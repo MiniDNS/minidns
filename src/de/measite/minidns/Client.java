@@ -4,14 +4,18 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.LineNumberReader;
+import java.lang.reflect.Method;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Random;
 
+import android.util.Log;
 import de.measite.minidns.Record.CLASS;
 import de.measite.minidns.Record.TYPE;
 
@@ -130,6 +134,33 @@ public class Client {
      * @return The server array.
      */
     public String[] findDNS() {
+        String[] result = findDNSByReflection();
+        if (result != null) {
+            Log.d("minidns/client",
+                "Got DNS servers via reflection: " + Arrays.toString(result));
+            return result;
+        }
+
+        result = findDNSByExec();
+        if (result != null) {
+            Log.d("minidns/client",
+                "Got DNS servers via exec: " + Arrays.toString(result));
+            return result;
+        }
+
+        // fallback for ipv4 and ipv6 connectivity
+        // see https://developers.google.com/speed/public-dns/docs/using
+        Log.d("minidns/client",
+            "No DNS found? Using fallback [8.8.8.8, [2001:4860:4860::8888]]");
+
+        return new String[]{"8.8.8.8", "[2001:4860:4860::8888]"};
+    }
+
+    /**
+     * Try to retrieve the list of dns server by executing getprop.
+     * @return Array of servers, or null on failure.
+     */
+    protected String[] findDNSByExec() {
         try {
             Process process = Runtime.getRuntime().exec("getprop");
             InputStream inputStream = process.getInputStream();
@@ -146,7 +177,19 @@ public class Client {
                 String value = line.substring(split + 4, line.length() - 1);
                 if (property.endsWith(".dns") || property.endsWith(".dns1") ||
                     property.endsWith(".dns2") || property.endsWith(".dns3") ||
-		    property.endsWith(".dns4")) {
+                    property.endsWith(".dns4")) {
+
+                    // normalize the address
+
+                    InetAddress ip = InetAddress.getByName(value);
+
+                    if (ip == null) continue;
+
+                    value = ip.getHostAddress();
+
+                    if (value == null) continue;
+                    if (value.length() == 0) continue;
+
                     server.add(value);
                 }
             }
@@ -158,4 +201,50 @@ public class Client {
         }
         return null;
     }
+
+    /**
+     * Try to retrieve the list of dns server by calling SystemProperties.
+     * @return Array of servers, or null on failure.
+     */
+    protected String[] findDNSByReflection() {
+        try {
+            Class<?> SystemProperties =
+                    Class.forName("android.os.SystemProperties");
+            Method method = SystemProperties.getMethod("get",
+                    new Class[] { String.class });
+
+            ArrayList<String> servers = new ArrayList<String>(5);
+
+            for (String propKey : new String[] {
+                    "net.dns1", "net.dns2", "net.dns3", "net.dns4"}) {
+
+                String value = (String)method.invoke(null, propKey);
+
+                if (value == null) continue;
+                if (value.length() == 0) continue;
+                if (servers.contains(value)) continue;
+
+                InetAddress ip = InetAddress.getByName(value);
+
+                if (ip == null) continue;
+
+                value = ip.getHostAddress();
+
+                if (value == null) continue;
+                if (value.length() == 0) continue;
+                if (servers.contains(value)) continue;
+
+                servers.add(value);
+            }
+
+            if (servers.size() > 0) {
+                return servers.toArray(new String[servers.size()]);
+            }
+        } catch (Exception e) {
+            // we might trigger some problems this way
+            e.printStackTrace();
+        }
+        return null;
+    }
+
 }
