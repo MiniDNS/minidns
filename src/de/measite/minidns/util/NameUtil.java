@@ -70,7 +70,7 @@ public class NameUtil {
     ) {
         int c = data[offset] & 0xff;
         if ((c & 0xc0) == 0xc0) {
-            c = ((c & 0x3f) << 8) + data[offset + 1];
+            c = ((c & 0x3f) << 8) + (data[offset + 1] & 0xff);
             if (jumps.contains(c)) {
                 throw new IllegalStateException("Cyclic offsets detected.");
             }
