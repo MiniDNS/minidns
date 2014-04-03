@@ -6,11 +6,25 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.IDN;
 import java.util.HashSet;
+import java.util.Arrays;
 
 public class NameUtil {
 
     public static int size(String name) {
         return name.length() + 2;
+    }
+
+    public static boolean idnEquals(String name1, String name2) {
+        if (name1 == name2) return true; // catches null, null
+        if (name1 == null) return false;
+        if (name2 == null) return false;
+        if (name1.equals(name2)) return true;
+
+        try {
+            return Arrays.equals(toByteArray(name1),toByteArray(name2));
+        } catch (IOException e) {
+            return false; // impossible
+        }
     }
 
     public static byte[] toByteArray(String name) throws IOException {
