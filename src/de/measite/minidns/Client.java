@@ -31,6 +31,16 @@ public class Client {
     protected Random random;
 
     /**
+     * The buffer size for dns replies.
+     */
+    protected int bufferSize = 1500;
+
+    /**
+     * DNS timeout.
+     */
+    protected int timeout = 5000;
+
+    /**
      * Create a new DNS client.
      */
     public Client() {
@@ -39,6 +49,26 @@ public class Client {
         } catch (NoSuchAlgorithmException e1) {
             random = new SecureRandom();
         }
+    }
+
+    /**
+     * Query a nameserver for a single entry.
+     * @param name The DNS name to request.
+     * @param type The DNS type to request (SRV, A, AAAA, ...).
+     * @param clazz The class of the request (usually IN for Internet).
+     * @param host The DNS server host.
+     * @param port The DNS server port.
+     * @return 
+     * @throws IOException On IO Errors.
+     */
+    public DNSMessage query(String name, TYPE type, CLASS clazz, String host, int port)
+        throws IOException
+    {
+        Question q = new Question();
+        q.setClazz(clazz);
+        q.setType(type);
+        q.setName(name);
+        return query(q, host, port);
     }
 
     /**
@@ -83,6 +113,17 @@ public class Client {
      * @throws IOException On IOErrors.
      */
     public DNSMessage query(Question q, String host) throws IOException {
+        return query(q, host, 53);
+    }
+
+    /**
+     * Query a specific server for one entry.
+     * @param q The question section of the DNS query.
+     * @param host The dns server host.
+     * @param port the dns port.
+     * @throws IOException On IOErrors.
+     */
+    public DNSMessage query(Question q, String host, int port) throws IOException {
         DNSMessage message = new DNSMessage();
         message.setQuestions(new Question[]{q});
         message.setRecursionDesired(true);
@@ -90,10 +131,10 @@ public class Client {
         byte[] buf = message.toArray();
         DatagramSocket socket = new DatagramSocket();
         DatagramPacket packet = new DatagramPacket(
-                buf, buf.length, InetAddress.getByName(host), 53);
-        socket.setSoTimeout(5000);
+                buf, buf.length, InetAddress.getByName(host), port);
+        socket.setSoTimeout(timeout);
         socket.send(packet);
-        packet = new DatagramPacket(new byte[513], 513);
+        packet = new DatagramPacket(new byte[bufferSize], bufferSize);
         socket.receive(packet);
         DNSMessage dnsMessage = DNSMessage.parse(packet.getData());
         if (dnsMessage.getId() != message.getId()) {
