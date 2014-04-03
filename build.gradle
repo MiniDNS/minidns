@@ -11,7 +11,7 @@ buildscript {
 apply plugin: 'android-library'
 
 android {
-    compileSdkVersion 9
+    compileSdkVersion 19
     buildToolsVersion '19.0.3'
     
     // NOTE: We are using the old folder structure to also support Eclipse
