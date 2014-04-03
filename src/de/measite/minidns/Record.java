@@ -286,6 +286,10 @@ public class Record {
                (q.getName().equals(name));
     }
 
+    public String getName() {
+        return name;
+    }
+
     public Data getPayload() {
         return payloadData;
     }
