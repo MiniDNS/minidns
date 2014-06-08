@@ -131,18 +131,19 @@ public class Client {
         message.setRecursionDesired(true);
         message.setId(random.nextInt());
         byte[] buf = message.toArray();
-        DatagramSocket socket = new DatagramSocket();
-        DatagramPacket packet = new DatagramPacket(
-                buf, buf.length, InetAddress.getByName(host), port);
-        socket.setSoTimeout(timeout);
-        socket.send(packet);
-        packet = new DatagramPacket(new byte[bufferSize], bufferSize);
-        socket.receive(packet);
-        DNSMessage dnsMessage = DNSMessage.parse(packet.getData());
-        if (dnsMessage.getId() != message.getId()) {
-            return null;
+        try (DatagramSocket socket = new DatagramSocket()) {
+            DatagramPacket packet = new DatagramPacket(buf, buf.length,
+                    InetAddress.getByName(host), port);
+            socket.setSoTimeout(timeout);
+            socket.send(packet);
+            packet = new DatagramPacket(new byte[bufferSize], bufferSize);
+            socket.receive(packet);
+            DNSMessage dnsMessage = DNSMessage.parse(packet.getData());
+            if (dnsMessage.getId() != message.getId()) {
+                return null;
+            }
+            return dnsMessage;
         }
-        return dnsMessage;
     }
 
     /**
