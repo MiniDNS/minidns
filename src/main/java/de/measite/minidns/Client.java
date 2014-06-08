@@ -169,6 +169,7 @@ public class Client {
                     }
                 }
             } catch (IOException ioe) {
+                LOGGER.log(Level.FINE, "IOException in query", ioe);
             }
         }
         return null;
