@@ -14,8 +14,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Random;
+import java.util.logging.Logger;
 
-import android.util.Log;
 import de.measite.minidns.Record.CLASS;
 import de.measite.minidns.Record.TYPE;
 
@@ -24,6 +24,8 @@ import de.measite.minidns.Record.TYPE;
  * This circumvents the missing javax.naming package on android.
  */
 public class Client {
+
+    private static final Logger LOGGER = Logger.getLogger(Client.class.getName());
 
     /**
      * The internal random class for sequence generation.
@@ -177,22 +179,19 @@ public class Client {
     public String[] findDNS() {
         String[] result = findDNSByReflection();
         if (result != null) {
-            Log.d("minidns/client",
-                "Got DNS servers via reflection: " + Arrays.toString(result));
+            LOGGER.fine("Got DNS servers via reflection: " + Arrays.toString(result));
             return result;
         }
 
         result = findDNSByExec();
         if (result != null) {
-            Log.d("minidns/client",
-                "Got DNS servers via exec: " + Arrays.toString(result));
+            LOGGER.fine("Got DNS servers via exec: " + Arrays.toString(result));
             return result;
         }
 
         // fallback for ipv4 and ipv6 connectivity
         // see https://developers.google.com/speed/public-dns/docs/using
-        Log.d("minidns/client",
-            "No DNS found? Using fallback [8.8.8.8, [2001:4860:4860::8888]]");
+        LOGGER.fine("No DNS found? Using fallback [8.8.8.8, [2001:4860:4860::8888]]");
 
         return new String[]{"8.8.8.8", "[2001:4860:4860::8888]"};
     }
