@@ -14,6 +14,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Random;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import de.measite.minidns.Record.CLASS;
@@ -238,7 +239,7 @@ public class Client {
                 return server.toArray(new String[server.size()]);
             }
         } catch (IOException e) {
-            e.printStackTrace();
+            LOGGER.log(Level.WARNING, "Exception in findDNSByExec", e);
         }
         return null;
     }
@@ -283,7 +284,7 @@ public class Client {
             }
         } catch (Exception e) {
             // we might trigger some problems this way
-            e.printStackTrace();
+            LOGGER.log(Level.WARNING, "Exception in findDNSByReflection", e);
         }
         return null;
     }
