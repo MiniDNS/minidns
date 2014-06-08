@@ -14,8 +14,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Random;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
-import android.util.Log;
 import de.measite.minidns.Record.CLASS;
 import de.measite.minidns.Record.TYPE;
 
@@ -24,6 +25,8 @@ import de.measite.minidns.Record.TYPE;
  * This circumvents the missing javax.naming package on android.
  */
 public class Client {
+
+    private static final Logger LOGGER = Logger.getLogger(Client.class.getName());
 
     /**
      * The internal random class for sequence generation.
@@ -129,18 +132,19 @@ public class Client {
         message.setRecursionDesired(true);
         message.setId(random.nextInt());
         byte[] buf = message.toArray();
-        DatagramSocket socket = new DatagramSocket();
-        DatagramPacket packet = new DatagramPacket(
-                buf, buf.length, InetAddress.getByName(host), port);
-        socket.setSoTimeout(timeout);
-        socket.send(packet);
-        packet = new DatagramPacket(new byte[bufferSize], bufferSize);
-        socket.receive(packet);
-        DNSMessage dnsMessage = DNSMessage.parse(packet.getData());
-        if (dnsMessage.getId() != message.getId()) {
-            return null;
+        try (DatagramSocket socket = new DatagramSocket()) {
+            DatagramPacket packet = new DatagramPacket(buf, buf.length,
+                    InetAddress.getByName(host), port);
+            socket.setSoTimeout(timeout);
+            socket.send(packet);
+            packet = new DatagramPacket(new byte[bufferSize], bufferSize);
+            socket.receive(packet);
+            DNSMessage dnsMessage = DNSMessage.parse(packet.getData());
+            if (dnsMessage.getId() != message.getId()) {
+                return null;
+            }
+            return dnsMessage;
         }
-        return dnsMessage;
     }
 
     /**
@@ -165,6 +169,7 @@ public class Client {
                     }
                 }
             } catch (IOException ioe) {
+                LOGGER.log(Level.FINE, "IOException in query", ioe);
             }
         }
         return null;
@@ -177,22 +182,19 @@ public class Client {
     public String[] findDNS() {
         String[] result = findDNSByReflection();
         if (result != null) {
-            Log.d("minidns/client",
-                "Got DNS servers via reflection: " + Arrays.toString(result));
+            LOGGER.fine("Got DNS servers via reflection: " + Arrays.toString(result));
             return result;
         }
 
         result = findDNSByExec();
         if (result != null) {
-            Log.d("minidns/client",
-                "Got DNS servers via exec: " + Arrays.toString(result));
+            LOGGER.fine("Got DNS servers via exec: " + Arrays.toString(result));
             return result;
         }
 
         // fallback for ipv4 and ipv6 connectivity
         // see https://developers.google.com/speed/public-dns/docs/using
-        Log.d("minidns/client",
-            "No DNS found? Using fallback [8.8.8.8, [2001:4860:4860::8888]]");
+        LOGGER.fine("No DNS found? Using fallback [8.8.8.8, [2001:4860:4860::8888]]");
 
         return new String[]{"8.8.8.8", "[2001:4860:4860::8888]"};
     }
@@ -238,7 +240,7 @@ public class Client {
                 return server.toArray(new String[server.size()]);
             }
         } catch (IOException e) {
-            e.printStackTrace();
+            LOGGER.log(Level.WARNING, "Exception in findDNSByExec", e);
         }
         return null;
     }
@@ -283,7 +285,7 @@ public class Client {
             }
         } catch (Exception e) {
             // we might trigger some problems this way
-            e.printStackTrace();
+            LOGGER.log(Level.WARNING, "Exception in findDNSByReflection", e);
         }
         return null;
     }
