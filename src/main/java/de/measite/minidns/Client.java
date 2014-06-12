@@ -17,6 +17,8 @@ import java.util.Random;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.jxmpp.util.cache.ExpirationCache;
+
 import de.measite.minidns.Record.CLASS;
 import de.measite.minidns.Record.TYPE;
 
@@ -27,6 +29,9 @@ import de.measite.minidns.Record.TYPE;
 public class Client {
 
     private static final Logger LOGGER = Logger.getLogger(Client.class.getName());
+
+    protected static final ExpirationCache<Question, DNSMessage> cache = new ExpirationCache<Question, DNSMessage>(
+            10, 1000 * 60 * 60 * 24);
 
     /**
      * The internal random class for sequence generation.
@@ -67,10 +72,7 @@ public class Client {
     public DNSMessage query(String name, TYPE type, CLASS clazz, String host, int port)
         throws IOException
     {
-        Question q = new Question();
-        q.setClazz(clazz);
-        q.setType(type);
-        q.setName(name);
+        Question q = new Question(name, type, clazz);
         return query(q, host, port);
     }
 
@@ -86,10 +88,7 @@ public class Client {
     public DNSMessage query(String name, TYPE type, CLASS clazz, String host)
         throws IOException
     {
-        Question q = new Question();
-        q.setClazz(clazz);
-        q.setType(type);
-        q.setName(name);
+        Question q = new Question(name, type, clazz);
         return query(q, host);
     }
 
@@ -102,10 +101,7 @@ public class Client {
      */
     public DNSMessage query(String name, TYPE type, CLASS clazz)
     {
-        Question q = new Question();
-        q.setClazz(clazz);
-        q.setType(type);
-        q.setName(name);
+        Question q = new Question(name, type, clazz);
         return query(q);
     }
 
@@ -127,6 +123,10 @@ public class Client {
      * @throws IOException On IOErrors.
      */
     public DNSMessage query(Question q, String host, int port) throws IOException {
+        DNSMessage dnsMessage = cache.get(q);
+        if (dnsMessage != null) {
+            return dnsMessage;
+        }
         DNSMessage message = new DNSMessage();
         message.setQuestions(new Question[]{q});
         message.setRecursionDesired(true);
@@ -139,9 +139,15 @@ public class Client {
             socket.send(packet);
             packet = new DatagramPacket(new byte[bufferSize], bufferSize);
             socket.receive(packet);
-            DNSMessage dnsMessage = DNSMessage.parse(packet.getData());
+            dnsMessage = DNSMessage.parse(packet.getData());
             if (dnsMessage.getId() != message.getId()) {
                 return null;
+            }
+            for (Record record : dnsMessage.getAnswers()) {
+                if (record.isAnswer(q)) {
+                    cache.put(q, dnsMessage, record.ttl);
+                    break;
+                }
             }
             return dnsMessage;
         }
@@ -152,10 +158,19 @@ public class Client {
      * @param q The question section of the DNS query.
      */
     public DNSMessage query(Question q) {
+        // While this query method does in fact re-use query(Question, String)
+        // we still do a cache lookup here in order to avoid unnecessary
+        // findDNS()calls, which are expensive on Android. Note that we do not
+        // put the results back into the Cache, as this is already done by
+        // query(Question, String).
+        DNSMessage message = cache.get(q);
+        if (message != null) {
+            return message;
+        }
         String dnsServer[] = findDNS();
         for (String dns : dnsServer) {
             try {
-                DNSMessage message = query(q, dns);
+                message = query(q, dns);
                 if (message == null) {
                     continue;
                 }

@@ -416,8 +416,7 @@ public class DNSMessage {
         int additionalResourceRecordCount = dis.readUnsignedShort();
         message.questions = new Question[questionCount];
         while (questionCount-- > 0) {
-            Question q = new Question();
-            q.parse(dis, data);
+            Question q = Question.parse(dis, data);
             message.questions[questionCount] = q;
         }
         message.answers = new Record[answerCount];
