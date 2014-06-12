@@ -27,13 +27,6 @@ if (isSnapshot) {
 repositories {
 	mavenLocal()
 	mavenCentral()
-	maven {
-		url 'https://oss.sonatype.org/content/repositories/snapshots/'
-	}
-}
-
-dependencies {
-	compile 'org.igniterealtime.jxmpp:jxmpp-util-cache:0.1.0-alpha1-SNAPSHOT'
 }
 
 jar {

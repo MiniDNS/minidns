@@ -196,6 +196,11 @@ public class DNSMessage {
     protected Record additionalResourceRecords[];
 
     /**
+     * The receive timestamp of this message.
+     */
+    protected long receiveTimestamp;
+
+    /**
      * Retrieve the current DNS message id.
      * @return The current DNS message id.
      */
@@ -209,6 +214,14 @@ public class DNSMessage {
      */
     public void setId(int id) {
         this.id = id & 0xffff;
+    }
+
+    /**
+     * Get the receive timestamp if this message was created via parse.
+     * This should be used to evaluate TTLs.
+     */
+    public long getReceiveTimestamp() {
+        return receiveTimestamp;
     }
 
     /**
@@ -410,6 +423,7 @@ public class DNSMessage {
         message.authenticData = ((header >> 5) & 1) == 1;
         message.checkDisabled = ((header >> 4) & 1) == 1;
         message.responseCode = RESPONSE_CODE.getResponseCode(header & 0xf);
+	message.receiveTimestamp = System.currentTimeMillis();
         int questionCount = dis.readUnsignedShort();
         int answerCount = dis.readUnsignedShort();
         int nameserverCount = dis.readUnsignedShort();

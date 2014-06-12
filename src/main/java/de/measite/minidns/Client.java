@@ -13,11 +13,11 @@ import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.Map.Entry;
 import java.util.Random;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
-import org.jxmpp.util.cache.ExpirationCache;
 
 import de.measite.minidns.Record.CLASS;
 import de.measite.minidns.Record.TYPE;
@@ -29,9 +29,6 @@ import de.measite.minidns.Record.TYPE;
 public class Client {
 
     private static final Logger LOGGER = Logger.getLogger(Client.class.getName());
-
-    protected static final ExpirationCache<Question, DNSMessage> cache = new ExpirationCache<Question, DNSMessage>(
-            10, 1000 * 60 * 60 * 24);
 
     /**
      * The internal random class for sequence generation.
@@ -49,6 +46,16 @@ public class Client {
     protected int timeout = 5000;
 
     /**
+     * The internal DNS cache.
+     */
+    protected LinkedHashMap<Question, DNSMessage> cache;
+
+    /**
+     * Maximum acceptable ttl.
+     */
+    protected long maxTTL = 60 * 60 * 1000;
+
+    /**
      * Create a new DNS client.
      */
     public Client() {
@@ -57,6 +64,7 @@ public class Client {
         } catch (NoSuchAlgorithmException e1) {
             random = new SecureRandom();
         }
+        setCacheSize(10);
     }
 
     /**
@@ -123,9 +131,20 @@ public class Client {
      * @throws IOException On IOErrors.
      */
     public DNSMessage query(Question q, String host, int port) throws IOException {
-        DNSMessage dnsMessage = cache.get(q);
-        if (dnsMessage != null) {
-            return dnsMessage;
+        DNSMessage dnsMessage = (cache == null) ? null : cache.get(q);
+        if (dnsMessage != null && dnsMessage.getReceiveTimestamp() > 0l) {
+            // check the ttl
+            long ttl = maxTTL;
+            for (Record r : dnsMessage.getAnswers()) {
+                ttl = Math.min(ttl, r.ttl);
+            }
+            for (Record r : dnsMessage.getAdditionalResourceRecords()) {
+                ttl = Math.min(ttl, r.ttl);
+            }
+            if (dnsMessage.getReceiveTimestamp() + ttl <
+                System.currentTimeMillis()) {
+                return dnsMessage;
+            }
         }
         DNSMessage message = new DNSMessage();
         message.setQuestions(new Question[]{q});
@@ -145,7 +164,9 @@ public class Client {
             }
             for (Record record : dnsMessage.getAnswers()) {
                 if (record.isAnswer(q)) {
-                    cache.put(q, dnsMessage, record.ttl);
+                    if (cache != null) {
+                        cache.put(q, dnsMessage);
+                    }
                     break;
                 }
             }
@@ -303,6 +324,54 @@ public class Client {
             LOGGER.log(Level.WARNING, "Exception in findDNSByReflection", e);
         }
         return null;
+    }
+
+    /**
+     * Configure the cache size (default 10).
+     * @param maximumSize The new cache size or 0 to disable.
+     */
+    @SuppressWarnings("serial")
+    public void setCacheSize(final int maximumSize) {
+        if (maximumSize == 0) {
+            this.cache = null;
+        } else {
+            LinkedHashMap<Question,DNSMessage> old = cache;
+            cache = new LinkedHashMap<Question,DNSMessage>() {
+                @Override
+                protected boolean removeEldestEntry(
+                        Entry<Question, DNSMessage> eldest) {
+                    return size() > maximumSize;
+                }
+            };
+            if (old != null) {
+                cache.putAll(old);
+            }
+        }
+    }
+
+    /**
+     * Flush the DNS cache.
+     */
+    public void flushCache() {
+        if (cache != null) {
+            cache.clear();
+        }
+    }
+
+    /**
+     * Get the current maximum record ttl.
+     * @return The maximum record ttl.
+     */
+    public long getMaxTTL() {
+        return maxTTL;
+    }
+
+    /**
+     * Set the maximum record ttl.
+     * @param maxTTL The new maximum ttl.
+     */
+    public void setMaxTTL(long maxTTL) {
+        this.maxTTL = maxTTL;
     }
 
 }
