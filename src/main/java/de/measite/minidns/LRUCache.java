@@ -48,7 +48,7 @@ public class LRUCache implements DNSCache {
         this.capacity = capacity;
         this.maxTTL = maxTTL;
         backend = new LinkedHashMap<Question,DNSMessage>(
-                Math.min(capacity, 11), 0.75f, true)
+                Math.min(capacity + (capacity + 3) / 4 + 2, 11), 0.75f, true)
             {
                 @Override
                 protected boolean removeEldestEntry(
