@@ -6,6 +6,9 @@ import java.io.IOException;
 import de.measite.minidns.Record.TYPE;
 import de.measite.minidns.util.NameUtil;
 
+/**
+ * CNAME payload (pointer to another domain / address).
+ */
 public class CNAME implements Data {
 
     protected String name;
@@ -20,8 +23,7 @@ public class CNAME implements Data {
 
     @Override
     public byte[] toByteArray() {
-        // TODO Auto-generated method stub
-        return null;
+        throw new UnsupportedOperationException("Not implemented yet");
     }
 
     @Override

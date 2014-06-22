@@ -286,10 +286,18 @@ public class Record {
                (q.getName().equals(name));
     }
 
+    /**
+     * The generic record name, e.g. "measite.de".
+     * @return The record name.
+     */
     public String getName() {
         return name;
     }
 
+    /**
+     * The payload data, usually a subclass of data (A, AAAA, CNAME, ...).
+     * @return The payload data.
+     */
     public Data getPayload() {
         return payloadData;
     }

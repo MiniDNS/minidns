@@ -5,8 +5,14 @@ import java.io.IOException;
 
 import de.measite.minidns.Record.TYPE;
 
+/**
+ * A record payload (ip pointer).
+ */
 public class A implements Data {
 
+    /**
+     * Target IP.
+     */
     private byte[] ip;
 
     @Override

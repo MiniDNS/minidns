@@ -5,8 +5,14 @@ import java.io.IOException;
 
 import de.measite.minidns.Record.TYPE;
 
+/**
+ * AAAA payload (an ipv6 pointer).
+ */
 public class AAAA implements Data {
 
+    /**
+     * The ipv6 address.
+     */
     private byte[] ip;
 
     @Override
