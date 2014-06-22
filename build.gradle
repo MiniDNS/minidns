@@ -1,27 +1,28 @@
 apply plugin: 'java'
 apply plugin: 'eclipse'
-apply plugin: 'maven'
 apply plugin: 'osgi'
-apply plugin: 'signing'
+apply plugin: 'nexus'
 
-ext {
-	shortVersion = '0.1'
-	isSnapshot = true
-	gitCommit = getGitCommit()
-	isReleaseVersion = !shortVersion
-	sonatypeCredentialsAvailable = project.hasProperty('sonatypeUsername') && project.hasProperty('sonatypePassword')
-	signingRequired = isReleaseVersion
-	sonatypeSnapshotUrl = 'https://oss.sonatype.org/content/repositories/snapshots'
-	sonatypeStagingUrl = 'https://oss.sonatype.org/service/local/staging/deploy/maven2'
-	buildDate = (new java.text.SimpleDateFormat("yyyy-MM-dd")).format(new Date())
+buildscript {
+    repositories {
+        jcenter()
+	mavenLocal()
+	mavenCentral()
+    }
+
+    dependencies {
+        classpath 'org.gradle.api.plugins:gradle-nexus-plugin:0.7.1'
+    }
 }
 
 group = 'de.measite.minidns'
 description = "A minimal DNS client library with support for A, AAAA, NS and SRV records"
 sourceCompatibility = 1.7
-version = shortVersion
-if (isSnapshot) {
-	version += '-SNAPSHOT'
+version = 'git tag --points-at HEAD'.execute().text.trim()
+isSNAPSHOT = 'git rev-parse --abbrev-ref HEAD'.execute().text.trim() == 'master'
+
+if (isSNAPSHOT) {
+  version = version + '-SNAPSHOT'
 }
 
 repositories {
@@ -29,103 +30,46 @@ repositories {
 	mavenCentral()
 }
 
-jar {
-	manifest {
-		instruction 'Implementation-GitRevision:', project.ext.gitCommit
-	}
+nexus {
+    attachSources = false
+    attachTests = false
+    attachJavadoc = false
+    sign = true
 }
 
-gradle.taskGraph.whenReady { taskGraph ->
-	if (signingRequired
-		&& taskGraph.allTasks.any { it instanceof Sign }) {
-		// Use Java 6's console to read from the console (no good for a CI environment)
-		Console console = System.console()
-		console.printf '\n\nWe have to sign some things in this build.\n\nPlease enter your signing details.\n\n'
-		def password = console.readPassword('GnuPG Private Key Password: ')
+modifyPom {
+    project {
+        name 'minidns'
+        description 'Minimal DNS library for java and android systems'
+        url 'https://github.com/rtreffer/minidns'
+        inceptionYear '2014'
 
-		allprojects { ext.'signing.password' = password }
+        scm {
+            url 'https://github.com/rtreffer/minidns'
+            connection 'scm:https://github.com/rtreffer/minidns'
+            developerConnection 'scm:git://github.com/rtreffer/minidns.git'
+        }
 
-		console.printf '\nThanks.\n\n'
-	}
+        licenses {
+            license {
+                name 'The Apache Software License, Version 2.0'
+                url 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+                distribution 'repo'
+            }
+        }
+
+        developers {
+            developer {
+                id 'rtreffer'
+                name 'Rene Treffer'
+                email 'treffer@measite.de'
+            }
+            developer {
+                id 'flow'
+                name 'Florian Schmaus'
+                email 'flow@geekplace.eu'
+            }
+        }
+    }
 }
 
-uploadArchives {
-	repositories {
-		mavenDeployer {
-			if (signingRequired) {
-				beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
-			}
-			repository(url: project.sonatypeStagingUrl) {
-				if (sonatypeCredentialsAvailable) {
-					authentication(userName: sonatypeUsername, password: sonatypePassword)
-				}
-			}
-			snapshotRepository(url: project.sonatypeSnapshotUrl) {
-				if (sonatypeCredentialsAvailable) {
-					authentication(userName: sonatypeUsername, password: sonatypePassword)
-				}
-			}
-
-			pom.project {
-				name 'minidns'
-				packaging 'jar'
-				inceptionYear '2014'
-				url 'https://github.com/rtreffer/minidns'
-				description project.description
-
-				issueManagement {
-					system 'GitHub'
-					url 'https://github.com/rtreffer/minidns/issues'
-				}
-
-				distributionManagement {
-					snapshotRepository {
-						id 'minidns.snapshot'
-						url project.sonatypeSnapshotUrl
-					}
-				}
-
-				scm {
-					url 'https://github.com/rtreffer/minidns'
-					connection 'scm:git:https://github.com/rtreffer/minidns.git'
-					developerConnection 'scm:git:https://github.com/rtreffer/minidns.git'
-				}
-
-				licenses {
-					license {
-						name 'The Apache Software License, Version 2.0'
-						url 'http://www.apache.org/licenses/LICENSE-2.0.txt'
-						distribution 'repo'
-					}
-				}
-
-				developers {
-					developer {
-						id 'rtreffer'
-						name 'Rene Treffer'
-					}
-					developer {
-						id 'flow'
-						name 'Florian Schmaus'
-						email 'flow@geekplace.eu'
-					}
-				}
-			}
-		}
-	}
-	signing {
-		required { signingRequired }
-		sign configurations.archives
-	}
-}
-
-def getGitCommit() {
-	def dotGit = new File("$projectDir/.git")
-	if (!dotGit.isDirectory()) return 'non-git build'
-
-	def cmd = 'git describe --all --dirty=+'
-	def proc = cmd.execute()
-	def gitCommit = proc.text.trim()
-	assert !gitCommit.isEmpty()
-	gitCommit
-}

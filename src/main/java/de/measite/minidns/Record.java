@@ -19,7 +19,7 @@ public class Record {
 
     /**
      * The record type.
-     * {@see http://www.iana.org/assignments/dns-parameters}
+     * @see <a href="http://www.iana.org/assignments/dns-parameters">IANA DNS Parameters</a>
      */
     public static enum TYPE {
         A(1),

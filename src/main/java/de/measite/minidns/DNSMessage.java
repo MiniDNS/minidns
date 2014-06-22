@@ -11,8 +11,8 @@ import java.util.Arrays;
  * A DNS message as defined by rfc1035. The message consists of a header and
  * 4 sections: question, answer, nameserver and addition resource record
  * section.
- * A message can either be parsed ({@see #parse(byte[])}) or serialized
- * ({@see #toArray()}).
+ * A message can either be parsed ({@link DNSMessage#parse(byte[])}) or serialized
+ * ({@link DNSMessage#toArray()}).
  */
 public class DNSMessage {
 
