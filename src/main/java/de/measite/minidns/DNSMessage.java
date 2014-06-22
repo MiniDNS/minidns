@@ -48,7 +48,7 @@ public class DNSMessage {
 
         /**
          * Retrieve the byte value of the response code.
-         * @return
+         * @return the byte value of the response code
          */
         public byte getValue() {
             return (byte) value;
@@ -435,23 +435,17 @@ public class DNSMessage {
         }
         message.answers = new Record[answerCount];
         while (answerCount-- > 0) {
-            Record rr = new Record();
-            rr.parse(dis, data);
-            message.answers[answerCount] = rr;
+            message.answers[answerCount] = new Record(dis, data);
         }
         message.nameserverRecords = new Record[nameserverCount];
         while (nameserverCount-- > 0) {
-            Record rr = new Record();
-            rr.parse(dis, data);
-            message.nameserverRecords[nameserverCount] = rr;
+            message.nameserverRecords[nameserverCount] = new Record(dis, data);
         }
         message.additionalResourceRecords =
                                     new Record[additionalResourceRecordCount];
         while (additionalResourceRecordCount-- > 0) {
-            Record rr = new Record();
-            rr.parse(dis, data);
             message.additionalResourceRecords[additionalResourceRecordCount] =
-                    rr;
+                    new Record(dis, data);
         }
         return message;
     }

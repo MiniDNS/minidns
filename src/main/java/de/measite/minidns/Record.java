@@ -198,27 +198,27 @@ public class Record {
     /**
      * The generic name of this record.
      */
-    protected String name;
+    public final String name;
 
     /**
      * The type (and payload type) of this record.
      */
-    protected TYPE type;
+    public final TYPE type;
 
     /**
      * The record class (usually CLASS.IN).
      */
-    protected CLASS clazz;
+    public final CLASS clazz;
 
     /**
      * The ttl of this record.
      */
-    protected long ttl;
+    public final long ttl;
 
     /**
      * The payload object of this record.
      */
-    protected Data payloadData;
+    public final Data payloadData;
 
     /**
      * Parse a given record based on the full message data and the current
@@ -227,7 +227,7 @@ public class Record {
      * @param data The full message data.
      * @throws IOException In case of malformed replies.
      */
-    public void parse(DataInputStream dis, byte[] data) throws IOException {
+    public Record(DataInputStream dis, byte[] data) throws IOException {
         this.name = NameUtil.parse(dis, data);
         this.type = TYPE.getType(dis.readUnsignedShort());
         this.clazz = CLASS.getClass(dis.readUnsignedShort());
