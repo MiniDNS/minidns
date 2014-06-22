@@ -13,7 +13,7 @@ public class A implements Data {
     /**
      * Target IP.
      */
-    private byte[] ip;
+    public final byte[] ip;
 
     @Override
     public TYPE getType() {
@@ -25,8 +25,7 @@ public class A implements Data {
         return ip;
     }
 
-    @Override
-    public void parse(DataInputStream dis, byte[] data, int length)
+    public A(DataInputStream dis, byte[] data, int length)
             throws IOException {
         ip = new byte[4];
         dis.readFully(ip);

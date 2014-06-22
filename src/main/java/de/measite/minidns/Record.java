@@ -3,6 +3,7 @@ package de.measite.minidns;
 import java.io.DataInputStream;
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.logging.Logger;
 
 import de.measite.minidns.record.A;
 import de.measite.minidns.record.AAAA;
@@ -16,6 +17,7 @@ import de.measite.minidns.util.NameUtil;
  * A generic DNS record.
  */
 public class Record {
+    private static final Logger LOGGER = Logger.getLogger(Record.class.getName());
 
     /**
      * The record type.
@@ -236,30 +238,27 @@ public class Record {
         int payloadLength = dis.readUnsignedShort();
         switch (this.type) {
         case SRV:
-            this.payloadData = new SRV();
+            this.payloadData = new SRV(dis, data, payloadLength);
             break;
         case AAAA:
-            this.payloadData = new AAAA();
+            this.payloadData = new AAAA(dis, data, payloadLength);
             break;
         case A:
-            this.payloadData = new A();
+            this.payloadData = new A(dis, data, payloadLength);
             break;
         case NS:
-            this.payloadData = new NS();
+            this.payloadData = new NS(dis, data, payloadLength);
             break;
         case CNAME:
-            this.payloadData = new CNAME();
+            this.payloadData = new CNAME(dis, data, payloadLength);
             break;
         default:
-            System.out.println("Unparsed type " + type);
+            LOGGER.info("Unparsed type " + type);
             this.payloadData = null;
             for (int i = 0; i < payloadLength; i++) {
                 dis.readByte();
             }
             break;
-        }
-        if (this.payloadData != null) {
-            this.payloadData.parse(dis, data, payloadLength);
         }
     }
 
