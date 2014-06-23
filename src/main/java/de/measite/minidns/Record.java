@@ -280,9 +280,9 @@ public class Record {
      * @return True if this record is a valid answer.
      */
     public boolean isAnswer(Question q) {
-        return ((q.getType() == type) || (q.getType() == TYPE.ANY)) &&
-               ((q.getClazz() == clazz) || (q.getClazz() == CLASS.ANY)) &&
-               (q.getName().equals(name));
+        return ((q.type == type) || (q.type == TYPE.ANY)) &&
+               ((q.clazz == clazz) || (q.clazz == CLASS.ANY)) &&
+               (q.name.equals(name));
     }
 
     /**

@@ -18,17 +18,17 @@ public class Question {
     /**
      * The question string (e.g. "measite.de").
      */
-    private final String name;
+    public final String name;
 
     /**
      * The question type (e.g. A).
      */
-    private final TYPE type;
+    public final TYPE type;
 
     /**
      * The question class (usually IN / internet).
      */
-    private final CLASS clazz;
+    public final CLASS clazz;
 
     /**
      * Cache for the serialized object.
@@ -57,41 +57,16 @@ public class Question {
     }
 
     /**
-     * Retrieve the type of this question.
-     * @return The type.
-     */
-    public TYPE getType() {
-        return type;
-    }
-
-    /**
-     * Retrieve the class of this dns question (usually internet).
-     * @return The class of this dns question.
-     */
-    public CLASS getClazz() {
-        return clazz;
-    }
-
-    /**
-     * Retrieve the name of this dns question (e.g. "measite.de").
-     * @return The name of this dns question.
-     */
-    public String getName() {
-        return name;
-    }
-
-    /**
      * Parse a byte array and rebuild the dns question from it.
      * @param dis The input stream.
      * @param data The plain data (for dns name references).
      * @return The parsed dns question.
      * @throws IOException On errors (read outside of packet).
      */
-    public static Question parse(DataInputStream dis, byte[] data) throws IOException {
-        String name = NameUtil.parse(dis, data);
-        TYPE type = TYPE.getType(dis.readUnsignedShort());
-        CLASS clazz = CLASS.getClass(dis.readUnsignedShort());
-        return new Question (name, type, clazz);
+    public Question(DataInputStream dis, byte[] data) throws IOException {
+        name = NameUtil.parse(dis, data);
+        type = TYPE.getType(dis.readUnsignedShort());
+        clazz = CLASS.getClass(dis.readUnsignedShort());
     }
 
     /**
