@@ -60,7 +60,7 @@ public class LRUCache implements DNSCache {
 
     /**
      * Create a new LRUCache with given capacity.
-     * @param capacity
+     * @param capacity The capacity of this cache.
      */
     public LRUCache(final int capacity) {
         this(capacity, Long.MAX_VALUE);

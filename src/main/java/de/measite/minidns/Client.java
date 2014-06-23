@@ -75,7 +75,7 @@ public class Client {
      * @param clazz The class of the request (usually IN for Internet).
      * @param host The DNS server host.
      * @param port The DNS server port.
-     * @return 
+     * @return The response (or null on timeout / failure).
      * @throws IOException On IO Errors.
      */
     public DNSMessage query(String name, TYPE type, CLASS clazz, String host, int port)
@@ -91,7 +91,7 @@ public class Client {
      * @param type The DNS type to request (SRV, A, AAAA, ...).
      * @param clazz The class of the request (usually IN for Internet).
      * @param host The DNS server host.
-     * @return 
+     * @return The response (or null on timeout / failure).
      * @throws IOException On IO Errors.
      */
     public DNSMessage query(String name, TYPE type, CLASS clazz, String host)
@@ -106,6 +106,7 @@ public class Client {
      * @param name The DNS name to request.
      * @param type The DNS type to request (SRV, A, AAAA, ...).
      * @param clazz The class of the request (usually IN for Internet).
+     * @return The response (or null on timeout/error).
      * @return The DNSMessage reply or null.
      */
     public DNSMessage query(String name, TYPE type, CLASS clazz)
@@ -118,6 +119,7 @@ public class Client {
      * Query a specific server for one entry.
      * @param q The question section of the DNS query.
      * @param host The dns server host.
+     * @return The response (or null on timeout/error).
      * @throws IOException On IOErrors.
      */
     public DNSMessage query(Question q, String host) throws IOException {
@@ -129,6 +131,7 @@ public class Client {
      * @param q The question section of the DNS query.
      * @param host The dns server host.
      * @param port the dns port.
+     * @return The response (or null on timeout/error).
      * @throws IOException On IOErrors.
      */
     public DNSMessage query(Question q, String host, int port) throws IOException {
@@ -167,6 +170,7 @@ public class Client {
     /**
      * Query the system DNS server for one entry.
      * @param q The question section of the DNS query.
+     * @return The response (or null on timeout/error).
      */
     public DNSMessage query(Question q) {
         // While this query method does in fact re-use query(Question, String)

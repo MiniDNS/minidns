@@ -302,4 +302,12 @@ public class Record {
         return payloadData;
     }
 
+    /**
+     * Retrieve the record ttl.
+     * @return The record ttl.
+     */
+    public long getTtl() {
+        return ttl;
+    }
+
 }

@@ -48,7 +48,7 @@ public class DNSMessage {
 
         /**
          * Retrieve the byte value of the response code.
-         * @return
+         * @return the response code.
          */
         public byte getValue() {
             return (byte) value;
@@ -219,6 +219,7 @@ public class DNSMessage {
     /**
      * Get the receive timestamp if this message was created via parse.
      * This should be used to evaluate TTLs.
+     * @return The receive timestamp in milliseconds.
      */
     public long getReceiveTimestamp() {
         return receiveTimestamp;
@@ -331,7 +332,7 @@ public class DNSMessage {
 
     /**
      * Change the check status of this packet.
-     * @param checkDisabled
+     * @param checkDisabled The new check disabled value.
      */
     public void setCheckDisabled(boolean checkDisabled) {
         this.checkDisabled = checkDisabled;
