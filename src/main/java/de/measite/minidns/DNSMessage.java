@@ -424,7 +424,7 @@ public class DNSMessage {
         message.authenticData = ((header >> 5) & 1) == 1;
         message.checkDisabled = ((header >> 4) & 1) == 1;
         message.responseCode = RESPONSE_CODE.getResponseCode(header & 0xf);
-	message.receiveTimestamp = System.currentTimeMillis();
+        message.receiveTimestamp = System.currentTimeMillis();
         int questionCount = dis.readUnsignedShort();
         int answerCount = dis.readUnsignedShort();
         int nameserverCount = dis.readUnsignedShort();
