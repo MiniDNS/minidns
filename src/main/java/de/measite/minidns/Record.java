@@ -11,6 +11,7 @@ import de.measite.minidns.record.Data;
 import de.measite.minidns.record.NS;
 import de.measite.minidns.record.PTR;
 import de.measite.minidns.record.SRV;
+import de.measite.minidns.record.TXT;
 import de.measite.minidns.util.NameUtil;
 
 /**
@@ -231,7 +232,11 @@ public class Record {
     public void parse(DataInputStream dis, byte[] data) throws IOException {
         this.name = NameUtil.parse(dis, data);
         this.type = TYPE.getType(dis.readUnsignedShort());
-        this.clazz = CLASS.getClass(dis.readUnsignedShort());
+        int clazzValue = dis.readUnsignedShort();
+        this.clazz = CLASS.getClass(clazzValue);
+        if (this.clazz == null) {
+            System.out.println("Unknown class " + clazzValue);
+        }
         this.ttl = (((long)dis.readUnsignedShort()) << 32) +
                    dis.readUnsignedShort();
         int payloadLength = dis.readUnsignedShort();
@@ -253,6 +258,9 @@ public class Record {
             break;
         case PTR:
             this.payloadData = new PTR();
+            break;
+        case TXT:
+            this.payloadData = new TXT();
             break;
         default:
             System.out.println("Unparsed type " + type);
