@@ -9,6 +9,7 @@ import de.measite.minidns.record.AAAA;
 import de.measite.minidns.record.CNAME;
 import de.measite.minidns.record.Data;
 import de.measite.minidns.record.NS;
+import de.measite.minidns.record.PTR;
 import de.measite.minidns.record.SRV;
 import de.measite.minidns.util.NameUtil;
 
@@ -249,6 +250,9 @@ public class Record {
             break;
         case CNAME:
             this.payloadData = new CNAME();
+            break;
+        case PTR:
+            this.payloadData = new PTR();
             break;
         default:
             System.out.println("Unparsed type " + type);
