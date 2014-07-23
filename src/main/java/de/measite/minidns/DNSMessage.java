@@ -515,7 +515,10 @@ public class DNSMessage {
 
     public String toString() {
         return "-- DNSMessage " + id + " --\n" +
-               Arrays.toString(answers);
+               "Q" + Arrays.toString(questions) +
+               "NS" + Arrays.toString(nameserverRecords) +
+               "A" + Arrays.toString(answers) +
+               "ARR" + Arrays.toString(additionalResourceRecords);
     }
 
 }

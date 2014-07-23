@@ -134,4 +134,9 @@ public class Question {
         byte o[] = ((Question)other).toByteArray();
         return Arrays.equals(t, o);
     }
+
+    @Override
+    public String toString() {
+        return "Question/" + clazz + "/" + type + ": " + name;
+    }
 }
