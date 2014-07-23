@@ -223,6 +223,11 @@ public class Record {
     protected Data payloadData;
 
     /**
+     * MDNS defines the highest bit of the class as the unicast query bit.
+     */
+    protected boolean unicastQuery;
+
+    /**
      * Parse a given record based on the full message data and the current
      * stream position.
      * @param dis The DataInputStream positioned at the first record byte.
@@ -233,7 +238,8 @@ public class Record {
         this.name = NameUtil.parse(dis, data);
         this.type = TYPE.getType(dis.readUnsignedShort());
         int clazzValue = dis.readUnsignedShort();
-        this.clazz = CLASS.getClass(clazzValue);
+        this.clazz = CLASS.getClass(clazzValue & 0x7fff);
+        this.unicastQuery = (clazzValue & 0x8000) > 0;
         if (this.clazz == null) {
             System.out.println("Unknown class " + clazzValue);
         }
@@ -296,6 +302,14 @@ public class Record {
         return ((q.getType() == type) || (q.getType() == TYPE.ANY)) &&
                ((q.getClazz() == clazz) || (q.getClazz() == CLASS.ANY)) &&
                (q.getName().equals(name));
+    }
+
+    /**
+     * See if this query/response was a unicast query (highest class bit set).
+     * @return True if it is a unicast query/response record.
+     */
+    public boolean isUnicastQuery() {
+        return unicastQuery;
     }
 
     /**
