@@ -6,8 +6,8 @@ apply plugin: 'nexus'
 buildscript {
     repositories {
         jcenter()
-	mavenLocal()
-	mavenCentral()
+        mavenLocal()
+        mavenCentral()
     }
 
     dependencies {
@@ -73,3 +73,5 @@ modifyPom {
     }
 }
 
+dependencies {
+}
