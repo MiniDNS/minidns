@@ -31,6 +31,11 @@ public class Question {
     private final CLASS clazz;
 
     /**
+     * UnicastQueries have the highest bit of the CLASS field set to 1.
+     */
+    private final boolean unicastQuery;
+
+    /**
      * Cache for the serialized object.
      */
     private byte[] byteArray;
@@ -41,10 +46,21 @@ public class Question {
      * @param type The type, e.g. A.
      * @param clazz The class, usually IN (internet).
      */
-    public Question(String name, TYPE type, CLASS clazz) {
+    public Question(String name, TYPE type, CLASS clazz, boolean unicastQuery) {
         this.name = name;
         this.type = type;
         this.clazz = clazz;
+        this.unicastQuery = unicastQuery;
+    }
+
+    /**
+     * Create a dns question for the given name/type/class.
+     * @param name The name e.g. "measite.de".
+     * @param type The type, e.g. A.
+     * @param clazz The class, usually IN (internet).
+     */
+    public Question(String name, TYPE type, CLASS clazz) {
+        this(name, type, clazz, false);
     }
 
     /**
@@ -106,7 +122,7 @@ public class Question {
             try {
                 dos.write(NameUtil.toByteArray(this.name));
                 dos.writeShort(type.getValue());
-                dos.writeShort(clazz.getValue());
+                dos.writeShort(clazz.getValue() | (unicastQuery ? (1 << 15) : 0));
                 dos.flush();
             } catch (IOException e) {
                 // Should never happen
