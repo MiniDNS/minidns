@@ -31,6 +31,11 @@ public class Question {
     public final CLASS clazz;
 
     /**
+     * UnicastQueries have the highest bit of the CLASS field set to 1.
+     */
+    private final boolean unicastQuery;
+
+    /**
      * Cache for the serialized object.
      */
     private byte[] byteArray;
@@ -41,10 +46,21 @@ public class Question {
      * @param type The type, e.g. A.
      * @param clazz The class, usually IN (internet).
      */
-    public Question(String name, TYPE type, CLASS clazz) {
+    public Question(String name, TYPE type, CLASS clazz, boolean unicastQuery) {
         this.name = name;
         this.type = type;
         this.clazz = clazz;
+        this.unicastQuery = unicastQuery;
+    }
+
+    /**
+     * Create a dns question for the given name/type/class.
+     * @param name The name e.g. "measite.de".
+     * @param type The type, e.g. A.
+     * @param clazz The class, usually IN (internet).
+     */
+    public Question(String name, TYPE type, CLASS clazz) {
+        this(name, type, clazz, false);
     }
 
     /**
@@ -60,13 +76,13 @@ public class Question {
      * Parse a byte array and rebuild the dns question from it.
      * @param dis The input stream.
      * @param data The plain data (for dns name references).
-     * @return The parsed dns question.
      * @throws IOException On errors (read outside of packet).
      */
     public Question(DataInputStream dis, byte[] data) throws IOException {
         name = NameUtil.parse(dis, data);
         type = TYPE.getType(dis.readUnsignedShort());
         clazz = CLASS.getClass(dis.readUnsignedShort());
+        unicastQuery = false;
     }
 
     /**
@@ -81,7 +97,7 @@ public class Question {
             try {
                 dos.write(NameUtil.toByteArray(this.name));
                 dos.writeShort(type.getValue());
-                dos.writeShort(clazz.getValue());
+                dos.writeShort(clazz.getValue() | (unicastQuery ? (1 << 15) : 0));
                 dos.flush();
             } catch (IOException e) {
                 // Should never happen
@@ -108,5 +124,10 @@ public class Question {
         byte t[] = toByteArray();
         byte o[] = ((Question)other).toByteArray();
         return Arrays.equals(t, o);
+    }
+
+    @Override
+    public String toString() {
+        return "Question/" + clazz + "/" + type + ": " + name;
     }
 }

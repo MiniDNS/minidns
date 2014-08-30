@@ -6,8 +6,8 @@ apply plugin: 'nexus'
 buildscript {
     repositories {
         jcenter()
-	mavenLocal()
-	mavenCentral()
+        mavenLocal()
+        mavenCentral()
     }
 
     dependencies {
@@ -19,7 +19,11 @@ group = 'de.measite.minidns'
 description = "A minimal DNS client library with support for A, AAAA, NS and SRV records"
 sourceCompatibility = 1.7
 version = 'git tag --points-at HEAD'.execute().text.trim()
-isSNAPSHOT = 'git rev-parse --abbrev-ref HEAD'.execute().text.trim() == 'master'
+
+// Custom properties need to be wraped in ext since Gradle 2.0
+ext {
+	isSNAPSHOT = 'git rev-parse --abbrev-ref HEAD'.execute().text.trim() == 'master'
+}
 
 if (isSNAPSHOT) {
   version = version + '-SNAPSHOT'
@@ -31,9 +35,9 @@ repositories {
 }
 
 nexus {
-    attachSources = false
+    attachSources = true
     attachTests = false
-    attachJavadoc = false
+    attachJavadoc = true
     sign = true
 }
 
@@ -73,3 +77,5 @@ modifyPom {
     }
 }
 
+dependencies {
+}

@@ -11,7 +11,7 @@ import java.util.Arrays;
  * A DNS message as defined by rfc1035. The message consists of a header and
  * 4 sections: question, answer, nameserver and addition resource record
  * section.
- * A message can either be parsed ({@link DNSMessage(byte[])}) or serialized
+ * A message can either be parsed ({@link #DNSMessage(byte[])}) or serialized
  * ({@link DNSMessage#toArray()}).
  */
 public class DNSMessage {
@@ -48,7 +48,7 @@ public class DNSMessage {
 
         /**
          * Retrieve the byte value of the response code.
-         * @return the byte value of the response code
+         * @return the response code.
          */
         public byte getValue() {
             return (byte) value;
@@ -219,6 +219,7 @@ public class DNSMessage {
     /**
      * Get the receive timestamp if this message was created via parse.
      * This should be used to evaluate TTLs.
+     * @return The receive timestamp in milliseconds.
      */
     public long getReceiveTimestamp() {
         return receiveTimestamp;
@@ -331,7 +332,7 @@ public class DNSMessage {
 
     /**
      * Change the check status of this packet.
-     * @param checkDisabled
+     * @param checkDisabled The new check disabled value.
      */
     public void setCheckDisabled(boolean checkDisabled) {
         this.checkDisabled = checkDisabled;
@@ -408,7 +409,6 @@ public class DNSMessage {
     /**
      * Build a DNS Message based on a binary DNS message.
      * @param data The DNS message data.
-     * @return Parsed DNSMessage message.
      * @throws IOException On read errors.
      */
     public DNSMessage(byte data[]) throws IOException {
@@ -508,7 +508,10 @@ public class DNSMessage {
 
     public String toString() {
         return "-- DNSMessage " + id + " --\n" +
-               Arrays.toString(answers);
+               "Q" + Arrays.toString(questions) +
+               "NS" + Arrays.toString(nameserverRecords) +
+               "A" + Arrays.toString(answers) +
+               "ARR" + Arrays.toString(additionalResourceRecords);
     }
 
 }

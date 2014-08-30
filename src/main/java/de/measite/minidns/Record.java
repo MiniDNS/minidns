@@ -3,6 +3,7 @@ package de.measite.minidns;
 import java.io.DataInputStream;
 import java.io.IOException;
 import java.util.HashMap;
+
 import java.util.logging.Logger;
 
 import de.measite.minidns.record.A;
@@ -10,7 +11,9 @@ import de.measite.minidns.record.AAAA;
 import de.measite.minidns.record.CNAME;
 import de.measite.minidns.record.Data;
 import de.measite.minidns.record.NS;
+import de.measite.minidns.record.PTR;
 import de.measite.minidns.record.SRV;
+import de.measite.minidns.record.TXT;
 import de.measite.minidns.util.NameUtil;
 
 /**
@@ -223,6 +226,11 @@ public class Record {
     public final Data payloadData;
 
     /**
+     * MDNS defines the highest bit of the class as the unicast query bit.
+     */
+    protected boolean unicastQuery;
+
+    /**
      * Parse a given record based on the full message data and the current
      * stream position.
      * @param dis The DataInputStream positioned at the first record byte.
@@ -232,7 +240,12 @@ public class Record {
     public Record(DataInputStream dis, byte[] data) throws IOException {
         this.name = NameUtil.parse(dis, data);
         this.type = TYPE.getType(dis.readUnsignedShort());
-        this.clazz = CLASS.getClass(dis.readUnsignedShort());
+        int clazzValue = dis.readUnsignedShort();
+        this.clazz = CLASS.getClass(clazzValue & 0x7fff);
+        this.unicastQuery = (clazzValue & 0x8000) > 0;
+        if (this.clazz == null) {
+            LOGGER.fine("Unknown class " + clazzValue);
+        }
         this.ttl = (((long)dis.readUnsignedShort()) << 32) +
                    dis.readUnsignedShort();
         int payloadLength = dis.readUnsignedShort();
@@ -252,8 +265,13 @@ public class Record {
         case CNAME:
             this.payloadData = new CNAME(dis, data, payloadLength);
             break;
+        case PTR:
+            this.payloadData = new PTR(dis, data, payloadLength);
+            break;
+        case TXT:
+            this.payloadData = new TXT(dis, data, payloadLength);
+            break;
         default:
-            LOGGER.info("Unparsed type " + type);
             this.payloadData = null;
             for (int i = 0; i < payloadLength; i++) {
                 dis.readByte();
@@ -286,6 +304,14 @@ public class Record {
     }
 
     /**
+     * See if this query/response was a unicast query (highest class bit set).
+     * @return True if it is a unicast query/response record.
+     */
+    public boolean isUnicastQuery() {
+        return unicastQuery;
+    }
+
+    /**
      * The generic record name, e.g. "measite.de".
      * @return The record name.
      */
@@ -299,6 +325,14 @@ public class Record {
      */
     public Data getPayload() {
         return payloadData;
+    }
+
+    /**
+     * Retrieve the record ttl.
+     * @return The record ttl.
+     */
+    public long getTtl() {
+        return ttl;
     }
 
 }

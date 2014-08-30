@@ -1,0 +1,21 @@
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+#
+# GPG settings
+#
+
+# gpg key id
+#signing.keyId=DEADBEEF
+# the gpg key passphrase
+#signing.password=correcthorsebatterystaple
+# gpg keyring (this is the default gnupg keyring containing private keys)
+#signing.secretKeyRingFile=/home/ubuntu/.gnupg/secring.gpg
+
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+#
+# nexus settings
+#
+
+# the nexus username used for log in
+#nexusUsername=ubuntu
+# the nexus password
+#nexusPassword=correcthorsebatterystaple
