@@ -178,7 +178,8 @@ public class Client {
         // findDNS()calls, which are expensive on Android. Note that we do not
         // put the results back into the Cache, as this is already done by
         // query(Question, String).
-        DNSMessage message = cache.get(q);
+        DNSMessage message = (cache == null) ? null : cache.get(q);
+
         if (message != null) {
             return message;
         }
