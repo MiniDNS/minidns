@@ -103,10 +103,10 @@ public class Client {
 
     /**
      * Query the system nameservers for a single entry of any class.
-     * 
+     *
      * This can be used to determine the name server version, if name
      * is version.bind, type is TYPE.TXT and clazz is CLASS.CH.
-     * 
+     *
      * @param name The DNS name to request.
      * @param type The DNS type to request (SRV, A, AAAA, ...).
      * @param clazz The class of the request (usually IN for Internet).

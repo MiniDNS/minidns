@@ -47,7 +47,7 @@ public class MX implements Data {
 
     /**
      * Set the name of the target server.
-     * @param name The new target servers name. 
+     * @param name The new target servers name.
      */
     public void setName(String name) {
         this.name = name;
