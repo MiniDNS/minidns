@@ -10,6 +10,7 @@ import de.measite.minidns.record.A;
 import de.measite.minidns.record.AAAA;
 import de.measite.minidns.record.CNAME;
 import de.measite.minidns.record.Data;
+import de.measite.minidns.record.MX;
 import de.measite.minidns.record.NS;
 import de.measite.minidns.record.PTR;
 import de.measite.minidns.record.SRV;
@@ -253,6 +254,9 @@ public class Record {
         switch (this.type) {
         case SRV:
             this.payloadData = new SRV();
+            break;
+        case MX:
+            this.payloadData = new MX();
             break;
         case AAAA:
             this.payloadData = new AAAA();
