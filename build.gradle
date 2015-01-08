@@ -18,10 +18,19 @@ buildscript {
 group = 'de.measite.minidns'
 description = "A minimal DNS client library with support for A, AAAA, NS and SRV records"
 sourceCompatibility = 1.7
-version = 'git tag --points-at HEAD'.execute().text.trim()
-isSNAPSHOT = 'git rev-parse --abbrev-ref HEAD'.execute().text.trim() == 'master'
+version = 'dev'
+ext.isSnapshot = true
 
-if (isSNAPSHOT) {
+if (!ext.isSnapshot && 'git rev-parse --abbrev-ref HEAD'.execute().text.trim() == 'master') {
+  throw new org.gradle.api.InvalidUserDataException('Untagged version detected! Please tag every release.')
+}
+if (version != 'dev' && version != 'git tag --points-at HEAD'.execute().text.trim()) {
+  throw new org.gradle.api.InvalidUserDataException(
+    'Tag mismatch detected, version is ' + version + ' but should be ' +
+    'git tag --points-at HEAD'.execute().text.trim())
+}
+
+if (ext.isSnapshot) {
   version = version + '-SNAPSHOT'
 }
 
