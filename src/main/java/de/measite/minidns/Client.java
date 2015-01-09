@@ -62,7 +62,7 @@ public class Client {
     }
 
     /**
-     * Create a new DNS client.
+     * Create a new DNS client without any caching.
      */
     public Client() {
         this(null);
@@ -102,7 +102,11 @@ public class Client {
     }
 
     /**
-     * Query the system nameserver for a single entry.
+     * Query the system nameservers for a single entry of any class.
+     *
+     * This can be used to determine the name server version, if name
+     * is version.bind, type is TYPE.TXT and clazz is CLASS.CH.
+     *
      * @param name The DNS name to request.
      * @param type The DNS type to request (SRV, A, AAAA, ...).
      * @param clazz The class of the request (usually IN for Internet).
@@ -111,6 +115,20 @@ public class Client {
     public DNSMessage query(String name, TYPE type, CLASS clazz)
     {
         Question q = new Question(name, type, clazz);
+        return query(q);
+    }
+
+    /**
+     * Query the system nameservers for a single entry of the class IN
+     * (which is used for MX, SRV, A, AAAA and most other RRs).
+     *
+     * @param name The DNS name to request.
+     * @param type The DNS type to request (SRV, A, AAAA, ...).
+     * @return The response (or null on timeout/error).
+     */
+    public DNSMessage query(String name, TYPE type)
+    {
+        Question q = new Question(name, type, CLASS.IN);
         return query(q);
     }
 
