@@ -255,7 +255,7 @@ public class Record {
             this.payloadData = new SRV(dis, data, payloadLength);
             break;
         case MX:
-            this.payloadData = new MX();
+            this.payloadData = new MX(dis, data, payloadLength);
             break;
         case AAAA:
             this.payloadData = new AAAA(dis, data, payloadLength);
