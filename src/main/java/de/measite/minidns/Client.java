@@ -13,6 +13,7 @@ import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Random;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -61,11 +62,24 @@ public class Client {
         this.cache = cache;
     }
 
+    public Client(final Map<Question, DNSMessage> cache) {
+        try {
+            random = SecureRandom.getInstance("SHA1PRNG");
+        } catch (NoSuchAlgorithmException e1) {
+            random = new SecureRandom();
+        }
+        if (cache != null)
+            this.cache = new DNSCache() {
+                public void put(Question q, DNSMessage message) { cache.put(q, message); }
+                public DNSMessage get(Question q) { return cache.get(q); }
+            };
+    }
+
     /**
      * Create a new DNS client without any caching.
      */
     public Client() {
-        this(null);
+        this((DNSCache)null);
     }
 
     /**
