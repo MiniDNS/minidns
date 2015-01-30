@@ -22,6 +22,7 @@ allprojects {
 	group = 'de.measite.minidns'
 	description = "A minimal DNS client library with support for A, AAAA, NS and SRV records"
 	sourceCompatibility = 1.7
+        targetCompatibility = 1.7
 	version = 'dev'
 	ext.isSnapshot = true
 
