@@ -6,18 +6,12 @@ import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.io.IOException;
 
+import java.util.HashSet;
 import java.util.Map;
 import java.util.TreeMap;
 
+import de.measite.minidns.record.*;
 import org.junit.Test;
-
-import de.measite.minidns.record.Data;
-
-import de.measite.minidns.record.A;
-import de.measite.minidns.record.AAAA;
-import de.measite.minidns.record.CNAME;
-import de.measite.minidns.record.MX;
-import de.measite.minidns.record.SRV;
 
 
 public class DNSMessageTest {
@@ -63,7 +57,7 @@ public class DNSMessageTest {
         assertTrue(answers[1-cname].getPayload() instanceof A);
         assertEquals("156.151.59.35",
                      ((A)(answers[1-cname].getPayload())).toString());
-    } 
+    }
 
 
     @Test
@@ -111,5 +105,24 @@ public class DNSMessageTest {
         assertEquals("raven.toroid.org", r.getName());
         assertEquals(5222, r.getPort());
         assertEquals(0, r.getPriority());
+    }
+
+    @Test
+    public void testTXTLookup() throws Exception {
+        DNSMessage m = getMessageFromResource("codinghorror-txt");
+        HashSet<String> txtToBeFound = new HashSet<>();
+        txtToBeFound.add("google-site-verification=2oV3cW79A6icpGf-JbLGY4rP4_omL4FOKTqRxb-Dyl4");
+        txtToBeFound.add("keybase-site-verification=dKxf6T30x5EbNIUpeJcbWxUABJEnVWzQ3Z3hCumnk10");
+        txtToBeFound.add("v=spf1 include:spf.mandrillapp.com ~all");
+        Record[] answers = m.getAnswers();
+        for(Record r : answers) {
+            assertEquals("codinghorror.com", r.getName());
+            Data d = r.getPayload();
+            assertTrue(d instanceof TXT);
+            TXT txt = (TXT)d;
+            assertTrue(txtToBeFound.contains(txt.getText()));
+            txtToBeFound.remove(txt.getText());
+        }
+        assertEquals(txtToBeFound.size(), 0);
     }
 }
