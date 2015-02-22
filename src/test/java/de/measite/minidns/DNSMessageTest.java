@@ -4,7 +4,6 @@ import static org.junit.Assert.*;
 
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
-import java.io.IOException;
 
 import java.util.HashSet;
 import java.util.Map;
@@ -12,7 +11,6 @@ import java.util.TreeMap;
 
 import de.measite.minidns.record.*;
 import org.junit.Test;
-
 
 public class DNSMessageTest {
 
@@ -28,7 +26,7 @@ public class DNSMessageTest {
             readBytes = inputStream.read())
             outputStream.write(readBytes);
  
-        DNSMessage result = DNSMessage.parse(outputStream.toByteArray());
+        DNSMessage result = new DNSMessage(outputStream.toByteArray());
 
         inputStream.close();
         outputStream.close();
@@ -51,7 +49,7 @@ public class DNSMessageTest {
             cname = 1;
         assertTrue(answers[cname].getPayload() instanceof CNAME);
         assertEquals("legacy-sun.oraclegha.com",
-                     ((CNAME)(answers[cname].getPayload())).getName());
+                     ((CNAME)(answers[cname].getPayload())).name);
 
         assertEquals("legacy-sun.oraclegha.com", answers[1-cname].getName());
         assertTrue(answers[1-cname].getPayload() instanceof A);
@@ -84,7 +82,7 @@ public class DNSMessageTest {
             assertEquals("gmail.com", r.getName());
             Data d = r.getPayload();
             assertTrue(d instanceof MX);
-            mxes.put(((MX)d).getPriority(), ((MX)d).getName());
+            mxes.put(((MX)d).priority, ((MX)d).name);
         }
         assertEquals("gmail-smtp-in.l.google.com", mxes.get(5));
         assertEquals("alt1.gmail-smtp-in.l.google.com", mxes.get(10));
@@ -102,9 +100,9 @@ public class DNSMessageTest {
         assertEquals(1, answers.length);
         assertTrue(answers[0].getPayload() instanceof SRV);
         SRV r = (SRV)(answers[0].getPayload());
-        assertEquals("raven.toroid.org", r.getName());
-        assertEquals(5222, r.getPort());
-        assertEquals(0, r.getPriority());
+        assertEquals("raven.toroid.org", r.name);
+        assertEquals(5222, r.port);
+        assertEquals(0, r.priority);
     }
 
     @Test
