@@ -83,6 +83,23 @@ public class Client {
     }
 
     /**
+     * Retrieve the current dns query timeout, in milliseconds.
+     * @return the current dns query timeout in milliseconds.
+     */
+    public int getTimeout() {
+        return timeout;
+    }
+
+    /**
+     * Change the dns query timeout for all future queries. The timeout
+     * must be specified in milliseconds.
+     * @param timeout new dns query timeout in milliseconds.
+     */
+    public void setTimeout(int timeout) {
+        this.timeout = timeout;
+    }
+
+    /**
      * Query a nameserver for a single entry.
      * @param name The DNS name to request.
      * @param type The DNS type to request (SRV, A, AAAA, ...).
@@ -209,7 +226,8 @@ public class Client {
         // findDNS()calls, which are expensive on Android. Note that we do not
         // put the results back into the Cache, as this is already done by
         // query(Question, String).
-        DNSMessage message = cache.get(q);
+        DNSMessage message = (cache == null) ? null : cache.get(q);
+
         if (message != null) {
             return message;
         }

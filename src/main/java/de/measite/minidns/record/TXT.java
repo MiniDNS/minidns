@@ -2,12 +2,17 @@ package de.measite.minidns.record;
 
 import java.io.DataInputStream;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 import de.measite.minidns.Record.TYPE;
 import de.measite.minidns.util.NameUtil;
 
 /**
- * TXT record (actually a binary blob with wrappers for text content).
+ * TXT record (actually a binary blob containing extents, each of which is a one-byte count
+ *  followed by that many bytes of data, which can usually be interpreted as ASCII strings
+ *  but not always
  */
 public class TXT implements Data {
 
@@ -22,12 +27,28 @@ public class TXT implements Data {
     }
 
     public String getText() {
-        try {
-            return (new String(blob, "UTF-8")).intern();
-        } catch (Exception e) {
-            /* Can't happen for UTF-8 unless it's really a blob */
-            return null;
+        List<byte[]> extents = getExtents();
+        StringBuilder sb = new StringBuilder();
+        int i = 0;
+        while (i < extents.size() - 1) {
+            sb.append(new String(extents.get(i))).append(" / ");
+            i++;
         }
+        sb.append(new String(extents.get(i)));
+        return sb.toString();
+    }
+
+    public List<byte[]> getExtents() {
+        ArrayList<byte[]> extents = new ArrayList<byte[]>();
+        int used = 0;
+        while (used < blob.length) {
+            int segLength = 0x00ff & blob[used];
+            int end = ++used + segLength;
+            byte[] extent = Arrays.copyOfRange(blob, used, end);
+            extents.add(extent);
+            used += segLength;
+        }
+        return extents;
     }
 
     public void setText(String text) {
@@ -41,12 +62,12 @@ public class TXT implements Data {
 
     @Override
     public byte[] toByteArray() {
-        throw new UnsupportedOperationException("Not implemented yet");
+        return blob;
     }
 
     @Override
     public void parse(DataInputStream dis, byte[] data, int length)
-        throws IOException
+            throws IOException
     {
         blob = new byte[length];
         dis.readFully(blob);
