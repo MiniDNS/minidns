@@ -199,7 +199,7 @@ public class Client {
             socket.send(packet);
             packet = new DatagramPacket(new byte[bufferSize], bufferSize);
             socket.receive(packet);
-            dnsMessage = DNSMessage.parse(packet.getData());
+            dnsMessage = new DNSMessage(packet.getData());
             if (dnsMessage.getId() != message.getId()) {
                 return null;
             }

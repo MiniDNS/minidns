@@ -11,23 +11,14 @@ import de.measite.minidns.util.NameUtil;
  */
 public class CNAME implements Data {
 
-    protected String name;
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
+    public final String name;
 
     @Override
     public byte[] toByteArray() {
         throw new UnsupportedOperationException("Not implemented yet");
     }
 
-    @Override
-    public void parse(DataInputStream dis, byte[] data, int length)
+    public CNAME(DataInputStream dis, byte[] data, int length)
         throws IOException
     {
         this.name = NameUtil.parse(dis, data);

@@ -3,7 +3,7 @@ package de.measite.minidns;
 import java.io.DataInputStream;
 import java.io.IOException;
 import java.util.HashMap;
-import java.util.logging.Level;
+
 import java.util.logging.Logger;
 
 import de.measite.minidns.record.A;
@@ -21,8 +21,7 @@ import de.measite.minidns.util.NameUtil;
  * A generic DNS record.
  */
 public class Record {
-
-    private static final Logger LOGGER = Logger.getLogger(Client.class.getName());
+    private static final Logger LOGGER = Logger.getLogger(Record.class.getName());
 
     /**
      * The record type.
@@ -205,27 +204,27 @@ public class Record {
     /**
      * The generic name of this record.
      */
-    protected String name;
+    public final String name;
 
     /**
      * The type (and payload type) of this record.
      */
-    protected TYPE type;
+    public final TYPE type;
 
     /**
      * The record class (usually CLASS.IN).
      */
-    protected CLASS clazz;
+    public final CLASS clazz;
 
     /**
      * The ttl of this record.
      */
-    protected long ttl;
+    public final long ttl;
 
     /**
      * The payload object of this record.
      */
-    protected Data payloadData;
+    public final Data payloadData;
 
     /**
      * MDNS defines the highest bit of the class as the unicast query bit.
@@ -239,53 +238,49 @@ public class Record {
      * @param data The full message data.
      * @throws IOException In case of malformed replies.
      */
-    public void parse(DataInputStream dis, byte[] data) throws IOException {
+    public Record(DataInputStream dis, byte[] data) throws IOException {
         this.name = NameUtil.parse(dis, data);
         this.type = TYPE.getType(dis.readUnsignedShort());
         int clazzValue = dis.readUnsignedShort();
         this.clazz = CLASS.getClass(clazzValue & 0x7fff);
         this.unicastQuery = (clazzValue & 0x8000) > 0;
         if (this.clazz == null) {
-            LOGGER.log(Level.FINE, "Unknown class " + clazzValue);
+            LOGGER.fine("Unknown class " + clazzValue);
         }
         this.ttl = (((long)dis.readUnsignedShort()) << 32) +
                    dis.readUnsignedShort();
         int payloadLength = dis.readUnsignedShort();
         switch (this.type) {
         case SRV:
-            this.payloadData = new SRV();
+            this.payloadData = new SRV(dis, data, payloadLength);
             break;
         case MX:
-            this.payloadData = new MX();
+            this.payloadData = new MX(dis, data, payloadLength);
             break;
         case AAAA:
-            this.payloadData = new AAAA();
+            this.payloadData = new AAAA(dis, data, payloadLength);
             break;
         case A:
-            this.payloadData = new A();
+            this.payloadData = new A(dis, data, payloadLength);
             break;
         case NS:
-            this.payloadData = new NS();
+            this.payloadData = new NS(dis, data, payloadLength);
             break;
         case CNAME:
-            this.payloadData = new CNAME();
+            this.payloadData = new CNAME(dis, data, payloadLength);
             break;
         case PTR:
-            this.payloadData = new PTR();
+            this.payloadData = new PTR(dis, data, payloadLength);
             break;
         case TXT:
-            this.payloadData = new TXT();
+            this.payloadData = new TXT(dis, data, payloadLength);
             break;
         default:
-            LOGGER.log(Level.FINE, "Unparsed type " + type);
             this.payloadData = null;
             for (int i = 0; i < payloadLength; i++) {
                 dis.readByte();
             }
             break;
-        }
-        if (this.payloadData != null) {
-            this.payloadData.parse(dis, data, payloadLength);
         }
     }
 
@@ -307,9 +302,9 @@ public class Record {
      * @return True if this record is a valid answer.
      */
     public boolean isAnswer(Question q) {
-        return ((q.getType() == type) || (q.getType() == TYPE.ANY)) &&
-               ((q.getClazz() == clazz) || (q.getClazz() == CLASS.ANY)) &&
-               (q.getName().equals(name));
+        return ((q.type == type) || (q.type == TYPE.ANY)) &&
+               ((q.clazz == clazz) || (q.clazz == CLASS.ANY)) &&
+               (q.name.equals(name));
     }
 
     /**

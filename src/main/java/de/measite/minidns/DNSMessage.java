@@ -11,7 +11,7 @@ import java.util.Arrays;
  * A DNS message as defined by rfc1035. The message consists of a header and
  * 4 sections: question, answer, nameserver and addition resource record
  * section.
- * A message can either be parsed ({@link DNSMessage#parse(byte[])}) or serialized
+ * A message can either be parsed ({@link #DNSMessage(byte[])}) or serialized
  * ({@link DNSMessage#toArray()}).
  */
 public class DNSMessage {
@@ -403,58 +403,51 @@ public class DNSMessage {
         return baos.toByteArray();
     }
 
+    public DNSMessage() {
+    }
+
     /**
      * Build a DNS Message based on a binary DNS message.
      * @param data The DNS message data.
-     * @return Parsed DNSMessage message.
      * @throws IOException On read errors.
      */
-    public static DNSMessage parse(byte data[]) throws IOException {
+    public DNSMessage(byte data[]) throws IOException {
         ByteArrayInputStream bis = new ByteArrayInputStream(data);
         DataInputStream dis = new DataInputStream(bis);
-        DNSMessage message = new DNSMessage();
-        message.id = dis.readUnsignedShort();
+        id = dis.readUnsignedShort();
         int header = dis.readUnsignedShort();
-        message.query = ((header >> 15) & 1) == 0;
-        message.opcode = OPCODE.getOpcode((header >> 11) & 0xf);
-        message.authoritativeAnswer = ((header >> 10) & 1) == 1;
-        message.truncated = ((header >> 9) & 1) == 1;
-        message.recursionDesired = ((header >> 8) & 1) == 1;
-        message.recursionAvailable = ((header >> 7) & 1) == 1;
-        message.authenticData = ((header >> 5) & 1) == 1;
-        message.checkDisabled = ((header >> 4) & 1) == 1;
-        message.responseCode = RESPONSE_CODE.getResponseCode(header & 0xf);
-        message.receiveTimestamp = System.currentTimeMillis();
+        query = ((header >> 15) & 1) == 0;
+        opcode = OPCODE.getOpcode((header >> 11) & 0xf);
+        authoritativeAnswer = ((header >> 10) & 1) == 1;
+        truncated = ((header >> 9) & 1) == 1;
+        recursionDesired = ((header >> 8) & 1) == 1;
+        recursionAvailable = ((header >> 7) & 1) == 1;
+        authenticData = ((header >> 5) & 1) == 1;
+        checkDisabled = ((header >> 4) & 1) == 1;
+        responseCode = RESPONSE_CODE.getResponseCode(header & 0xf);
+        receiveTimestamp = System.currentTimeMillis();
         int questionCount = dis.readUnsignedShort();
         int answerCount = dis.readUnsignedShort();
         int nameserverCount = dis.readUnsignedShort();
         int additionalResourceRecordCount = dis.readUnsignedShort();
-        message.questions = new Question[questionCount];
+        questions = new Question[questionCount];
         while (questionCount-- > 0) {
-            Question q = Question.parse(dis, data);
-            message.questions[questionCount] = q;
+            questions[questionCount] = new Question(dis, data);
         }
-        message.answers = new Record[answerCount];
+        answers = new Record[answerCount];
         while (answerCount-- > 0) {
-            Record rr = new Record();
-            rr.parse(dis, data);
-            message.answers[answerCount] = rr;
+            answers[answerCount] = new Record(dis, data);
         }
-        message.nameserverRecords = new Record[nameserverCount];
+        nameserverRecords = new Record[nameserverCount];
         while (nameserverCount-- > 0) {
-            Record rr = new Record();
-            rr.parse(dis, data);
-            message.nameserverRecords[nameserverCount] = rr;
+            nameserverRecords[nameserverCount] = new Record(dis, data);
         }
-        message.additionalResourceRecords =
+        additionalResourceRecords =
                                     new Record[additionalResourceRecordCount];
         while (additionalResourceRecordCount-- > 0) {
-            Record rr = new Record();
-            rr.parse(dis, data);
-            message.additionalResourceRecords[additionalResourceRecordCount] =
-                    rr;
+            additionalResourceRecords[additionalResourceRecordCount] =
+                    new Record(dis, data);
         }
-        return message;
     }
 
     /**

@@ -13,7 +13,7 @@ public class AAAA implements Data {
     /**
      * The ipv6 address.
      */
-    private byte[] ip;
+    public final byte[] ip;
 
     @Override
     public TYPE getType() {
@@ -25,8 +25,7 @@ public class AAAA implements Data {
         return ip;
     }
 
-    @Override
-    public void parse(DataInputStream dis, byte[] data, int length)
+    public AAAA(DataInputStream dis, byte[] data, int length)
             throws IOException {
         ip = new byte[16];
         dis.readFully(ip);

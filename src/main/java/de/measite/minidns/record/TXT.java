@@ -7,7 +7,6 @@ import java.util.Arrays;
 import java.util.List;
 
 import de.measite.minidns.Record.TYPE;
-import de.measite.minidns.util.NameUtil;
 
 /**
  * TXT record (actually a binary blob containing extents, each of which is a one-byte count
@@ -16,14 +15,28 @@ import de.measite.minidns.util.NameUtil;
  */
 public class TXT implements Data {
 
-    protected byte[] blob;
+    protected final byte[] blob;
+
+    public TXT(DataInputStream dis, byte[] data, int length) throws IOException {
+        blob = new byte[length];
+        dis.readFully(blob);
+    }
+
+    public TXT(String text) {
+        try {
+            this.blob = text.getBytes("UTF-8");
+        } catch (Exception e) {
+            /* Can't happen, UTF-8 IS supported */
+            throw new RuntimeException("UTF-8 not supported", e);
+        }
+    }
+ 
+    public TXT(byte[] blob) {
+        this.blob = blob;
+    }
 
     public byte[] getBlob() {
         return blob;
-    }
-
-    public void setBlob(byte[] blob) {
-        this.blob = blob;
     }
 
     public String getText() {
@@ -51,26 +64,9 @@ public class TXT implements Data {
         return extents;
     }
 
-    public void setText(String text) {
-        try {
-            this.blob = text.getBytes("UTF-8");
-        } catch (Exception e) {
-            /* Can't happen, UTF-8 IS supported */
-            throw new RuntimeException("UTF-8 not supported", e);
-        }
-    }
-
     @Override
     public byte[] toByteArray() {
         return blob;
-    }
-
-    @Override
-    public void parse(DataInputStream dis, byte[] data, int length)
-            throws IOException
-    {
-        blob = new byte[length];
-        dis.readFully(blob);
     }
 
     @Override
