@@ -196,7 +196,12 @@ public class Client {
         message.setRecursionDesired(true);
         message.setId(random.nextInt());
         byte[] buf = message.toArray();
-        try (DatagramSocket socket = new DatagramSocket()) {
+
+        // TOOD Use a try-with-resource statement here once miniDNS minimum
+        // required Android API level is >= 19
+        DatagramSocket socket = null;
+        try {
+            socket = new DatagramSocket();
             DatagramPacket packet = new DatagramPacket(buf, buf.length,
                     InetAddress.getByName(host), port);
             socket.setSoTimeout(timeout);
@@ -216,6 +221,10 @@ public class Client {
                 }
             }
             return dnsMessage;
+        } finally {
+            if (socket != null) {
+                socket.close();
+            }
         }
     }
 
