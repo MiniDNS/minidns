@@ -58,6 +58,10 @@ public class Client {
         this.cache = cache;
     }
 
+    /**
+     * Creates a new client that uses the given Map as cache.
+     * @param cache
+     */
     public Client(final Map<Question, DNSMessage> cache) {
         this();
         if (cache != null)
