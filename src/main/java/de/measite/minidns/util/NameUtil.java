@@ -2,7 +2,6 @@ package de.measite.minidns.util;
 
 import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
-import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.IDN;
 import java.util.HashSet;
@@ -36,29 +35,22 @@ public class NameUtil {
         if (name2 == null) return false;
         if (name1.equals(name2)) return true;
 
-        try {
-            return Arrays.equals(toByteArray(name1),toByteArray(name2));
-        } catch (IOException e) {
-            return false; // impossible
-        }
+        return Arrays.equals(toByteArray(name1),toByteArray(name2));
     }
 
     /**
      * Serialize a domain name under IDN rules.
      * @param name The domain name.
      * @return The binary domain name representation.
-     * @throws IOException Should never happen.
      */
-    public static byte[] toByteArray(String name) throws IOException {
+    public static byte[] toByteArray(String name) {
         ByteArrayOutputStream baos = new ByteArrayOutputStream(64);
-        DataOutputStream dos = new DataOutputStream(baos);
         for (String s: name.split("[.\u3002\uFF0E\uFF61]")) {
             byte[] buffer = IDN.toASCII(s).getBytes();
-            dos.writeByte(buffer.length);
-            dos.write(buffer);
+            baos.write(buffer.length);
+            baos.write(buffer, 0, buffer.length);
         }
-        dos.writeByte(0);
-        dos.flush();
+        baos.write(0);
         return baos.toByteArray();
     }
 
