@@ -32,7 +32,7 @@ public class Client {
     /**
      * The internal random class for sequence generation.
      */
-    protected Random random;
+    protected final Random random;
 
     /**
      * The buffer size for dns replies.
@@ -54,20 +54,12 @@ public class Client {
      * @param cache The backend DNS cache.
      */
     public Client(DNSCache cache) {
-        try {
-            random = SecureRandom.getInstance("SHA1PRNG");
-        } catch (NoSuchAlgorithmException e1) {
-            random = new SecureRandom();
-        }
+        this();
         this.cache = cache;
     }
 
     public Client(final Map<Question, DNSMessage> cache) {
-        try {
-            random = SecureRandom.getInstance("SHA1PRNG");
-        } catch (NoSuchAlgorithmException e1) {
-            random = new SecureRandom();
-        }
+        this();
         if (cache != null)
             this.cache = new DNSCache() {
                 public void put(Question q, DNSMessage message) { cache.put(q, message); }
@@ -79,7 +71,13 @@ public class Client {
      * Create a new DNS client without any caching.
      */
     public Client() {
-        this((DNSCache)null);
+        Random random;
+        try {
+            random = SecureRandom.getInstance("SHA1PRNG");
+        } catch (NoSuchAlgorithmException e1) {
+            random = new SecureRandom();
+        }
+        this.random = random;
     }
 
     /**
