@@ -185,10 +185,12 @@ public class Client {
      * @throws IOException On IOErrors.
      */
     public DNSMessage query(Question q, String host, int port) throws IOException {
+        // See if we have the answer to this question already cached
         DNSMessage dnsMessage = (cache == null) ? null : cache.get(q);
         if (dnsMessage != null) {
             return dnsMessage;
         }
+
         DNSMessage message = new DNSMessage();
         message.setQuestions(new Question[]{q});
         message.setRecursionDesired(true);
@@ -229,10 +231,10 @@ public class Client {
         // put the results back into the Cache, as this is already done by
         // query(Question, String).
         DNSMessage message = (cache == null) ? null : cache.get(q);
-
         if (message != null) {
             return message;
         }
+
         String dnsServer[] = findDNS();
         for (String dns : dnsServer) {
             try {
