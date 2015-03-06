@@ -32,7 +32,7 @@ public class Client {
     /**
      * The internal random class for sequence generation.
      */
-    protected Random random;
+    protected final Random random;
 
     /**
      * The buffer size for dns replies.
@@ -54,20 +54,16 @@ public class Client {
      * @param cache The backend DNS cache.
      */
     public Client(DNSCache cache) {
-        try {
-            random = SecureRandom.getInstance("SHA1PRNG");
-        } catch (NoSuchAlgorithmException e1) {
-            random = new SecureRandom();
-        }
+        this();
         this.cache = cache;
     }
 
+    /**
+     * Creates a new client that uses the given Map as cache.
+     * @param cache
+     */
     public Client(final Map<Question, DNSMessage> cache) {
-        try {
-            random = SecureRandom.getInstance("SHA1PRNG");
-        } catch (NoSuchAlgorithmException e1) {
-            random = new SecureRandom();
-        }
+        this();
         if (cache != null)
             this.cache = new DNSCache() {
                 public void put(Question q, DNSMessage message) { cache.put(q, message); }
@@ -79,7 +75,13 @@ public class Client {
      * Create a new DNS client without any caching.
      */
     public Client() {
-        this((DNSCache)null);
+        Random random;
+        try {
+            random = SecureRandom.getInstance("SHA1PRNG");
+        } catch (NoSuchAlgorithmException e1) {
+            random = new SecureRandom();
+        }
+        this.random = random;
     }
 
     /**
@@ -183,16 +185,23 @@ public class Client {
      * @throws IOException On IOErrors.
      */
     public DNSMessage query(Question q, String host, int port) throws IOException {
+        // See if we have the answer to this question already cached
         DNSMessage dnsMessage = (cache == null) ? null : cache.get(q);
         if (dnsMessage != null) {
             return dnsMessage;
         }
+
         DNSMessage message = new DNSMessage();
         message.setQuestions(new Question[]{q});
         message.setRecursionDesired(true);
         message.setId(random.nextInt());
         byte[] buf = message.toArray();
-        try (DatagramSocket socket = new DatagramSocket()) {
+
+        // TOOD Use a try-with-resource statement here once miniDNS minimum
+        // required Android API level is >= 19
+        DatagramSocket socket = null;
+        try {
+            socket = new DatagramSocket();
             DatagramPacket packet = new DatagramPacket(buf, buf.length,
                     InetAddress.getByName(host), port);
             socket.setSoTimeout(timeout);
@@ -212,6 +221,10 @@ public class Client {
                 }
             }
             return dnsMessage;
+        } finally {
+            if (socket != null) {
+                socket.close();
+            }
         }
     }
 
@@ -227,10 +240,10 @@ public class Client {
         // put the results back into the Cache, as this is already done by
         // query(Question, String).
         DNSMessage message = (cache == null) ? null : cache.get(q);
-
         if (message != null) {
             return message;
         }
+
         String dnsServer[] = findDNS();
         for (String dns : dnsServer) {
             try {

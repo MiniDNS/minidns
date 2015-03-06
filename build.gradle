@@ -21,6 +21,11 @@ sourceCompatibility = 1.7
 version = 'dev'
 ext.isSnapshot = true
 
+ext {
+	minidnsMinAndroidSdk = 9
+	androidBootClasspath = getAndroidRuntimeJar()
+}
+
 if (!ext.isSnapshot && 'git rev-parse --abbrev-ref HEAD'.execute().text.trim() == 'master') {
   throw new org.gradle.api.InvalidUserDataException('Untagged version detected! Please tag every release.')
 }
@@ -84,4 +89,33 @@ modifyPom {
 
 dependencies {
     testCompile 'junit:junit:4.11'
+}
+
+task compileAndroid(type: JavaCompile) {
+	source = compileJava.source
+	classpath = compileJava.classpath
+	destinationDir = new File(buildDir, 'android')
+	options.bootClasspath = androidBootClasspath
+}
+
+test { dependsOn compileAndroid }
+
+def getAndroidRuntimeJar() {
+	def androidHome = getAndroidHome()
+	def androidJar = new File("$androidHome/platforms/android-$minidnsMinAndroidSdk/android.jar")
+	if (androidJar.isFile()) {
+		return androidJar
+	} else {
+		throw new Exception("Can't find android.jar for $minidnsMinAndroidSdk API. Please install corresponding SDK platform package")
+	}
+}
+
+def getAndroidHome() {
+	def androidHomeEnv = System.getenv("ANDROID_HOME")
+	if (androidHomeEnv == null) {
+		throw new Exception("ANDROID_HOME environment variable is not set")
+	}
+	def androidHome = new File(androidHomeEnv)
+	if (!androidHome.isDirectory()) throw new Exception("Environment variable ANDROID_HOME is not pointing to a directory")
+	return androidHome
 }
