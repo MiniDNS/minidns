@@ -22,19 +22,6 @@ public class TXT implements Data {
         dis.readFully(blob);
     }
 
-    public TXT(String text) {
-        try {
-            this.blob = text.getBytes("UTF-8");
-        } catch (Exception e) {
-            /* Can't happen, UTF-8 IS supported */
-            throw new RuntimeException("UTF-8 not supported", e);
-        }
-    }
- 
-    public TXT(byte[] blob) {
-        this.blob = blob;
-    }
-
     public byte[] getBlob() {
         return blob;
     }
