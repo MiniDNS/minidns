@@ -66,6 +66,6 @@ public class SOA implements Data {
 
     @Override
     public byte[] toByteArray() {
-        return new byte[0];
+        throw new UnsupportedOperationException("Not implemented yet");
     }
 }
