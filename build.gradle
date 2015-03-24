@@ -87,6 +87,17 @@ modifyPom {
     }
 }
 
+tasks.withType(JavaCompile) {
+	// Some systems may not have set their platform default
+	// converter to 'utf8', but we use unicode in our source
+	// files. Therefore ensure that javac uses unicode
+	options.encoding = "utf8"
+	options.compilerArgs = [
+		'-Xlint:all',
+		'-Werror',
+	]
+}
+
 dependencies {
     testCompile 'junit:junit:4.11'
 }

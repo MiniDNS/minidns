@@ -346,7 +346,7 @@ public class Client {
             Class<?> SystemProperties =
                     Class.forName("android.os.SystemProperties");
             Method method = SystemProperties.getMethod("get",
-                    new Class[] { String.class });
+                    new Class<?>[] { String.class });
 
             ArrayList<String> servers = new ArrayList<String>(5);
 

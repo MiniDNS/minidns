@@ -51,7 +51,7 @@ public class DNSMessage {
          * @return the response code.
          */
         public byte getValue() {
-            return (byte) value;
+            return value;
         }
 
         /**
