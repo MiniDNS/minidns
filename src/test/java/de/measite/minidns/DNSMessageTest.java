@@ -123,4 +123,22 @@ public class DNSMessageTest {
         }
         assertEquals(txtToBeFound.size(), 0);
     }
+
+
+    @Test
+    public void testSoaLookup() throws Exception {
+        DNSMessage m = getMessageFromResource("oracle-soa");
+        assertFalse(m.isAuthoritativeAnswer());
+        Record[] answers = m.getAnswers();
+        assertEquals(1, answers.length);
+        assertTrue(answers[0].getPayload() instanceof SOA);
+        SOA soa = (SOA) answers[0].getPayload();
+        assertEquals("orcldns1.ultradns.com", soa.mname);
+        assertEquals("hostmaster\\@oracle.com", soa.rname);
+        assertEquals(2015032404L, soa.serial);
+        assertEquals(10800, soa.refresh);
+        assertEquals(3600, soa.retry);
+        assertEquals(1209600, soa.expire);
+        assertEquals(900L, soa.minimum);
+    }
 }
