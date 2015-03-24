@@ -1,0 +1,6 @@
+language: android
+android:
+  components:
+    - android-8
+install: gradle assemble
+script: gradle check

@@ -1,6 +1,8 @@
 MiniDNS
 -------
 
+[![Build Status](https://travis-ci.org/rtreffer/minidns.svg)](https://travis-ci.org/rtreffer/minidns)
+
 MiniDNS is a minimal dns client library for android. It can parse a basic set
 of resource records (A, AAAA, NS, SRV) and is easy to use and extend.
 
