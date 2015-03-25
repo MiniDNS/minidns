@@ -4,3 +4,4 @@ android:
     - android-9
 install: gradle assemble
 script: gradle check
+
