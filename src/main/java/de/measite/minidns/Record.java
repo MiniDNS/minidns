@@ -13,6 +13,7 @@ import de.measite.minidns.record.Data;
 import de.measite.minidns.record.MX;
 import de.measite.minidns.record.NS;
 import de.measite.minidns.record.PTR;
+import de.measite.minidns.record.SOA;
 import de.measite.minidns.record.SRV;
 import de.measite.minidns.record.TXT;
 import de.measite.minidns.util.NameUtil;
@@ -251,6 +252,9 @@ public class Record {
                    dis.readUnsignedShort();
         int payloadLength = dis.readUnsignedShort();
         switch (this.type) {
+        case SOA:
+            this.payloadData = new SOA(dis, data, payloadLength);
+            break;
         case SRV:
             this.payloadData = new SRV(dis, data, payloadLength);
             break;

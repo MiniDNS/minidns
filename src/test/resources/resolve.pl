@@ -47,3 +47,5 @@ sub lookup() {
 
 # AAAA doubles in importance every few months
 &lookup("google.com", "aaaa", "google-aaaa");
+
+&lookup("oracle.com", "soa", "oracle-soa");
