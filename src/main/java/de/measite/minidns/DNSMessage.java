@@ -508,10 +508,10 @@ public class DNSMessage {
 
     public String toString() {
         return "-- DNSMessage " + id + " --\n" +
-               "Q" + Arrays.toString(questions) +
-               "NS" + Arrays.toString(nameserverRecords) +
-               "A" + Arrays.toString(answers) +
-               "ARR" + Arrays.toString(additionalResourceRecords);
+               "Q " + Arrays.toString(questions) + '\n' +
+               "NS " + Arrays.toString(nameserverRecords) + '\n' +
+               "A " + Arrays.toString(answers) + '\n' +
+               "ARR " + Arrays.toString(additionalResourceRecords);
     }
 
 }
