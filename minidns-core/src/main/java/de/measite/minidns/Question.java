@@ -45,6 +45,7 @@ public class Question {
      * @param name The name e.g. "measite.de".
      * @param type The type, e.g. A.
      * @param clazz The class, usually IN (internet).
+     * @param unicastQuery True if this is a unicast query.
      */
     public Question(String name, TYPE type, CLASS clazz, boolean unicastQuery) {
         this.name = name;
