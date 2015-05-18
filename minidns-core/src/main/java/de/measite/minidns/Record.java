@@ -142,7 +142,7 @@ public class Record {
         public static TYPE getType(int value) {
             return INVERSE_LUT.get(value);
         }
-    };
+    }
 
     /**
      * The symbolic class of a DNS record (usually IN for Internet).
@@ -298,7 +298,7 @@ public class Record {
             return "RR " + type + "/" + clazz;
         }
         return "RR " + type + "/" + clazz + ": " + payloadData.toString();
-    };
+    }
 
     /**
      * Check if this record answers a given query.

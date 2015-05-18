@@ -68,7 +68,7 @@ public class DNSMessage {
             return INVERSE_LUT[value];
         }
 
-    };
+    }
 
     /**
      * Symbolic DNS Opcode values.
@@ -123,7 +123,7 @@ public class DNSMessage {
             return INVERSE_LUT[value];
         }
 
-    };
+    }
 
     /**
      * The DNS message id.
