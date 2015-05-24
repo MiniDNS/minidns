@@ -38,7 +38,7 @@ public class DNSClient extends AbstractDNSClient {
     }
 
     @Override
-    public DNSMessage query(Question q, String host, int port) throws IOException {
+    public DNSMessage query(Question q, InetAddress address, int port) throws IOException {
         // See if we have the answer to this question already cached
         DNSMessage dnsMessage = (cache == null) ? null : cache.get(q);
         if (dnsMessage != null) {
@@ -57,7 +57,7 @@ public class DNSClient extends AbstractDNSClient {
         try {
             socket = new DatagramSocket();
             DatagramPacket packet = new DatagramPacket(buf, buf.length,
-                    InetAddress.getByName(host), port);
+                    address, port);
             socket.setSoTimeout(timeout);
             socket.send(packet);
             packet = new DatagramPacket(new byte[bufferSize], bufferSize);

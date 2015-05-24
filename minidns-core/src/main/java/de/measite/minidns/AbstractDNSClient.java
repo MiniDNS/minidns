@@ -1,6 +1,7 @@
 package de.measite.minidns;
 
 import java.io.IOException;
+import java.net.InetAddress;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.util.Map;
@@ -133,28 +134,28 @@ public abstract class AbstractDNSClient {
     /**
      * Query a specific server for one entry.
      * @param q The question section of the DNS query.
-     * @param host The dns server host.
+     * @param address The dns server address.
      * @param port the dns port.
      * @return The response (or null on timeout/error).
      * @throws IOException On IOErrors.
      */
-    public abstract DNSMessage query(Question q, String host, int port) throws IOException;
+    public abstract DNSMessage query(Question q, InetAddress address, int port) throws IOException;
 
     /**
      * Query a nameserver for a single entry.
      * @param name The DNS name to request.
      * @param type The DNS type to request (SRV, A, AAAA, ...).
      * @param clazz The class of the request (usually IN for Internet).
-     * @param host The DNS server host.
+     * @param address The DNS server address.
      * @param port The DNS server port.
      * @return The response (or null on timeout / failure).
      * @throws IOException On IO Errors.
      */
-    public DNSMessage query(String name, TYPE type, CLASS clazz, String host, int port)
+    public DNSMessage query(String name, TYPE type, CLASS clazz, InetAddress address, int port)
         throws IOException
     {
         Question q = new Question(name, type, clazz);
-        return query(q, host, port);
+        return query(q, address, port);
     }
 
     /**
@@ -162,15 +163,15 @@ public abstract class AbstractDNSClient {
      * @param name The DNS name to request.
      * @param type The DNS type to request (SRV, A, AAAA, ...).
      * @param clazz The class of the request (usually IN for Internet).
-     * @param host The DNS server host.
+     * @param address The DNS server host.
      * @return The response (or null on timeout / failure).
      * @throws IOException On IO Errors.
      */
-    public DNSMessage query(String name, TYPE type, CLASS clazz, String host)
+    public DNSMessage query(String name, TYPE type, CLASS clazz, InetAddress address)
         throws IOException
     {
         Question q = new Question(name, type, clazz);
-        return query(q, host);
+        return query(q, address);
     }
 
     /**
@@ -181,7 +182,17 @@ public abstract class AbstractDNSClient {
      * @throws IOException On IOErrors.
      */
     public DNSMessage query(Question q, String host) throws IOException {
-        return query(q, host, 53);
+        return query(q, InetAddress.getByName(host), 53);
     }
 
+    /**
+     * Query a specific server for one entry.
+     * @param q The question section of the DNS query.
+     * @param address The dns server address.
+     * @return The response (or null on timeout/error).
+     * @throws IOException On IOErrors.
+     */
+    public DNSMessage query(Question q, InetAddress address) throws IOException {
+        return query(q, address, 53);
+    }
 }
