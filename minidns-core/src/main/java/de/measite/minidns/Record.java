@@ -1,6 +1,8 @@
 package de.measite.minidns;
 
+import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
+import java.io.DataOutputStream;
 import java.io.IOException;
 import java.util.HashMap;
 
@@ -218,6 +220,14 @@ public class Record {
     public final CLASS clazz;
 
     /**
+     * The value of the class field of a RR.
+     * <p/>
+     * According to RFC 2671 (OPT RR) this is not necessarily representable
+     * using clazz field and unicastQuery bit
+     */
+    public final int clazzValue;
+
+    /**
      * The ttl of this record.
      */
     public final long ttl;
@@ -242,7 +252,7 @@ public class Record {
     public Record(DataInputStream dis, byte[] data) throws IOException {
         this.name = NameUtil.parse(dis, data);
         this.type = TYPE.getType(dis.readUnsignedShort());
-        int clazzValue = dis.readUnsignedShort();
+        this.clazzValue = dis.readUnsignedShort();
         this.clazz = CLASS.getClass(clazzValue & 0x7fff);
         this.unicastQuery = (clazzValue & 0x8000) > 0;
         if (this.clazz == null) {
@@ -286,6 +296,46 @@ public class Record {
             }
             break;
         }
+    }
+
+    public Record(String name, TYPE type, CLASS clazz, long ttl, Data payloadData, boolean unicastQuery) {
+        this.name = name;
+        this.type = type;
+        this.clazz = clazz;
+        this.ttl = ttl;
+        this.payloadData = payloadData;
+        this.unicastQuery = unicastQuery;
+        this.clazzValue = clazz.getValue() + (unicastQuery ? 0x8000 : 0);
+    }
+
+    public Record(String name, TYPE type, int clazzValue, long ttl, Data payloadData) {
+        this.name = name;
+        this.type = type;
+        this.clazz = CLASS.NONE;
+        this.clazzValue = clazzValue;
+        this.ttl = ttl;
+        this.payloadData = payloadData;
+    }
+
+    public byte[] toByteArray() {
+        if (payloadData == null) {
+            throw new IllegalStateException("Empty Record has no byte representation");
+        }
+        byte[] payload = payloadData.toByteArray();
+        ByteArrayOutputStream baos = new ByteArrayOutputStream(NameUtil.size(name) + 8 + payload.length);
+        DataOutputStream dos = new DataOutputStream(baos);
+        try {
+            dos.write(NameUtil.toByteArray(name));
+            dos.writeShort(type.getValue());
+            dos.writeShort(clazzValue);
+            dos.writeInt((int) ttl);
+            dos.writeShort(payload.length);
+            dos.write(payload);
+        } catch (IOException e) {
+            // Should never happen
+            throw new IllegalStateException(e);
+        }
+        return baos.toByteArray();
     }
 
     /**

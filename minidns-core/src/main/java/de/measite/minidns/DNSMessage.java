@@ -396,8 +396,25 @@ public class DNSMessage {
         } else {
             dos.writeShort((short)additionalResourceRecords.length);
         }
-        for (Question question: questions) {
-            dos.write(question.toByteArray());
+        if (questions != null) {
+            for (Question question : questions) {
+                dos.write(question.toByteArray());
+            }
+        }
+        if (answers != null) {
+            for (Record answer : answers) {
+                dos.write(answer.toByteArray());
+            }
+        }
+        if (nameserverRecords != null) {
+            for (Record nameserverRecord : nameserverRecords) {
+                dos.write(nameserverRecord.toByteArray());
+            }
+        }
+        if (additionalResourceRecords != null) {
+            for (Record additionalResourceRecord : additionalResourceRecords) {
+                dos.write(additionalResourceRecord.toByteArray());
+            }
         }
         dos.flush();
         return baos.toByteArray();
