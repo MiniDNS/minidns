@@ -24,11 +24,12 @@ public class NameUtil {
 
     /**
      * Retrieve the rough binary length of a string
-     * (length + 2 bytes length prefix).
+     * (1 byte for the root domain or (length + 2) bytes).
      * @param name The name string.
-     * @return The binary size of the string (length + 2).
+     * @return The binary size of the string.
      */
     public static int size(String name) {
+        if (name.isEmpty()) return 1; // TODO
         return name.length() + 2;
     }
 
@@ -55,10 +56,12 @@ public class NameUtil {
      */
     public static byte[] toByteArray(String name) {
         ByteArrayOutputStream baos = new ByteArrayOutputStream(64);
-        for (String s: name.split("[.\u3002\uFF0E\uFF61]")) {
-            byte[] buffer = IDN.toASCII(s).getBytes();
-            baos.write(buffer.length);
-            baos.write(buffer, 0, buffer.length);
+        if (!name.isEmpty()) {
+            for (String s : name.split("[.\u3002\uFF0E\uFF61]")) {
+                byte[] buffer = IDN.toASCII(s).getBytes();
+                baos.write(buffer.length);
+                baos.write(buffer, 0, buffer.length);
+            }
         }
         baos.write(0);
         return baos.toByteArray();
