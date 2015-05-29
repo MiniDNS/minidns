@@ -223,7 +223,7 @@ public class Record {
 
     /**
      * The value of the class field of a RR.
-     * <p/>
+     * 
      * According to RFC 2671 (OPT RR) this is not necessarily representable
      * using clazz field and unicastQuery bit
      */
