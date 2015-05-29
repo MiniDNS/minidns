@@ -9,13 +9,40 @@ import java.io.IOException;
  * DNSKEY record payload
  */
 public class DNSKEY implements Data {
+    /**
+     * Whether the key should be used as a secure entry point key.
+     * {@see RFC 3757}
+     */
     public static final short FLAG_SECURE_ENTRY_POINT = 0x1;
+
+    /**
+     * Whether the record holds a revoked key
+     */
     public static final short FLAG_REVOKE = 0x80;
+
+    /**
+     * Whether the record holds a DNS zone key
+     */
     public static final short FLAG_ZONE = 0x100;
 
+    /**
+     * Bitmap of flags: {@link #FLAG_SECURE_ENTRY_POINT}, {@link #FLAG_REVOKE}, {@link #FLAG_ZONE}
+     */
     public final short flags;
+
+    /**
+     * Must be 3 as of RFC 4034
+     */
     public final byte protocol;
+
+    /**
+     * The public key's cryptographic algorithm used.
+     */
     public final byte algorithm;
+
+    /**
+     * The public key material. The format depends on the algorithm of the key being stored.
+     */
     public final byte[] key;
 
     public DNSKEY(DataInputStream dis, byte[] data, int length) throws IOException {

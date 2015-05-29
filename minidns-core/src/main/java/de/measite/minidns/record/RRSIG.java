@@ -14,14 +14,49 @@ import java.util.TimeZone;
  */
 public class RRSIG implements Data {
 
+    /**
+     * The type of RRset covered by this signature.
+     */
     public final TYPE typeCovered;
+
+    /**
+     * The cryptographic algorithm used to create the signature.
+     */
     public final byte algorithm;
+
+    /**
+     * The number of labels in the original RRSIG RR owner name.
+     */
     public final byte labels;
+
+    /**
+     * The TTL of the covered RRset.
+     */
     public final long /* unsigned int */ originalTtl;
+
+    /**
+     * The date and time this RRSIG records expires.
+     */
     public final Date signatureExpiration;
+
+    /**
+     * The date and time this RRSIG records starts to be valid.
+     */
     public final Date signatureInception;
+
+    /**
+     * The key tag value of the DNSKEY RR that validates this signature.
+     */
     public final short keyTag;
+
+    /**
+     * The owner name of the DNSKEY RR that a validator is supposed to use.
+     */
     public final String signerName;
+
+    /**
+     * Signature that covers RRSIG RDATA (excluding the signature field) and RRset data
+     */
     public final byte[] signature;
 
     public RRSIG(DataInputStream dis, byte[] data, int length) throws IOException {
