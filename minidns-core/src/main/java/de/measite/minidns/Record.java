@@ -17,6 +17,7 @@ import de.measite.minidns.record.MX;
 import de.measite.minidns.record.NS;
 import de.measite.minidns.record.OPT;
 import de.measite.minidns.record.PTR;
+import de.measite.minidns.record.RRSIG;
 import de.measite.minidns.record.SOA;
 import de.measite.minidns.record.SRV;
 import de.measite.minidns.record.TXT;
@@ -296,6 +297,9 @@ public class Record {
             break;
         case DNSKEY:
             this.payloadData = new DNSKEY(dis, data, payloadLength);
+            break;
+        case RRSIG:
+            this.payloadData = new RRSIG(dis, data, payloadLength);
             break;
         default:
             this.payloadData = null;

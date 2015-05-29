@@ -39,6 +39,6 @@ public class DNSKEY implements Data {
     @Override
     public String toString() {
         // TODO: cross platform Base64 of key?
-        return "DNSKEY " + flags + " " + protocol + " " + algorithm + " " + key + '}';
+        return "DNSKEY " + flags + " " + protocol + " " + algorithm + " " + key;
     }
 }
