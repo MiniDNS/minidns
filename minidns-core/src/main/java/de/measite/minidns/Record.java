@@ -14,6 +14,7 @@ import de.measite.minidns.record.CNAME;
 import de.measite.minidns.record.Data;
 import de.measite.minidns.record.MX;
 import de.measite.minidns.record.NS;
+import de.measite.minidns.record.OPT;
 import de.measite.minidns.record.PTR;
 import de.measite.minidns.record.SOA;
 import de.measite.minidns.record.SRV;
@@ -288,6 +289,9 @@ public class Record {
             break;
         case TXT:
             this.payloadData = new TXT(dis, data, payloadLength);
+            break;
+        case OPT:
+            this.payloadData = new OPT(dis, data, payloadLength);
             break;
         default:
             this.payloadData = null;

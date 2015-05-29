@@ -1,11 +1,15 @@
 package de.measite.minidns;
 
+import de.measite.minidns.record.OPT;
+
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Iterator;
 
 /**
  * A DNS message as defined by rfc1035. The message consists of a header and
@@ -521,6 +525,32 @@ public class DNSMessage {
      */
     public Record[] getAdditionalResourceRecords() {
         return additionalResourceRecords;
+    }
+
+    /**
+     * Send the supported size of UDP payload with the request
+     * 
+     * Note that some networks and firewalls are known to block big UDP payloads.
+     * 1280 should be a reasonable value, everything below 512 is treated as 512 and
+     * should work on all networks.
+     * 
+     * @param udpPayloadSize Supported size of payload. Must be between 512 and 65563. 
+     */
+    public void announceUdpPayloadSize(int udpPayloadSize) {
+        Record opt = new Record("", Record.TYPE.OPT, udpPayloadSize, 0, new OPT());
+        if (additionalResourceRecords == null) {
+            additionalResourceRecords = new Record[]{opt};
+        } else {
+            ArrayList<Record> records = new ArrayList<Record>(Arrays.asList(additionalResourceRecords));
+            for (Iterator<Record> iterator = records.iterator(); iterator.hasNext(); ) {
+                Record record = iterator.next();
+                if (record.type == Record.TYPE.OPT) {
+                    iterator.remove();
+                }
+            }
+            records.add(opt);
+            additionalResourceRecords = records.toArray(new Record[records.size()]);
+        }
     }
 
     public String toString() {
