@@ -11,6 +11,7 @@ import java.util.logging.Logger;
 import de.measite.minidns.record.A;
 import de.measite.minidns.record.AAAA;
 import de.measite.minidns.record.CNAME;
+import de.measite.minidns.record.DNSKEY;
 import de.measite.minidns.record.Data;
 import de.measite.minidns.record.MX;
 import de.measite.minidns.record.NS;
@@ -292,6 +293,9 @@ public class Record {
             break;
         case OPT:
             this.payloadData = new OPT(dis, data, payloadLength);
+            break;
+        case DNSKEY:
+            this.payloadData = new DNSKEY(dis, data, payloadLength);
             break;
         default:
             this.payloadData = null;
