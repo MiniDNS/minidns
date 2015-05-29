@@ -47,7 +47,7 @@ public class RRSIG implements Data {
     /**
      * The key tag value of the DNSKEY RR that validates this signature.
      */
-    public final short keyTag;
+    public final int /* unsigned short */  keyTag;
 
     /**
      * The owner name of the DNSKEY RR that a validator is supposed to use.
@@ -66,7 +66,7 @@ public class RRSIG implements Data {
         originalTtl = dis.readInt() & 0xFFFFFFFFL;
         signatureExpiration = new Date((dis.readInt() & 0xFFFFFFFFL) * 1000);
         signatureInception = new Date((dis.readInt() & 0xFFFFFFFFL) * 1000);
-        keyTag = dis.readShort();
+        keyTag = dis.readUnsignedShort();
         signerName = NameUtil.parse(dis, data);
         int sigSize = length - NameUtil.size(signerName) - 18;
         signature = new byte[sigSize];
@@ -79,6 +79,11 @@ public class RRSIG implements Data {
     }
 
     @Override
+    public byte[] toByteArray() {
+        throw new UnsupportedOperationException("Not implemented yet");
+    }
+
+    @Override
     public String toString() {
         SimpleDateFormat dateFormat = new SimpleDateFormat("YYYYMMddHHmmss");
         dateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
@@ -86,10 +91,5 @@ public class RRSIG implements Data {
         return "RRSIG " + typeCovered.name() + " " + algorithm + " " + labels + " " + originalTtl + " "
                 + dateFormat.format(signatureExpiration) + " " + dateFormat.format(signatureInception) + " " +
                 keyTag + " " + signerName + " " + signature;
-    }
-
-    @Override
-    public byte[] toByteArray() {
-        throw new UnsupportedOperationException("Not implemented yet");
     }
 }

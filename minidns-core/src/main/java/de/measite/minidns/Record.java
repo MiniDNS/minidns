@@ -12,6 +12,7 @@ import de.measite.minidns.record.A;
 import de.measite.minidns.record.AAAA;
 import de.measite.minidns.record.CNAME;
 import de.measite.minidns.record.DNSKEY;
+import de.measite.minidns.record.DS;
 import de.measite.minidns.record.Data;
 import de.measite.minidns.record.MX;
 import de.measite.minidns.record.NS;
@@ -300,6 +301,9 @@ public class Record {
             break;
         case RRSIG:
             this.payloadData = new RRSIG(dis, data, payloadLength);
+            break;
+        case DS:
+            this.payloadData = new DS(dis, data, payloadLength);
             break;
         default:
             this.payloadData = null;

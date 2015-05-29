@@ -11,7 +11,8 @@ import java.io.IOException;
 public class DNSKEY implements Data {
     /**
      * Whether the key should be used as a secure entry point key.
-     * {@see RFC 3757}
+     * 
+     * see RFC 3757
      */
     public static final short FLAG_SECURE_ENTRY_POINT = 0x1;
 
