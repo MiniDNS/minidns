@@ -1,9 +1,13 @@
 package de.measite.minidns;
 
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
+import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -50,9 +54,33 @@ public class DNSClient extends AbstractDNSClient {
         message.setQuestions(new Question[]{q});
         message.setRecursionDesired(true);
         message.setId(random.nextInt());
-        message.announceUdpPayloadSize(udpPayloadSize);
+        message.announceUdpPayloadSize(Math.min(udpPayloadSize, bufferSize));
         byte[] buf = message.toArray();
 
+        dnsMessage = rawQueryUdp(address, port, buf);
+        if (dnsMessage.getId() != message.getId()) {
+            return null;
+        }
+
+        if (dnsMessage.isTruncated()) {
+            dnsMessage = rawQueryTcp(address, port, buf);
+        }
+
+        if (dnsMessage.getId() != message.getId()) {
+            return null;
+        }
+        for (Record record : dnsMessage.getAnswers()) {
+            if (record.isAnswer(q)) {
+                if (cache != null) {
+                    cache.put(q, dnsMessage);
+                }
+                break;
+            }
+        }
+        return dnsMessage;
+    }
+
+    private DNSMessage rawQueryUdp(InetAddress address, int port, byte[] buf) throws IOException {
         // TOOD Use a try-with-resource statement here once miniDNS minimum
         // required Android API level is >= 19
         DatagramSocket socket = null;
@@ -64,22 +92,29 @@ public class DNSClient extends AbstractDNSClient {
             socket.send(packet);
             packet = new DatagramPacket(new byte[bufferSize], bufferSize);
             socket.receive(packet);
-            dnsMessage = new DNSMessage(packet.getData());
-            if (dnsMessage.isTruncated()) {
-                // TODO: retry with TCP
+            return new DNSMessage(packet.getData());
+        } finally {
+            if (socket != null) {
+                socket.close();
             }
-            if (dnsMessage.getId() != message.getId()) {
-                return null;
-            }
-            for (Record record : dnsMessage.getAnswers()) {
-                if (record.isAnswer(q)) {
-                    if (cache != null) {
-                        cache.put(q, dnsMessage);
-                    }
-                    break;
-                }
-            }
-            return dnsMessage;
+        }
+    }
+
+    private DNSMessage rawQueryTcp(InetAddress address, int port, byte[] buf) throws IOException {
+        // TOOD Use a try-with-resource statement here once miniDNS minimum
+        // required Android API level is >= 19
+        Socket socket = null;
+        try {
+            socket = new Socket(address, port);
+            DataOutputStream dos = new DataOutputStream(socket.getOutputStream());
+            dos.writeShort(buf.length);
+            dos.write(buf);
+            dos.flush();
+            DataInputStream dis = new DataInputStream(socket.getInputStream());
+            int length = dis.readUnsignedShort();
+            byte[] data = new byte[length];
+            dis.read(data);
+            return new DNSMessage(data);
         } finally {
             if (socket != null) {
                 socket.close();
