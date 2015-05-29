@@ -16,6 +16,7 @@ import de.measite.minidns.record.DS;
 import de.measite.minidns.record.Data;
 import de.measite.minidns.record.MX;
 import de.measite.minidns.record.NS;
+import de.measite.minidns.record.NSEC;
 import de.measite.minidns.record.OPT;
 import de.measite.minidns.record.PTR;
 import de.measite.minidns.record.RRSIG;
@@ -304,6 +305,9 @@ public class Record {
             break;
         case DS:
             this.payloadData = new DS(dis, data, payloadLength);
+            break;
+        case NSEC:
+            this.payloadData = new NSEC(dis, data, payloadLength);
             break;
         default:
             this.payloadData = null;
