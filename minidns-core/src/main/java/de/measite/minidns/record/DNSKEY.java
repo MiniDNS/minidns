@@ -2,7 +2,9 @@ package de.measite.minidns.record;
 
 import de.measite.minidns.Record.TYPE;
 
+import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
+import java.io.DataOutputStream;
 import java.io.IOException;
 
 /**
@@ -61,7 +63,19 @@ public class DNSKEY implements Data {
 
     @Override
     public byte[] toByteArray() {
-        throw new UnsupportedOperationException("Not implemented yet");
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        DataOutputStream dos = new DataOutputStream(baos);
+        try {
+            dos.writeShort(flags);
+            dos.writeByte(protocol);
+            dos.writeByte(algorithm);
+            dos.write(key);
+        } catch (IOException e) {
+            // Should never happen
+            throw new IllegalStateException(e);
+        }
+        
+        return baos.toByteArray();
     }
 
     @Override
