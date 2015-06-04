@@ -11,6 +11,11 @@ import java.io.IOException;
 public class OPT implements Data {
 
     /**
+     * Inform the dns server that the client supports DNSSEC.
+     */
+    public static final int FLAG_DNSSEC_OK = 0x8000;
+
+    /**
      * Raw encoded RDATA of an OPT RR
      */
     public final byte[] encodedOptData;

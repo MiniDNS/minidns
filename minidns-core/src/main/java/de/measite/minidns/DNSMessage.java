@@ -528,16 +528,19 @@ public class DNSMessage {
     }
 
     /**
-     * Send the supported size of UDP payload with the request
+     * Send the OPT pseudo record with this request for EDNS support. The OPT record
+     * can be used to announce the supported size of UDP payload as well as additional
+     * flags.
      * 
      * Note that some networks and firewalls are known to block big UDP payloads.
      * 1280 should be a reasonable value, everything below 512 is treated as 512 and
      * should work on all networks.
-     * 
-     * @param udpPayloadSize Supported size of payload. Must be between 512 and 65563. 
+     *
+     * @param udpPayloadSize Supported size of payload. Must be between 512 and 65563.
+     * @param optFlags       A bitmap of flags to be attached to the
      */
-    public void announceUdpPayloadSize(int udpPayloadSize) {
-        Record opt = new Record("", Record.TYPE.OPT, udpPayloadSize, 0, new OPT());
+    public void setOptPseudoRecord(int udpPayloadSize, int optFlags) {
+        Record opt = new Record("", Record.TYPE.OPT, udpPayloadSize, optFlags, new OPT());
         if (additionalResourceRecords == null) {
             additionalResourceRecords = new Record[]{opt};
         } else {
