@@ -48,13 +48,13 @@ public class DNSMessageTest {
         if(answers[1].getName().equalsIgnoreCase("www.sun.com"))
             cname = 1;
         assertTrue(answers[cname].getPayload() instanceof CNAME);
-        assertEquals(answers[cname].getPayload().getType(), Record.TYPE.CNAME);
+        assertEquals(Record.TYPE.CNAME, answers[cname].getPayload().getType());
         assertEquals("legacy-sun.oraclegha.com",
                      ((CNAME)(answers[cname].getPayload())).name);
 
         assertEquals("legacy-sun.oraclegha.com", answers[1-cname].getName());
         assertTrue(answers[1-cname].getPayload() instanceof A);
-        assertEquals(answers[1-cname].getPayload().getType(), Record.TYPE.A);
+        assertEquals(Record.TYPE.A, answers[1-cname].getPayload().getType());
         assertEquals("156.151.59.35",
                      ((A)(answers[1-cname].getPayload())).toString());
     }
@@ -68,7 +68,7 @@ public class DNSMessageTest {
         assertEquals(1, answers.length);
         assertEquals("google.com", answers[0].getName());
         assertTrue(answers[0].getPayload() instanceof AAAA);
-        assertEquals(answers[0].getPayload().getType(), Record.TYPE.AAAA);
+        assertEquals(Record.TYPE.AAAA, answers[0].getPayload().getType());
         assertEquals("2a00:1450:400c:c02:0:0:0:8a",
                      ((AAAA)(answers[0].getPayload())).toString());
     }
@@ -85,7 +85,7 @@ public class DNSMessageTest {
             assertEquals("gmail.com", r.getName());
             Data d = r.getPayload();
             assertTrue(d instanceof MX);
-            assertEquals(d.getType(), Record.TYPE.MX);
+            assertEquals(Record.TYPE.MX, d.getType());
             mxes.put(((MX)d).priority, ((MX)d).name);
         }
         assertEquals("gmail-smtp-in.l.google.com", mxes.get(5));
@@ -103,6 +103,7 @@ public class DNSMessageTest {
         Record[] answers = m.getAnswers();
         assertEquals(1, answers.length);
         assertTrue(answers[0].getPayload() instanceof SRV);
+        assertEquals(Record.TYPE.SRV, answers[0].getPayload().getType());
         SRV r = (SRV)(answers[0].getPayload());
         assertEquals("raven.toroid.org", r.name);
         assertEquals(5222, r.port);
@@ -121,7 +122,7 @@ public class DNSMessageTest {
             assertEquals("codinghorror.com", r.getName());
             Data d = r.getPayload();
             assertTrue(d instanceof TXT);
-            assertEquals(d.getType(), Record.TYPE.TXT);
+            assertEquals(Record.TYPE.TXT, d.getType());
             TXT txt = (TXT)d;
             assertTrue(txtToBeFound.contains(txt.getText()));
             txtToBeFound.remove(txt.getText());
@@ -137,7 +138,7 @@ public class DNSMessageTest {
         Record[] answers = m.getAnswers();
         assertEquals(1, answers.length);
         assertTrue(answers[0].getPayload() instanceof SOA);
-        assertEquals(answers[0].getPayload().getType(), Record.TYPE.SOA);
+        assertEquals(Record.TYPE.SOA, answers[0].getPayload().getType());
         SOA soa = (SOA) answers[0].getPayload();
         assertEquals("orcldns1.ultradns.com", soa.mname);
         assertEquals("hostmaster\\@oracle.com", soa.rname);
