@@ -1,6 +1,7 @@
 package de.measite.minidns.record;
 
 import de.measite.minidns.Record.TYPE;
+import de.measite.minidns.util.Base32;
 
 import java.io.DataInputStream;
 import java.io.IOException;
@@ -77,7 +78,7 @@ public class NSEC3 implements Data {
                 .append(flags).append(' ')
                 .append(iterations).append(' ')
                 .append(salt.length == 0 ? "-" : new BigInteger(salt).toString(16)).append(' ')
-                .append(nextHashed.toString()); // TODO: cross platform Base32 of hash
+                .append(Base32.encodeToString(nextHashed));
         for (TYPE type : types) {
             sb.append(' ').append(type.name());
         }

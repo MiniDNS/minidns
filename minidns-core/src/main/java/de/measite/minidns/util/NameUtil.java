@@ -19,7 +19,7 @@ public class NameUtil {
      * @return The binary size of the string.
      */
     public static int size(String name) {
-        if (name.isEmpty()) return 1; // TODO
+        if (name.isEmpty()) return 1;
         return name.length() + 2;
     }
 

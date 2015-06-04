@@ -1,6 +1,7 @@
 package de.measite.minidns.record;
 
 import de.measite.minidns.Record.TYPE;
+import de.measite.minidns.util.Base64;
 import de.measite.minidns.util.NameUtil;
 
 import java.io.DataInputStream;
@@ -96,7 +97,7 @@ public class RRSIG implements Data {
                 .append(dateFormat.format(signatureInception)).append(' ')
                 .append(keyTag).append(' ')
                 .append(signerName).append(' ')
-                .append(signature.toString()); // TODO: cross platform Base64 of signature
+                .append(Base64.encodeToString(signature));
         return sb.toString();
     }
 }

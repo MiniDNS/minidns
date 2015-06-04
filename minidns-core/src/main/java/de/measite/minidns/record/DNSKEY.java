@@ -1,6 +1,7 @@
 package de.measite.minidns.record;
 
 import de.measite.minidns.Record.TYPE;
+import de.measite.minidns.util.Base64;
 
 import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
@@ -84,7 +85,7 @@ public class DNSKEY implements Data {
         sb.append(flags).append(' ')
                 .append(protocol).append(' ')
                 .append(algorithm).append(' ')
-                .append(key.toString()); // TODO: cross platform Base64 of key
+                .append(Base64.encodeToString(key));
         return sb.toString();
     }
 }
