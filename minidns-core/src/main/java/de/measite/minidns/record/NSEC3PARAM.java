@@ -5,27 +5,14 @@ import de.measite.minidns.util.Base32;
 
 import java.io.DataInputStream;
 import java.io.IOException;
-import java.math.BigInteger;
 
-/**
- * NSEC3 record payload
- */
-public class NSEC3 implements Data {
-
-    /**
-     * This Flag indicates whether this NSEC3 RR may cover unsigned
-     * delegations.
-     */
-    public static final byte FLAG_OPT_OUT = 0x1;
+public class NSEC3PARAM implements Data {
 
     /**
      * The cryptographic hash algorithm used.
      */
     public final byte hashAlgorithm;
 
-    /**
-     * Bitmap of flags: {@link #FLAG_OPT_OUT}
-     */
     public final byte flags;
 
     /**
@@ -38,32 +25,18 @@ public class NSEC3 implements Data {
      */
     public final byte[] salt;
 
-    /**
-     * The next hashed owner name in hash order
-     */
-    public final byte[] nextHashed;
-
-    /**
-     * The RR types existing at the original owner name.
-     */
-    public final TYPE[] types;
-
-    public NSEC3(DataInputStream dis, byte[] data, int length) throws IOException {
+    public NSEC3PARAM(DataInputStream dis, byte[] data, int length) throws IOException {
         hashAlgorithm = dis.readByte();
         flags = dis.readByte();
         iterations = dis.readUnsignedShort();
         int saltLength = dis.readUnsignedByte();
         salt = new byte[saltLength];
         dis.read(salt);
-        int hashLength = dis.readUnsignedByte();
-        nextHashed = new byte[hashLength];
-        dis.read(nextHashed);
-        types = NSEC.readTypeBitMap(dis, 6 + saltLength + hashLength, length);
     }
-
+    
     @Override
     public TYPE getType() {
-        return TYPE.NSEC3;
+        return TYPE.NSEC3PARAM;
     }
 
     @Override
@@ -73,15 +46,11 @@ public class NSEC3 implements Data {
 
     @Override
     public String toString() {
-        StringBuilder sb = new StringBuilder("NSEC3 ");
+        StringBuilder sb = new StringBuilder("NSEC3PARAM ");
         sb.append(hashAlgorithm).append(' ')
                 .append(flags).append(' ')
                 .append(iterations).append(' ')
-                .append(salt.length == 0 ? "-" : new BigInteger(salt).toString(16)).append(' ')
-                .append(Base32.encodeToString(nextHashed));
-        for (TYPE type : types) {
-            sb.append(' ').append(type.name());
-        }
+                .append(Base32.encodeToString(salt));
         return sb.toString();
     }
 }
