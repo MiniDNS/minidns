@@ -46,8 +46,8 @@ public class NSEC3PARAM implements Data {
 
     @Override
     public String toString() {
-        StringBuilder sb = new StringBuilder("NSEC3PARAM ");
-        sb.append(hashAlgorithm).append(' ')
+        StringBuilder sb = new StringBuilder()
+                .append(hashAlgorithm).append(' ')
                 .append(flags).append(' ')
                 .append(iterations).append(' ')
                 .append(Base32.encodeToString(salt));

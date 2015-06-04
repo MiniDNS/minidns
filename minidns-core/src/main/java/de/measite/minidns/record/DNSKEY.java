@@ -81,8 +81,8 @@ public class DNSKEY implements Data {
 
     @Override
     public String toString() {
-        StringBuilder sb = new StringBuilder("DNSKEY "); 
-        sb.append(flags).append(' ')
+        StringBuilder sb = new StringBuilder()
+                .append(flags).append(' ')
                 .append(protocol).append(' ')
                 .append(algorithm).append(' ')
                 .append(Base64.encodeToString(key));

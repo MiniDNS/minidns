@@ -36,6 +36,7 @@ public class DNSClient extends AbstractDNSClient {
     }
     private int udpPayloadSize = 512;
     private boolean askForDnssec = false;
+    private boolean disableResultFilter = false;
 
     public DNSClient(DNSCache dnsCache) {
         super(dnsCache);
@@ -155,6 +156,9 @@ public class DNSClient extends AbstractDNSClient {
                 if (message == null) {
                     continue;
                 }
+                if (disableResultFilter) {
+                    return message;
+                }
                 if (message.getResponseCode() !=
                     DNSMessage.RESPONSE_CODE.NO_ERROR) {
                     continue;
@@ -218,5 +222,13 @@ public class DNSClient extends AbstractDNSClient {
 
     public void setAskForDnssec(boolean askForDnssec) {
         this.askForDnssec = askForDnssec;
+    }
+
+    public boolean isDisableResultFilter() {
+        return disableResultFilter;
+    }
+
+    public void setDisableResultFilter(boolean disableResultFilter) {
+        this.disableResultFilter = disableResultFilter;
     }
 }

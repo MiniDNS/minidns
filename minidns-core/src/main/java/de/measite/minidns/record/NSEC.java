@@ -3,6 +3,7 @@ package de.measite.minidns.record;
 import de.measite.minidns.Record.TYPE;
 import de.measite.minidns.util.NameUtil;
 
+import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -17,6 +18,8 @@ public class NSEC implements Data {
      */
     public final String next;
 
+    private final byte[] typeBitmap;
+    
     /**
      * The RR types existing at the owner name.
      */
@@ -25,7 +28,9 @@ public class NSEC implements Data {
     public NSEC(DataInputStream dis, byte[] data, int length) throws IOException {
         next = NameUtil.parse(dis, data);
 
-        types = readTypeBitMap(dis, NameUtil.size(next), length);
+        typeBitmap = new byte[length-NameUtil.size(next)];
+        dis.read(typeBitmap);
+        types = readTypeBitMap(typeBitmap);
     }
 
     @Override
@@ -40,24 +45,29 @@ public class NSEC implements Data {
 
     @Override
     public String toString() {
-        StringBuilder sb = new StringBuilder("NSEC ");
-        sb.append(next);
+        StringBuilder sb = new StringBuilder()
+                .append(next).append('.');
         for (TYPE type : types) {
             sb.append(' ').append(type.name());
         }
         return sb.toString();
     }
 
-    public static TYPE[] readTypeBitMap(DataInputStream dis, int read, int length) throws IOException {
+    public static TYPE[] readTypeBitMap(byte[] typeBitmap) throws IOException {
+        DataInputStream dis = new DataInputStream(new ByteArrayInputStream(typeBitmap));
+        int read = 0;
         ArrayList<TYPE> typeList = new ArrayList<TYPE>();
-        while (length > read) {
+        while (typeBitmap.length > read) {
             int windowBlock = dis.readUnsignedByte();
             int bitmapLength = dis.readUnsignedByte();
             for (int i = 0; i < bitmapLength; i++) {
                 int b = dis.readUnsignedByte();
                 for (int j = 0; j < 8; j++) {
                     if (((b >> j) & 0x1) > 0) {
-                        typeList.add(TYPE.getType((windowBlock >> 8) + (i * 8) + (7 - j)));
+                        TYPE type = TYPE.getType((windowBlock << 8) + (i * 8) + (7 - j));
+                        if (type != null) {
+                            typeList.add(type);
+                        }
                     }
                 }
             }

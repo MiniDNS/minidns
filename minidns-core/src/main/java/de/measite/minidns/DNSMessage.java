@@ -452,22 +452,20 @@ public class DNSMessage {
         int nameserverCount = dis.readUnsignedShort();
         int additionalResourceRecordCount = dis.readUnsignedShort();
         questions = new Question[questionCount];
-        while (questionCount-- > 0) {
-            questions[questionCount] = new Question(dis, data);
+        for (int i = 0; i < questionCount; i++) {
+            questions[i] = new Question(dis, data);
         }
         answers = new Record[answerCount];
-        while (answerCount-- > 0) {
-            answers[answerCount] = new Record(dis, data);
+        for (int i = 0; i < answerCount; i++) {
+            answers[i] = new Record(dis, data);
         }
         nameserverRecords = new Record[nameserverCount];
-        while (nameserverCount-- > 0) {
-            nameserverRecords[nameserverCount] = new Record(dis, data);
+        for (int i = 0; i < nameserverCount; i++) {
+            nameserverRecords[i] = new Record(dis, data);
         }
-        additionalResourceRecords =
-                                    new Record[additionalResourceRecordCount];
-        while (additionalResourceRecordCount-- > 0) {
-            additionalResourceRecords[additionalResourceRecordCount] =
-                    new Record(dis, data);
+        additionalResourceRecords = new Record[additionalResourceRecordCount];
+        for (int i = 0; i < additionalResourceRecordCount; i++) {
+            additionalResourceRecords[i] = new Record(dis, data);
         }
     }
 
@@ -557,11 +555,34 @@ public class DNSMessage {
     }
 
     public String toString() {
-        return "-- DNSMessage " + id + " --\n" +
-               "Q " + Arrays.toString(questions) + '\n' +
-               "NS " + Arrays.toString(nameserverRecords) + '\n' +
-               "A " + Arrays.toString(answers) + '\n' +
-               "ARR " + Arrays.toString(additionalResourceRecords);
+        StringBuilder sb = new StringBuilder(";; ->>HEADER<<-")
+                .append(" opcode: ").append(opcode.name())
+                .append(", status: ").append(responseCode.name())
+                .append(", id: ").append(id).append("\n");
+        if (additionalResourceRecords != null && additionalResourceRecords.length != 0) {
+            for (Record record : additionalResourceRecords) {
+                sb.append("; ").append(record).append('\n');
+            }
+        }
+        if (questions != null && questions.length != 0) {
+            sb.append("\n;; QUESTION SECTION:\n");
+            for (Question question : questions) {
+                sb.append("; ").append(question.toString()).append('\n');
+            }
+        }
+        if (nameserverRecords != null && nameserverRecords.length != 0) {
+            sb.append("\n;; AUTHORITY SECTION:\n");
+            for (Record record : nameserverRecords) {
+                sb.append(record.toString()).append('\n');
+            }
+        }
+        if (answers != null && answers.length != 0) {
+            sb.append("\n;; ANSWER SECTION:\n");
+            for (Record record : answers) {
+                sb.append(record.toString()).append('\n');
+            }
+        }
+        return sb.toString();
     }
 
 }

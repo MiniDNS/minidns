@@ -88,15 +88,15 @@ public class RRSIG implements Data {
     public String toString() {
         SimpleDateFormat dateFormat = new SimpleDateFormat("YYYYMMddHHmmss");
         dateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
-        StringBuilder sb = new StringBuilder("RRSIG ");
-        sb.append(typeCovered.name()).append(' ')
+        StringBuilder sb = new StringBuilder()
+                .append(typeCovered.name()).append(' ')
                 .append(algorithm).append(' ')
                 .append(labels).append(' ')
                 .append(originalTtl).append(' ')
                 .append(dateFormat.format(signatureExpiration)).append(' ')
                 .append(dateFormat.format(signatureInception)).append(' ')
                 .append(keyTag).append(' ')
-                .append(signerName).append(' ')
+                .append(signerName).append(". ")
                 .append(Base64.encodeToString(signature));
         return sb.toString();
     }

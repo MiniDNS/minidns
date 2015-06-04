@@ -43,6 +43,8 @@ public class NSEC3 implements Data {
      */
     public final byte[] nextHashed;
 
+    private final byte[] typeBitmap;
+    
     /**
      * The RR types existing at the original owner name.
      */
@@ -58,7 +60,9 @@ public class NSEC3 implements Data {
         int hashLength = dis.readUnsignedByte();
         nextHashed = new byte[hashLength];
         dis.read(nextHashed);
-        types = NSEC.readTypeBitMap(dis, 6 + saltLength + hashLength, length);
+        typeBitmap = new byte[length - (6 + saltLength + hashLength)];
+        dis.read(typeBitmap);
+        types = NSEC.readTypeBitMap(typeBitmap);
     }
 
     @Override
@@ -73,8 +77,8 @@ public class NSEC3 implements Data {
 
     @Override
     public String toString() {
-        StringBuilder sb = new StringBuilder("NSEC3 ");
-        sb.append(hashAlgorithm).append(' ')
+        StringBuilder sb = new StringBuilder()
+                .append(hashAlgorithm).append(' ')
                 .append(flags).append(' ')
                 .append(iterations).append(' ')
                 .append(salt.length == 0 ? "-" : new BigInteger(salt).toString(16)).append(' ')

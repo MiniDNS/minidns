@@ -51,8 +51,8 @@ public class DS implements Data {
 
     @Override
     public String toString() {
-        StringBuilder sb = new StringBuilder("DS "); 
-        sb.append(keyTag).append(' ')
+        StringBuilder sb = new StringBuilder()
+                .append(keyTag).append(' ')
                 .append(algorithm).append(' ')
                 .append(digestType).append(' ')
                 .append(new BigInteger(1, digest).toString(16).toUpperCase());

@@ -89,14 +89,26 @@ public class Record {
         DHCID(49),
         NSEC3(50),
         NSEC3PARAM(51),
+        TLSA(52),
         HIP(55),
         NINFO(56),
         RKEY(57),
         TALINK(58),
+        CDS(59),
+        CDNSKEY(60),
+        OPENPGPKEY(61),
+        CSYNC(62),
         SPF(99),
         UINFO(100),
         UID(101),
         GID(102),
+        UNSPEC(103),
+        NID(104),
+        L32(105),
+        L64(106),
+        LP(107),
+        EUI48(108),
+        EUI64(109),
         TKEY(249),
         TSIG(250),
         IXFR(251),
@@ -104,6 +116,8 @@ public class Record {
         MAILB(253),
         MAILA(254),
         ANY(255),
+        URI(256),
+        CAA(257),
         TA(32768),
         DLV(32769);
 
@@ -258,7 +272,8 @@ public class Record {
      */
     public Record(DataInputStream dis, byte[] data) throws IOException {
         this.name = NameUtil.parse(dis, data);
-        this.type = TYPE.getType(dis.readUnsignedShort());
+        int typeValue = dis.readUnsignedShort();
+        this.type = TYPE.getType(typeValue);
         this.clazzValue = dis.readUnsignedShort();
         this.clazz = CLASS.getClass(clazzValue & 0x7fff);
         this.unicastQuery = (clazzValue & 0x8000) > 0;
@@ -268,61 +283,68 @@ public class Record {
         this.ttl = (((long)dis.readUnsignedShort()) << 32) +
                    dis.readUnsignedShort();
         int payloadLength = dis.readUnsignedShort();
-        switch (this.type) {
-        case SOA:
-            this.payloadData = new SOA(dis, data, payloadLength);
-            break;
-        case SRV:
-            this.payloadData = new SRV(dis, data, payloadLength);
-            break;
-        case MX:
-            this.payloadData = new MX(dis, data, payloadLength);
-            break;
-        case AAAA:
-            this.payloadData = new AAAA(dis, data, payloadLength);
-            break;
-        case A:
-            this.payloadData = new A(dis, data, payloadLength);
-            break;
-        case NS:
-            this.payloadData = new NS(dis, data, payloadLength);
-            break;
-        case CNAME:
-            this.payloadData = new CNAME(dis, data, payloadLength);
-            break;
-        case PTR:
-            this.payloadData = new PTR(dis, data, payloadLength);
-            break;
-        case TXT:
-            this.payloadData = new TXT(dis, data, payloadLength);
-            break;
-        case OPT:
-            this.payloadData = new OPT(dis, data, payloadLength);
-            break;
-        case DNSKEY:
-            this.payloadData = new DNSKEY(dis, data, payloadLength);
-            break;
-        case RRSIG:
-            this.payloadData = new RRSIG(dis, data, payloadLength);
-            break;
-        case DS:
-            this.payloadData = new DS(dis, data, payloadLength);
-            break;
-        case NSEC:
-            this.payloadData = new NSEC(dis, data, payloadLength);
-            break;
-        case NSEC3:
-            this.payloadData = new NSEC3(dis, data, payloadLength);
-            break;
-        case NSEC3PARAM:
-            this.payloadData = new NSEC3PARAM(dis, data, payloadLength);
-            break;
-        default:
+        if (this.type == null) {
             this.payloadData = null;
             for (int i = 0; i < payloadLength; i++) {
                 dis.readByte();
             }
-            break;
+        } else {
+            switch (this.type) {
+                case SOA:
+                    this.payloadData = new SOA(dis, data, payloadLength);
+                    break;
+                case SRV:
+                    this.payloadData = new SRV(dis, data, payloadLength);
+                    break;
+                case MX:
+                    this.payloadData = new MX(dis, data, payloadLength);
+                    break;
+                case AAAA:
+                    this.payloadData = new AAAA(dis, data, payloadLength);
+                    break;
+                case A:
+                    this.payloadData = new A(dis, data, payloadLength);
+                    break;
+                case NS:
+                    this.payloadData = new NS(dis, data, payloadLength);
+                    break;
+                case CNAME:
+                    this.payloadData = new CNAME(dis, data, payloadLength);
+                    break;
+                case PTR:
+                    this.payloadData = new PTR(dis, data, payloadLength);
+                    break;
+                case TXT:
+                    this.payloadData = new TXT(dis, data, payloadLength);
+                    break;
+                case OPT:
+                    this.payloadData = new OPT(dis, data, payloadLength);
+                    break;
+                case DNSKEY:
+                    this.payloadData = new DNSKEY(dis, data, payloadLength);
+                    break;
+                case RRSIG:
+                    this.payloadData = new RRSIG(dis, data, payloadLength);
+                    break;
+                case DS:
+                    this.payloadData = new DS(dis, data, payloadLength);
+                    break;
+                case NSEC:
+                    this.payloadData = new NSEC(dis, data, payloadLength);
+                    break;
+                case NSEC3:
+                    this.payloadData = new NSEC3(dis, data, payloadLength);
+                    break;
+                case NSEC3PARAM:
+                    this.payloadData = new NSEC3PARAM(dis, data, payloadLength);
+                    break;
+                default:
+                    this.payloadData = null;
+                    for (int i = 0; i < payloadLength; i++) {
+                        dis.readByte();
+                    }
+                    break;
+            }
         }
     }
 
@@ -375,7 +397,7 @@ public class Record {
         if (payloadData == null) {
             return "RR " + type + "/" + clazz;
         }
-        return "RR " + type + "/" + clazz + ": " + payloadData.toString();
+        return name + ".\t" + ttl + '\t' + clazz + '\t' + type + '\t' + payloadData.toString();
     }
 
     /**
