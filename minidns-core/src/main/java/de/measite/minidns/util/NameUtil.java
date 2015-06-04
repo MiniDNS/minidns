@@ -10,17 +10,22 @@ import java.util.Arrays;
 /**
  * Utilities related to internationalized domain names and dns name handling.
  */
-public class NameUtil {
+public final class NameUtil {
 
     /**
-     * Retrieve the rough binary length of a string
-     * (1 byte for the root domain or (length + 2) bytes).
+     * Do not allow to instantiate NameUtil
+     */
+    private NameUtil() {}
+
+    /**
+     * Retrieve the binary length of a string
+     * 
      * @param name The name string.
      * @return The binary size of the string.
      */
     public static int size(String name) {
         if (name.isEmpty()) return 1;
-        return name.length() + 2;
+        return IDN.toASCII(name).length() + 2;
     }
 
     /**
