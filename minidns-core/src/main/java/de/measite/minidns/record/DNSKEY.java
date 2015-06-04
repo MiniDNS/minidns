@@ -80,7 +80,11 @@ public class DNSKEY implements Data {
 
     @Override
     public String toString() {
-        // TODO: cross platform Base64 of key?
-        return "DNSKEY " + flags + " " + protocol + " " + algorithm + " " + key;
+        StringBuilder sb = new StringBuilder("DNSKEY "); 
+        sb.append(flags).append(' ')
+                .append(protocol).append(' ')
+                .append(algorithm).append(' ')
+                .append(key.toString()); // TODO: cross platform Base64 of key
+        return sb.toString();
     }
 }

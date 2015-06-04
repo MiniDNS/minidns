@@ -87,9 +87,16 @@ public class RRSIG implements Data {
     public String toString() {
         SimpleDateFormat dateFormat = new SimpleDateFormat("YYYYMMddHHmmss");
         dateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
-        // TODO: cross platform Base64 of key?
-        return "RRSIG " + typeCovered.name() + " " + algorithm + " " + labels + " " + originalTtl + " "
-                + dateFormat.format(signatureExpiration) + " " + dateFormat.format(signatureInception) + " " +
-                keyTag + " " + signerName + " " + signature;
+        StringBuilder sb = new StringBuilder("RRSIG ");
+        sb.append(typeCovered.name()).append(' ')
+                .append(algorithm).append(' ')
+                .append(labels).append(' ')
+                .append(originalTtl).append(' ')
+                .append(dateFormat.format(signatureExpiration)).append(' ')
+                .append(dateFormat.format(signatureInception)).append(' ')
+                .append(keyTag).append(' ')
+                .append(signerName).append(' ')
+                .append(signature.toString()); // TODO: cross platform Base64 of signature
+        return sb.toString();
     }
 }
