@@ -64,10 +64,7 @@ public class NSEC implements Data {
                 int b = dis.readUnsignedByte();
                 for (int j = 0; j < 8; j++) {
                     if (((b >> j) & 0x1) > 0) {
-                        TYPE type = TYPE.getType((windowBlock << 8) + (i * 8) + (7 - j));
-                        if (type != null) {
-                            typeList.add(type);
-                        }
+                        typeList.add(TYPE.getType((windowBlock << 8) + (i * 8) + (7 - j)));
                     }
                 }
             }
