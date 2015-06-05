@@ -17,15 +17,11 @@ import de.measite.minidns.dnsserverlookup.HardcodedDNSServerAddresses;
 public class DNSClientTest {
 
     @Test
-    public void serverLookupOrderTest() {
+    public void oracleOrderTest() {
         List<DNSServerLookupMechanism> expectedOrder = new ArrayList<>();
-        if (isAndroid()) {
-            expectedOrder.add(0, AndroidUsingExec.INSTANCE);
-            expectedOrder.add(1, AndroidUsingReflection.INSTANCE);
-            expectedOrder.add(2, HardcodedDNSServerAddresses.INSTANCE);
-        } else {
-            expectedOrder.add(0, HardcodedDNSServerAddresses.INSTANCE);
-        }
+        expectedOrder.add(0, AndroidUsingExec.INSTANCE);
+        expectedOrder.add(1, AndroidUsingReflection.INSTANCE);
+        expectedOrder.add(2, HardcodedDNSServerAddresses.INSTANCE);
         for (DNSServerLookupMechanism mechanism : DNSClient.LOOKUP_MECHANISMS) {
             if (expectedOrder.isEmpty()) {
                 break;
@@ -66,14 +62,5 @@ public class DNSClientTest {
         TestClient client = new TestClient();
         assertNull(client.query("example.com", Record.TYPE.A));
         assertFalse(client.lastQueryUdp);
-    }
-
-    private static boolean isAndroid() {
-        try {
-            Class.forName("android.Manifest"); // throws execption when not on Android
-            return true;
-        } catch (Exception e) {
-            return false;
-        }
     }
 }

@@ -28,10 +28,8 @@ public class DNSClient extends AbstractDNSClient {
     static final List<DNSServerLookupMechanism> LOOKUP_MECHANISMS = new ArrayList<>();
 
     static {
-        if (isAndroid()) {
-            addDnsServerLookupMechanism(AndroidUsingExec.INSTANCE);
-            addDnsServerLookupMechanism(AndroidUsingReflection.INSTANCE);
-        }
+        addDnsServerLookupMechanism(AndroidUsingExec.INSTANCE);
+        addDnsServerLookupMechanism(AndroidUsingReflection.INSTANCE);
         addDnsServerLookupMechanism(HardcodedDNSServerAddresses.INSTANCE);
     }
     private int udpPayloadSize = 512;
@@ -197,15 +195,6 @@ public class DNSClient extends AbstractDNSClient {
 
     public static synchronized boolean removeDNSServerLookupMechanism(DNSServerLookupMechanism dnsServerLookup) {
         return LOOKUP_MECHANISMS.remove(dnsServerLookup);
-    }
-
-    private static boolean isAndroid() {
-        try {
-            Class.forName("android.Manifest"); // throws execption when not on Android
-            return true;
-        } catch (Exception e) {
-            return false;
-        }
     }
 
     public int getUdpPayloadSize() {
