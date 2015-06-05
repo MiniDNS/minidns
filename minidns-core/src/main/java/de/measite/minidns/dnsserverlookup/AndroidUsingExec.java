@@ -10,6 +10,8 @@
  */
 package de.measite.minidns.dnsserverlookup;
 
+import de.measite.minidns.util.PlatformDetection;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -32,6 +34,7 @@ public class AndroidUsingExec extends AbstractDNSServerLookupMechanism {
 
     @Override
     public String[] getDnsServerAddresses() {
+        if (!PlatformDetection.isAndroid()) return null;
         try {
             Process process = Runtime.getRuntime().exec("getprop");
             InputStream inputStream = process.getInputStream();
