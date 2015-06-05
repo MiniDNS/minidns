@@ -1,5 +1,7 @@
 package de.measite.minidns.dnsserverlookup;
 
+import de.measite.minidns.util.PlatformDetection;
+
 import java.lang.reflect.Method;
 import java.net.InetAddress;
 import java.util.ArrayList;
@@ -19,6 +21,7 @@ public class AndroidUsingReflection extends AbstractDNSServerLookupMechanism {
 
     @Override
     public String[] getDnsServerAddresses() {
+        if (!PlatformDetection.isAndroid()) return null;
         try {
             Class<?> SystemProperties =
                     Class.forName("android.os.SystemProperties");
