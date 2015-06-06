@@ -15,6 +15,7 @@ allprojects {
 	apply plugin: 'eclipse'
 	apply plugin: 'osgi'
 	apply plugin: 'nexus'
+	apply plugin: 'checkstyle'
 
 	group = 'de.measite.minidns'
 	description = "A minimal DNS client library with support for A, AAAA, NS and SRV records"
@@ -25,6 +26,7 @@ allprojects {
 	ext {
 		minidnsMinAndroidSdk = 9
 		androidBootClasspath = getAndroidRuntimeJar()
+		rootConfigDir = new File(rootDir, 'config')
 	}
 
 	if (!ext.isSnapshot && 'git rev-parse --abbrev-ref HEAD'.execute().text.trim() == 'master') {
@@ -116,6 +118,9 @@ allprojects {
 
 	test { dependsOn compileAndroid }
 
+	checkstyle {
+		configFile = new File(rootConfigDir, 'checkstyle.xml')
+	}
 }
 
 jar {

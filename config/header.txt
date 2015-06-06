@@ -8,14 +8,3 @@
  * upon the condition that you accept all of the terms of either
  * the Apache License 2.0, the LGPL 2.1+ or the WTFPL.
  */
-package de.measite.minidns.dnsserverlookup;
-
-public interface DNSServerLookupMechanism extends Comparable<DNSServerLookupMechanism> {
-
-    public String getName();
-
-    public int getPriority();
-
-    public String[] getDnsServerAddresses();
-
-}

@@ -1,16 +1,36 @@
+/*
+ * Copyright 2015 the original author or authors
+ *
+ * This software is licensed under the Apache License, Version 2.0,
+ * the GNU Lesser General Public License version 2 or later ("LGPL")
+ * and the WTFPL.
+ * You may choose either license to govern your use of this software only
+ * upon the condition that you accept all of the terms of either
+ * the Apache License 2.0, the LGPL 2.1+ or the WTFPL.
+ */
 package de.measite.minidns;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
-
 import java.util.HashSet;
 import java.util.Map;
 import java.util.TreeMap;
 
-import de.measite.minidns.record.*;
 import org.junit.Test;
+
+import de.measite.minidns.record.A;
+import de.measite.minidns.record.AAAA;
+import de.measite.minidns.record.CNAME;
+import de.measite.minidns.record.Data;
+import de.measite.minidns.record.MX;
+import de.measite.minidns.record.SOA;
+import de.measite.minidns.record.SRV;
+import de.measite.minidns.record.TXT;
 
 public class DNSMessageTest {
 
@@ -20,17 +40,17 @@ public class DNSMessageTest {
         InputStream inputStream =
             getClass().getResourceAsStream(resourceFileName);
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
- 
+
         for(int readBytes = inputStream.read();
             readBytes >= 0;
             readBytes = inputStream.read())
             outputStream.write(readBytes);
- 
+
         DNSMessage result = new DNSMessage(outputStream.toByteArray());
 
         inputStream.close();
         outputStream.close();
- 
+
         assertNotNull(result);
 
         return result;
