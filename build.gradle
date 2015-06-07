@@ -7,6 +7,7 @@ buildscript {
 
     dependencies {
         classpath 'org.gradle.api.plugins:gradle-nexus-plugin:0.7.1'
+		classpath "org.kt3k.gradle.plugin:coveralls-gradle-plugin:2.3.1"
     }
 }
 
@@ -16,6 +17,7 @@ allprojects {
 	apply plugin: 'osgi'
 	apply plugin: 'nexus'
 	apply plugin: 'checkstyle'
+	apply plugin: 'jacoco'
 
 	group = 'de.measite.minidns'
 	description = "A minimal DNS client library with support for A, AAAA, NS and SRV records"
@@ -121,11 +123,45 @@ allprojects {
 	checkstyle {
 		configFile = new File(rootConfigDir, 'checkstyle.xml')
 	}
+
+	jacoco {
+		toolVersion = "0.7.4.201502262128"
+	}
+
+	jacocoTestReport {
+		dependsOn test
+		sourceDirectories = project.files(sourceSets.main.allSource.srcDirs)
+		classDirectories =  project.files(sourceSets.main.output)
+		reports {
+			xml.enabled true
+		}
+	}
 }
 
 jar {
 	// Root project should not create empty jar artifact
 	enabled = false
+}
+
+apply plugin: "com.github.kt3k.coveralls"
+coveralls {
+	sourceDirs = files(subprojects.sourceSets.main.allSource.srcDirs).files.absolutePath
+}
+
+task jacocoRootReport(type: org.gradle.testing.jacoco.tasks.JacocoReport) {
+	dependsOn = subprojects.jacocoTestReport
+	sourceDirectories = files(subprojects.sourceSets.main.allSource.srcDirs)
+	classDirectories = files(subprojects.sourceSets.main.output)
+	executionData = files(subprojects.jacocoTestReport.executionData)
+	reports {
+		xml.enabled true
+		xml.destination ="${buildDir}/reports/jacoco/test/jacocoTestReport.xml"
+	}
+	// We could remove the following setOnlyIf line, but then
+	// jacocoRootReport would silently be SKIPPED if something with
+	// the subprojects is wrong (e.g. a project is missing
+	// in there).
+	setOnlyIf { true }
 }
 
 def getAndroidRuntimeJar() {
