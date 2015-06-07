@@ -1,12 +1,25 @@
+/*
+ * Copyright 2015 the original author or authors
+ *
+ * This software is licensed under the Apache License, Version 2.0,
+ * the GNU Lesser General Public License version 2 or later ("LGPL")
+ * and the WTFPL.
+ * You may choose either license to govern your use of this software only
+ * upon the condition that you accept all of the terms of either
+ * the Apache License 2.0, the LGPL 2.1+ or the WTFPL.
+ */
 package de.measite.minidns.util;
-
-import static org.junit.Assert.*;
 
 import org.junit.Test;
 
 import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
 import java.io.IOException;
+
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 public class NameUtilTest {
     @Test
@@ -45,7 +58,7 @@ public class NameUtilTest {
         test = new byte[]{7, 'e', 'x', 'a', 'm', 'p', 'l', 'e', 3, 'c', 'o', 'm', 0};
         assertEquals("example.com", NameUtil.parse(new DataInputStream(new ByteArrayInputStream(test)), test));
     }
-    
+
     @Test
     public void parseWithOffsetTest() {
         // TODO

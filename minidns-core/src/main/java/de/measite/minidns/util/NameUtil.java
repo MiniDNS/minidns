@@ -14,8 +14,8 @@ import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.IOException;
 import java.net.IDN;
-import java.util.HashSet;
 import java.util.Arrays;
+import java.util.HashSet;
 
 /**
  * Utilities related to internationalized domain names and dns name handling.
@@ -25,11 +25,12 @@ public final class NameUtil {
     /**
      * Do not allow to instantiate NameUtil
      */
-    private NameUtil() {}
+    private NameUtil() {
+    }
 
     /**
-     * Retrieve the binary length of a string
-     * 
+     * Retrieve the binary length of a string.
+     *
      * @param name The name string.
      * @return The binary size of the string.
      */
@@ -41,6 +42,7 @@ public final class NameUtil {
     /**
      * Check if two internationalized domain names are equal, possibly causing
      * a serialization of both domain names.
+     *
      * @param name1 The first domain name.
      * @param name2 The second domain name.
      * @return True if both domain names are the same.
@@ -51,11 +53,12 @@ public final class NameUtil {
         if (name2 == null) return false;
         if (name1.equals(name2)) return true;
 
-        return Arrays.equals(toByteArray(name1),toByteArray(name2));
+        return Arrays.equals(toByteArray(name1), toByteArray(name2));
     }
 
     /**
      * Serialize a domain name under IDN rules.
+     *
      * @param name The domain name.
      * @return The binary domain name representation.
      */
@@ -75,14 +78,14 @@ public final class NameUtil {
     /**
      * Parse a domain name starting at the current offset and moving the input
      * stream pointer past this domain name (even if cross references occure).
-     * @param dis The input stream.
+     *
+     * @param dis  The input stream.
      * @param data The raw data (for cross references).
      * @return The domain name string.
      * @throws IOException Should never happen.
      */
-    public static String parse(DataInputStream dis, byte data[]) 
-        throws IOException
-    {
+    public static String parse(DataInputStream dis, byte data[])
+            throws IOException {
         int c = dis.readUnsignedByte();
         if ((c & 0xc0) == 0xc0) {
             c = ((c & 0x3f) << 8) + dis.readUnsignedByte();
@@ -104,18 +107,15 @@ public final class NameUtil {
     }
 
     /**
-     * Parse a domain name starting at the given offset. 
-     * @param data The raw data.
+     * Parse a domain name starting at the given offset.
+     *
+     * @param data   The raw data.
      * @param offset The offset.
-     * @param jumps The list of jumps (by now).
+     * @param jumps  The list of jumps (by now).
      * @return The parsed domain name.
      * @throws IllegalStateException on cycles.
      */
-    public static String parse(
-        byte data[],
-        int offset,
-        HashSet<Integer> jumps
-    ) {
+    public static String parse(byte data[], int offset, HashSet<Integer> jumps) {
         int c = data[offset] & 0xff;
         if ((c & 0xc0) == 0xc0) {
             c = ((c & 0x3f) << 8) + (data[offset + 1] & 0xff);
@@ -128,7 +128,7 @@ public final class NameUtil {
         if (c == 0) {
             return "";
         }
-        String s = new String(data,offset + 1, c);
+        String s = new String(data, offset + 1, c);
         String t = parse(data, offset + 1 + c, jumps);
         if (t.length() > 0) {
             s = s + "." + t;
