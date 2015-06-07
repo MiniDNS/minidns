@@ -4,3 +4,4 @@
 rootProject.name = 'MiniDNS'
 
 include 'minidns-core'
+include 'minidns-dnssec'

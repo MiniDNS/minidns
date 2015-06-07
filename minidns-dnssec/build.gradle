@@ -1,0 +1,4 @@
+dependencies {
+    compile project(':minidns-core')
+    testCompile 'junit:junit:4.11'
+}
