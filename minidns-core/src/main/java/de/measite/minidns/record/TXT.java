@@ -1,3 +1,13 @@
+/*
+ * Copyright 2015 the original author or authors
+ *
+ * This software is licensed under the Apache License, Version 2.0,
+ * the GNU Lesser General Public License version 2 or later ("LGPL")
+ * and the WTFPL.
+ * You may choose either license to govern your use of this software only
+ * upon the condition that you accept all of the terms of either
+ * the Apache License 2.0, the LGPL 2.1+ or the WTFPL.
+ */
 package de.measite.minidns.record;
 
 import java.io.DataInputStream;
@@ -9,9 +19,9 @@ import java.util.List;
 import de.measite.minidns.Record.TYPE;
 
 /**
- * TXT record (actually a binary blob containing extents, each of which is a one-byte count
+ *  A TXT record. Actually a binary blob containing extents, each of which is a one-byte count
  *  followed by that many bytes of data, which can usually be interpreted as ASCII strings
- *  but not always
+ *  but not always.
  */
 public class TXT implements Data {
 

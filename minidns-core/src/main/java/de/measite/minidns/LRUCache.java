@@ -1,3 +1,13 @@
+/*
+ * Copyright 2015 the original author or authors
+ *
+ * This software is licensed under the Apache License, Version 2.0,
+ * the GNU Lesser General Public License version 2 or later ("LGPL")
+ * and the WTFPL.
+ * You may choose either license to govern your use of this software only
+ * upon the condition that you accept all of the terms of either
+ * the Apache License 2.0, the LGPL 2.1+ or the WTFPL.
+ */
 package de.measite.minidns;
 
 import java.util.LinkedHashMap;
@@ -11,17 +21,17 @@ public class LRUCache implements DNSCache {
     /**
      * Internal miss count.
      */
-    protected long missCount = 0l;
+    protected long missCount = 0L;
 
     /**
      * Internal expire count (subset of misses that was caused by expire).
      */
-    protected long expireCount = 0l;
+    protected long expireCount = 0L;
 
     /**
      * Internal hit count.
      */
-    protected long hitCount = 0l;
+    protected long hitCount = 0L;
 
     /**
      * The internal capacity of the backend cache.
@@ -68,7 +78,7 @@ public class LRUCache implements DNSCache {
 
     @Override
     public synchronized void put(Question q, DNSMessage message) {
-        if (message.getReceiveTimestamp() <= 0l) {
+        if (message.getReceiveTimestamp() <= 0L) {
             return;
         }
         backend.put(q, message);
@@ -105,9 +115,9 @@ public class LRUCache implements DNSCache {
      */
     public synchronized void clear() {
         backend.clear();
-        missCount = 0l;
-        hitCount = 0l;
-        expireCount = 0l;
+        missCount = 0L;
+        hitCount = 0L;
+        expireCount = 0L;
     }
 
     /**
