@@ -10,8 +10,6 @@
  */
 package de.measite.minidns;
 
-import static org.junit.Assert.*;
-
 import java.io.IOException;
 import java.net.InetAddress;
 import java.util.ArrayList;
@@ -23,6 +21,10 @@ import de.measite.minidns.dnsserverlookup.AndroidUsingExec;
 import de.measite.minidns.dnsserverlookup.AndroidUsingReflection;
 import de.measite.minidns.dnsserverlookup.DNSServerLookupMechanism;
 import de.measite.minidns.dnsserverlookup.HardcodedDNSServerAddresses;
+
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 public class DNSClientTest {
 

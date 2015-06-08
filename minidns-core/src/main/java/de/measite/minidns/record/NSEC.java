@@ -1,3 +1,13 @@
+/*
+ * Copyright 2015 the original author or authors
+ *
+ * This software is licensed under the Apache License, Version 2.0,
+ * the GNU Lesser General Public License version 2 or later ("LGPL")
+ * and the WTFPL.
+ * You may choose either license to govern your use of this software only
+ * upon the condition that you accept all of the terms of either
+ * the Apache License 2.0, the LGPL 2.1+ or the WTFPL.
+ */
 package de.measite.minidns.record;
 
 import de.measite.minidns.Record.TYPE;
@@ -9,17 +19,17 @@ import java.io.IOException;
 import java.util.ArrayList;
 
 /**
- * NSEC record payload
+ * NSEC record payload.
  */
 public class NSEC implements Data {
 
     /**
-     * The next owner name that contains a authoritative data or a delegation point
+     * The next owner name that contains a authoritative data or a delegation point.
      */
     public final String next;
 
     private final byte[] typeBitmap;
-    
+
     /**
      * The RR types existing at the owner name.
      */
@@ -28,7 +38,7 @@ public class NSEC implements Data {
     public NSEC(DataInputStream dis, byte[] data, int length) throws IOException {
         next = NameUtil.parse(dis, data);
 
-        typeBitmap = new byte[length-NameUtil.size(next)];
+        typeBitmap = new byte[length - NameUtil.size(next)];
         dis.read(typeBitmap);
         types = readTypeBitMap(typeBitmap);
     }

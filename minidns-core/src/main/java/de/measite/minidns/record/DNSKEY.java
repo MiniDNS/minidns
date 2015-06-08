@@ -1,3 +1,13 @@
+/*
+ * Copyright 2015 the original author or authors
+ *
+ * This software is licensed under the Apache License, Version 2.0,
+ * the GNU Lesser General Public License version 2 or later ("LGPL")
+ * and the WTFPL.
+ * You may choose either license to govern your use of this software only
+ * upon the condition that you accept all of the terms of either
+ * the Apache License 2.0, the LGPL 2.1+ or the WTFPL.
+ */
 package de.measite.minidns.record;
 
 import de.measite.minidns.Record.TYPE;
@@ -9,7 +19,7 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 
 /**
- * DNSKEY record payload
+ * DNSKEY record payload.
  */
 public class DNSKEY implements Data {
     /**
@@ -20,22 +30,22 @@ public class DNSKEY implements Data {
     public static final short FLAG_SECURE_ENTRY_POINT = 0x1;
 
     /**
-     * Whether the record holds a revoked key
+     * Whether the record holds a revoked key.
      */
     public static final short FLAG_REVOKE = 0x80;
 
     /**
-     * Whether the record holds a DNS zone key
+     * Whether the record holds a DNS zone key.
      */
     public static final short FLAG_ZONE = 0x100;
 
     /**
-     * Bitmap of flags: {@link #FLAG_SECURE_ENTRY_POINT}, {@link #FLAG_REVOKE}, {@link #FLAG_ZONE}
+     * Bitmap of flags: {@link #FLAG_SECURE_ENTRY_POINT}, {@link #FLAG_REVOKE}, {@link #FLAG_ZONE}.
      */
     public final short flags;
 
     /**
-     * Must be 3 as of RFC 4034
+     * Must be 3 as of RFC 4034.
      */
     public final byte protocol;
 
@@ -75,7 +85,7 @@ public class DNSKEY implements Data {
             // Should never happen
             throw new IllegalStateException(e);
         }
-        
+
         return baos.toByteArray();
     }
 

@@ -1,3 +1,13 @@
+/*
+ * Copyright 2015 the original author or authors
+ *
+ * This software is licensed under the Apache License, Version 2.0,
+ * the GNU Lesser General Public License version 2 or later ("LGPL")
+ * and the WTFPL.
+ * You may choose either license to govern your use of this software only
+ * upon the condition that you accept all of the terms of either
+ * the Apache License 2.0, the LGPL 2.1+ or the WTFPL.
+ */
 package de.measite.minidns.record;
 
 import de.measite.minidns.Record.TYPE;
@@ -8,7 +18,7 @@ import java.io.IOException;
 import java.math.BigInteger;
 
 /**
- * NSEC3 record payload
+ * NSEC3 record payload.
  */
 public class NSEC3 implements Data {
 
@@ -24,7 +34,7 @@ public class NSEC3 implements Data {
     public final byte hashAlgorithm;
 
     /**
-     * Bitmap of flags: {@link #FLAG_OPT_OUT}
+     * Bitmap of flags: {@link #FLAG_OPT_OUT}.
      */
     public final byte flags;
 
@@ -39,12 +49,12 @@ public class NSEC3 implements Data {
     public final byte[] salt;
 
     /**
-     * The next hashed owner name in hash order
+     * The next hashed owner name in hash order.
      */
     public final byte[] nextHashed;
 
     private final byte[] typeBitmap;
-    
+
     /**
      * The RR types existing at the original owner name.
      */
