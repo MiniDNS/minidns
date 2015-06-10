@@ -10,16 +10,21 @@
  */
 package de.measite.minidns;
 
+import de.measite.minidns.Record.CLASS;
+import de.measite.minidns.Record.TYPE;
+
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
 import java.io.IOException;
+import java.net.DatagramPacket;
+import java.net.DatagramSocket;
 import java.net.InetAddress;
+import java.net.Socket;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.util.Map;
 import java.util.Random;
 import java.util.logging.Logger;
-
-import de.measite.minidns.Record.CLASS;
-import de.measite.minidns.Record.TYPE;
 
 /**
  * A minimal DNS client for SRV/A/AAAA/NS and CNAME lookups, with IDN support.
@@ -48,6 +53,8 @@ public abstract class AbstractDNSClient {
      * The internal DNS cache.
      */
     protected DNSCache cache;
+
+    protected int udpPayloadSize = 512;
 
     /**
      * Create a new DNS client with the given DNS cache.
@@ -203,5 +210,70 @@ public abstract class AbstractDNSClient {
      */
     public DNSMessage query(Question q, InetAddress address) throws IOException {
         return query(q, address, 53);
+    }
+
+    protected DNSMessage queryUdp(InetAddress address, int port, DNSMessage message) throws IOException {
+        DNSMessage dnsMessage = queryUdp(address, port, message.toArray());
+        if (dnsMessage.getId() != message.getId()) {
+            return null;
+        }
+        return dnsMessage;
+    }
+
+    protected DNSMessage queryUdp(InetAddress address, int port, byte[] message) throws IOException {
+        // TODO Use a try-with-resource statement here once miniDNS minimum
+        // required Android API level is >= 19
+        DatagramSocket socket = null;
+        try {
+            socket = new DatagramSocket();
+            DatagramPacket packet = new DatagramPacket(message, message.length, address, port);
+            socket.setSoTimeout(timeout);
+            socket.send(packet);
+            packet = new DatagramPacket(new byte[bufferSize], bufferSize);
+            socket.receive(packet);
+            return new DNSMessage(packet.getData());
+        } finally {
+            if (socket != null) {
+                socket.close();
+            }
+        }
+    }
+
+    protected DNSMessage queryTcp(InetAddress address, int port, DNSMessage message) throws IOException {
+        DNSMessage dnsMessage = queryTcp(address, port, message.toArray());
+        if (dnsMessage.getId() != message.getId()) {
+            return null;
+        }
+        return dnsMessage;
+    }
+
+    protected DNSMessage queryTcp(InetAddress address, int port, byte[] message) throws IOException {
+        // TODO Use a try-with-resource statement here once miniDNS minimum
+        // required Android API level is >= 19
+        Socket socket = null;
+        try {
+            socket = new Socket(address, port);
+            DataOutputStream dos = new DataOutputStream(socket.getOutputStream());
+            dos.writeShort(message.length);
+            dos.write(message);
+            dos.flush();
+            DataInputStream dis = new DataInputStream(socket.getInputStream());
+            int length = dis.readUnsignedShort();
+            byte[] data = new byte[length];
+            dis.read(data);
+            return new DNSMessage(data);
+        } finally {
+            if (socket != null) {
+                socket.close();
+            }
+        }
+    }
+
+    public int getUdpPayloadSize() {
+        return udpPayloadSize;
+    }
+
+    public void setUdpPayloadSize(int udpPayloadSize) {
+        this.udpPayloadSize = udpPayloadSize;
     }
 }
