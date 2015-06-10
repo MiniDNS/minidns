@@ -12,6 +12,7 @@ package de.measite.minidns;
 
 import de.measite.minidns.Record.TYPE;
 import de.measite.minidns.record.A;
+import de.measite.minidns.record.CNAME;
 import de.measite.minidns.record.NS;
 
 import java.io.IOException;
@@ -49,21 +50,28 @@ public class RecursiveDNSClient extends AbstractDNSClient {
                 String name = ((NS) record.payloadData).name;
                 InetAddress target = searchAdditional(resMessage, name);
                 if (target == null) {
-                    Question question = new Question(name, TYPE.A);
-                    DNSMessage nsMessage = query(question);
-                    if (nsMessage != null) {
-                        for (Record answer : nsMessage.answers) {
-                            if (answer.isAnswer(question)) {
-                                target = InetAddress.getByAddress(name, ((A) answer.payloadData).ip);
-                            }
-                        }
-                    }
+                    target = resolveIpRecursive(name);
                 }
                 if (target != null) {
                     DNSMessage recursive = queryRecursive(q, target);
                     if (recursive != null) {
                         return recursive;
                     }
+                }
+            }
+        }
+        return null;
+    }
+
+    private InetAddress resolveIpRecursive(String name) throws UnknownHostException {
+        Question question = new Question(name, TYPE.A);
+        DNSMessage aMessage = query(question);
+        if (aMessage != null) {
+            for (Record answer : aMessage.answers) {
+                if (answer.isAnswer(question)) {
+                    return InetAddress.getByAddress(name, ((A) answer.payloadData).ip);
+                } else if (answer.type == TYPE.CNAME && answer.name.equals(name)) {
+                    return resolveIpRecursive(((CNAME) answer.payloadData).name);
                 }
             }
         }
@@ -82,7 +90,7 @@ public class RecursiveDNSClient extends AbstractDNSClient {
 
     @Override
     public DNSMessage query(Question q, InetAddress address, int port) throws IOException {
-        //System.out.println("Q: " + q + " @ " + address);
+        System.out.println("Q: " + q + " @ " + address);
         // See if we have the answer to this question already cached
         DNSMessage dnsMessage = (cache == null) ? null : cache.get(q);
         if (dnsMessage != null) {
