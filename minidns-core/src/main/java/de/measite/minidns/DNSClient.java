@@ -10,24 +10,18 @@
  */
 package de.measite.minidns;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.IOException;
-import java.net.DatagramPacket;
-import java.net.DatagramSocket;
-import java.net.InetAddress;
-import java.net.Socket;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.logging.Level;
-
 import de.measite.minidns.dnsserverlookup.AndroidUsingExec;
 import de.measite.minidns.dnsserverlookup.AndroidUsingReflection;
 import de.measite.minidns.dnsserverlookup.DNSServerLookupMechanism;
 import de.measite.minidns.dnsserverlookup.HardcodedDNSServerAddresses;
 import de.measite.minidns.record.OPT;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.logging.Level;
 
 /**
  * A minimal DNS client for SRV/A/AAAA/NS and CNAME lookups, with IDN support.
@@ -42,7 +36,7 @@ public class DNSClient extends AbstractDNSClient {
         addDnsServerLookupMechanism(AndroidUsingReflection.INSTANCE);
         addDnsServerLookupMechanism(HardcodedDNSServerAddresses.INSTANCE);
     }
-    private int udpPayloadSize = 512;
+
     private boolean askForDnssec = false;
     private boolean disableResultFilter = false;
 
@@ -55,94 +49,18 @@ public class DNSClient extends AbstractDNSClient {
     }
 
     @Override
-    public DNSMessage query(Question q, InetAddress address, int port) throws IOException {
-        // See if we have the answer to this question already cached
-        DNSMessage dnsMessage = (cache == null) ? null : cache.get(q);
-        if (dnsMessage != null) {
-            return dnsMessage;
-        }
-
+    protected DNSMessage buildMessage(Question question) {
         DNSMessage message = new DNSMessage();
-        message.setQuestions(new Question[]{q});
+        message.setQuestions(question);
         message.setRecursionDesired(true);
         message.setId(random.nextInt());
-        message.setOptPseudoRecord(Math.min(udpPayloadSize, bufferSize), askForDnssec ? OPT.FLAG_DNSSEC_OK : 0);
-
-        dnsMessage = queryUdp(address, port, message);
-
-        if (dnsMessage == null || dnsMessage.isTruncated()) {
-            dnsMessage = queryTcp(address, port, message);
-        }
-
-        if (dnsMessage == null) {
-            return null;
-        }
-
-        for (Record record : dnsMessage.getAnswers()) {
-            if (record.isAnswer(q)) {
-                if (cache != null) {
-                    cache.put(q, dnsMessage);
-                }
-                break;
-            }
-        }
-        return dnsMessage;
-    }
-
-    protected DNSMessage queryUdp(InetAddress address, int port, DNSMessage message) throws IOException {
-        byte[] buf = message.toArray();
-        // TODO Use a try-with-resource statement here once miniDNS minimum
-        // required Android API level is >= 19
-        DatagramSocket socket = null;
-        try {
-            socket = new DatagramSocket();
-            DatagramPacket packet = new DatagramPacket(buf, buf.length,
-                    address, port);
-            socket.setSoTimeout(timeout);
-            socket.send(packet);
-            packet = new DatagramPacket(new byte[bufferSize], bufferSize);
-            socket.receive(packet);
-            DNSMessage dnsMessage = new DNSMessage(packet.getData());
-            if (dnsMessage.getId() != message.getId()) {
-                return null;
-            }
-            return dnsMessage;
-        } finally {
-            if (socket != null) {
-                socket.close();
-            }
-        }
-    }
-
-    protected DNSMessage queryTcp(InetAddress address, int port, DNSMessage message) throws IOException {
-        byte[] buf = message.toArray();
-        // TODO Use a try-with-resource statement here once miniDNS minimum
-        // required Android API level is >= 19
-        Socket socket = null;
-        try {
-            socket = new Socket(address, port);
-            DataOutputStream dos = new DataOutputStream(socket.getOutputStream());
-            dos.writeShort(buf.length);
-            dos.write(buf);
-            dos.flush();
-            DataInputStream dis = new DataInputStream(socket.getInputStream());
-            int length = dis.readUnsignedShort();
-            byte[] data = new byte[length];
-            dis.read(data);
-            DNSMessage dnsMessage = new DNSMessage(data);
-            if (dnsMessage.getId() != message.getId()) {
-                return null;
-            }
-            return dnsMessage;
-        } finally {
-            if (socket != null) {
-                socket.close();
-            }
-        }
+        message.setOptPseudoRecord(dnsWorld.getUdpPayloadSize(), askForDnssec ? OPT.FLAG_DNSSEC_OK : 0);
+        return message;
     }
 
     /**
      * Query the system DNS server for one entry.
+     *
      * @param q The question section of the DNS query.
      * @return The response (or null on timeout/error).
      */
@@ -168,10 +86,10 @@ public class DNSClient extends AbstractDNSClient {
                     return message;
                 }
                 if (message.getResponseCode() !=
-                    DNSMessage.RESPONSE_CODE.NO_ERROR) {
+                        DNSMessage.RESPONSE_CODE.NO_ERROR) {
                     continue;
                 }
-                for (Record record: message.getAnswers()) {
+                for (Record record : message.getAnswers()) {
                     if (record.isAnswer(q)) {
                         return message;
                     }
@@ -185,6 +103,7 @@ public class DNSClient extends AbstractDNSClient {
 
     /**
      * Retrieve a list of currently configured DNS servers.
+     *
      * @return The server array.
      */
     public static synchronized String[] findDNS() {
@@ -205,14 +124,6 @@ public class DNSClient extends AbstractDNSClient {
 
     public static synchronized boolean removeDNSServerLookupMechanism(DNSServerLookupMechanism dnsServerLookup) {
         return LOOKUP_MECHANISMS.remove(dnsServerLookup);
-    }
-
-    public int getUdpPayloadSize() {
-        return udpPayloadSize;
-    }
-
-    public void setUdpPayloadSize(int udpPayloadSize) {
-        this.udpPayloadSize = udpPayloadSize;
     }
 
     public boolean isAskForDnssec() {

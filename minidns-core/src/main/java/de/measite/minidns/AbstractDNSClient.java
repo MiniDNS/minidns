@@ -10,6 +10,11 @@
  */
 package de.measite.minidns;
 
+import de.measite.minidns.Record.CLASS;
+import de.measite.minidns.Record.TYPE;
+import de.measite.minidns.world.DNSWorld;
+import de.measite.minidns.world.NetworkDNSWorld;
+
 import java.io.IOException;
 import java.net.InetAddress;
 import java.security.NoSuchAlgorithmException;
@@ -17,9 +22,6 @@ import java.security.SecureRandom;
 import java.util.Map;
 import java.util.Random;
 import java.util.logging.Logger;
-
-import de.measite.minidns.Record.CLASS;
-import de.measite.minidns.Record.TYPE;
 
 /**
  * A minimal DNS client for SRV/A/AAAA/NS and CNAME lookups, with IDN support.
@@ -35,22 +37,14 @@ public abstract class AbstractDNSClient {
     protected final Random random;
 
     /**
-     * The buffer size for dns replies.
-     */
-    protected int bufferSize = 1500;
-
-    /**
-     * DNS timeout.
-     */
-    protected int timeout = 5000;
-
-    /**
      * The internal DNS cache.
      */
     protected DNSCache cache;
+    protected DNSWorld dnsWorld = new NetworkDNSWorld();
 
     /**
      * Create a new DNS client with the given DNS cache.
+     *
      * @param cache The backend DNS cache.
      */
     protected AbstractDNSClient(DNSCache cache) {
@@ -60,14 +54,20 @@ public abstract class AbstractDNSClient {
 
     /**
      * Creates a new client that uses the given Map as cache.
+     *
      * @param cache the Map to use as cache for DNS results.
      */
     protected AbstractDNSClient(final Map<Question, DNSMessage> cache) {
         this();
         if (cache != null)
             this.cache = new DNSCache() {
-                public void put(Question q, DNSMessage message) { cache.put(q, message); }
-                public DNSMessage get(Question q) { return cache.get(q); }
+                public void put(Question q, DNSMessage message) {
+                    cache.put(q, message);
+                }
+
+                public DNSMessage get(Question q) {
+                    return cache.get(q);
+                }
             };
     }
 
@@ -85,35 +85,17 @@ public abstract class AbstractDNSClient {
     }
 
     /**
-     * Retrieve the current dns query timeout, in milliseconds.
-     * @return the current dns query timeout in milliseconds.
-     */
-    public int getTimeout() {
-        return timeout;
-    }
-
-    /**
-     * Change the dns query timeout for all future queries. The timeout
-     * must be specified in milliseconds.
-     * @param timeout new dns query timeout in milliseconds.
-     */
-    public void setTimeout(int timeout) {
-        this.timeout = timeout;
-    }
-
-    /**
      * Query the system nameservers for a single entry of any class.
      *
      * This can be used to determine the name server version, if name
      * is version.bind, type is TYPE.TXT and clazz is CLASS.CH.
      *
-     * @param name The DNS name to request.
-     * @param type The DNS type to request (SRV, A, AAAA, ...).
+     * @param name  The DNS name to request.
+     * @param type  The DNS type to request (SRV, A, AAAA, ...).
      * @param clazz The class of the request (usually IN for Internet).
      * @return The response (or null on timeout/error).
      */
-    public final DNSMessage query(String name, TYPE type, CLASS clazz)
-    {
+    public final DNSMessage query(String name, TYPE type, CLASS clazz) {
         Question q = new Question(name, type, clazz);
         return query(q);
     }
@@ -126,8 +108,7 @@ public abstract class AbstractDNSClient {
      * @param type The DNS type to request (SRV, A, AAAA, ...).
      * @return The response (or null on timeout/error).
      */
-    public final DNSMessage query(String name, TYPE type)
-    {
+    public final DNSMessage query(String name, TYPE type) {
         Question q = new Question(name, type, CLASS.IN);
         return query(q);
     }
@@ -135,57 +116,75 @@ public abstract class AbstractDNSClient {
 
     /**
      * Query the system DNS server for one entry.
+     *
      * @param q The question section of the DNS query.
      * @return The response (or null on timeout/error).
      */
     public abstract DNSMessage query(Question q);
 
-    /**
-     * Query a specific server for one entry.
-     * @param q The question section of the DNS query.
-     * @param address The dns server address.
-     * @param port the dns port.
-     * @return The response (or null on timeout/error).
-     * @throws IOException On IOErrors.
-     */
-    public abstract DNSMessage query(Question q, InetAddress address, int port) throws IOException;
+    public DNSMessage query(Question q, InetAddress address, int port) {
+        // See if we have the answer to this question already cached
+        DNSMessage dnsMessage = (cache == null) ? null : cache.get(q);
+        if (dnsMessage != null) {
+            return dnsMessage;
+        }
+
+        DNSMessage message = buildMessage(q);
+
+        dnsMessage = dnsWorld.query(message, address, port);
+        
+        if (dnsMessage == null) return null;
+
+        for (Record record : dnsMessage.getAnswers()) {
+            if (record.isAnswer(q)) {
+                if (cache != null) {
+                    cache.put(q, dnsMessage);
+                }
+                break;
+            }
+        }
+        return dnsMessage;
+    }
+
+    protected abstract DNSMessage buildMessage(Question question);
 
     /**
      * Query a nameserver for a single entry.
-     * @param name The DNS name to request.
-     * @param type The DNS type to request (SRV, A, AAAA, ...).
-     * @param clazz The class of the request (usually IN for Internet).
+     *
+     * @param name    The DNS name to request.
+     * @param type    The DNS type to request (SRV, A, AAAA, ...).
+     * @param clazz   The class of the request (usually IN for Internet).
      * @param address The DNS server address.
-     * @param port The DNS server port.
+     * @param port    The DNS server port.
      * @return The response (or null on timeout / failure).
      * @throws IOException On IO Errors.
      */
     public DNSMessage query(String name, TYPE type, CLASS clazz, InetAddress address, int port)
-        throws IOException
-    {
+            throws IOException {
         Question q = new Question(name, type, clazz);
         return query(q, address, port);
     }
 
     /**
      * Query a nameserver for a single entry.
-     * @param name The DNS name to request.
-     * @param type The DNS type to request (SRV, A, AAAA, ...).
-     * @param clazz The class of the request (usually IN for Internet).
+     *
+     * @param name    The DNS name to request.
+     * @param type    The DNS type to request (SRV, A, AAAA, ...).
+     * @param clazz   The class of the request (usually IN for Internet).
      * @param address The DNS server host.
      * @return The response (or null on timeout / failure).
      * @throws IOException On IO Errors.
      */
     public DNSMessage query(String name, TYPE type, CLASS clazz, InetAddress address)
-        throws IOException
-    {
+            throws IOException {
         Question q = new Question(name, type, clazz);
         return query(q, address);
     }
 
     /**
      * Query a specific server for one entry.
-     * @param q The question section of the DNS query.
+     *
+     * @param q    The question section of the DNS query.
      * @param host The dns server host.
      * @return The response (or null on timeout/error).
      * @throws IOException On IOErrors.
@@ -196,12 +195,21 @@ public abstract class AbstractDNSClient {
 
     /**
      * Query a specific server for one entry.
-     * @param q The question section of the DNS query.
+     *
+     * @param q       The question section of the DNS query.
      * @param address The dns server address.
      * @return The response (or null on timeout/error).
      * @throws IOException On IOErrors.
      */
     public DNSMessage query(Question q, InetAddress address) throws IOException {
         return query(q, address, 53);
+    }
+
+    public DNSWorld getDnsWorld() {
+        return dnsWorld;
+    }
+
+    public void setDnsWorld(DNSWorld dnsWorld) {
+        this.dnsWorld = dnsWorld;
     }
 }

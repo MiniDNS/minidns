@@ -10,20 +10,15 @@
  */
 package de.measite.minidns;
 
-import java.io.IOException;
-import java.net.InetAddress;
-import java.util.ArrayList;
-import java.util.List;
-
-import org.junit.Test;
-
 import de.measite.minidns.dnsserverlookup.AndroidUsingExec;
 import de.measite.minidns.dnsserverlookup.AndroidUsingReflection;
 import de.measite.minidns.dnsserverlookup.DNSServerLookupMechanism;
 import de.measite.minidns.dnsserverlookup.HardcodedDNSServerAddresses;
+import org.junit.Test;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNull;
+import java.util.ArrayList;
+import java.util.List;
+
 import static org.junit.Assert.assertTrue;
 
 public class DNSClientTest {
@@ -44,35 +39,5 @@ public class DNSClientTest {
             }
         }
         assertTrue(expectedOrder.isEmpty());
-    }
-
-    @Test
-    public void udpTruncatedTcpFallbackTest() {
-        class TestClient extends DNSClient {
-            public TestClient() {
-                super(new LRUCache(0));
-            }
-
-            boolean lastQueryUdp = false;
-
-            @Override
-            protected DNSMessage queryUdp(InetAddress address, int port, DNSMessage message) throws IOException {
-                assertFalse(lastQueryUdp);
-                lastQueryUdp = true;
-                DNSMessage msg = new DNSMessage();
-                msg.setTruncated(true);
-                return msg;
-            }
-
-            @Override
-            protected DNSMessage queryTcp(InetAddress address, int port, DNSMessage message) throws IOException {
-                assertTrue(lastQueryUdp);
-                lastQueryUdp = false;
-                return null;
-            }
-        }
-        TestClient client = new TestClient();
-        assertNull(client.query("example.com", Record.TYPE.A));
-        assertFalse(client.lastQueryUdp);
     }
 }

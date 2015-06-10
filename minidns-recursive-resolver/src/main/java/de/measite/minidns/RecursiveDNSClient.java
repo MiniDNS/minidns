@@ -64,6 +64,7 @@ public class RecursiveDNSClient extends AbstractDNSClient {
     }
 
     private InetAddress resolveIpRecursive(String name) throws UnknownHostException {
+        // TODO: IPv6?
         Question question = new Question(name, TYPE.A);
         DNSMessage aMessage = query(question);
         if (aMessage != null) {
@@ -89,38 +90,12 @@ public class RecursiveDNSClient extends AbstractDNSClient {
     }
 
     @Override
-    public DNSMessage query(Question q, InetAddress address, int port) throws IOException {
-        System.out.println("Q: " + q + " @ " + address);
-        // See if we have the answer to this question already cached
-        DNSMessage dnsMessage = (cache == null) ? null : cache.get(q);
-        if (dnsMessage != null) {
-            return dnsMessage;
-        }
-
+    protected DNSMessage buildMessage(Question question) {
         DNSMessage message = new DNSMessage();
-        message.setQuestions(new Question[]{q});
+        message.setQuestions(question);
         message.setRecursionDesired(false);
         message.setId(random.nextInt());
-        message.setOptPseudoRecord(Math.min(getUdpPayloadSize(), bufferSize), 0);
-
-        dnsMessage = queryUdp(address, port, message);
-
-        if (dnsMessage == null || dnsMessage.isTruncated()) {
-            dnsMessage = queryTcp(address, port, message);
-        }
-
-        if (dnsMessage == null) {
-            return null;
-        }
-
-        for (Record record : dnsMessage.getAnswers()) {
-            if (record.isAnswer(q)) {
-                if (cache != null) {
-                    cache.put(q, dnsMessage);
-                }
-                break;
-            }
-        }
-        return dnsMessage;
+        message.setOptPseudoRecord(dnsWorld.getUdpPayloadSize(), 0);
+        return message;
     }
 }
