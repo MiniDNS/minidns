@@ -54,7 +54,7 @@ public class DNSClient extends AbstractDNSClient {
         message.setQuestions(question);
         message.setRecursionDesired(true);
         message.setId(random.nextInt());
-        message.setOptPseudoRecord(dnsWorld.getUdpPayloadSize(), askForDnssec ? OPT.FLAG_DNSSEC_OK : 0);
+        message.setOptPseudoRecord(dataSource.getUdpPayloadSize(), askForDnssec ? OPT.FLAG_DNSSEC_OK : 0);
         return message;
     }
 

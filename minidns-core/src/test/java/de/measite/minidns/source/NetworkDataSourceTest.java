@@ -8,7 +8,7 @@
  * upon the condition that you accept all of the terms of either
  * the Apache License 2.0, the LGPL 2.1+ or the WTFPL.
  */
-package de.measite.minidns.world;
+package de.measite.minidns.source;
 
 import de.measite.minidns.DNSMessage;
 import org.junit.Test;
@@ -20,11 +20,11 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
-public class NetworkDNSWorldTest {
+public class NetworkDataSourceTest {
 
     @Test
     public void udpTruncatedTcpFallbackTest() {
-        class TestNetworkWorld extends NetworkDNSWorld {
+        class TestNetworkDataSource extends NetworkDataSource {
             boolean lastQueryUdp = false;
 
             @Override
@@ -43,7 +43,7 @@ public class NetworkDNSWorldTest {
                 return null;
             }
         }
-        TestNetworkWorld world = new TestNetworkWorld();
+        TestNetworkDataSource world = new TestNetworkDataSource();
         assertNull(world.query(new DNSMessage(), null, 53));
         assertFalse(world.lastQueryUdp);
     }

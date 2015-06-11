@@ -8,7 +8,7 @@
  * upon the condition that you accept all of the terms of either
  * the Apache License 2.0, the LGPL 2.1+ or the WTFPL.
  */
-package de.measite.minidns.world;
+package de.measite.minidns.source;
 
 import de.measite.minidns.DNSMessage;
 
@@ -20,7 +20,7 @@ import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.Socket;
 
-public class NetworkDNSWorld extends DNSWorld {
+public class NetworkDataSource extends DNSDataSource {
 
     public DNSMessage query(DNSMessage message, InetAddress address, int port) {
         DNSMessage dnsMessage = null;

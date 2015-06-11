@@ -95,7 +95,7 @@ public class RecursiveDNSClient extends AbstractDNSClient {
         message.setQuestions(question);
         message.setRecursionDesired(false);
         message.setId(random.nextInt());
-        message.setOptPseudoRecord(dnsWorld.getUdpPayloadSize(), 0);
+        message.setOptPseudoRecord(dataSource.getUdpPayloadSize(), 0);
         return message;
     }
 }

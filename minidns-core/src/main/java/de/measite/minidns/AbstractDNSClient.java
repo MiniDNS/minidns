@@ -12,8 +12,8 @@ package de.measite.minidns;
 
 import de.measite.minidns.Record.CLASS;
 import de.measite.minidns.Record.TYPE;
-import de.measite.minidns.world.DNSWorld;
-import de.measite.minidns.world.NetworkDNSWorld;
+import de.measite.minidns.source.DNSDataSource;
+import de.measite.minidns.source.NetworkDataSource;
 
 import java.io.IOException;
 import java.net.InetAddress;
@@ -40,7 +40,7 @@ public abstract class AbstractDNSClient {
      * The internal DNS cache.
      */
     protected DNSCache cache;
-    protected DNSWorld dnsWorld = new NetworkDNSWorld();
+    protected DNSDataSource dataSource = new NetworkDataSource();
 
     /**
      * Create a new DNS client with the given DNS cache.
@@ -131,8 +131,8 @@ public abstract class AbstractDNSClient {
 
         DNSMessage message = buildMessage(q);
 
-        dnsMessage = dnsWorld.query(message, address, port);
-        
+        dnsMessage = dataSource.query(message, address, port);
+
         if (dnsMessage == null) return null;
 
         for (Record record : dnsMessage.getAnswers()) {
@@ -205,11 +205,11 @@ public abstract class AbstractDNSClient {
         return query(q, address, 53);
     }
 
-    public DNSWorld getDnsWorld() {
-        return dnsWorld;
+    public DNSDataSource getDataSource() {
+        return dataSource;
     }
 
-    public void setDnsWorld(DNSWorld dnsWorld) {
-        this.dnsWorld = dnsWorld;
+    public void setDataSource(DNSDataSource dataSource) {
+        this.dataSource = dataSource;
     }
 }
