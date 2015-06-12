@@ -24,6 +24,10 @@ public class NS extends CNAME {
         super(dis, data, length);
     }
 
+    public NS(String name) {
+        super(name);
+    }
+
     @Override
     public TYPE getType() {
         return TYPE.NS;

@@ -360,34 +360,7 @@ public class DNSMessage {
     public byte[] toArray() throws IOException {
         ByteArrayOutputStream baos = new ByteArrayOutputStream(512);
         DataOutputStream dos = new DataOutputStream(baos);
-        int header = 0;
-        if (query) {
-            header += 1 << 15;
-        }
-        if (opcode != null) {
-            header += opcode.getValue() << 11;
-        }
-        if (authoritativeAnswer) {
-            header += 1 << 10;
-        }
-        if (truncated) {
-            header += 1 << 9;
-        }
-        if (recursionDesired) {
-            header += 1 << 8;
-        }
-        if (recursionAvailable) {
-            header += 1 << 7;
-        }
-        if (authenticData) {
-            header += 1 << 5;
-        }
-        if (checkDisabled) {
-            header += 1 << 4;
-        }
-        if (responseCode != null) {
-            header += responseCode.getValue();
-        }
+        int header = calculateHeaderBitmap();
         dos.writeShort((short)id);
         dos.writeShort((short)header);
         if (questions == null) {
@@ -477,6 +450,38 @@ public class DNSMessage {
         for (int i = 0; i < additionalResourceRecordCount; i++) {
             additionalResourceRecords[i] = new Record(dis, data);
         }
+    }
+
+    int calculateHeaderBitmap() {
+        int header = 0;
+        if (query) {
+            header += 1 << 15;
+        }
+        if (opcode != null) {
+            header += opcode.getValue() << 11;
+        }
+        if (authoritativeAnswer) {
+            header += 1 << 10;
+        }
+        if (truncated) {
+            header += 1 << 9;
+        }
+        if (recursionDesired) {
+            header += 1 << 8;
+        }
+        if (recursionAvailable) {
+            header += 1 << 7;
+        }
+        if (authenticData) {
+            header += 1 << 5;
+        }
+        if (checkDisabled) {
+            header += 1 << 4;
+        }
+        if (responseCode != null) {
+            header += responseCode.getValue();
+        }
+        return header;
     }
 
     /**

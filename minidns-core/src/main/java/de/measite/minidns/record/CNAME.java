@@ -10,11 +10,11 @@
  */
 package de.measite.minidns.record;
 
-import java.io.DataInputStream;
-import java.io.IOException;
-
 import de.measite.minidns.Record.TYPE;
 import de.measite.minidns.util.NameUtil;
+
+import java.io.DataInputStream;
+import java.io.IOException;
 
 /**
  * CNAME payload (pointer to another domain / address).
@@ -28,10 +28,12 @@ public class CNAME implements Data {
         throw new UnsupportedOperationException("Not implemented yet");
     }
 
-    public CNAME(DataInputStream dis, byte[] data, int length)
-        throws IOException
-    {
+    public CNAME(DataInputStream dis, byte[] data, int length) throws IOException {
         this.name = NameUtil.parse(dis, data);
+    }
+
+    public CNAME(String name) {
+        this.name = name;
     }
 
     @Override
