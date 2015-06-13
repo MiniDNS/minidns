@@ -1,0 +1,69 @@
+/*
+ * Copyright 2015 the original author or authors
+ *
+ * This software is licensed under the Apache License, Version 2.0,
+ * the GNU Lesser General Public License version 2 or later ("LGPL")
+ * and the WTFPL.
+ * You may choose either license to govern your use of this software only
+ * upon the condition that you accept all of the terms of either
+ * the Apache License 2.0, the LGPL 2.1+ or the WTFPL.
+ */
+package de.measite.minidns;
+
+import de.measite.minidns.Record.TYPE;
+import de.measite.minidns.record.A;
+import org.junit.Test;
+
+import java.net.UnknownHostException;
+
+import static de.measite.minidns.DNSWorld.a;
+import static de.measite.minidns.DNSWorld.applyZones;
+import static de.measite.minidns.DNSWorld.ns;
+import static de.measite.minidns.DNSWorld.record;
+import static de.measite.minidns.DNSWorld.rootZone;
+import static de.measite.minidns.DNSWorld.zone;
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+
+public class RecursiveDNSClientTest {
+    @Test
+    public void basicRecursionTest() throws UnknownHostException {
+        RecursiveDNSClient client = new RecursiveDNSClient(new LRUCache(0));
+        applyZones(client,
+                rootZone(
+                        record("com", ns("ns.com")),
+                        record("ns.com", a("1.1.1.1"))
+                ), zone("com", "ns.com", "1.1.1.1",
+                        record("example.com", ns("ns.example.com")),
+                        record("ns.example.com", a("1.1.1.2"))
+                ), zone("example.com", "ns.example.com", "1.1.1.2",
+                        record("www.example.com", a("1.1.1.3"))
+                )
+        );
+        DNSMessage message = client.query("www.example.com", TYPE.A);
+        assertNotNull(message);
+        assertEquals(1, message.answers.length);
+        assertEquals(TYPE.A, message.answers[0].type);
+        assertArrayEquals(new byte[]{1, 1, 1, 3}, ((A) message.answers[0].payloadData).ip);
+    }
+
+    @Test
+    public void loopRecursionTest() {
+        RecursiveDNSClient client = new RecursiveDNSClient(new LRUCache(0));
+        applyZones(client,
+                rootZone(
+                        record("a", ns("a.ns")),
+                        record("b", ns("b.ns")),
+                        record("a.ns", a("1.1.1.1")),
+                        record("b.ns", a("1.1.1.2"))
+                ), zone("a", "a.ns", "1.1.1.1",
+                        record("test.a", ns("a.test.b"))
+                ), zone("b", "b.ns", "1.1.1.2",
+                        record("test.b", ns("b.test.a"))
+                )
+        );
+        assertNull(client.query("www.test.a", TYPE.A));
+    }
+}
