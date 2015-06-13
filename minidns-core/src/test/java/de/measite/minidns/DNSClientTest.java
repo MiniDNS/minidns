@@ -25,12 +25,7 @@ import java.util.List;
 
 import static de.measite.minidns.DNSWorld.a;
 import static de.measite.minidns.DNSWorld.applyStubRecords;
-import static de.measite.minidns.DNSWorld.applyZones;
-import static de.measite.minidns.DNSWorld.cname;
-import static de.measite.minidns.DNSWorld.ns;
 import static de.measite.minidns.DNSWorld.record;
-import static de.measite.minidns.DNSWorld.rootZone;
-import static de.measite.minidns.DNSWorld.zone;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;

@@ -1,4 +1,5 @@
 dependencies {
     compile project(':minidns-core')
+    testCompile project(':minidns-core').sourceSets.test.output
     testCompile 'junit:junit:4.11'
 }
