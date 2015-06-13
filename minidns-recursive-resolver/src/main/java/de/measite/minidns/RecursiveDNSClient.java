@@ -23,6 +23,7 @@ import java.util.Map;
 public class RecursiveDNSClient extends AbstractDNSClient {
 
     private static final InetAddress[] ROOT_SERVERS;
+    private int maxDepth = 128;
 
     static {
         ROOT_SERVERS = new InetAddress[]{
@@ -52,8 +53,8 @@ public class RecursiveDNSClient extends AbstractDNSClient {
 
     @Override
     public DNSMessage query(Question q) {
-        InetAddress target = ROOT_SERVERS[random.nextInt(ROOT_SERVERS.length)];
-        DNSMessage message = queryRecursive(q, target);
+        DNSMessage message = queryRecursive(0, q);
+        if (message == null) return null;
         // TODO: restrict to real answer or accept non-answers?
         for (Record answer : message.answers) {
             if (answer.isAnswer(q)) {
@@ -63,7 +64,13 @@ public class RecursiveDNSClient extends AbstractDNSClient {
         return null;
     }
 
-    private DNSMessage queryRecursive(Question q, InetAddress address) {
+    public DNSMessage queryRecursive(int depth, Question q) {
+        InetAddress target = ROOT_SERVERS[random.nextInt(ROOT_SERVERS.length)];
+        return queryRecursive(depth, q, target);
+    }
+
+    private DNSMessage queryRecursive(int depth, Question q, InetAddress address) {
+        if (depth > maxDepth) return null;
         DNSMessage resMessage;
         try {
             resMessage = query(q, address);
@@ -77,11 +84,11 @@ public class RecursiveDNSClient extends AbstractDNSClient {
             if (record.type == TYPE.NS) {
                 String name = ((NS) record.payloadData).name;
                 InetAddress target = searchAdditional(resMessage, name);
-                if (target == null) {
-                    target = resolveIpRecursive(name);
+                if (target == null && !(q.name.equals(name) && q.type == TYPE.A)) {
+                    target = resolveIpRecursive(depth + 1, name);
                 }
                 if (target != null) {
-                    DNSMessage recursive = queryRecursive(q, target);
+                    DNSMessage recursive = queryRecursive(depth + 1, q, target);
                     if (recursive != null) {
                         return recursive;
                     }
@@ -91,16 +98,16 @@ public class RecursiveDNSClient extends AbstractDNSClient {
         return null;
     }
 
-    private InetAddress resolveIpRecursive(String name) {
+    private InetAddress resolveIpRecursive(int depth, String name) {
         // TODO: IPv6?
         Question question = new Question(name, TYPE.A);
-        DNSMessage aMessage = query(question);
+        DNSMessage aMessage = queryRecursive(depth + 1, question);
         if (aMessage != null) {
             for (Record answer : aMessage.answers) {
                 if (answer.isAnswer(question)) {
                     return inetAddressFromRecord(name, (A) answer.payloadData);
                 } else if (answer.type == TYPE.CNAME && answer.name.equals(name)) {
-                    return resolveIpRecursive(((CNAME) answer.payloadData).name);
+                    return resolveIpRecursive(depth + 1, ((CNAME) answer.payloadData).name);
                 }
             }
         }
