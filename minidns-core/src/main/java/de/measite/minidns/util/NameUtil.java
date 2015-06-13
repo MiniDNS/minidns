@@ -65,6 +65,7 @@ public final class NameUtil {
     public static byte[] toByteArray(String name) {
         ByteArrayOutputStream baos = new ByteArrayOutputStream(64);
         if (!name.isEmpty()) {
+            // See RFC-3490 section 3.1 https://www.ietf.org/rfc/rfc3490.txt
             for (String s : name.split("[.\u3002\uFF0E\uFF61]")) {
                 byte[] buffer = IDN.toASCII(s).getBytes();
                 baos.write(buffer.length);
