@@ -66,4 +66,28 @@ public class RecursiveDNSClientTest {
         );
         assertNull(client.query("www.test.a", TYPE.A));
     }
+
+    @Test
+    public void notGluedNsTest() {
+        RecursiveDNSClient client = new RecursiveDNSClient(new LRUCache(0));
+        applyZones(client,
+                rootZone(
+                        record("com", ns("ns.com")),
+                        record("net", ns("ns.net")),
+                        record("ns.com", a("1.1.1.1")),
+                        record("ns.net", a("1.1.2.1"))
+                ), zone("com", "ns.com", "1.1.1.1",
+                        record("example.com", ns("example.ns.net"))
+                ),  zone("net", "ns.net", "1.1.2.1",
+                        record("example.ns.net", a("1.1.2.2"))
+                ), zone("example.com", "example.ns.net", "1.1.2.2",
+                        record("www.example.com", a("1.1.1.3"))
+                )
+        );
+        DNSMessage message = client.query("www.example.com", TYPE.A);
+        assertNotNull(message);
+        assertEquals(1, message.answers.length);
+        assertEquals(TYPE.A, message.answers[0].type);
+        assertArrayEquals(new byte[]{1, 1, 1, 3}, ((A) message.answers[0].payloadData).ip);
+    }
 }
