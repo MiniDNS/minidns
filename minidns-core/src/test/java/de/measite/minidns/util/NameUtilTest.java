@@ -58,9 +58,4 @@ public class NameUtilTest {
         test = new byte[]{7, 'e', 'x', 'a', 'm', 'p', 'l', 'e', 3, 'c', 'o', 'm', 0};
         assertEquals("example.com", NameUtil.parse(new DataInputStream(new ByteArrayInputStream(test)), test));
     }
-
-    @Test
-    public void parseWithOffsetTest() {
-        // TODO
-    }
 }
