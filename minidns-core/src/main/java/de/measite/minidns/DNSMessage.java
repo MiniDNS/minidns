@@ -585,7 +585,7 @@ public class DNSMessage {
      * @param optFlags       A bitmap of flags to be attached to the
      */
     public void setOptPseudoRecord(int udpPayloadSize, int optFlags) {
-        Record opt = new Record("", Record.TYPE.OPT, udpPayloadSize, optFlags, new OPT());
+        Record opt = OPT.createEdnsOptRecord(udpPayloadSize, optFlags);
         if (additionalResourceRecords == null) {
             additionalResourceRecords = new Record[]{opt};
         } else {
@@ -618,7 +618,7 @@ public class DNSMessage {
         if (additionalResourceRecords != null && additionalResourceRecords.length != 0) {
             for (Record record : additionalResourceRecords) {
                 if (record.type == Record.TYPE.OPT) {
-                    sb.append(";; OPT PSEUDOSECTION:\n; ").append(OPT.toString(record)).append("\n");
+                    sb.append(";; OPT PSEUDOSECTION:\n; ").append(OPT.optRecordToString(record)).append("\n");
                 }
             }
         }

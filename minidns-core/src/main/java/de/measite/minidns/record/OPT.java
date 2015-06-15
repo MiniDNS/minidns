@@ -50,9 +50,23 @@ public class OPT implements Data {
         return encodedOptData;
     }
 
-    public static String toString(Record record) {
-        StringBuilder sb = new StringBuilder("EDNS: version: ").append((record.ttl >> 16) & 0xff).append(", flags:");
+    public static Record createEdnsOptRecord(int udpPayloadSize, int optFlags) {
+        return new Record("", Record.TYPE.OPT, udpPayloadSize, optFlags, new OPT());
+    }
+
+    public static int readEdnsVersion(Record record) {
+        return (int) ((record.ttl >> 16) & 0xff);
+    }
+
+    public static int readEdnsUdpPayloadSize(Record record) {
+        return record.clazzValue;
+    }
+
+    public static String optRecordToString(Record record) {
+        StringBuilder sb = new StringBuilder("EDNS: version: ")
+                .append(readEdnsVersion(record))
+                .append(", flags:");
         if ((record.ttl & FLAG_DNSSEC_OK) > 0) sb.append(" do");
-        return sb.append("; udp: ").append(record.clazzValue).toString();
+        return sb.append("; udp: ").append(readEdnsUdpPayloadSize(record)).toString();
     }
 }
