@@ -10,6 +10,7 @@
  */
 package de.measite.minidns.record;
 
+import de.measite.minidns.Record;
 import de.measite.minidns.Record.TYPE;
 
 import java.io.DataInputStream;
@@ -47,5 +48,11 @@ public class OPT implements Data {
     @Override
     public byte[] toByteArray() {
         return encodedOptData;
+    }
+
+    public static String toString(Record record) {
+        StringBuilder sb = new StringBuilder("EDNS: version: ").append((record.ttl >> 16) & 0xff).append(", flags:");
+        if ((record.ttl & FLAG_DNSSEC_OK) > 0) sb.append(" do");
+        return sb.append("; udp: ").append(record.clazzValue).toString();
     }
 }

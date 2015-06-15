@@ -19,6 +19,7 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.Iterator;
 
 /**
@@ -36,15 +37,15 @@ public class DNSMessage {
     public static enum RESPONSE_CODE {
         NO_ERROR(0), FORMAT_ERR(1), SERVER_FAIL(2), NX_DOMAIN(3),
         NO_IMP(4), REFUSED(5), YXDOMAIN(6), YXRRSET(7),
-        NXRRSET(8), NOT_AUTH(9),NOT_ZONE(10);
+        NXRRSET(8), NOT_AUTH(9), NOT_ZONE(10);
 
         /**
          * Reverse lookup table for response codes.
          */
         private final static RESPONSE_CODE INVERSE_LUT[] = new RESPONSE_CODE[]{
-            NO_ERROR, FORMAT_ERR, SERVER_FAIL, NX_DOMAIN, NO_IMP,
-            REFUSED, YXDOMAIN, YXRRSET, NXRRSET, NOT_AUTH, NOT_ZONE,
-            null, null, null, null, null
+                NO_ERROR, FORMAT_ERR, SERVER_FAIL, NX_DOMAIN, NO_IMP,
+                REFUSED, YXDOMAIN, YXRRSET, NXRRSET, NOT_AUTH, NOT_ZONE,
+                null, null, null, null, null
         };
 
         /**
@@ -54,14 +55,16 @@ public class DNSMessage {
 
         /**
          * Create a new response code.
+         *
          * @param value The response code value.
          */
         private RESPONSE_CODE(int value) {
-            this.value = (byte)value;
+            this.value = (byte) value;
         }
 
         /**
          * Retrieve the byte value of the response code.
+         *
          * @return the response code.
          */
         public byte getValue() {
@@ -70,10 +73,10 @@ public class DNSMessage {
 
         /**
          * Retrieve the response code for a byte value.
+         *
          * @param value The byte value.
          * @return The symbolic response code or null.
-         * @throws IllegalArgumentException if the value is not in the range of
-         *         0..15.
+         * @throws IllegalArgumentException if the value is not in the range of 0..15.
          */
         public static RESPONSE_CODE getResponseCode(int value) {
             if (value < 0 || value > 15) {
@@ -98,8 +101,8 @@ public class DNSMessage {
          * Lookup table for for obcode reolution.
          */
         private final static OPCODE INVERSE_LUT[] = new OPCODE[]{
-            QUERY, INVERSE_QUERY, STATUS, null, NOTIFY, UPDATE, null,
-            null, null, null, null, null, null, null, null
+                QUERY, INVERSE_QUERY, STATUS, null, NOTIFY, UPDATE, null,
+                null, null, null, null, null, null, null, null
         };
 
         /**
@@ -109,14 +112,16 @@ public class DNSMessage {
 
         /**
          * Create a new opcode for a given byte value.
+         *
          * @param value The byte value of the opcode.
          */
         private OPCODE(int value) {
-            this.value = (byte)value;
+            this.value = (byte) value;
         }
 
         /**
          * Retrieve the byte value of this opcode.
+         *
          * @return The byte value of this opcode.
          */
         public byte getValue() {
@@ -125,10 +130,11 @@ public class DNSMessage {
 
         /**
          * Retrieve the symbolic name of an opcode byte.
+         *
          * @param value The byte value of the opcode.
          * @return The symbolic opcode or null.
          * @throws IllegalArgumentException If the byte value is not in the
-         *         range 0..15.
+         *                                  range 0..15.
          */
         public static OPCODE getOpcode(int value) {
             if (value < 0 || value > 15) {
@@ -216,6 +222,7 @@ public class DNSMessage {
 
     /**
      * Retrieve the current DNS message id.
+     *
      * @return The current DNS message id.
      */
     public int getId() {
@@ -224,6 +231,7 @@ public class DNSMessage {
 
     /**
      * Set the current DNS message id.
+     *
      * @param id The new DNS message id.
      */
     public void setId(int id) {
@@ -233,6 +241,7 @@ public class DNSMessage {
     /**
      * Get the receive timestamp if this message was created via parse.
      * This should be used to evaluate TTLs.
+     *
      * @return The receive timestamp in milliseconds.
      */
     public long getReceiveTimestamp() {
@@ -241,6 +250,7 @@ public class DNSMessage {
 
     /**
      * Retrieve the query type (true or false).
+     *
      * @return True if this DNS message is a query.
      */
     public boolean isQuery() {
@@ -249,6 +259,7 @@ public class DNSMessage {
 
     /**
      * Set the query status of this message.
+     *
      * @param query The new query status.
      */
     public void setQuery(boolean query) {
@@ -257,6 +268,7 @@ public class DNSMessage {
 
     /**
      * True if the DNS message is an authoritative answer.
+     *
      * @return True if this an authoritative DNS message.
      */
     public boolean isAuthoritativeAnswer() {
@@ -265,6 +277,7 @@ public class DNSMessage {
 
     /**
      * Set the authoritative answer flag.
+     *
      * @param authoritativeAnswer Tge new authoritative answer value.
      */
     public void setAuthoritativeAnswer(boolean authoritativeAnswer) {
@@ -274,6 +287,7 @@ public class DNSMessage {
     /**
      * Retrieve the truncation status of this message. True means that the
      * client should try a tcp lookup.
+     *
      * @return True if this message was truncated.
      */
     public boolean isTruncated() {
@@ -282,6 +296,7 @@ public class DNSMessage {
 
     /**
      * Set the truncation bit on this DNS message.
+     *
      * @param truncated The new truncated bit status.
      */
     public void setTruncated(boolean truncated) {
@@ -290,6 +305,7 @@ public class DNSMessage {
 
     /**
      * Check if this message preferes recursion.
+     *
      * @return True if recursion is desired.
      */
     public boolean isRecursionDesired() {
@@ -298,6 +314,7 @@ public class DNSMessage {
 
     /**
      * Set the recursion desired flag on this message.
+     *
      * @param recursionDesired The new recusrion setting.
      */
     public void setRecursionDesired(boolean recursionDesired) {
@@ -306,6 +323,7 @@ public class DNSMessage {
 
     /**
      * Retrieve the recursion available flag of this DNS message.
+     *
      * @return The recursion available flag of this message.
      */
     public boolean isRecursionAvailable() {
@@ -314,6 +332,7 @@ public class DNSMessage {
 
     /**
      * Set the recursion available flog from this DNS message.
+     *
      * @param recursionAvailable The new recursion available status.
      */
     public void setRecursionAvailable(boolean recursionAvailable) {
@@ -322,6 +341,7 @@ public class DNSMessage {
 
     /**
      * Retrieve the authentic data flag of this message.
+     *
      * @return The authentic data flag.
      */
     public boolean isAuthenticData() {
@@ -330,6 +350,7 @@ public class DNSMessage {
 
     /**
      * Set the authentic data flag on this DNS message.
+     *
      * @param authenticData The new authentic data flag value.
      */
     public void setAuthenticData(boolean authenticData) {
@@ -338,6 +359,7 @@ public class DNSMessage {
 
     /**
      * Check if checks are disabled.
+     *
      * @return The status of the CheckDisabled flag.
      */
     public boolean isCheckDisabled() {
@@ -346,6 +368,7 @@ public class DNSMessage {
 
     /**
      * Change the check status of this packet.
+     *
      * @param checkDisabled The new check disabled value.
      */
     public void setCheckDisabled(boolean checkDisabled) {
@@ -354,6 +377,7 @@ public class DNSMessage {
 
     /**
      * Generate a binary dns packet out of this message.
+     *
      * @return byte[] the binary representation.
      * @throws IOException Should never happen.
      */
@@ -361,27 +385,27 @@ public class DNSMessage {
         ByteArrayOutputStream baos = new ByteArrayOutputStream(512);
         DataOutputStream dos = new DataOutputStream(baos);
         int header = calculateHeaderBitmap();
-        dos.writeShort((short)id);
-        dos.writeShort((short)header);
+        dos.writeShort((short) id);
+        dos.writeShort((short) header);
         if (questions == null) {
             dos.writeShort(0);
         } else {
-            dos.writeShort((short)questions.length);
+            dos.writeShort((short) questions.length);
         }
         if (answers == null) {
             dos.writeShort(0);
         } else {
-            dos.writeShort((short)answers.length);
+            dos.writeShort((short) answers.length);
         }
         if (nameserverRecords == null) {
             dos.writeShort(0);
         } else {
-            dos.writeShort((short)nameserverRecords.length);
+            dos.writeShort((short) nameserverRecords.length);
         }
         if (additionalResourceRecords == null) {
             dos.writeShort(0);
         } else {
-            dos.writeShort((short)additionalResourceRecords.length);
+            dos.writeShort((short) additionalResourceRecords.length);
         }
         if (questions != null) {
             for (Question question : questions) {
@@ -412,6 +436,7 @@ public class DNSMessage {
 
     /**
      * Build a DNS Message based on a binary DNS message.
+     *
      * @param data The DNS message data.
      * @throws IOException On read errors.
      */
@@ -486,14 +511,16 @@ public class DNSMessage {
 
     /**
      * Set the question part of this message.
+     *
      * @param questions The questions.
      */
-    public void setQuestions(Question ... questions) {
+    public void setQuestions(Question... questions) {
         this.questions = questions;
     }
 
     /**
      * Retrieve the opcode of this message.
+     *
      * @return The opcode of this message.
      */
     public OPCODE getOpcode() {
@@ -502,6 +529,7 @@ public class DNSMessage {
 
     /**
      * Retrieve the response code of this message.
+     *
      * @return The response code.
      */
     public RESPONSE_CODE getResponseCode() {
@@ -510,6 +538,7 @@ public class DNSMessage {
 
     /**
      * Retrieve the question section of this message.
+     *
      * @return The DNS question section.
      */
     public Question[] getQuestions() {
@@ -518,6 +547,7 @@ public class DNSMessage {
 
     /**
      * Retrieve the answer records of this DNS message.
+     *
      * @return The answer section of this DNS message.
      */
     public Record[] getAnswers() {
@@ -526,6 +556,7 @@ public class DNSMessage {
 
     /**
      * Retrieve the nameserver records of this DNS message.
+     *
      * @return The nameserver section of this DNS message.
      */
     public Record[] getNameserverRecords() {
@@ -534,6 +565,7 @@ public class DNSMessage {
 
     /**
      * Retrieve the additional resource records attached to this DNS message.
+     *
      * @return The additional resource record section of this DNS message.
      */
     public Record[] getAdditionalResourceRecords() {
@@ -544,7 +576,7 @@ public class DNSMessage {
      * Send the OPT pseudo record with this request for EDNS support. The OPT record
      * can be used to announce the supported size of UDP payload as well as additional
      * flags.
-     * 
+     *
      * Note that some networks and firewalls are known to block big UDP payloads.
      * 1280 should be a reasonable value, everything below 512 is treated as 512 and
      * should work on all networks.
@@ -573,14 +605,25 @@ public class DNSMessage {
         StringBuilder sb = new StringBuilder(";; ->>HEADER<<-")
                 .append(" opcode: ").append(opcode.name())
                 .append(", status: ").append(responseCode.name())
-                .append(", id: ").append(id).append("\n");
+                .append(", id: ").append(id).append("\r\n")
+                .append(";; flags:");
+        if (!query) sb.append(" qr");
+        if (authoritativeAnswer) sb.append(" aa");
+        if (truncated) sb.append(" tr");
+        if (recursionDesired) sb.append(" rd");
+        if (recursionAvailable) sb.append(" ra");
+        if (authenticData) sb.append(" ad");
+        if (checkDisabled) sb.append(" cd");
+        sb.append(";\n\n");
         if (additionalResourceRecords != null && additionalResourceRecords.length != 0) {
             for (Record record : additionalResourceRecords) {
-                sb.append("; ").append(record).append('\n');
+                if (record.type == Record.TYPE.OPT) {
+                    sb.append(";; OPT PSEUDOSECTION:\n; ").append(OPT.toString(record)).append("\n");
+                }
             }
         }
         if (questions != null && questions.length != 0) {
-            sb.append("\n;; QUESTION SECTION:\n");
+            sb.append(";; QUESTION SECTION:\n");
             for (Question question : questions) {
                 sb.append("; ").append(question.toString()).append('\n');
             }
@@ -597,7 +640,19 @@ public class DNSMessage {
                 sb.append(record.toString()).append('\n');
             }
         }
-        return sb.toString();
+        if (additionalResourceRecords != null && additionalResourceRecords.length != 0) {
+            boolean hasNonOptArr = false;
+            for (Record record : additionalResourceRecords) {
+                if (record.type != Record.TYPE.OPT) {
+                    if (!hasNonOptArr) {
+                        hasNonOptArr = true;
+                        sb.append("\n;; ADDITIONAL SECTION:\n");
+                    }
+                    sb.append(record.toString()).append('\n');
+                }
+            }
+        }
+        return sb.append("\n;; WHEN: ").append(new Date(receiveTimestamp).toString()).toString();
     }
 
 }
