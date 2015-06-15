@@ -21,6 +21,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.TreeMap;
 
+import de.measite.minidns.record.OPT;
 import org.junit.Test;
 
 import de.measite.minidns.record.A;
@@ -187,5 +188,10 @@ public class DNSMessageTest {
             assertEquals(112028, answer.ttl);
             assertTrue(((NS) answer.payloadData).name.endsWith(".gtld-servers.net"));
         }
+        Record[] arr = m.getAdditionalResourceRecords();
+        assertEquals(1, arr.length);
+        Record opt = arr[0];
+        assertEquals(4096, OPT.readEdnsUdpPayloadSize(opt));
+        assertEquals(0, OPT.readEdnsVersion(opt));
     }
 }
