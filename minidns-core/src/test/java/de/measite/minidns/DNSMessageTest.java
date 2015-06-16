@@ -28,6 +28,7 @@ import de.measite.minidns.record.AAAA;
 import de.measite.minidns.record.CNAME;
 import de.measite.minidns.record.Data;
 import de.measite.minidns.record.MX;
+import de.measite.minidns.record.NS;
 import de.measite.minidns.record.SOA;
 import de.measite.minidns.record.SRV;
 import de.measite.minidns.record.TXT;
@@ -167,5 +168,24 @@ public class DNSMessageTest {
         assertEquals(3600, soa.retry);
         assertEquals(1209600, soa.expire);
         assertEquals(900L, soa.minimum);
+    }
+
+    @Test
+    public void testComNsLookup() throws Exception {
+        DNSMessage m = getMessageFromResource("com-ns");
+        assertFalse(m.isAuthoritativeAnswer());
+        assertFalse(m.isAuthenticData());
+        assertTrue(m.isRecursionDesired());
+        assertTrue(m.isRecursionAvailable());
+        assertFalse(m.isQuery());
+        Record[] answers = m.getAnswers();
+        assertEquals(13, answers.length);
+        for (Record answer : answers) {
+            assertEquals("com", answer.name);
+            assertEquals(Record.CLASS.IN, answer.clazz);
+            assertEquals(Record.TYPE.NS, answer.type);
+            assertEquals(112028, answer.ttl);
+            assertTrue(((NS) answer.payloadData).name.endsWith(".gtld-servers.net"));
+        }
     }
 }

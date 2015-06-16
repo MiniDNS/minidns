@@ -258,7 +258,7 @@ public class Record {
         if (this.clazz == null) {
             LOGGER.fine("Unknown class " + clazzValue);
         }
-        this.ttl = (((long)dis.readUnsignedShort()) << 32) +
+        this.ttl = (((long)dis.readUnsignedShort()) << 16) +
                    dis.readUnsignedShort();
         int payloadLength = dis.readUnsignedShort();
         switch (this.type) {
