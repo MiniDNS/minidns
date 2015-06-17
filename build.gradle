@@ -27,7 +27,7 @@ allprojects {
 	ext.isSnapshot = true
 
 	ext {
-		minidnsMinAndroidSdk = 9
+		minidnsMinAndroidSdk = rootProject.ext.compileSdkVersion
 		androidBootClasspath = getAndroidRuntimeJar()
 		rootConfigDir = new File(rootDir, 'config')
 	}
