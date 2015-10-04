@@ -6,6 +6,7 @@ resolvers += Resolver.sonatypeRepo("snapshots")
 resolvers += Resolver.mavenLocal
 
 libraryDependencies += "de.measite.minidns" % "minidns-core" % "latest.integration"
+libraryDependencies += "de.measite.minidns" % "minidns-dnssec" % "latest.integration"
 
 initialCommands in console += "import de.measite.minidns._;"
 initialCommands in console += "import de.measite.minidns.Record.TYPE;"

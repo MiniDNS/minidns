@@ -10,7 +10,9 @@
  */
 package de.measite.minidns.record;
 
+import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
+import java.io.DataOutputStream;
 import java.io.IOException;
 
 import de.measite.minidns.Record.TYPE;
@@ -38,14 +40,29 @@ public class MX implements Data {
         this.name = NameUtil.parse(dis, data);
     }
 
+    public MX(int priority, String name) {
+        this.priority = priority;
+        this.name = name;
+    }
+
     @Override
     public byte[] toByteArray() {
-        throw new UnsupportedOperationException("Not implemented yet");
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        DataOutputStream dos = new DataOutputStream(baos);
+        try {
+            dos.writeShort(priority);
+            dos.write(NameUtil.toByteArray(name));
+        } catch (IOException e) {
+            // Should never happen
+            throw new RuntimeException(e);
+        }
+
+        return baos.toByteArray();
     }
 
     @Override
     public String toString() {
-        return "MX " + name + " p:" + priority;
+        return priority + " " + name + '.';
     }
 
     @Override

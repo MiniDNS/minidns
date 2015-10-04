@@ -10,7 +10,9 @@
  */
 package de.measite.minidns.record;
 
+import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
+import java.io.DataOutputStream;
 import java.io.IOException;
 
 import de.measite.minidns.Record.TYPE;
@@ -40,12 +42,7 @@ public class SRV implements Data {
     /**
      * The target server.
      */
-    public String name;
-
-    @Override
-    public byte[] toByteArray() {
-        throw new UnsupportedOperationException("Not implemented yet");
-    }
+    public final String name;
 
     public SRV(DataInputStream dis, byte[] data, int length)
         throws IOException
@@ -56,9 +53,33 @@ public class SRV implements Data {
         this.name = NameUtil.parse(dis, data);
     }
 
+    public SRV(int priority, int weight, int port, String name) {
+        this.priority = priority;
+        this.weight = weight;
+        this.port = port;
+        this.name = name;
+    }
+
+    @Override
+    public byte[] toByteArray() {
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        DataOutputStream dos = new DataOutputStream(baos);
+        try {
+            dos.writeShort(priority);
+            dos.writeShort(weight);
+            dos.writeShort(port);
+            dos.write(NameUtil.toByteArray(name));
+        } catch (IOException e) {
+            // Should never happen
+            throw new RuntimeException(e);
+        }
+
+        return baos.toByteArray();
+    }
+
     @Override
     public String toString() {
-        return "SRV " + name + ":" + port + " p:" + priority + " w:" + weight;
+        return priority + " " + weight + " " + port + " " + name + ".";
     }
 
     @Override

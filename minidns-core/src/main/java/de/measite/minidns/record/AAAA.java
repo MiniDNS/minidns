@@ -35,6 +35,13 @@ public class AAAA implements Data {
         return ip;
     }
 
+    public AAAA(byte[] ip) {
+        if (ip.length != 16) {
+            throw new IllegalArgumentException("IPv6 address in AAAA record is always 16 byte");
+        }
+        this.ip = ip;
+    }
+
     public AAAA(DataInputStream dis, byte[] data, int length)
             throws IOException {
         ip = new byte[16];

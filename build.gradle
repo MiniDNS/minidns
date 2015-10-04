@@ -111,15 +111,6 @@ allprojects {
 		]
 	}
 
-	task compileAndroid(type: JavaCompile) {
-		source = compileJava.source
-		classpath = compileJava.classpath
-		destinationDir = new File(buildDir, 'android')
-		options.bootClasspath = androidBootClasspath
-	}
-
-	test { dependsOn compileAndroid }
-
 	checkstyle {
 		configFile = new File(rootConfigDir, 'checkstyle.xml')
 	}
@@ -136,6 +127,17 @@ allprojects {
 			xml.enabled true
 		}
 	}
+}
+
+configure(subprojects.findAll{!it.name.endsWith('-java7')}) {
+	task compileAndroid(type: JavaCompile) {
+		source = compileJava.source
+		classpath = compileJava.classpath
+		destinationDir = new File(buildDir, 'android')
+		options.bootClasspath = androidBootClasspath
+	}
+
+	test { dependsOn compileAndroid }
 }
 
 jar {

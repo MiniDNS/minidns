@@ -24,6 +24,10 @@ public class PTR extends CNAME {
         super(dis, data, length);
     }
 
+    PTR(String name) {
+        super(name);
+    }
+
     @Override
     public TYPE getType() {
         return TYPE.PTR;
