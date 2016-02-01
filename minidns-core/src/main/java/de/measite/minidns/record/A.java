@@ -35,6 +35,13 @@ public class A implements Data {
         return ip;
     }
 
+    public A(byte[] ip) {
+        if (ip.length != 4) {
+            throw new IllegalArgumentException("IPv4 address in A record is always 4 byte");
+        }
+        this.ip = ip;
+    }
+
     public A(DataInputStream dis, byte[] data, int length)
             throws IOException {
         ip = new byte[4];

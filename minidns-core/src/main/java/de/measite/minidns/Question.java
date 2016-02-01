@@ -112,7 +112,7 @@ public class Question {
                 dos.flush();
             } catch (IOException e) {
                 // Should never happen
-                throw new IllegalStateException(e);
+                throw new RuntimeException(e);
             }
             byteArray = baos.toByteArray();
         }
@@ -139,6 +139,6 @@ public class Question {
 
     @Override
     public String toString() {
-        return "Question/" + clazz + "/" + type + ": " + name;
+        return name + ".\t" + clazz + '\t' + type;
     }
 }

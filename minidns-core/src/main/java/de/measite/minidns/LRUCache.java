@@ -99,7 +99,7 @@ public class LRUCache implements DNSCache {
         for (Record r : message.getAdditionalResourceRecords()) {
             ttl = Math.min(ttl, r.ttl);
         }
-        if (message.getReceiveTimestamp() + ttl > System.currentTimeMillis()) {
+        if (message.getReceiveTimestamp() + ttl < System.currentTimeMillis()) {
             missCount++;
             expireCount++;
             backend.remove(q);
@@ -146,4 +146,8 @@ public class LRUCache implements DNSCache {
         return hitCount;
     }
 
+    @Override
+    public String toString() {
+        return "LRUCache{usage=" + backend.size() + "/" + capacity + ", hits=" + hitCount + ", misses=" + missCount + ", expires=" + expireCount + "}";
+    }
 }
