@@ -12,6 +12,7 @@ package de.measite.minidns.dnssec;
 
 import de.measite.minidns.Question;
 import de.measite.minidns.Record;
+import de.measite.minidns.DNSSECConstants.DigestAlgorithm;
 import de.measite.minidns.record.DS;
 
 public abstract class UnverifiedReason {
@@ -37,8 +38,8 @@ public abstract class UnverifiedReason {
         private final String kind;
         private final Record record;
 
-        public AlgorithmNotSupportedReason(String algorithm, String kind, Record record) {
-            this.algorithm = algorithm;
+        public AlgorithmNotSupportedReason(byte algorithm, String kind, Record record) {
+            this.algorithm = Integer.toString(algorithm & 0xff);
             this.kind = kind;
             this.record = record;
         }
@@ -55,8 +56,8 @@ public abstract class UnverifiedReason {
         private final Exception reason;
         private final Record record;
 
-        public AlgorithmExceptionThrownReason(int algorithmNumber, String kind, Record record, Exception reason) {
-            this.algorithmNumber = algorithmNumber;
+        public AlgorithmExceptionThrownReason(DigestAlgorithm algorithm, String kind, Record record, Exception reason) {
+            this.algorithmNumber = algorithm.value;
             this.kind = kind;
             this.record = record;
             this.reason = reason;

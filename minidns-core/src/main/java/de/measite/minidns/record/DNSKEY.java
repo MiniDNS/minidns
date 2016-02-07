@@ -10,6 +10,7 @@
  */
 package de.measite.minidns.record;
 
+import de.measite.minidns.DNSSECConstants.SignatureAlgorithm;
 import de.measite.minidns.Record.TYPE;
 import de.measite.minidns.util.Base64;
 
@@ -57,9 +58,8 @@ public class DNSKEY implements Data {
     /**
      * The public key's cryptographic algorithm used.
      *
-     * See {@link de.measite.minidns.DNSSECConstants} for possible values.
      */
-    public final byte algorithm;
+    public final SignatureAlgorithm algorithm;
 
     /**
      * The public key material. The format depends on the algorithm of the key being stored.
@@ -74,12 +74,16 @@ public class DNSKEY implements Data {
     public DNSKEY(DataInputStream dis, byte[] data, int length) throws IOException {
         flags = dis.readShort();
         protocol = dis.readByte();
-        algorithm = dis.readByte();
+        algorithm = SignatureAlgorithm.forByte(dis.readByte());
         key = new byte[length - 4];
         dis.readFully(key);
     }
 
     public DNSKEY(short flags, byte protocol, byte algorithm, byte[] key) {
+        this(flags, protocol, SignatureAlgorithm.forByte(algorithm), key);
+    }
+
+    public DNSKEY(short flags, byte protocol, SignatureAlgorithm algorithm, byte[] key) {
         this.flags = flags;
         this.protocol = protocol;
         this.algorithm = algorithm;
@@ -120,7 +124,7 @@ public class DNSKEY implements Data {
         try {
             dos.writeShort(flags);
             dos.writeByte(protocol);
-            dos.writeByte(algorithm);
+            dos.writeByte(algorithm.number);
             dos.write(key);
         } catch (IOException e) {
             // Should never happen

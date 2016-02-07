@@ -10,6 +10,7 @@
  */
 package de.measite.minidns.record;
 
+import de.measite.minidns.DNSSECConstants.SignatureAlgorithm;
 import de.measite.minidns.Record.TYPE;
 import de.measite.minidns.util.Base64;
 import de.measite.minidns.util.NameUtil;
@@ -34,10 +35,13 @@ public class RRSIG implements Data {
 
     /**
      * The cryptographic algorithm used to create the signature.
-     * 
-     * See {@link de.measite.minidns.DNSSECConstants} for possible values.
      */
-    public final byte algorithm;
+    public final SignatureAlgorithm algorithm;
+
+    /**
+     * The cryptographic algorithm used to create the signature.
+     */
+    public final byte algorithmByte;
 
     /**
      * The number of labels in the original RRSIG RR owner name.
@@ -76,7 +80,8 @@ public class RRSIG implements Data {
 
     public RRSIG(DataInputStream dis, byte[] data, int length) throws IOException {
         typeCovered = TYPE.getType(dis.readUnsignedShort());
-        algorithm = dis.readByte();
+        algorithmByte = dis.readByte();
+        algorithm = SignatureAlgorithm.forByte(algorithmByte);
         labels = dis.readByte();
         originalTtl = dis.readInt() & 0xFFFFFFFFL;
         signatureExpiration = new Date((dis.readInt() & 0xFFFFFFFFL) * 1000);
@@ -88,10 +93,11 @@ public class RRSIG implements Data {
         if (dis.read(signature) != signature.length) throw new IOException();
     }
 
-    public RRSIG(TYPE typeCovered, byte algorithm, byte labels, long originalTtl, Date signatureExpiration, 
-                 Date signatureInception, int keyTag, String signerName, byte[] signature) {
+    public RRSIG(TYPE typeCovered, int algorithm, byte labels, long originalTtl, Date signatureExpiration, 
+            Date signatureInception, int keyTag, String signerName, byte[] signature) {
         this.typeCovered = typeCovered;
-        this.algorithm = algorithm;
+        this.algorithmByte = (byte) algorithm;
+        this.algorithm = SignatureAlgorithm.forByte(algorithmByte);
         this.labels = labels;
         this.originalTtl = originalTtl;
         this.signatureExpiration = signatureExpiration;
@@ -99,6 +105,12 @@ public class RRSIG implements Data {
         this.keyTag = keyTag;
         this.signerName = signerName;
         this.signature = signature;
+}
+
+    public RRSIG(TYPE typeCovered, SignatureAlgorithm algorithm, byte labels,
+            long originalTtl, Date signatureExpiration, Date signatureInception,
+            int keyTag, String signerName, byte[] signature) {
+        this(typeCovered,algorithm.number, labels, originalTtl, signatureExpiration, signatureInception, keyTag, signerName, signature);
     }
 
     @Override
@@ -123,7 +135,7 @@ public class RRSIG implements Data {
 
     public void writePartialSignature(DataOutputStream dos) throws IOException {
         dos.writeShort(typeCovered.getValue());
-        dos.writeByte(algorithm);
+        dos.writeByte(algorithmByte);
         dos.writeByte(labels);
         dos.writeInt((int) originalTtl);
         dos.writeInt((int) (signatureExpiration.getTime()/1000));

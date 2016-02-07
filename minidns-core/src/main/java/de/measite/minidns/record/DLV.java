@@ -10,6 +10,8 @@
  */
 package de.measite.minidns.record;
 
+import de.measite.minidns.DNSSECConstants.DigestAlgorithm;
+import de.measite.minidns.DNSSECConstants.SignatureAlgorithm;
 import de.measite.minidns.Record;
 
 import java.io.DataInputStream;
@@ -26,6 +28,10 @@ public class DLV extends DS {
     }
 
     public DLV(int keyTag, byte algorithm, byte digestType, byte[] digest) {
+        super(keyTag, algorithm, digestType, digest);
+    }
+
+    public DLV(int keyTag, SignatureAlgorithm algorithm, DigestAlgorithm digestType, byte[] digest) {
         super(keyTag, algorithm, digestType, digest);
     }
 

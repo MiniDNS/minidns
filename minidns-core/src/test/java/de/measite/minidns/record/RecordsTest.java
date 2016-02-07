@@ -10,7 +10,10 @@
  */
 package de.measite.minidns.record;
 
+import de.measite.minidns.DNSSECConstants.DigestAlgorithm;
+import de.measite.minidns.DNSSECConstants.SignatureAlgorithm;
 import de.measite.minidns.Record.TYPE;
+import de.measite.minidns.record.NSEC3.HashAlgorithm;
 import de.measite.minidns.util.Base64;
 import org.junit.Assert;
 import org.junit.Test;
@@ -74,40 +77,41 @@ public class RecordsTest {
     @Test
     public void testDlvRecord() throws Exception {
         DLV dlv = new DLV(42, (byte) 8, (byte) 2, new byte[]{0x13, 0x37});
-        assertEquals("42 8 2 1337", dlv.toString());
+        assertEquals("42 RSASHA256 SHA256 1337", dlv.toString());
         assertEquals(TYPE.DLV, dlv.getType());
         byte[] dlvb = dlv.toByteArray();
         dlv = new DLV(new DataInputStream(new ByteArrayInputStream(dlvb)), dlvb, dlvb.length);
         assertEquals(42, dlv.keyTag);
-        assertEquals(8, dlv.algorithm);
-        assertEquals(2, dlv.digestType);
+        assertEquals(SignatureAlgorithm.RSASHA256, dlv.algorithm);
+        assertEquals(DigestAlgorithm.SHA256, dlv.digestType);
         assertArrayEquals(new byte[]{0x13, 0x37}, dlv.digest);
     }
 
+    @SuppressWarnings("deprecation")
     @Test
     public void testDnskeyRecord() throws Exception {
         DNSKEY dnskey = new DNSKEY(DNSKEY.FLAG_ZONE, (byte) 3, (byte) 1, new byte[]{42});
         // TODO: Compare with real Base64 once done
-        assertEquals("256 3 1 " + Base64.encodeToString(dnskey.key), dnskey.toString());
+        assertEquals("256 3 RSAMD5 " + Base64.encodeToString(dnskey.key), dnskey.toString());
         assertEquals(TYPE.DNSKEY, dnskey.getType());
         byte[] dnskeyb = dnskey.toByteArray();
         dnskey = new DNSKEY(new DataInputStream(new ByteArrayInputStream(dnskeyb)), dnskeyb, dnskeyb.length);
         assertEquals(256, dnskey.flags);
         assertEquals(3, dnskey.protocol);
-        assertEquals(1, dnskey.algorithm);
+        assertEquals(SignatureAlgorithm.RSAMD5, dnskey.algorithm);
         assertArrayEquals(new byte[]{42}, dnskey.key);
     }
 
     @Test
     public void testDsRecord() throws Exception {
         DS ds = new DS(42, (byte) 8, (byte) 2, new byte[]{0x13, 0x37});
-        assertEquals("42 8 2 1337", ds.toString());
+        assertEquals("42 RSASHA256 SHA256 1337", ds.toString());
         assertEquals(TYPE.DS, ds.getType());
         byte[] dsb = ds.toByteArray();
         ds = new DS(new DataInputStream(new ByteArrayInputStream(dsb)), dsb, dsb.length);
         assertEquals(42, ds.keyTag);
-        assertEquals(8, ds.algorithm);
-        assertEquals(2, ds.digestType);
+        assertEquals(SignatureAlgorithm.RSASHA256, ds.algorithm);
+        assertEquals(DigestAlgorithm.SHA256, ds.digestType);
         assertArrayEquals(new byte[]{0x13, 0x37}, ds.digest);
     }
 
@@ -138,18 +142,18 @@ public class RecordsTest {
     @Test
     public void testNsec3Record() throws Exception {
         NSEC3 nsec3 = new NSEC3((byte) 1, (byte) 1, 1, new byte[]{0x13, 0x37}, new byte[]{0x42, 0x42, 0x42, 0x42, 0x42}, new TYPE[]{TYPE.A});
-        assertEquals("1 1 1 1337 89144GI2 A", nsec3.toString());
+        assertEquals("SHA1 1 1 1337 89144GI2 A", nsec3.toString());
         assertEquals(TYPE.NSEC3, nsec3.getType());
         byte[] nsec3b = nsec3.toByteArray();
         nsec3 = new NSEC3(new DataInputStream(new ByteArrayInputStream(nsec3b)), nsec3b, nsec3b.length);
-        assertEquals(1, nsec3.hashAlgorithm);
+        assertEquals(HashAlgorithm.SHA1, nsec3.hashAlgorithm);
         assertEquals(1, nsec3.flags);
         assertEquals(1, nsec3.iterations);
         assertArrayEquals(new byte[]{0x13, 0x37}, nsec3.salt);
         assertArrayEquals(new byte[]{0x42, 0x42, 0x42, 0x42, 0x42}, nsec3.nextHashed);
         assertArrayEquals(new TYPE[]{TYPE.A}, nsec3.types);
 
-        assertEquals("1 1 1 - ", new NSEC3((byte) 1, (byte) 1, 1, new byte[0], new byte[0], new TYPE[0]).toString());
+        assertEquals("SHA1 1 1 - ", new NSEC3((byte) 1, (byte) 1, 1, new byte[0], new byte[0], new TYPE[0]).toString());
     }
 
     @Test
@@ -191,12 +195,12 @@ public class RecordsTest {
     public void testRrsigRecord() throws Exception {
         RRSIG rrsig = new RRSIG(TYPE.A, (byte) 8, (byte) 2, 3600, new Date(1000), new Date(0), 42, "example.com", new byte[]{42});
         // TODO: Compare with real Base64 once done
-        assertEquals("A 8 2 3600 19700101000001 19700101000000 42 example.com. " + Base64.encodeToString(rrsig.signature), rrsig.toString());
+        assertEquals("A RSASHA256 2 3600 19700101000001 19700101000000 42 example.com. " + Base64.encodeToString(rrsig.signature), rrsig.toString());
         assertEquals(TYPE.RRSIG, rrsig.getType());
         byte[] rrsigb = rrsig.toByteArray();
         rrsig = new RRSIG(new DataInputStream(new ByteArrayInputStream(rrsigb)), rrsigb, rrsigb.length);
         assertEquals(TYPE.A, rrsig.typeCovered);
-        assertEquals(8, rrsig.algorithm);
+        assertEquals(SignatureAlgorithm.RSASHA256, rrsig.algorithm);
         assertEquals(2, rrsig.labels);
         assertEquals(3600, rrsig.originalTtl);
         assertEquals(new Date(1000), rrsig.signatureExpiration);

@@ -10,21 +10,21 @@
  */
 package de.measite.minidns.dnssec.algorithms;
 
+import de.measite.minidns.DNSSECConstants.DigestAlgorithm;
 import de.measite.minidns.dnssec.DigestCalculator;
-import de.measite.minidns.record.NSEC3;
+import de.measite.minidns.record.NSEC3.HashAlgorithm;
+
 import org.junit.Test;
 
 import java.math.BigInteger;
 
-import static de.measite.minidns.DNSSECConstants.DIGEST_ALGORITHM_SHA1;
-import static de.measite.minidns.DNSSECConstants.DIGEST_ALGORITHM_SHA256;
 import static org.junit.Assert.assertEquals;
 
 public class DigestTest extends AlgorithmTest {
 
     @Test
     public void testSha1DsDigest() {
-        DigestCalculator dsDigestCalculator = algorithmMap.getDsDigestCalculator(DIGEST_ALGORITHM_SHA1);
+        DigestCalculator dsDigestCalculator = algorithmMap.getDsDigestCalculator(DigestAlgorithm.SHA1);
         assertEquals("da39a3ee5e6b4b0d3255bfef95601890afd80709", digestHexString(dsDigestCalculator, ""));
         assertEquals("a94a8fe5ccb19ba61c4c0873d391e987982fbbd3", digestHexString(dsDigestCalculator, "test"));
         assertEquals("640ab2bae07bedc4c163f679a746f7ab7fb5d1fa", digestHexString(dsDigestCalculator, "Test"));
@@ -32,7 +32,7 @@ public class DigestTest extends AlgorithmTest {
 
     @Test
     public void testSha256DsDigest() {
-        DigestCalculator dsDigestCalculator = algorithmMap.getDsDigestCalculator(DIGEST_ALGORITHM_SHA256);
+        DigestCalculator dsDigestCalculator = algorithmMap.getDsDigestCalculator(DigestAlgorithm.SHA256);
         assertEquals("e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855", digestHexString(dsDigestCalculator, ""));
         assertEquals("9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08", digestHexString(dsDigestCalculator, "test"));
         assertEquals("532eaabd9574880dbf76b9b8cc00832c20a6ec113d682299550d7a6e0f345e25", digestHexString(dsDigestCalculator, "Test"));
@@ -40,7 +40,7 @@ public class DigestTest extends AlgorithmTest {
 
     @Test
     public void testSha1nsec3Digest() {
-        DigestCalculator nsecDigestCalculator = algorithmMap.getNsecDigestCalculator(NSEC3.HASH_ALGORITHM_SHA1);
+        DigestCalculator nsecDigestCalculator = algorithmMap.getNsecDigestCalculator(HashAlgorithm.SHA1);
         assertEquals("da39a3ee5e6b4b0d3255bfef95601890afd80709", digestHexString(nsecDigestCalculator, ""));
         assertEquals("a94a8fe5ccb19ba61c4c0873d391e987982fbbd3", digestHexString(nsecDigestCalculator, "test"));
         assertEquals("640ab2bae07bedc4c163f679a746f7ab7fb5d1fa", digestHexString(nsecDigestCalculator, "Test"));

@@ -19,8 +19,6 @@ import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import static de.measite.minidns.DNSSECConstants.getSignatureAlgorithmName;
-
 public class IntegrationTestHelper {
     private static Set<Class<?>> testClasses;
     private static Logger LOGGER = Logger.getLogger(IntegrationTestHelper.class.getName());
@@ -36,7 +34,7 @@ public class IntegrationTestHelper {
     public static void main(String[] args) throws IllegalAccessException {
         // Disable AlgorithmMap logging
         Logger.getLogger(AlgorithmMap.class.getName()).setLevel(Level.OFF);
-        referenceAlgorithmMap = new AlgorithmMap();
+        referenceAlgorithmMap = AlgorithmMap.INSTANCE;
 
         for (final Class<?> aClass : testClasses) {
             for (final Method method : aClass.getDeclaredMethods()) {
@@ -50,11 +48,6 @@ public class IntegrationTestHelper {
     public static void invokeTest(Method method, Class<?> aClass) {
         Class<?> expected = method.getAnnotation(IntegrationTest.class).expected();
         if (!Exception.class.isAssignableFrom(expected)) expected = null;
-        byte sigAlg = method.getAnnotation(IntegrationTest.class).requiredSignatureVerifier();
-        if (sigAlg != -1 && referenceAlgorithmMap.getSignatureVerifier(sigAlg) == null) {
-            LOGGER.logp(Level.INFO, aClass.getName(), method.getName(), "Test skipped: " + getSignatureAlgorithmName(sigAlg) + " not available on this platform.");
-            return;
-        }
 
         try {
             method.invoke(null);

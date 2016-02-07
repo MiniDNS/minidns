@@ -13,6 +13,8 @@ package de.measite.minidns.dnssec;
 import de.measite.minidns.DNSMessage;
 import de.measite.minidns.DNSWorld;
 import de.measite.minidns.Record;
+import de.measite.minidns.DNSSECConstants.DigestAlgorithm;
+import de.measite.minidns.DNSSECConstants.SignatureAlgorithm;
 import de.measite.minidns.dnssec.algorithms.AlgorithmMap;
 import de.measite.minidns.record.DLV;
 import de.measite.minidns.record.DNSKEY;
@@ -45,14 +47,6 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 
-import static de.measite.minidns.DNSSECConstants.SIGNATURE_ALGORITHM_DSA;
-import static de.measite.minidns.DNSSECConstants.SIGNATURE_ALGORITHM_DSA_NSEC3_SHA1;
-import static de.measite.minidns.DNSSECConstants.SIGNATURE_ALGORITHM_RSAMD5;
-import static de.measite.minidns.DNSSECConstants.SIGNATURE_ALGORITHM_RSASHA1;
-import static de.measite.minidns.DNSSECConstants.SIGNATURE_ALGORITHM_RSASHA1_NSEC3_SHA1;
-import static de.measite.minidns.DNSSECConstants.SIGNATURE_ALGORITHM_RSASHA256;
-import static de.measite.minidns.DNSSECConstants.SIGNATURE_ALGORITHM_RSASHA512;
-
 public class DNSSECWorld extends DNSWorld {
     public static Zone signedRootZone(SignedRRSet... rrSets) {
         return new Zone("", null, merge(rrSets));
@@ -80,7 +74,7 @@ public class DNSSECWorld extends DNSWorld {
         return recordList.toArray(new Record[recordList.size()]);
     }
 
-    public static SignedRRSet sign(DNSKEY key, String signerName, PrivateKey privateKey, byte algorithm, Record... records) {
+    public static SignedRRSet sign(DNSKEY key, String signerName, PrivateKey privateKey, SignatureAlgorithm algorithm, Record... records) {
         return new SignedRRSet(records, rrsigRecord(key, signerName, privateKey, algorithm, records));
     }
 
@@ -98,7 +92,7 @@ public class DNSSECWorld extends DNSWorld {
         }
     }
 
-    public static Record rrsigRecord(DNSKEY key, String signerName, PrivateKey privateKey, byte algorithm, Record... records) {
+    public static Record rrsigRecord(DNSKEY key, String signerName, PrivateKey privateKey, SignatureAlgorithm algorithm, Record... records) {
         Record.TYPE typeCovered = records[0].type;
         String name = records[0].name;
         int labels = name.isEmpty() ? 0 : name.split("\\.").length;
@@ -117,16 +111,16 @@ public class DNSSECWorld extends DNSWorld {
                 sign(privateKey, rrsig.algorithm, bytes)));
     }
 
-    public static DS ds(String name, byte digestType, DNSKEY dnskey) {
+    public static DS ds(String name, DigestAlgorithm digestType, DNSKEY dnskey) {
         return ds(dnskey.getKeyTag(), dnskey.algorithm, digestType, calculateDsDigest(name, digestType, dnskey));
     }
 
-    public static DLV dlv(String name, byte digestType, DNSKEY dnskey) {
+    public static DLV dlv(String name, DigestAlgorithm digestType, DNSKEY dnskey) {
         return dlv(dnskey.getKeyTag(), dnskey.algorithm, digestType, calculateDsDigest(name, digestType, dnskey));
     }
 
-    public static byte[] calculateDsDigest(String name, byte digestType, DNSKEY dnskey) {
-        DigestCalculator digestCalculator = new AlgorithmMap().getDsDigestCalculator(digestType);
+    public static byte[] calculateDsDigest(String name, DigestAlgorithm digestType, DNSKEY dnskey) {
+        DigestCalculator digestCalculator = AlgorithmMap.INSTANCE.getDsDigestCalculator(digestType);
 
         byte[] dnskeyData = dnskey.toByteArray();
         byte[] dnskeyOwner = NameUtil.toByteArray(name);
@@ -137,25 +131,25 @@ public class DNSSECWorld extends DNSWorld {
     }
 
     @SuppressWarnings("deprecation")
-    public static byte[] sign(PrivateKey privateKey, byte algorithm, byte[] content) {
+    public static byte[] sign(PrivateKey privateKey, SignatureAlgorithm algorithm, byte[] content) {
         try {
             Signature signature;
             switch (algorithm) {
-                case SIGNATURE_ALGORITHM_RSAMD5:
+                case RSAMD5:
                     signature = Signature.getInstance("MD5withRSA");
                     break;
-                case SIGNATURE_ALGORITHM_RSASHA1:
-                case SIGNATURE_ALGORITHM_RSASHA1_NSEC3_SHA1:
+                case RSASHA1:
+                case RSASHA1_NSEC3_SHA1:
                     signature = Signature.getInstance("SHA1withRSA");
                     break;
-                case SIGNATURE_ALGORITHM_RSASHA256:
+                case RSASHA256:
                     signature = Signature.getInstance("SHA256withRSA");
                     break;
-                case SIGNATURE_ALGORITHM_RSASHA512:
+                case RSASHA512:
                     signature = Signature.getInstance("SHA512withRSA");
                     break;
-                case SIGNATURE_ALGORITHM_DSA:
-                case SIGNATURE_ALGORITHM_DSA_NSEC3_SHA1:
+                case DSA:
+                case DSA_NSEC3_SHA1:
                     signature = Signature.getInstance("SHA1withDSA");
                     break;
                 default:
@@ -165,15 +159,15 @@ public class DNSSECWorld extends DNSWorld {
             signature.update(content);
             byte[] bytes = signature.sign();
             switch (algorithm) {
-                case SIGNATURE_ALGORITHM_DSA:
-                case SIGNATURE_ALGORITHM_DSA_NSEC3_SHA1:
+                case DSA:
+                case DSA_NSEC3_SHA1:
                     return convertAsn1ToRFC((DSAPrivateKey) privateKey, bytes);
 
-                case SIGNATURE_ALGORITHM_RSAMD5:
-                case SIGNATURE_ALGORITHM_RSASHA1:
-                case SIGNATURE_ALGORITHM_RSASHA1_NSEC3_SHA1:
-                case SIGNATURE_ALGORITHM_RSASHA256:
-                case SIGNATURE_ALGORITHM_RSASHA512:
+                case RSAMD5:
+                case RSASHA1:
+                case RSASHA1_NSEC3_SHA1:
+                case RSASHA256:
+                case RSASHA512:
                 default:
                     return bytes;
             }
@@ -214,16 +208,16 @@ public class DNSSECWorld extends DNSWorld {
     }
 
     @SuppressWarnings("deprecation")
-    public static PrivateKey generatePrivateKey(byte algorithm, int length) {
+    public static PrivateKey generatePrivateKey(SignatureAlgorithm algorithm, int length) {
         switch (algorithm) {
-            case SIGNATURE_ALGORITHM_RSAMD5:
-            case SIGNATURE_ALGORITHM_RSASHA1:
-            case SIGNATURE_ALGORITHM_RSASHA1_NSEC3_SHA1:
-            case SIGNATURE_ALGORITHM_RSASHA256:
-            case SIGNATURE_ALGORITHM_RSASHA512:
+            case RSAMD5:
+            case RSASHA1:
+            case RSASHA1_NSEC3_SHA1:
+            case RSASHA256:
+            case RSASHA512:
                 return generateRSAPrivateKey(length, RSAKeyGenParameterSpec.F4);
-            case SIGNATURE_ALGORITHM_DSA:
-            case SIGNATURE_ALGORITHM_DSA_NSEC3_SHA1:
+            case DSA:
+            case DSA_NSEC3_SHA1:
                 return generateDSAPrivateKey(length);
             default:
                 throw new RuntimeException(algorithm + " algorithm not yet supported by DNSSECWorld");
@@ -253,16 +247,16 @@ public class DNSSECWorld extends DNSWorld {
     }
 
     @SuppressWarnings("deprecation")
-    public static byte[] publicKey(byte algorithm, PrivateKey privateKey) {
+    public static byte[] publicKey(SignatureAlgorithm algorithm, PrivateKey privateKey) {
         switch (algorithm) {
-            case SIGNATURE_ALGORITHM_RSAMD5:
-            case SIGNATURE_ALGORITHM_RSASHA1:
-            case SIGNATURE_ALGORITHM_RSASHA1_NSEC3_SHA1:
-            case SIGNATURE_ALGORITHM_RSASHA256:
-            case SIGNATURE_ALGORITHM_RSASHA512:
+            case RSAMD5:
+            case RSASHA1:
+            case RSASHA1_NSEC3_SHA1:
+            case RSASHA256:
+            case RSASHA512:
                 return getRSAPublicKey((RSAPrivateCrtKey) privateKey);
-            case SIGNATURE_ALGORITHM_DSA:
-            case SIGNATURE_ALGORITHM_DSA_NSEC3_SHA1:
+            case DSA:
+            case DSA_NSEC3_SHA1:
                 return getDSAPublicKey((DSAPrivateKey) privateKey);
             default:
                 throw new RuntimeException(algorithm + " algorithm not yet supported by DNSSECWorld");

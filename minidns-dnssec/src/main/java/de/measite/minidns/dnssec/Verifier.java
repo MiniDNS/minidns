@@ -10,7 +10,6 @@
  */
 package de.measite.minidns.dnssec;
 
-import de.measite.minidns.DNSSECConstants;
 import de.measite.minidns.Question;
 import de.measite.minidns.Record;
 import de.measite.minidns.dnssec.UnverifiedReason.AlgorithmExceptionThrownReason;
@@ -38,13 +37,13 @@ import java.util.logging.Logger;
 class Verifier {
     private Logger LOGGER = Logger.getLogger(Verifier.class.getName());
 
-    private AlgorithmMap algorithmMap = new AlgorithmMap();
+    private AlgorithmMap algorithmMap = AlgorithmMap.INSTANCE;
 
     public UnverifiedReason verify(Record dnskeyRecord, DS ds) {
         DNSKEY dnskey = (DNSKEY) dnskeyRecord.getPayload();
         DigestCalculator digestCalculator = algorithmMap.getDsDigestCalculator(ds.digestType);
         if (digestCalculator == null) {
-            return new AlgorithmNotSupportedReason(DNSSECConstants.getDelegationDigestName(ds.digestType), "DS", dnskeyRecord);
+            return new AlgorithmNotSupportedReason(ds.digestTypeByte, "DS", dnskeyRecord);
         }
 
         byte[] dnskeyData = dnskey.toByteArray();
@@ -68,7 +67,7 @@ class Verifier {
     public UnverifiedReason verify(List<Record> records, RRSIG rrsig, DNSKEY key) {
         SignatureVerifier signatureVerifier = algorithmMap.getSignatureVerifier(rrsig.algorithm);
         if (signatureVerifier == null) {
-            return new AlgorithmNotSupportedReason(DNSSECConstants.getSignatureAlgorithmName(rrsig.algorithm), "RRSIG", records.get(0));
+            return new AlgorithmNotSupportedReason(rrsig.algorithmByte, "RRSIG", records.get(0));
         }
 
         byte[] combine = combine(rrsig, records);
@@ -94,7 +93,7 @@ class Verifier {
         NSEC3 nsec3 = (NSEC3) nsec3record.payloadData;
         DigestCalculator digestCalculator = algorithmMap.getNsecDigestCalculator(nsec3.hashAlgorithm);
         if (digestCalculator == null) {
-            return new AlgorithmNotSupportedReason(Integer.toString(nsec3.hashAlgorithm), "NSEC3", nsec3record);
+            return new AlgorithmNotSupportedReason(nsec3.hashAlgorithmByte, "NSEC3", nsec3record);
         }
 
         byte[] bytes = nsec3hash(digestCalculator, nsec3.salt, NameUtil.toByteArray(q.name.toLowerCase()), nsec3.iterations);

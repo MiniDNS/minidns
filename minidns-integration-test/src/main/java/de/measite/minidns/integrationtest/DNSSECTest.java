@@ -15,7 +15,6 @@ import de.measite.minidns.Record;
 import de.measite.minidns.dnssec.DNSSECClient;
 import de.measite.minidns.dnssec.DNSSECValidationFailedException;
 
-import static de.measite.minidns.DNSSECConstants.SIGNATURE_ALGORITHM_ECDSAP256SHA256;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
@@ -39,7 +38,7 @@ public class DNSSECTest {
         client.query("sigfail.verteiltesysteme.net", Record.TYPE.A);
     }
 
-    @IntegrationTest(requiredSignatureVerifier = SIGNATURE_ALGORITHM_ECDSAP256SHA256)
+    @IntegrationTest
     public static void testCloudFlare() {
         DNSSECClient client = new DNSSECClient(new LRUCache(1024));
         assertTrue(client.query("www.cloudflare-dnssec-auth.com", Record.TYPE.A).isAuthenticData());

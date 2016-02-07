@@ -20,147 +20,80 @@ public final class DNSSECConstants {
     private DNSSECConstants() {
     }
 
-    /*
-     * DNSSEC Algorithm Numbers
-     * http://www.iana.org/assignments/dns-sec-alg-numbers/dns-sec-alg-numbers.xhtml
+    private static final Map<Byte, SignatureAlgorithm> SIGNATURE_ALGORITHM_LUT = new HashMap<>();
+
+    /**
+     * DNSSEC Signature Algorithms.
+     * 
+     * @see <a href=
+     *      "http://www.iana.org/assignments/dns-sec-alg-numbers/dns-sec-alg-numbers.xhtml">
+     *      IANA DNSSEC Algorithm Numbers</a>
      */
+    public enum SignatureAlgorithm {
+        @Deprecated
+        RSAMD5(1, "RSA/MD5"),
+        DH(2, "Diffie-Hellman"),
+        DSA(3, "DSA/SHA1"),
+        RSASHA1(5, "RSA/SHA-1"),
+        DSA_NSEC3_SHA1(6, "DSA_NSEC3-SHA1"),
+        RSASHA1_NSEC3_SHA1(7, "RSASHA1-NSEC3-SHA1"),
+        RSASHA256(8, "RSA/SHA-256"),
+        RSASHA512(10, "RSA/SHA-512"),
+        ECC_GOST(12, "GOST R 34.10-2001"),
+        ECDSAP256SHA256(13, "ECDSA Curve P-256 with SHA-256"),
+        ECDSAP384SHA384(14, "ECDSA Curve P-384 with SHA-384"),
+        INDIRECT(252, "Reserved for Indirect Keys"),
+        PRIVATEDNS(253, "private algorithm"),
+        PRIVATEOID(254, "private algorithm oid"),
+        ;
 
-    private static Map<Integer, String> signatureAlogorithmLut;
+        private SignatureAlgorithm(int number, String description) {
+            if (number < 0 || number > 255) {
+                throw new IllegalArgumentException();
+            }
+            this.number = (byte) number;
+            this.description = description;
+            SIGNATURE_ALGORITHM_LUT.put(this.number, this);
+        }
 
-    static {
-        signatureAlogorithmLut = new HashMap<>();
-        signatureAlogorithmLut.put(1, "RSA/MD5");
-        signatureAlogorithmLut.put(2, "Diffie-Hellman");
-        signatureAlogorithmLut.put(3, "DSA/SHA1");
-        signatureAlogorithmLut.put(5, "RSA/SHA-1");
-        signatureAlogorithmLut.put(6, "DSA-NSEC3-SHA1");
-        signatureAlogorithmLut.put(7, "RSASHA1-NSEC3-SHA1");
-        signatureAlogorithmLut.put(8, "RSA/SHA-256");
-        signatureAlogorithmLut.put(10, "RSA/SHA-512");
-        signatureAlogorithmLut.put(12, "GOST R 34.10-2001");
-        signatureAlogorithmLut.put(13, "ECDSA Curve P-256 with SHA-256");
-        signatureAlogorithmLut.put(14, "ECDSA Curve P-384 with SHA-384");
-    }
+        public final byte number;
+        public final String description;
 
-    public static String getSignatureAlgorithmName(int algorithm) {
-        if (signatureAlogorithmLut.containsKey(algorithm)) {
-            return signatureAlogorithmLut.get(algorithm);
-        } else {
-            return "Unknown (" + algorithm + ")";
+        public static SignatureAlgorithm forByte(byte b) {
+            return SIGNATURE_ALGORITHM_LUT.get(b);
         }
     }
 
-    /**
-     * RSA/MD5 (deprecated).
-     */
-    @Deprecated
-    public static final byte SIGNATURE_ALGORITHM_RSAMD5 = 1;
+    private static final Map<Byte, DigestAlgorithm> DELEGATION_DIGEST_LUT = new HashMap<>();
 
     /**
-     * Diffie-Hellman.
+     * DNSSEC Digest Algorithms.
+     * 
+     * @see <a href=
+     *      "https://www.iana.org/assignments/ds-rr-types/ds-rr-types.xhtml">
+     *      IANA Delegation Signer (DS) Resource Record (RR)</a>
      */
-    public static final byte SIGNATURE_ALGORITHM_DH = 2;
+    public enum DigestAlgorithm {
+        SHA1(1, "SHA-1"),
+        SHA256(2, "SHA-256"),
+        GOST(3, "GOST R 34.11-94"),
+        SHA384(4, "SHA-384"),
+        ;
 
-    /**
-     * DSA/SHA1.
-     */
-    public static final byte SIGNATURE_ALGORITHM_DSA = 3;
+        private DigestAlgorithm(int value, String description) {
+            if (value < 0 || value > 255) {
+                throw new IllegalArgumentException();
+            }
+            this.value = (byte) value;
+            this.description = description;
+            DELEGATION_DIGEST_LUT.put(this.value, this);
+        }
 
-    /**
-     * RSA/SHA-1.
-     */
-    public static final byte SIGNATURE_ALGORITHM_RSASHA1 = 5;
+        public final byte value;
+        public final String description;
 
-    /**
-     * DSA-NSEC3-SHA1.
-     */
-    public static final byte SIGNATURE_ALGORITHM_DSA_NSEC3_SHA1 = 6;
-
-    /**
-     * RSASHA1-NSEC3-SHA1.
-     */
-    public static final byte SIGNATURE_ALGORITHM_RSASHA1_NSEC3_SHA1 = 7;
-
-    /**
-     * RSA/SHA-256.
-     */
-    public static final byte SIGNATURE_ALGORITHM_RSASHA256 = 8;
-
-    /**
-     * RSA/SHA-512.
-     */
-    public static final byte SIGNATURE_ALGORITHM_RSASHA512 = 10;
-
-    /**
-     * GOST R 34.10-2001.
-     */
-    public static final byte SIGNATURE_ALGORITHM_ECC_GOST = 12;
-
-    /**
-     * ECDSA Curve P-256 with SHA-256.
-     */
-    public static final byte SIGNATURE_ALGORITHM_ECDSAP256SHA256 = 13;
-
-    /**
-     * ECDSA Curve P-384 with SHA-384.
-     */
-    public static final byte SIGNATURE_ALGORITHM_ECDSAP384SHA384 = 14;
-
-    /**
-     * Reserved for Indirect Keys.
-     */
-    public static final byte SIGNATURE_ALGORITHM_INDIRECT = (byte) 252;
-
-    /**
-     * private algorithm.
-     */
-    public static final byte SIGNATURE_ALGORITHM_PRIVATEDNS = (byte) 253;
-
-    /**
-     * private algorithm OID.
-     */
-    public static final byte SIGNATURE_ALGORITHM_PRIVATEOID = (byte) 253;
-
-    /*
-     * Delegation digest
-     * https://www.iana.org/assignments/ds-rr-types/ds-rr-types.xhtml
-     */
-
-    private static Map<Integer, String> delegationDigestLut;
-
-    static {
-        delegationDigestLut = new HashMap<>();
-        delegationDigestLut.put(1, "SHA-1");
-        delegationDigestLut.put(2, "SHA-256");
-        delegationDigestLut.put(3, "GOST R 34.11-94");
-        delegationDigestLut.put(4, "SHA-384");
-    }
-
-    public static String getDelegationDigestName(int algorithm) {
-        if (delegationDigestLut.containsKey(algorithm)) {
-            return delegationDigestLut.get(algorithm);
-        } else {
-            return "Unknown (" + algorithm + ")";
+        public static DigestAlgorithm forByte(byte b) {
+            return DELEGATION_DIGEST_LUT.get(b);
         }
     }
-
-    /**
-     * SHA-1.
-     */
-    public static final byte DIGEST_ALGORITHM_SHA1 = 1;
-
-    /**
-     * SHA-256.
-     */
-    public static final byte DIGEST_ALGORITHM_SHA256 = 2;
-
-    /**
-     * GOST R 34.11-94.
-     */
-    public static final byte DIGEST_ALGORITHM_GOST = 3;
-
-    /**
-     * SHA-384.
-     */
-    public static final byte DIGEST_ALGORITHM_SHA384 = 4;
 }

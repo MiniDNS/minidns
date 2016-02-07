@@ -12,6 +12,8 @@ package de.measite.minidns.dnssec.algorithms;
 
 import org.junit.Before;
 
+import de.measite.minidns.DNSSECConstants.SignatureAlgorithm;
+
 import java.security.PrivateKey;
 import java.util.Random;
 
@@ -33,19 +35,19 @@ public class SignatureVerifierTest extends AlgorithmTest {
         RANDOM.nextBytes(sample);
     }
 
-    protected void verifierTest(int length, byte algorithm) {
+    protected void verifierTest(int length, SignatureAlgorithm algorithm) {
         verifierTest(generatePrivateKey(algorithm, length), algorithm);
     }
 
-    protected void verifierTest(PrivateKey privateKey, byte algorithm) {
+    protected void verifierTest(PrivateKey privateKey, SignatureAlgorithm algorithm) {
         assertSignatureValid(publicKey(algorithm, privateKey), algorithm, sign(privateKey, algorithm, sample));
     }
 
-    protected void assertSignatureValid(byte[] publicKey, byte algorithm, byte[] signature) {
+    protected void assertSignatureValid(byte[] publicKey, SignatureAlgorithm algorithm, byte[] signature) {
         assertTrue(algorithmMap.getSignatureVerifier(algorithm).verify(sample, signature, publicKey));
     }
 
-    protected void assertSignatureInvalid(byte[] publicKey, byte algorithm, byte[] signature) {
+    protected void assertSignatureInvalid(byte[] publicKey, SignatureAlgorithm algorithm, byte[] signature) {
         assertFalse(algorithmMap.getSignatureVerifier(algorithm).verify(sample, signature, publicKey));
     }
 }

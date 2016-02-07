@@ -10,6 +10,8 @@
  */
 package de.measite.minidns.record;
 
+import de.measite.minidns.DNSSECConstants.DigestAlgorithm;
+import de.measite.minidns.DNSSECConstants.SignatureAlgorithm;
 import de.measite.minidns.Record.TYPE;
 
 import java.io.ByteArrayOutputStream;
@@ -29,18 +31,32 @@ public class DS implements Data {
     public final int /* unsigned short */ keyTag;
 
     /**
-     * The cryptographic algorithm used to create the signature.
-     *
-     * See {@link de.measite.minidns.DNSSECConstants} for possible values.
+     * The cryptographic algorithm used to create the signature. If MiniDNS
+     * isn't aware of the signature algorithm, then this field will be
+     * <code>null</code>.
+     * 
+     * @see #algorithmByte
      */
-    public final byte algorithm;
+    public final SignatureAlgorithm algorithm;
 
     /**
-     * The algorithm used to construct the digest.
-     *
-     * See {@link de.measite.minidns.DNSSECConstants} for possible values.
+     * The byte value of the cryptographic algorithm used to create the signature.
      */
-    public final byte digestType;
+    public final byte algorithmByte;
+
+    /**
+     * The algorithm used to construct the digest. If MiniDNS
+     * isn't aware of the digest algorithm, then this field will be
+     * <code>null</code>.
+     * 
+     * @see #digestTypeByte
+     */
+    public final DigestAlgorithm digestType;
+
+    /**
+     * The byte value of algorithm used to construct the digest.
+     */
+    public final byte digestTypeByte;
 
     /**
      * The digest build from a DNSKEY.
@@ -49,17 +65,29 @@ public class DS implements Data {
 
     public DS(DataInputStream dis, byte[] data, int length) throws IOException {
         keyTag = dis.readUnsignedShort();
-        algorithm = dis.readByte();
-        digestType = dis.readByte();
+        algorithmByte = dis.readByte();
+        algorithm = SignatureAlgorithm.forByte(algorithmByte);
+        digestTypeByte = dis.readByte();
+        digestType = DigestAlgorithm.forByte(digestTypeByte);
         digest = new byte[length - 4];
         if (dis.read(digest) != digest.length) throw new IOException();
     }
 
     public DS(int keyTag, byte algorithm, byte digestType, byte[] digest) {
         this.keyTag = keyTag;
-        this.algorithm = algorithm;
-        this.digestType = digestType;
+        this.algorithmByte = algorithm;
+        this.algorithm = SignatureAlgorithm.forByte(algorithmByte);
+        this.digestTypeByte = digestType;
+        this.digestType = DigestAlgorithm.forByte(digestTypeByte);
         this.digest = digest;
+    }
+
+    public DS(int keyTag, SignatureAlgorithm algorithm, byte digestType, byte[] digest) {
+        this(keyTag, algorithm.number, digestType, digest);
+    }
+
+    public DS(int keyTag, SignatureAlgorithm algorithm, DigestAlgorithm digestType, byte[] digest) {
+        this(keyTag, algorithm.number, digestType.value, digest);
     }
 
     @Override
@@ -73,8 +101,8 @@ public class DS implements Data {
         DataOutputStream dos = new DataOutputStream(baos);
         try {
             dos.writeShort(keyTag);
-            dos.writeByte(algorithm);
-            dos.writeByte(digestType);
+            dos.writeByte(algorithmByte);
+            dos.writeByte(digestTypeByte);
             dos.write(digest);
         } catch (IOException e) {
             // Should never happen

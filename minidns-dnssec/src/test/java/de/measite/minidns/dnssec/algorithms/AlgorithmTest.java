@@ -17,6 +17,6 @@ public class AlgorithmTest {
 
     @Before
     public void setUp() throws Exception {
-        algorithmMap = new AlgorithmMap();
+        algorithmMap = AlgorithmMap.INSTANCE;
     }
 }

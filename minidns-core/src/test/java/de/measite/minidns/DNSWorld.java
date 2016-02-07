@@ -12,6 +12,8 @@ package de.measite.minidns;
 
 import de.measite.minidns.DNSMessage.OPCODE;
 import de.measite.minidns.DNSMessage.RESPONSE_CODE;
+import de.measite.minidns.DNSSECConstants.DigestAlgorithm;
+import de.measite.minidns.DNSSECConstants.SignatureAlgorithm;
 import de.measite.minidns.Record.CLASS;
 import de.measite.minidns.Record.TYPE;
 import de.measite.minidns.record.A;
@@ -393,19 +395,23 @@ public class DNSWorld extends DNSDataSource {
         return new CNAME(name);
     }
 
-    public static DNSKEY dnskey(int flags, int protocol, byte algorithm, byte[] key) {
+    public static DNSKEY dnskey(int flags, int protocol, SignatureAlgorithm algorithm, byte[] key) {
         return new DNSKEY((short) flags, (byte) protocol, algorithm, key);
     }
 
-    public static DNSKEY dnskey(int flags, byte algorithm, byte[] key) {
+    public static DNSKEY dnskey(int flags, SignatureAlgorithm algorithm, byte[] key) {
         return dnskey(flags, DNSKEY.PROTOCOL_RFC4034, algorithm, key);
     }
 
-    public static DS ds(int keyTag, byte algorithm, byte digestType, byte[] digest) {
+    public static DS ds(int keyTag, SignatureAlgorithm algorithm, DigestAlgorithm digestType, byte[] digest) {
         return new DS(keyTag, algorithm, digestType, digest);
     }
 
-    public static DLV dlv(int keyTag, byte algorithm, byte digestType, byte[] digest) {
+    public static DS ds(int keyTag, SignatureAlgorithm algorithm, byte digestType, byte[] digest) {
+        return new DS(keyTag, algorithm, digestType, digest);
+    }
+
+    public static DLV dlv(int keyTag, SignatureAlgorithm algorithm, DigestAlgorithm digestType, byte[] digest) {
         return new DLV(keyTag, algorithm, digestType, digest);
     }
 
@@ -429,10 +435,19 @@ public class DNSWorld extends DNSDataSource {
         return new NSEC3(hashAlgorithm, flags, iterations, salt, nextHashed, types);
     }
 
-    public static RRSIG rrsig(TYPE typeCovered, int algorithm, int labels, long originalTtl, Date signatureExpiration,
+    public static RRSIG rrsig(TYPE typeCovered, SignatureAlgorithm algorithm, int labels, long originalTtl, Date signatureExpiration,
                               Date signatureInception, int keyTag, String signerName, byte[] signature) {
-        return new RRSIG(typeCovered, (byte) algorithm, (byte) labels, originalTtl, signatureExpiration,
+        return new RRSIG(typeCovered, algorithm, (byte) labels, originalTtl, signatureExpiration,
                 signatureInception, keyTag, signerName, signature);
+    }
+
+    public static RRSIG rrsig(TYPE typeCovered, int algorithm,
+            int labels, long originalTtl, Date signatureExpiration,
+            Date signatureInception, int keyTag, String signerName,
+            byte[] signature) {
+        return new RRSIG(typeCovered, algorithm, (byte) labels,
+                originalTtl, signatureExpiration, signatureInception, keyTag,
+                signerName, signature);
     }
 
     public static SOA soa(String mname, String rname, long serial, int refresh, int retry, int expire, long minimum) {

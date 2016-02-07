@@ -10,16 +10,16 @@
  */
 package de.measite.minidns.dnssec.algorithms;
 
+import de.measite.minidns.DNSSECConstants.SignatureAlgorithm;
 import de.measite.minidns.dnssec.DNSSECValidationFailedException;
 import org.junit.Test;
 
-import static de.measite.minidns.DNSSECConstants.SIGNATURE_ALGORITHM_DSA;
 import static de.measite.minidns.dnssec.DNSSECWorld.generatePrivateKey;
 import static de.measite.minidns.dnssec.DNSSECWorld.publicKey;
 import static de.measite.minidns.dnssec.DNSSECWorld.sign;
 
 public class DSASingatureVerifierTest extends SignatureVerifierTest {
-    private static final byte ALGORITHM = SIGNATURE_ALGORITHM_DSA;
+    private static final SignatureAlgorithm ALGORITHM = SignatureAlgorithm.DSA;
 
     @Test
     public void testDSA1024Valid() {

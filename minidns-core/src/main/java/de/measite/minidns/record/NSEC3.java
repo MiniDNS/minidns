@@ -18,6 +18,8 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.math.BigInteger;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * NSEC3 record payload.
@@ -30,17 +32,50 @@ public class NSEC3 implements Data {
      */
     public static final byte FLAG_OPT_OUT = 0x1;
 
-    /**
-     * SHA-1.
-     */
-    public static final byte HASH_ALGORITHM_SHA1 = 1;
+    private static final Map<Byte, HashAlgorithm> HASH_ALGORITHM_LUT = new HashMap<>();
 
     /**
-     * The cryptographic hash algorithm used.
-     * 
-     * See {@link de.measite.minidns.DNSSECConstants} for possible values.
+     * DNSSEC NSEC3 Hash Algorithms.
+     *
+     * @see <a href=
+     *      "https://www.iana.org/assignments/dnssec-nsec3-parameters/dnssec-nsec3-parameters.xhtml#dnssec-nsec3-parameters-3">
+     *      IANA DNSSEC NSEC3 Hash Algorithms</a>
      */
-    public final byte hashAlgorithm;
+    public enum HashAlgorithm {
+        RESERVED(0, "Reserved"),
+        SHA1(1, "SHA-1"),
+        ;
+
+        HashAlgorithm(int value, String description) {
+            if (value < 0 || value > 255) {
+                throw new IllegalArgumentException();
+            }
+            this.value = (byte) value;
+            this.description = description;
+            HASH_ALGORITHM_LUT.put(this.value, this);
+        }
+
+        public final byte value;
+        public final String description;
+
+        public static HashAlgorithm forByte(byte b) {
+            return HASH_ALGORITHM_LUT.get(b);
+        }
+    }
+
+    /**
+     * The cryptographic hash algorithm used. If MiniDNS
+     * isn't aware of the hash algorithm, then this field will be
+     * <code>null</code>.
+     * 
+     * @see #hashAlgorithmByte
+     */
+    public final HashAlgorithm hashAlgorithm;
+
+    /**
+     * The byte value of the cryptographic hash algorithm used.
+     */
+    public final byte hashAlgorithmByte;
 
     /**
      * Bitmap of flags: {@link #FLAG_OPT_OUT}.
@@ -70,7 +105,8 @@ public class NSEC3 implements Data {
     public final TYPE[] types;
 
     public NSEC3(DataInputStream dis, byte[] data, int length) throws IOException {
-        hashAlgorithm = dis.readByte();
+        hashAlgorithmByte = dis.readByte();
+        hashAlgorithm = HashAlgorithm.forByte(hashAlgorithmByte);
         flags = dis.readByte();
         iterations = dis.readUnsignedShort();
         int saltLength = dis.readUnsignedByte();
@@ -85,7 +121,8 @@ public class NSEC3 implements Data {
     }
 
     public NSEC3(byte hashAlgorithm, byte flags, int iterations, byte[] salt, byte[] nextHashed, TYPE[] types) {
-        this.hashAlgorithm = hashAlgorithm;
+        this.hashAlgorithmByte = hashAlgorithm;
+        this.hashAlgorithm = HashAlgorithm.forByte(hashAlgorithmByte);
         this.flags = flags;
         this.iterations = iterations;
         this.salt = salt;
@@ -104,7 +141,7 @@ public class NSEC3 implements Data {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         DataOutputStream dos = new DataOutputStream(baos);
         try {
-            dos.writeByte(hashAlgorithm);
+            dos.writeByte(hashAlgorithmByte);
             dos.writeByte(flags);
             dos.writeShort(iterations);
             dos.writeByte(salt.length);

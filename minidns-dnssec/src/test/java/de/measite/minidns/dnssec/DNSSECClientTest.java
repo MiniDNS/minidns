@@ -11,7 +11,8 @@
 package de.measite.minidns.dnssec;
 
 import de.measite.minidns.DNSMessage;
-import de.measite.minidns.DNSSECConstants;
+import de.measite.minidns.DNSSECConstants.DigestAlgorithm;
+import de.measite.minidns.DNSSECConstants.SignatureAlgorithm;
 import de.measite.minidns.DNSWorld;
 import de.measite.minidns.LRUCache;
 import de.measite.minidns.Record;
@@ -51,8 +52,8 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 public class DNSSECClientTest {
-    private static byte algorithm = DNSSECConstants.SIGNATURE_ALGORITHM_RSASHA256;
-    private static byte digestType = DNSSECConstants.DIGEST_ALGORITHM_SHA1;
+    private static SignatureAlgorithm algorithm = SignatureAlgorithm.RSASHA256;
+    private static DigestAlgorithm digestType = DigestAlgorithm.SHA1;
     private static PrivateKey rootPrivateKSK;
     private static DNSKEY rootKSK;
     private static PrivateKey rootPrivateZSK;

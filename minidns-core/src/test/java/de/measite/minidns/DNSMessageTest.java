@@ -10,6 +10,8 @@
  */
 package de.measite.minidns;
 
+import de.measite.minidns.DNSSECConstants.DigestAlgorithm;
+import de.measite.minidns.DNSSECConstants.SignatureAlgorithm;
 import de.measite.minidns.Record.TYPE;
 import de.measite.minidns.record.A;
 import de.measite.minidns.record.AAAA;
@@ -21,6 +23,7 @@ import de.measite.minidns.record.MX;
 import de.measite.minidns.record.NS;
 import de.measite.minidns.record.NSEC;
 import de.measite.minidns.record.NSEC3;
+import de.measite.minidns.record.NSEC3.HashAlgorithm;
 import de.measite.minidns.record.OPT;
 import de.measite.minidns.record.RRSIG;
 import de.measite.minidns.record.SOA;
@@ -225,7 +228,7 @@ public class DNSMessageTest {
             assertEquals(TYPE.DNSKEY, answer.getPayload().getType());
             DNSKEY dnskey = (DNSKEY) answer.getPayload();
             assertEquals(3, dnskey.protocol);
-            assertEquals(8, dnskey.algorithm);
+            assertEquals(SignatureAlgorithm.RSASHA256, dnskey.algorithm);
             assertTrue((dnskey.flags & DNSKEY.FLAG_ZONE) > 0);
             assertEquals(dnskey.getKeyTag(), dnskey.getKeyTag());
             switch (i) {
@@ -266,8 +269,8 @@ public class DNSMessageTest {
         assertEquals(TYPE.DS, answers[0].payloadData.getType());
         DS ds = (DS) answers[0].payloadData;
         assertEquals(30909, ds.keyTag);
-        assertEquals(8, ds.algorithm);
-        assertEquals(2, ds.digestType);
+        assertEquals(SignatureAlgorithm.RSASHA256, ds.algorithm);
+        assertEquals(DigestAlgorithm.SHA256, ds.digestType);
         assertEquals("E2D3C916F6DEEAC73294E8268FB5885044A833FC5459588F4A9184CFC41A5766",
                 new BigInteger(1, ds.digest).toString(16).toUpperCase());
 
@@ -275,7 +278,7 @@ public class DNSMessageTest {
         assertEquals(TYPE.RRSIG, answers[1].payloadData.getType());
         RRSIG rrsig = (RRSIG) answers[1].payloadData;
         assertEquals(TYPE.DS, rrsig.typeCovered);
-        assertEquals(8, rrsig.algorithm);
+        assertEquals(SignatureAlgorithm.RSASHA256, rrsig.algorithm);
         assertEquals(1, rrsig.labels);
         assertEquals(86400, rrsig.originalTtl);
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMddHHmmss");
@@ -325,7 +328,7 @@ public class DNSMessageTest {
             if (record.type == TYPE.NSEC3) {
                 assertEquals(TYPE.NSEC3, record.getPayload().getType());
                 NSEC3 nsec3 = (NSEC3) record.payloadData;
-                assertEquals(1, nsec3.hashAlgorithm);
+                assertEquals(HashAlgorithm.SHA1, nsec3.hashAlgorithm);
                 assertEquals(1, nsec3.flags);
                 assertEquals(0, nsec3.iterations);
                 assertEquals(0, nsec3.salt.length);
