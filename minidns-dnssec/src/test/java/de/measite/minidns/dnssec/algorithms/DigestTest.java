@@ -46,7 +46,7 @@ public class DigestTest extends AlgorithmTest {
         assertEquals("640ab2bae07bedc4c163f679a746f7ab7fb5d1fa", digestHexString(nsecDigestCalculator, "Test"));
     }
 
-    private String digestHexString(DigestCalculator digestCalculator, String in) {
+    private static String digestHexString(DigestCalculator digestCalculator, String in) {
         return new BigInteger(1, digestCalculator.digest(in.getBytes())).toString(16);
     }
 }

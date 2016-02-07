@@ -32,11 +32,8 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
-import java.util.logging.Logger;
 
 class Verifier {
-    private Logger LOGGER = Logger.getLogger(Verifier.class.getName());
-
     private AlgorithmMap algorithmMap = AlgorithmMap.INSTANCE;
 
     public UnverifiedReason verify(Record dnskeyRecord, DS ds) {

@@ -350,7 +350,7 @@ public class DNSMessageTest {
         }
     }
 
-    private void assertArrayContentEquals(Object[] expect, Object[] value) {
+    private static void assertArrayContentEquals(Object[] expect, Object[] value) {
         assertEquals(expect.length, value.length);
         List<Object> list = new ArrayList<Object>(Arrays.asList(expect));
         for (Object type : value) {

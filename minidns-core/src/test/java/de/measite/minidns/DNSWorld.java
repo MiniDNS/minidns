@@ -32,7 +32,6 @@ import de.measite.minidns.record.SOA;
 import de.measite.minidns.record.SRV;
 import de.measite.minidns.source.DNSDataSource;
 
-import java.net.Inet6Address;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
@@ -476,7 +475,7 @@ public class DNSWorld extends DNSDataSource {
 
     static byte[] parseIpV6(String ipString) {
         try {
-            return Inet6Address.getByName(ipString).getAddress();
+            return InetAddress.getByName(ipString).getAddress();
         } catch (UnknownHostException e) {
             throw new IllegalArgumentException(ipString + " is not an valid IPv6 address", e);
         }

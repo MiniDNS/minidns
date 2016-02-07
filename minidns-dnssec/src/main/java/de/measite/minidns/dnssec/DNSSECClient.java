@@ -130,14 +130,14 @@ public class DNSSECClient extends RecursiveDNSClient {
         return new DNSSECMessage(dnsMessage, answers, nameserverRecords, additionalResourceRecords, signatures, result);
     }
 
-    private void extractSignatureRecords(Set<Record> signatures, Record[] records) {
+    private static void extractSignatureRecords(Set<Record> signatures, Record[] records) {
         for (Record record : records) {
             if (record.type == TYPE.RRSIG)
                 signatures.add(record);
         }
     }
 
-    private Record[] stripSignatureRecords(Record[] records) {
+    private static Record[] stripSignatureRecords(Record[] records) {
         if (records.length == 0) return records;
         List<Record> recordList = new ArrayList<>();
         for (Record record : records) {
@@ -313,7 +313,7 @@ public class DNSSECClient extends RecursiveDNSClient {
         return result;
     }
 
-    private boolean isParentOrSelf(String child, String parent) {
+    private static boolean isParentOrSelf(String child, String parent) {
         if (child.equals(parent)) return true;
         if (parent.isEmpty()) return true;
         String[] childSplit = child.split("\\.");

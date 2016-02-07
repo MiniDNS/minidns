@@ -10,8 +10,6 @@
  */
 package de.measite.minidns.integrationtest;
 
-import de.measite.minidns.dnssec.algorithms.AlgorithmMap;
-
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.HashSet;
@@ -22,7 +20,6 @@ import java.util.logging.Logger;
 public class IntegrationTestHelper {
     private static Set<Class<?>> testClasses;
     private static Logger LOGGER = Logger.getLogger(IntegrationTestHelper.class.getName());
-    private static AlgorithmMap referenceAlgorithmMap;
 
     static {
         testClasses = new HashSet<>();
@@ -31,11 +28,7 @@ public class IntegrationTestHelper {
         testClasses.add(DaneTest.class);
     }
 
-    public static void main(String[] args) throws IllegalAccessException {
-        // Disable AlgorithmMap logging
-        Logger.getLogger(AlgorithmMap.class.getName()).setLevel(Level.OFF);
-        referenceAlgorithmMap = AlgorithmMap.INSTANCE;
-
+    public static void main(String[] args) {
         for (final Class<?> aClass : testClasses) {
             for (final Method method : aClass.getDeclaredMethods()) {
                 if (method.isAnnotationPresent(IntegrationTest.class)) {

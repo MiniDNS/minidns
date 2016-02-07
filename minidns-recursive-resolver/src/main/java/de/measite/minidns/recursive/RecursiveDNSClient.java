@@ -147,7 +147,7 @@ public class RecursiveDNSClient extends AbstractDNSClient {
         return null;
     }
 
-    private InetAddress searchAdditional(DNSMessage message, String name) {
+    private static InetAddress searchAdditional(DNSMessage message, String name) {
         for (Record record : message.getAdditionalResourceRecords()) {
             // TODO: IPv6?
             if (record.type == TYPE.A && record.name.equals(name)) {

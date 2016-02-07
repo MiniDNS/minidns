@@ -58,7 +58,7 @@ public class LRUCacheTest {
         assertEquals(1, lruCache.getHitCount());
     }
 
-    private DNSMessage createSampleMessage() {
+    private static DNSMessage createSampleMessage() {
         DNSMessage message = new DNSMessage();
         message.receiveTimestamp = System.currentTimeMillis();
         message.answers = new Record[]{record("", ns("a.root-servers.net"))};

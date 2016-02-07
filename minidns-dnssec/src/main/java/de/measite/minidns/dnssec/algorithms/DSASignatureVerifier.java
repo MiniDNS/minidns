@@ -38,6 +38,7 @@ class DSASignatureVerifier extends JavaSecSignatureVerifier {
             ByteArrayOutputStream bos = new ByteArrayOutputStream();
             DataOutputStream dos = new DataOutputStream(bos);
 
+            @SuppressWarnings("unused")
             byte t = dis.readByte();
 
             byte[] r = new byte[LENGTH];

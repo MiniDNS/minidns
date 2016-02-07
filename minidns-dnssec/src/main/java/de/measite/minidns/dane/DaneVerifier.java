@@ -220,7 +220,7 @@ public class DaneVerifier {
         }
     }
 
-    private X509Certificate[] convert(Certificate[] certificates) {
+    private static X509Certificate[] convert(Certificate[] certificates) {
         List<X509Certificate> certs = new ArrayList<>();
         for (Certificate certificate : certificates) {
             if (certificate instanceof X509Certificate) {
@@ -230,7 +230,7 @@ public class DaneVerifier {
         return certs.toArray(new X509Certificate[certs.size()]);
     }
 
-    private X509Certificate[] convert(javax.security.cert.X509Certificate[] certificates) {
+    private static X509Certificate[] convert(javax.security.cert.X509Certificate[] certificates) {
         X509Certificate[] certs = new X509Certificate[certificates.length];
         for (int i = 0; i < certificates.length; i++) {
             try {

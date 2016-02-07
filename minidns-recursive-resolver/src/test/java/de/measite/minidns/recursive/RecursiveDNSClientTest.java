@@ -17,8 +17,6 @@ import de.measite.minidns.Record.TYPE;
 import de.measite.minidns.record.A;
 import org.junit.Test;
 
-import java.net.UnknownHostException;
-
 import static de.measite.minidns.DNSWorld.a;
 import static de.measite.minidns.DNSWorld.applyZones;
 import static de.measite.minidns.DNSWorld.ns;
@@ -32,7 +30,7 @@ import static org.junit.Assert.assertNull;
 
 public class RecursiveDNSClientTest {
     @Test
-    public void basicRecursionTest() throws UnknownHostException {
+    public void basicRecursionTest() {
         RecursiveDNSClient client = new RecursiveDNSClient(new LRUCache(0));
         applyZones(client,
                 rootZone(
