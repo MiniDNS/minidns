@@ -166,6 +166,15 @@ task jacocoRootReport(type: org.gradle.testing.jacoco.tasks.JacocoReport) {
 	setOnlyIf { true }
 }
 
+task integrationTest {
+	// Depend on the integration test's 'run' task using a closure, as
+	// usually the subprojects are evaluated after the parent
+	// project. The closure defers the lookup, compared to
+	// dependsOn project(':minidns-integration-test').tasks.run
+	// which won't work. See also: https://discuss.gradle.org/t/4387/2
+	dependsOn { project(':minidns-integration-test').tasks.run }
+}
+
 def getAndroidRuntimeJar() {
 	def androidHome = getAndroidHome()
 	def androidJar = new File("$androidHome/platforms/android-$minidnsMinAndroidSdk/android.jar")
