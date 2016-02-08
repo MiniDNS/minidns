@@ -27,7 +27,7 @@ public class TXT implements Data {
 
     protected final byte[] blob;
 
-    public static TXT parse(DataInputStream dis, byte[] data, int length) throws IOException {
+    public static TXT parse(DataInputStream dis, int length) throws IOException {
         byte[] blob = new byte[length];
         dis.readFully(blob);
         return new TXT(blob);

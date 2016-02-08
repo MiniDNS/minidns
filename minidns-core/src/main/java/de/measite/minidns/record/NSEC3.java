@@ -104,7 +104,7 @@ public class NSEC3 implements Data {
      */
     public final TYPE[] types;
 
-    public static NSEC3 parse(DataInputStream dis, byte[] data, int length) throws IOException {
+    public static NSEC3 parse(DataInputStream dis, int length) throws IOException {
         byte hashAlgorithm = dis.readByte();
         byte flags = dis.readByte();
         int iterations = dis.readUnsignedShort();

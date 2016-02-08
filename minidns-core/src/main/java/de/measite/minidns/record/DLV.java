@@ -23,8 +23,8 @@ import java.io.IOException;
  * According to RFC4431, DLV has exactly the same format as DS records.
  */
 public class DLV extends DS {
-    public static DLV parse (DataInputStream dis, byte[] data, int length) throws IOException {
-        DS ds = DS.parse(dis, data, length);
+    public static DLV parse (DataInputStream dis, int length) throws IOException {
+        DS ds = DS.parse(dis, length);
         return new DLV(ds.keyTag, ds.algorithm, ds.digestType, ds.digest);
     }
 

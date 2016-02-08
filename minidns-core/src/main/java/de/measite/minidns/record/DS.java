@@ -63,7 +63,7 @@ public class DS implements Data {
      */
     public final byte[] digest;
 
-    public static DS parse(DataInputStream dis, byte[] data, int length) throws IOException {
+    public static DS parse(DataInputStream dis, int length) throws IOException {
         int keyTag = dis.readUnsignedShort();
         byte algorithm = dis.readByte();
         byte digestType = dis.readByte();

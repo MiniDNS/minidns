@@ -20,8 +20,8 @@ import de.measite.minidns.Record.TYPE;
  */
 public class PTR extends CNAME {
 
-    public static PTR parse(DataInputStream dis, byte[] data, int length) throws IOException {
-        CNAME cname = CNAME.parse(dis, data, length);
+    public static PTR parse(DataInputStream dis, byte[] data) throws IOException {
+        CNAME cname = CNAME.parse(dis, data);
         return new PTR(cname.name);
     }
 

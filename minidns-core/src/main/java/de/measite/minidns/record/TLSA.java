@@ -54,7 +54,7 @@ public class TLSA implements Data {
      */
     public final byte[] certificateAssociation;
 
-    public static TLSA parse(DataInputStream dis, byte[] data, int length) throws IOException {
+    public static TLSA parse(DataInputStream dis, int length) throws IOException {
         byte certUsage = dis.readByte();
         byte selector = dis.readByte();
         byte matchingType = dis.readByte();

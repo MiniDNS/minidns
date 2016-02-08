@@ -44,7 +44,7 @@ public class SRV implements Data {
      */
     public final String name;
 
-    public static SRV parse(DataInputStream dis, byte[] data, int length)
+    public static SRV parse(DataInputStream dis, byte[] data)
         throws IOException
     {
         int priority = dis.readUnsignedShort();

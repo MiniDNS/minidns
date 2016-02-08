@@ -39,7 +39,7 @@ public class OPT implements Data {
         this.encodedOptData = encodedOptData;
     }
 
-    public static OPT parse(DataInputStream dis, byte[] data, int payloadLength) throws IOException {
+    public static OPT parse(DataInputStream dis, int payloadLength) throws IOException {
         byte[] encodedOptData = new byte[payloadLength];
         if (dis.read(encodedOptData) != encodedOptData.length && encodedOptData.length != 0) throw new IOException();
         return new OPT(encodedOptData);

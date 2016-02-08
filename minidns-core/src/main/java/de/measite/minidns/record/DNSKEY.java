@@ -77,7 +77,7 @@ public class DNSKEY implements Data {
      */
     private Integer keyTag;
 
-    public static DNSKEY parse(DataInputStream dis, byte[] data, int length) throws IOException {
+    public static DNSKEY parse(DataInputStream dis, int length) throws IOException {
         short flags = dis.readShort();
         byte protocol = dis.readByte();
         byte algorithm = dis.readByte();

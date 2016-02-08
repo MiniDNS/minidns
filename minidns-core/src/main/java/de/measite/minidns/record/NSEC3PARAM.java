@@ -48,7 +48,7 @@ public class NSEC3PARAM implements Data {
      */
     public final byte[] salt;
 
-    public static NSEC3PARAM parse(DataInputStream dis, byte[] data, int length) throws IOException {
+    public static NSEC3PARAM parse(DataInputStream dis) throws IOException {
         byte hashAlgorithm = dis.readByte();
         byte flags = dis.readByte();
         int iterations = dis.readUnsignedShort();

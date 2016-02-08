@@ -42,7 +42,7 @@ public class AAAA implements Data {
         this.ip = ip;
     }
 
-    public static AAAA parse(DataInputStream dis, byte[] data, int length)
+    public static AAAA parse(DataInputStream dis)
             throws IOException {
         byte[] ip = new byte[16];
         dis.readFully(ip);

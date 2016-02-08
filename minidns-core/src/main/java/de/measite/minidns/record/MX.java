@@ -33,7 +33,7 @@ public class MX implements Data {
      */
     public final String name;
 
-    public static MX parse(DataInputStream dis, byte[] data, int length)
+    public static MX parse(DataInputStream dis, byte[] data)
         throws IOException
     {
         int priority = dis.readUnsignedShort();

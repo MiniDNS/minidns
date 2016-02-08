@@ -60,7 +60,7 @@ public class SOA implements Data {
      */
     public final long /* unsigned int */ minimum;
 
-    public static SOA parse(DataInputStream dis, byte[] data, int length)
+    public static SOA parse(DataInputStream dis, byte[] data)
             throws IOException {
         String mname = NameUtil.parse(dis, data);
         String rname = NameUtil.parse(dis, data);
