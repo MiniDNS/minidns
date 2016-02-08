@@ -1,5 +1,5 @@
 MiniDNS
--------
+=======
 
 [![Build Status](https://travis-ci.org/rtreffer/minidns.svg)](https://travis-ci.org/rtreffer/minidns)  [![Coverage Status](https://coveralls.io/repos/rtreffer/minidns/badge.svg)](https://coveralls.io/r/rtreffer/minidns)
 
@@ -8,3 +8,19 @@ of resource records (A, AAAA, NS, SRV) and is easy to use and extend.
 
 This library is not intended to be used as a DNS server. You might want to
 look into dnsjava for such functionality.
+
+REPL
+----
+
+MiniDNS comes with a REPL which can be used to perform DNS lookups and to test the library. Simple use `./repl` to start the REPL.
+
+```text
+minidns $ ./repl
+...
+scala> c.query("measite.de", TYPE.A)
+res4: de.measite.minidns.DNSMessage = DNSMessage@54653(QUERY NO_ERROR qr rd ra) { \
+  [Q: measite.de.	IN	A] \
+  [A: measite.de.	3599	IN	A	85.10.226.249] \
+  [X: EDNS: version: 0, flags:; udp: 512]
+}
+```

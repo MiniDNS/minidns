@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+set -e
+
+while getopts d OPTION "$@"; do
+    case $OPTION in
+	d)
+	    set -x
+	    ;;
+    esac
+done
+
+echo "Computing classpath (May take a while)"
+declare -r GRADLE_CLASSPATH="$(gradle :minidns-repl:printClasspath --quiet)"
+echo "Classpath computed, starting REPL"
+
+java \
+	-Dscala.usejavacp=true \
+	-classpath "${GRADLE_CLASSPATH}" \
+	scala.tools.nsc.MainGenericRunner \
+	-i minidns-repl/scala.repl

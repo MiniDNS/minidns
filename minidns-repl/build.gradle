@@ -1,0 +1,15 @@
+ext {
+    scalaVersion = '2.11.7'
+}
+
+dependencies {
+    compile project(':minidns-core')
+    compile project(':minidns-recursive-resolver')
+    compile project(':minidns-dnssec')
+    compile 'junit:junit:4.11'
+    compile "org.scala-lang:scala-compiler:${scalaVersion}"
+}
+
+task printClasspath(dependsOn: assemble) << {
+    println sourceSets.main.runtimeClasspath.asPath
+}
