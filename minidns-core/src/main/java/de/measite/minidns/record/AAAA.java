@@ -42,10 +42,11 @@ public class AAAA implements Data {
         this.ip = ip;
     }
 
-    public AAAA(DataInputStream dis, byte[] data, int length)
+    public static AAAA parse(DataInputStream dis, byte[] data, int length)
             throws IOException {
-        ip = new byte[16];
+        byte[] ip = new byte[16];
         dis.readFully(ip);
+        return new AAAA(ip);
     }
 
     @Override

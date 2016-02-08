@@ -20,9 +20,10 @@ public class OPENPGPKEY implements Data {
 
     public final byte[] publicKeyPacket;
 
-    public OPENPGPKEY(DataInputStream dis, byte[] data, int length) throws IOException {
-        publicKeyPacket = new byte[length];
+    public static OPENPGPKEY parse(DataInputStream dis, byte[] data, int length) throws IOException {
+        byte[] publicKeyPacket = new byte[length];
         dis.readFully(publicKeyPacket);
+        return new OPENPGPKEY(publicKeyPacket);
     }
 
     OPENPGPKEY(byte[] publicKeyPacket) {

@@ -42,10 +42,11 @@ public class A implements Data {
         this.ip = ip;
     }
 
-    public A(DataInputStream dis, byte[] data, int length)
+    public static A parse(DataInputStream dis, byte[] data, int length)
             throws IOException {
-        ip = new byte[4];
+        byte[] ip = new byte[4];
         dis.readFully(ip);
+        return new A(ip);
     }
 
     @Override

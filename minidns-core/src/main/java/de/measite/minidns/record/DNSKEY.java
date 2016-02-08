@@ -62,6 +62,12 @@ public class DNSKEY implements Data {
     public final SignatureAlgorithm algorithm;
 
     /**
+     * The byte value of the public key's cryptographic algorithm used.
+     *
+     */
+    public final byte algorithmByte;
+
+    /**
      * The public key material. The format depends on the algorithm of the key being stored.
      */
     public final byte[] key;
@@ -71,12 +77,24 @@ public class DNSKEY implements Data {
      */
     private Integer keyTag;
 
-    public DNSKEY(DataInputStream dis, byte[] data, int length) throws IOException {
-        flags = dis.readShort();
-        protocol = dis.readByte();
-        algorithm = SignatureAlgorithm.forByte(dis.readByte());
-        key = new byte[length - 4];
+    public static DNSKEY parse(DataInputStream dis, byte[] data, int length) throws IOException {
+        short flags = dis.readShort();
+        byte protocol = dis.readByte();
+        byte algorithm = dis.readByte();
+        byte[] key = new byte[length - 4];
         dis.readFully(key);
+        return new DNSKEY(flags, protocol, algorithm, key);
+    }
+
+    private DNSKEY(short flags, byte protocol, SignatureAlgorithm algorithm, byte algorithmByte, byte[] key) {
+        this.flags = flags;
+        this.protocol = protocol;
+
+        assert algorithmByte == (algorithm != null ? algorithm.number : algorithmByte);
+        this.algorithmByte = algorithmByte;
+        this.algorithm = algorithm != null ? algorithm : SignatureAlgorithm.forByte(algorithmByte);
+
+        this.key = key;
     }
 
     public DNSKEY(short flags, byte protocol, byte algorithm, byte[] key) {
@@ -84,10 +102,7 @@ public class DNSKEY implements Data {
     }
 
     public DNSKEY(short flags, byte protocol, SignatureAlgorithm algorithm, byte[] key) {
-        this.flags = flags;
-        this.protocol = protocol;
-        this.algorithm = algorithm;
-        this.key = key;
+        this(flags, protocol, algorithm, algorithm.number, key);
     }
 
     @Override

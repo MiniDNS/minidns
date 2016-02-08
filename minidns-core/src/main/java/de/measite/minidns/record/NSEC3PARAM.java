@@ -11,6 +11,7 @@
 package de.measite.minidns.record;
 
 import de.measite.minidns.Record.TYPE;
+import de.measite.minidns.record.NSEC3.HashAlgorithm;
 
 import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
@@ -26,9 +27,14 @@ public class NSEC3PARAM implements Data {
     /**
      * The cryptographic hash algorithm used.
      * 
-     * See {@link de.measite.minidns.DNSSECConstants} for possible values.
      */
-    public final byte hashAlgorithm;
+    public final HashAlgorithm hashAlgorithm;
+
+    /**
+     * The cryptographic hash algorithm used.
+     * 
+     */
+    public final byte hashAlgorithmByte;
 
     public final byte flags;
 
@@ -42,20 +48,28 @@ public class NSEC3PARAM implements Data {
      */
     public final byte[] salt;
 
-    public NSEC3PARAM(DataInputStream dis, byte[] data, int length) throws IOException {
-        hashAlgorithm = dis.readByte();
-        flags = dis.readByte();
-        iterations = dis.readUnsignedShort();
+    public static NSEC3PARAM parse(DataInputStream dis, byte[] data, int length) throws IOException {
+        byte hashAlgorithm = dis.readByte();
+        byte flags = dis.readByte();
+        int iterations = dis.readUnsignedShort();
         int saltLength = dis.readUnsignedByte();
-        salt = new byte[saltLength];
+        byte[] salt = new byte[saltLength];
         if (dis.read(salt) != salt.length && salt.length != 0) throw new IOException();
+        return new NSEC3PARAM(hashAlgorithm, flags, iterations, salt);
     }
 
-    NSEC3PARAM(byte hashAlgorithm, byte flags, int iterations, byte[] salt) {
-        this.hashAlgorithm = hashAlgorithm;
+    private NSEC3PARAM(HashAlgorithm hashAlgorithm, byte hashAlgorithmByte, byte flags, int iterations, byte[] salt) {
+        assert hashAlgorithmByte == (hashAlgorithm != null ? hashAlgorithm.value : hashAlgorithmByte);
+        this.hashAlgorithmByte = hashAlgorithmByte;
+        this.hashAlgorithm = hashAlgorithm != null ? hashAlgorithm : HashAlgorithm.forByte(hashAlgorithmByte);
+
         this.flags = flags;
         this.iterations = iterations;
         this.salt = salt;
+    }
+
+    NSEC3PARAM(byte hashAlgorithm, byte flags, int iterations, byte[] salt) {
+        this(null, hashAlgorithm, flags, iterations, salt);
     }
 
     @Override
@@ -68,7 +82,7 @@ public class NSEC3PARAM implements Data {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         DataOutputStream dos = new DataOutputStream(baos);
         try {
-            dos.writeByte(hashAlgorithm);
+            dos.writeByte(hashAlgorithmByte);
             dos.writeByte(flags);
             dos.writeShort(iterations);
             dos.writeByte(salt.length);

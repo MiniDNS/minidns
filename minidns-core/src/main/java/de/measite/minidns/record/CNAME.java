@@ -28,8 +28,9 @@ public class CNAME implements Data {
         return NameUtil.toByteArray(name);
     }
 
-    public CNAME(DataInputStream dis, byte[] data, int length) throws IOException {
-        this.name = NameUtil.parse(dis, data);
+    public static CNAME parse(DataInputStream dis, byte[] data, int length) throws IOException {
+        String name = NameUtil.parse(dis, data);
+        return new CNAME(name);
     }
 
     public CNAME(String name) {

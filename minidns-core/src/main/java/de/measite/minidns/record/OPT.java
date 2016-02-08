@@ -32,12 +32,17 @@ public class OPT implements Data {
     public final byte[] encodedOptData;
 
     public OPT() {
-        encodedOptData = new byte[0];
+        this(new byte[0]);
     }
 
-    public OPT(DataInputStream dis, byte[] data, int payloadLength) throws IOException {
-        encodedOptData = new byte[payloadLength];
+    public OPT(byte[] encodedOptData) {
+        this.encodedOptData = encodedOptData;
+    }
+
+    public static OPT parse(DataInputStream dis, byte[] data, int payloadLength) throws IOException {
+        byte[] encodedOptData = new byte[payloadLength];
         if (dis.read(encodedOptData) != encodedOptData.length && encodedOptData.length != 0) throw new IOException();
+        return new OPT(encodedOptData);
     }
 
     @Override

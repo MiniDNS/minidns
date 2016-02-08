@@ -54,12 +54,13 @@ public class TLSA implements Data {
      */
     public final byte[] certificateAssociation;
 
-    public TLSA(DataInputStream dis, byte[] data, int length) throws IOException {
-        certUsage = dis.readByte();
-        selector = dis.readByte();
-        matchingType = dis.readByte();
-        certificateAssociation = new byte[length - 3];
+    public static TLSA parse(DataInputStream dis, byte[] data, int length) throws IOException {
+        byte certUsage = dis.readByte();
+        byte selector = dis.readByte();
+        byte matchingType = dis.readByte();
+        byte[] certificateAssociation = new byte[length - 3];
         if (dis.read(certificateAssociation) != certificateAssociation.length) throw new IOException();
+        return new TLSA(certUsage, selector, matchingType, certificateAssociation);
     }
 
     TLSA(byte certUsage, byte selector, byte matchingType, byte[] certificateAssociation) {

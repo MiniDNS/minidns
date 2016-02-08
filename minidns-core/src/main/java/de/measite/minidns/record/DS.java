@@ -63,31 +63,40 @@ public class DS implements Data {
      */
     public final byte[] digest;
 
-    public DS(DataInputStream dis, byte[] data, int length) throws IOException {
-        keyTag = dis.readUnsignedShort();
-        algorithmByte = dis.readByte();
-        algorithm = SignatureAlgorithm.forByte(algorithmByte);
-        digestTypeByte = dis.readByte();
-        digestType = DigestAlgorithm.forByte(digestTypeByte);
-        digest = new byte[length - 4];
+    public static DS parse(DataInputStream dis, byte[] data, int length) throws IOException {
+        int keyTag = dis.readUnsignedShort();
+        byte algorithm = dis.readByte();
+        byte digestType = dis.readByte();
+        byte[] digest = new byte[length - 4];
         if (dis.read(digest) != digest.length) throw new IOException();
+        return new DS(keyTag, algorithm, digestType, digest);
     }
 
-    public DS(int keyTag, byte algorithm, byte digestType, byte[] digest) {
+    private DS(int keyTag, SignatureAlgorithm algorithm, byte algorithmByte, DigestAlgorithm digestType, byte digestTypeByte, byte[] digest) {
         this.keyTag = keyTag;
-        this.algorithmByte = algorithm;
-        this.algorithm = SignatureAlgorithm.forByte(algorithmByte);
-        this.digestTypeByte = digestType;
-        this.digestType = DigestAlgorithm.forByte(digestTypeByte);
+
+        assert algorithmByte == (algorithm != null ? algorithm.number : algorithmByte);
+        this.algorithmByte = algorithmByte;
+        this.algorithm = algorithm != null ? algorithm : SignatureAlgorithm.forByte(algorithmByte);
+
+        assert digestTypeByte == (digestType != null ? digestType.value : digestTypeByte);
+        this.digestTypeByte = digestTypeByte;
+        this.digestType = digestType != null ? digestType : DigestAlgorithm.forByte(digestTypeByte);
+
+        assert digest != null;
         this.digest = digest;
     }
 
+    public DS(int keyTag, byte algorithm, byte digestType, byte[] digest) {
+        this(keyTag, null, algorithm, null, digestType, digest);
+    }
+
     public DS(int keyTag, SignatureAlgorithm algorithm, byte digestType, byte[] digest) {
-        this(keyTag, algorithm.number, digestType, digest);
+        this(keyTag, algorithm, algorithm.number, null, digestType, digest);
     }
 
     public DS(int keyTag, SignatureAlgorithm algorithm, DigestAlgorithm digestType, byte[] digest) {
-        this(keyTag, algorithm.number, digestType.value, digest);
+        this(keyTag, algorithm, algorithm.number, digestType, digestType.value, digest);
     }
 
     @Override

@@ -296,61 +296,61 @@ public class Record {
         int payloadLength = dis.readUnsignedShort();
         switch (this.type) {
             case SOA:
-                this.payloadData = new SOA(dis, data, payloadLength);
+                this.payloadData = SOA.parse(dis, data, payloadLength);
                 break;
             case SRV:
-                this.payloadData = new SRV(dis, data, payloadLength);
+                this.payloadData = SRV.parse(dis, data, payloadLength);
                 break;
             case MX:
-                this.payloadData = new MX(dis, data, payloadLength);
+                this.payloadData = MX.parse(dis, data, payloadLength);
                 break;
             case AAAA:
-                this.payloadData = new AAAA(dis, data, payloadLength);
+                this.payloadData = AAAA.parse(dis, data, payloadLength);
                 break;
             case A:
-                this.payloadData = new A(dis, data, payloadLength);
+                this.payloadData = A.parse(dis, data, payloadLength);
                 break;
             case NS:
-                this.payloadData = new NS(dis, data, payloadLength);
+                this.payloadData = NS.parse(dis, data, payloadLength);
                 break;
             case CNAME:
-                this.payloadData = new CNAME(dis, data, payloadLength);
+                this.payloadData = CNAME.parse(dis, data, payloadLength);
                 break;
             case PTR:
-                this.payloadData = new PTR(dis, data, payloadLength);
+                this.payloadData = PTR.parse(dis, data, payloadLength);
                 break;
             case TXT:
-                this.payloadData = new TXT(dis, data, payloadLength);
+                this.payloadData = TXT.parse(dis, data, payloadLength);
                 break;
             case OPT:
-                this.payloadData = new OPT(dis, data, payloadLength);
+                this.payloadData = OPT.parse(dis, data, payloadLength);
                 break;
             case DNSKEY:
-                this.payloadData = new DNSKEY(dis, data, payloadLength);
+                this.payloadData = DNSKEY.parse(dis, data, payloadLength);
                 break;
             case RRSIG:
-                this.payloadData = new RRSIG(dis, data, payloadLength);
+                this.payloadData = RRSIG.parse(dis, data, payloadLength);
                 break;
             case DS:
-                this.payloadData = new DS(dis, data, payloadLength);
+                this.payloadData = DS.parse(dis, data, payloadLength);
                 break;
             case NSEC:
-                this.payloadData = new NSEC(dis, data, payloadLength);
+                this.payloadData = NSEC.parse(dis, data, payloadLength);
                 break;
             case NSEC3:
-                this.payloadData = new NSEC3(dis, data, payloadLength);
+                this.payloadData = NSEC3.parse(dis, data, payloadLength);
                 break;
             case NSEC3PARAM:
-                this.payloadData = new NSEC3PARAM(dis, data, payloadLength);
+                this.payloadData = NSEC3PARAM.parse(dis, data, payloadLength);
                 break;
             case TLSA:
-                this.payloadData = new TLSA(dis, data, payloadLength);
+                this.payloadData = TLSA.parse(dis, data, payloadLength);
                 break;
             case OPENPGPKEY:
-                this.payloadData = new OPENPGPKEY(dis, data, payloadLength);
+                this.payloadData = OPENPGPKEY.parse(dis, data, payloadLength);
                 break;
             case DLV:
-                this.payloadData = new DLV(dis, data, payloadLength);
+                this.payloadData = DLV.parse(dis, data, payloadLength);
                 break;
             case UNKNOWN:
             default:

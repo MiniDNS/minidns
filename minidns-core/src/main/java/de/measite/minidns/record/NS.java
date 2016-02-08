@@ -20,8 +20,9 @@ import de.measite.minidns.Record.TYPE;
  */
 public class NS extends CNAME {
 
-    public NS(DataInputStream dis, byte[] data, int length) throws IOException {
-        super(dis, data, length);
+    public static NS parse(DataInputStream dis, byte[] data, int length) throws IOException {
+        CNAME cname = CNAME.parse(dis, data, length);
+        return new NS(cname.name);
     }
 
     public NS(String name) {

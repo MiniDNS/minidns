@@ -39,7 +39,7 @@ public class RecordsTest {
         assertEquals("127.0.0.1", a.toString());
         Assert.assertEquals(TYPE.A, a.getType());
         byte[] ab = a.toByteArray();
-        a = new A(new DataInputStream(new ByteArrayInputStream(ab)), ab, ab.length);
+        a = A.parse(new DataInputStream(new ByteArrayInputStream(ab)), ab, ab.length);
         assertArrayEquals(new byte[]{127, 0, 0, 1}, a.ip);
     }
 
@@ -55,7 +55,7 @@ public class RecordsTest {
         assertEquals("2001:db8:85a3:8d3:1319:8a2e:370:7344", aaaa.toString());
         Assert.assertEquals(TYPE.AAAA, aaaa.getType());
         byte[] aaaab  = aaaa.toByteArray();
-        aaaa = new AAAA(new DataInputStream(new ByteArrayInputStream(aaaab)), aaaab, aaaab.length);
+        aaaa = AAAA.parse(new DataInputStream(new ByteArrayInputStream(aaaab)), aaaab, aaaab.length);
         assertArrayEquals(new byte[]{0x20, 0x01, 0x0d, (byte) 0xb8, (byte) 0x85, (byte) 0xa3, 0x08, (byte) 0xd3, 0x13, 0x19, (byte) 0x8a, 0x2e, 0x03, 0x70, 0x73, 0x44}, aaaa.ip);
     }
 
@@ -70,7 +70,7 @@ public class RecordsTest {
         assertEquals("www.example.com.", cname.toString());
         assertEquals(TYPE.CNAME, cname.getType());
         byte[] cnameb = cname.toByteArray();
-        cname = new CNAME(new DataInputStream(new ByteArrayInputStream(cnameb)), cnameb, cnameb.length);
+        cname = CNAME.parse(new DataInputStream(new ByteArrayInputStream(cnameb)), cnameb, cnameb.length);
         assertEquals("www.example.com", cname.name);
     }
 
@@ -80,7 +80,7 @@ public class RecordsTest {
         assertEquals("42 RSASHA256 SHA256 1337", dlv.toString());
         assertEquals(TYPE.DLV, dlv.getType());
         byte[] dlvb = dlv.toByteArray();
-        dlv = new DLV(new DataInputStream(new ByteArrayInputStream(dlvb)), dlvb, dlvb.length);
+        dlv = DLV.parse(new DataInputStream(new ByteArrayInputStream(dlvb)), dlvb, dlvb.length);
         assertEquals(42, dlv.keyTag);
         assertEquals(SignatureAlgorithm.RSASHA256, dlv.algorithm);
         assertEquals(DigestAlgorithm.SHA256, dlv.digestType);
@@ -95,7 +95,7 @@ public class RecordsTest {
         assertEquals("256 3 RSAMD5 " + Base64.encodeToString(dnskey.key), dnskey.toString());
         assertEquals(TYPE.DNSKEY, dnskey.getType());
         byte[] dnskeyb = dnskey.toByteArray();
-        dnskey = new DNSKEY(new DataInputStream(new ByteArrayInputStream(dnskeyb)), dnskeyb, dnskeyb.length);
+        dnskey = DNSKEY.parse(new DataInputStream(new ByteArrayInputStream(dnskeyb)), dnskeyb, dnskeyb.length);
         assertEquals(256, dnskey.flags);
         assertEquals(3, dnskey.protocol);
         assertEquals(SignatureAlgorithm.RSAMD5, dnskey.algorithm);
@@ -108,7 +108,7 @@ public class RecordsTest {
         assertEquals("42 RSASHA256 SHA256 1337", ds.toString());
         assertEquals(TYPE.DS, ds.getType());
         byte[] dsb = ds.toByteArray();
-        ds = new DS(new DataInputStream(new ByteArrayInputStream(dsb)), dsb, dsb.length);
+        ds = DS.parse(new DataInputStream(new ByteArrayInputStream(dsb)), dsb, dsb.length);
         assertEquals(42, ds.keyTag);
         assertEquals(SignatureAlgorithm.RSASHA256, ds.algorithm);
         assertEquals(DigestAlgorithm.SHA256, ds.digestType);
@@ -121,7 +121,7 @@ public class RecordsTest {
         assertEquals("10 mx.example.com.", mx.toString());
         assertEquals(TYPE.MX, mx.getType());
         byte[] mxb = mx.toByteArray();
-        mx = new MX(new DataInputStream(new ByteArrayInputStream(mxb)), mxb, mxb.length);
+        mx = MX.parse(new DataInputStream(new ByteArrayInputStream(mxb)), mxb, mxb.length);
         assertEquals(10, mx.priority);
         assertEquals("mx.example.com", mx.name);
     }
@@ -132,7 +132,7 @@ public class RecordsTest {
         assertEquals("example.com. A RRSIG DLV", nsec.toString());
         assertEquals(TYPE.NSEC, nsec.getType());
         byte[] nsecb = nsec.toByteArray();
-        nsec = new NSEC(new DataInputStream(new ByteArrayInputStream(nsecb)), nsecb, nsecb.length);
+        nsec = NSEC.parse(new DataInputStream(new ByteArrayInputStream(nsecb)), nsecb, nsecb.length);
         assertEquals("example.com", nsec.next);
         assertArrayEquals(new TYPE[]{TYPE.A, TYPE.RRSIG, TYPE.DLV}, nsec.types);
 
@@ -145,7 +145,7 @@ public class RecordsTest {
         assertEquals("SHA1 1 1 1337 89144GI2 A", nsec3.toString());
         assertEquals(TYPE.NSEC3, nsec3.getType());
         byte[] nsec3b = nsec3.toByteArray();
-        nsec3 = new NSEC3(new DataInputStream(new ByteArrayInputStream(nsec3b)), nsec3b, nsec3b.length);
+        nsec3 = NSEC3.parse(new DataInputStream(new ByteArrayInputStream(nsec3b)), nsec3b, nsec3b.length);
         assertEquals(HashAlgorithm.SHA1, nsec3.hashAlgorithm);
         assertEquals(1, nsec3.flags);
         assertEquals(1, nsec3.iterations);
@@ -159,16 +159,17 @@ public class RecordsTest {
     @Test
     public void testNsec3ParamRecord() throws Exception {
         NSEC3PARAM nsec3param = new NSEC3PARAM((byte) 1, (byte) 1, 1, new byte[0]);
-        assertEquals("1 1 1 -", nsec3param.toString());
+        assertEquals("SHA1 1 1 -", nsec3param.toString());
         assertEquals(TYPE.NSEC3PARAM, nsec3param.getType());
         byte[] nsec3paramb = nsec3param.toByteArray();
-        nsec3param = new NSEC3PARAM(new DataInputStream(new ByteArrayInputStream(nsec3paramb)), nsec3paramb, nsec3paramb.length);
-        assertEquals(1, nsec3param.hashAlgorithm);
+        nsec3param = NSEC3PARAM.parse(new DataInputStream(new ByteArrayInputStream(nsec3paramb)), nsec3paramb, nsec3paramb.length);
+        assertEquals("SHA-1", nsec3param.hashAlgorithm.description);
+        assertEquals(1, nsec3param.hashAlgorithmByte);
         assertEquals(1, nsec3param.flags);
         assertEquals(1, nsec3param.iterations);
         assertEquals(0, nsec3param.salt.length);
 
-        assertEquals("1 1 1 1337", new NSEC3PARAM((byte) 1, (byte) 1, 1, new byte[]{0x13, 0x37}).toString());
+        assertEquals("SHA1 1 1 1337", new NSEC3PARAM((byte) 1, (byte) 1, 1, new byte[]{0x13, 0x37}).toString());
     }
 
     @Test
@@ -177,7 +178,7 @@ public class RecordsTest {
         assertEquals("Ezc=", openpgpkey.toString());
         assertEquals(TYPE.OPENPGPKEY, openpgpkey.getType());
         byte[] openpgpkeyb = openpgpkey.toByteArray();
-        openpgpkey = new OPENPGPKEY(new DataInputStream(new ByteArrayInputStream(openpgpkeyb)), openpgpkeyb, openpgpkeyb.length);
+        openpgpkey = OPENPGPKEY.parse(new DataInputStream(new ByteArrayInputStream(openpgpkeyb)), openpgpkeyb, openpgpkeyb.length);
         assertArrayEquals(new byte[]{0x13, 0x37}, openpgpkey.publicKeyPacket);
     }
 
@@ -187,7 +188,7 @@ public class RecordsTest {
         assertEquals("ptr.example.com.", ptr.toString());
         assertEquals(TYPE.PTR, ptr.getType());
         byte[] ptrb = ptr.toByteArray();
-        ptr = new PTR(new DataInputStream(new ByteArrayInputStream(ptrb)), ptrb, ptrb.length);
+        ptr = PTR.parse(new DataInputStream(new ByteArrayInputStream(ptrb)), ptrb, ptrb.length);
         assertEquals("ptr.example.com", ptr.name);
     }
 
@@ -198,7 +199,7 @@ public class RecordsTest {
         assertEquals("A RSASHA256 2 3600 19700101000001 19700101000000 42 example.com. " + Base64.encodeToString(rrsig.signature), rrsig.toString());
         assertEquals(TYPE.RRSIG, rrsig.getType());
         byte[] rrsigb = rrsig.toByteArray();
-        rrsig = new RRSIG(new DataInputStream(new ByteArrayInputStream(rrsigb)), rrsigb, rrsigb.length);
+        rrsig = RRSIG.parse(new DataInputStream(new ByteArrayInputStream(rrsigb)), rrsigb, rrsigb.length);
         assertEquals(TYPE.A, rrsig.typeCovered);
         assertEquals(SignatureAlgorithm.RSASHA256, rrsig.algorithm);
         assertEquals(2, rrsig.labels);
@@ -216,7 +217,7 @@ public class RecordsTest {
         assertEquals("sns.dns.icann.org. noc.dns.icann.org. 2015060341 7200 3600 1209600 3600", soa.toString());
         assertEquals(TYPE.SOA, soa.getType());
         byte[] soab = soa.toByteArray();
-        soa = new SOA(new DataInputStream(new ByteArrayInputStream(soab)), soab, soab.length);
+        soa = SOA.parse(new DataInputStream(new ByteArrayInputStream(soab)), soab, soab.length);
         assertEquals("sns.dns.icann.org", soa.mname);
         assertEquals("noc.dns.icann.org", soa.rname);
         assertEquals(2015060341, soa.serial);
@@ -232,7 +233,7 @@ public class RecordsTest {
         assertEquals("30 31 5222 hermes.jabber.org.", srv.toString());
         assertEquals(TYPE.SRV, srv.getType());
         byte[] srvb = srv.toByteArray();
-        srv = new SRV(new DataInputStream(new ByteArrayInputStream(srvb)), srvb, srvb.length);
+        srv = SRV.parse(new DataInputStream(new ByteArrayInputStream(srvb)), srvb, srvb.length);
         assertEquals(30, srv.priority);
         assertEquals(31, srv.weight);
         assertEquals(5222, srv.port);
@@ -245,7 +246,7 @@ public class RecordsTest {
         assertEquals("1 1 1 1337", tlsa.toString());
         assertEquals(TYPE.TLSA, tlsa.getType());
         byte[] tlsab = tlsa.toByteArray();
-        tlsa = new TLSA(new DataInputStream(new ByteArrayInputStream(tlsab)), tlsab, tlsab.length);
+        tlsa = TLSA.parse(new DataInputStream(new ByteArrayInputStream(tlsab)), tlsab, tlsab.length);
         assertEquals(1, tlsa.certUsage);
         assertEquals(1, tlsa.selector);
         assertEquals(1, tlsa.matchingType);

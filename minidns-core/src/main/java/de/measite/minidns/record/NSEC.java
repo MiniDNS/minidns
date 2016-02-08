@@ -39,12 +39,13 @@ public class NSEC implements Data {
      */
     public final TYPE[] types;
 
-    public NSEC(DataInputStream dis, byte[] data, int length) throws IOException {
-        next = NameUtil.parse(dis, data);
+    public static NSEC parse(DataInputStream dis, byte[] data, int length) throws IOException {
+        String next = NameUtil.parse(dis, data);
 
-        typeBitmap = new byte[length - NameUtil.size(next)];
+        byte[] typeBitmap = new byte[length - NameUtil.size(next)];
         if (dis.read(typeBitmap) != typeBitmap.length) throw new IOException();
-        types = readTypeBitMap(typeBitmap);
+        TYPE[] types = readTypeBitMap(typeBitmap);
+        return new NSEC(next, types);
     }
 
     public NSEC(String next, TYPE[] types) {

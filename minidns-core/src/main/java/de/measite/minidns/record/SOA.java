@@ -60,15 +60,16 @@ public class SOA implements Data {
      */
     public final long /* unsigned int */ minimum;
 
-    public SOA(DataInputStream dis, byte[] data, int length)
+    public static SOA parse(DataInputStream dis, byte[] data, int length)
             throws IOException {
-        mname = NameUtil.parse(dis, data);
-        rname = NameUtil.parse(dis, data);
-        serial = dis.readInt() & 0xFFFFFFFFL;
-        refresh = dis.readInt();
-        retry = dis.readInt();
-        expire = dis.readInt();
-        minimum = dis.readInt() & 0xFFFFFFFFL;
+        String mname = NameUtil.parse(dis, data);
+        String rname = NameUtil.parse(dis, data);
+        long serial = dis.readInt() & 0xFFFFFFFFL;
+        int refresh = dis.readInt();
+        int retry = dis.readInt();
+        int expire = dis.readInt();
+        long minimum = dis.readInt() & 0xFFFFFFFFL;
+        return new SOA(mname, rname, serial, refresh, retry, expire, minimum);
     }
 
     public SOA(String mname, String rname, long serial, int refresh, int retry, int expire, long minimum) {

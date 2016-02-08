@@ -104,31 +104,37 @@ public class NSEC3 implements Data {
      */
     public final TYPE[] types;
 
-    public NSEC3(DataInputStream dis, byte[] data, int length) throws IOException {
-        hashAlgorithmByte = dis.readByte();
-        hashAlgorithm = HashAlgorithm.forByte(hashAlgorithmByte);
-        flags = dis.readByte();
-        iterations = dis.readUnsignedShort();
+    public static NSEC3 parse(DataInputStream dis, byte[] data, int length) throws IOException {
+        byte hashAlgorithm = dis.readByte();
+        byte flags = dis.readByte();
+        int iterations = dis.readUnsignedShort();
         int saltLength = dis.readUnsignedByte();
-        salt = new byte[saltLength];
+        byte[] salt = new byte[saltLength];
         if (dis.read(salt) != salt.length) throw new IOException();
         int hashLength = dis.readUnsignedByte();
-        nextHashed = new byte[hashLength];
+        byte[] nextHashed = new byte[hashLength];
         if (dis.read(nextHashed) != nextHashed.length) throw new IOException();
-        typeBitmap = new byte[length - (6 + saltLength + hashLength)];
+        byte[] typeBitmap = new byte[length - (6 + saltLength + hashLength)];
         if (dis.read(typeBitmap) != typeBitmap.length) throw new IOException();
-        types = NSEC.readTypeBitMap(typeBitmap);
+        TYPE[] types = NSEC.readTypeBitMap(typeBitmap);
+        return new NSEC3(hashAlgorithm, flags, iterations, salt, nextHashed, types);
     }
 
-    public NSEC3(byte hashAlgorithm, byte flags, int iterations, byte[] salt, byte[] nextHashed, TYPE[] types) {
-        this.hashAlgorithmByte = hashAlgorithm;
-        this.hashAlgorithm = HashAlgorithm.forByte(hashAlgorithmByte);
+    private NSEC3(HashAlgorithm hashAlgorithm, byte hashAlgorithmByte, byte flags, int iterations, byte[] salt, byte[] nextHashed, TYPE[] types) {
+        assert hashAlgorithmByte == (hashAlgorithm != null ? hashAlgorithm.value : hashAlgorithmByte);
+        this.hashAlgorithmByte = hashAlgorithmByte;
+        this.hashAlgorithm = hashAlgorithm != null ? hashAlgorithm : HashAlgorithm.forByte(hashAlgorithmByte);
+
         this.flags = flags;
         this.iterations = iterations;
         this.salt = salt;
         this.nextHashed = nextHashed;
         this.types = types;
         this.typeBitmap = NSEC.createTypeBitMap(types);
+    }
+
+    public NSEC3(byte hashAlgorithm, byte flags, int iterations, byte[] salt, byte[] nextHashed, TYPE[] types) {
+        this(null, hashAlgorithm, flags, iterations, salt, nextHashed, types);
     }
 
     @Override

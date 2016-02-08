@@ -44,13 +44,14 @@ public class SRV implements Data {
      */
     public final String name;
 
-    public SRV(DataInputStream dis, byte[] data, int length)
+    public static SRV parse(DataInputStream dis, byte[] data, int length)
         throws IOException
     {
-        this.priority = dis.readUnsignedShort();
-        this.weight = dis.readUnsignedShort();
-        this.port = dis.readUnsignedShort();
-        this.name = NameUtil.parse(dis, data);
+        int priority = dis.readUnsignedShort();
+        int weight = dis.readUnsignedShort();
+        int port = dis.readUnsignedShort();
+        String name = NameUtil.parse(dis, data);
+        return new SRV(priority, weight, port, name);
     }
 
     public SRV(int priority, int weight, int port, String name) {

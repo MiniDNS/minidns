@@ -27,9 +27,14 @@ public class TXT implements Data {
 
     protected final byte[] blob;
 
-    public TXT(DataInputStream dis, byte[] data, int length) throws IOException {
-        blob = new byte[length];
+    public static TXT parse(DataInputStream dis, byte[] data, int length) throws IOException {
+        byte[] blob = new byte[length];
         dis.readFully(blob);
+        return new TXT(blob);
+    }
+
+    public TXT(byte[] blob) {
+        this.blob = blob;
     }
 
     public byte[] getBlob() {

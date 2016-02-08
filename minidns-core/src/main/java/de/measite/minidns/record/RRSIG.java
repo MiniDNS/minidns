@@ -78,26 +78,30 @@ public class RRSIG implements Data {
      */
     public final byte[] signature;
 
-    public RRSIG(DataInputStream dis, byte[] data, int length) throws IOException {
-        typeCovered = TYPE.getType(dis.readUnsignedShort());
-        algorithmByte = dis.readByte();
-        algorithm = SignatureAlgorithm.forByte(algorithmByte);
-        labels = dis.readByte();
-        originalTtl = dis.readInt() & 0xFFFFFFFFL;
-        signatureExpiration = new Date((dis.readInt() & 0xFFFFFFFFL) * 1000);
-        signatureInception = new Date((dis.readInt() & 0xFFFFFFFFL) * 1000);
-        keyTag = dis.readUnsignedShort();
-        signerName = NameUtil.parse(dis, data);
+    public static RRSIG parse(DataInputStream dis, byte[] data, int length) throws IOException {
+        TYPE typeCovered = TYPE.getType(dis.readUnsignedShort());
+        byte algorithm = dis.readByte();
+        byte labels = dis.readByte();
+        long originalTtl = dis.readInt() & 0xFFFFFFFFL;
+        Date signatureExpiration = new Date((dis.readInt() & 0xFFFFFFFFL) * 1000);
+        Date signatureInception = new Date((dis.readInt() & 0xFFFFFFFFL) * 1000);
+        int keyTag = dis.readUnsignedShort();
+        String signerName = NameUtil.parse(dis, data);
         int sigSize = length - NameUtil.size(signerName) - 18;
-        signature = new byte[sigSize];
+        byte[] signature = new byte[sigSize];
         if (dis.read(signature) != signature.length) throw new IOException();
+        return new RRSIG(typeCovered, null, algorithm, labels, originalTtl, signatureExpiration, signatureInception, keyTag, signerName,
+                signature);
     }
 
-    public RRSIG(TYPE typeCovered, int algorithm, byte labels, long originalTtl, Date signatureExpiration, 
+    private  RRSIG(TYPE typeCovered, SignatureAlgorithm algorithm, byte algorithmByte, byte labels, long originalTtl, Date signatureExpiration, 
             Date signatureInception, int keyTag, String signerName, byte[] signature) {
         this.typeCovered = typeCovered;
-        this.algorithmByte = (byte) algorithm;
-        this.algorithm = SignatureAlgorithm.forByte(algorithmByte);
+
+        assert algorithmByte == (algorithm != null ? algorithm.number : algorithmByte);
+        this.algorithmByte = algorithmByte;
+        this.algorithm = algorithm != null ? algorithm : SignatureAlgorithm.forByte(algorithmByte);
+
         this.labels = labels;
         this.originalTtl = originalTtl;
         this.signatureExpiration = signatureExpiration;
@@ -105,7 +109,12 @@ public class RRSIG implements Data {
         this.keyTag = keyTag;
         this.signerName = signerName;
         this.signature = signature;
-}
+    }
+
+    public RRSIG(TYPE typeCovered, int algorithm, byte labels, long originalTtl, Date signatureExpiration, 
+            Date signatureInception, int keyTag, String signerName, byte[] signature) {
+            this(typeCovered, null, (byte) algorithm, labels, originalTtl, signatureExpiration, signatureInception, keyTag, signerName, signature);
+    }
 
     public RRSIG(TYPE typeCovered, SignatureAlgorithm algorithm, byte labels,
             long originalTtl, Date signatureExpiration, Date signatureInception,
