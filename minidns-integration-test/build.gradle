@@ -11,6 +11,7 @@
 apply plugin: 'application'
 
 mainClassName = 'de.measite.minidns.integrationtest.IntegrationTestHelper'
+applicationDefaultJvmArgs = ["-enableassertions"]
 
 dependencies {
     compile project(':minidns-core')
