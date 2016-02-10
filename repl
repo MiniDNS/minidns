@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 set -e
+set -u
+set -o pipefail
 
 while getopts d OPTION "$@"; do
     case $OPTION in
@@ -9,8 +11,9 @@ while getopts d OPTION "$@"; do
     esac
 done
 
-echo "Computing classpath (May take a while)"
-declare -r GRADLE_CLASSPATH="$(gradle :minidns-repl:printClasspath --quiet)"
+echo "Compiling and computing classpath (May take a while)"
+declare -r GRADLE_CLASSPATH="$(gradle :minidns-repl:printClasspath --quiet |\
+	tail -n1)"
 echo "Classpath computed, starting REPL"
 
 java \
