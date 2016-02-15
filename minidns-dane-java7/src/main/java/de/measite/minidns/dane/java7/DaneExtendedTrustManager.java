@@ -8,9 +8,10 @@
  * upon the condition that you accept all of the terms of either
  * the Apache License 2.0, the LGPL 2.1+ or the WTFPL.
  */
-package de.measite.minidns.dane;
+package de.measite.minidns.dane.java7;
 
 import de.measite.minidns.AbstractDNSClient;
+import de.measite.minidns.dane.DaneVerifier;
 
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLEngine;
@@ -18,6 +19,7 @@ import javax.net.ssl.TrustManager;
 import javax.net.ssl.TrustManagerFactory;
 import javax.net.ssl.X509ExtendedTrustManager;
 import javax.net.ssl.X509TrustManager;
+
 import java.net.Socket;
 import java.security.KeyManagementException;
 import java.security.KeyStore;
