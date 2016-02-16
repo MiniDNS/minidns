@@ -27,7 +27,7 @@ import java.security.spec.InvalidKeySpecException;
 
 class ECGOSTSignatureVerifier extends JavaSecSignatureVerifier {
     private static final int LENGTH = 32;
-    private static ECParameterSpec SPEC = new ECParameterSpec(
+    private static final ECParameterSpec SPEC = new ECParameterSpec(
             new EllipticCurve(
                     new ECFieldFp(new BigInteger("FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFD97", 16)),
                     new BigInteger("FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFD94", 16),

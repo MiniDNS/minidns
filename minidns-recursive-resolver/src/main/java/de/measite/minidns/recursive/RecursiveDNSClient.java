@@ -30,26 +30,23 @@ import java.util.List;
 import java.util.Map;
 
 public class RecursiveDNSClient extends AbstractDNSClient {
-    protected static final InetAddress[] ROOT_SERVERS;
-    private int maxDepth = 128;
-
-    static {
-        ROOT_SERVERS = new InetAddress[]{
-                rootServerInetAddress("a.root-servers.net", new int[]{198, 41, 0, 4}),
-                rootServerInetAddress("b.root-servers.net", new int[]{192, 228, 79, 201}),
-                rootServerInetAddress("c.root-servers.net", new int[]{192, 33, 4, 12}),
-                rootServerInetAddress("d.root-servers.net", new int[]{199, 7, 91, 13}),
-                rootServerInetAddress("e.root-servers.net", new int[]{192, 203, 230, 10}),
-                rootServerInetAddress("f.root-servers.net", new int[]{192, 5, 5, 241}),
-                rootServerInetAddress("g.root-servers.net", new int[]{192, 112, 36, 4}),
-                rootServerInetAddress("h.root-servers.net", new int[]{128, 63, 2, 53}),
-                rootServerInetAddress("i.root-servers.net", new int[]{192, 36, 148, 17}),
-                rootServerInetAddress("j.root-servers.net", new int[]{192, 58, 128, 30}),
-                rootServerInetAddress("k.root-servers.net", new int[]{193, 0, 14, 129}),
-                rootServerInetAddress("l.root-servers.net", new int[]{199, 7, 83, 42}),
-                rootServerInetAddress("m.root-servers.net", new int[]{202, 12, 27, 33}),
+    protected static final InetAddress[] ROOT_SERVERS = new InetAddress[]{
+        rootServerInetAddress("a.root-servers.net", new int[]{198,  41,   0,   4}),
+        rootServerInetAddress("b.root-servers.net", new int[]{192, 228,  79, 201}),
+        rootServerInetAddress("c.root-servers.net", new int[]{192,  33,   4,  12}),
+        rootServerInetAddress("d.root-servers.net", new int[]{199,   7,  91 , 13}),
+        rootServerInetAddress("e.root-servers.net", new int[]{192, 203, 230,  10}),
+        rootServerInetAddress("f.root-servers.net", new int[]{192,   5,   5, 241}),
+        rootServerInetAddress("g.root-servers.net", new int[]{192, 112,  36,   4}),
+        rootServerInetAddress("h.root-servers.net", new int[]{128,  63,   2,  53}),
+        rootServerInetAddress("i.root-servers.net", new int[]{192,  36, 148,  17}),
+        rootServerInetAddress("j.root-servers.net", new int[]{192,  58, 128,  30}),
+        rootServerInetAddress("k.root-servers.net", new int[]{193,   0,  14, 129}),
+        rootServerInetAddress("l.root-servers.net", new int[]{199,   7,  83,  42}),
+        rootServerInetAddress("m.root-servers.net", new int[]{202,  12,  27,  33}),
         };
-    }
+
+    private int maxDepth = 128;
 
     /**
      * Create a new recursive DNS client with the given DNS cache.
@@ -99,7 +96,7 @@ public class RecursiveDNSClient extends AbstractDNSClient {
         if (resMessage == null || resMessage.isAuthoritativeAnswer()) {
             return resMessage;
         }
-        List<Record> authorities = new ArrayList<Record>(Arrays.asList(resMessage.getNameserverRecords()));
+        List<Record> authorities = new ArrayList<>(Arrays.asList(resMessage.getNameserverRecords()));
 
         // Glued NS first
         for (Iterator<Record> iterator = authorities.iterator(); iterator.hasNext(); ) {

@@ -28,8 +28,8 @@ import java.security.spec.EllipticCurve;
 import java.security.spec.InvalidKeySpecException;
 
 abstract class ECDSASignatureVerifier extends JavaSecSignatureVerifier {
-    private ECParameterSpec spec;
-    private int length;
+    private final ECParameterSpec spec;
+    private final int length;
 
     public ECDSASignatureVerifier(BigInteger[] spec, int length, String algorithm) throws NoSuchAlgorithmException {
         this(new ECParameterSpec(new EllipticCurve(new ECFieldFp(spec[0]), spec[1], spec[2]), new ECPoint(spec[3], spec[4]), spec[5], 1), length, algorithm);

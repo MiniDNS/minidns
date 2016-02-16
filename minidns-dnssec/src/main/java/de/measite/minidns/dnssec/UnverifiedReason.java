@@ -98,7 +98,7 @@ public abstract class UnverifiedReason {
     }
 
     public static class NoSecureEntryPointReason extends UnverifiedReason {
-        private String zone;
+        private final String zone;
 
         public NoSecureEntryPointReason(String zone) {
             this.zone = zone;
@@ -111,7 +111,7 @@ public abstract class UnverifiedReason {
     }
 
     public static class NoSignaturesReason extends UnverifiedReason {
-        private Question question;
+        private final Question question;
 
         public NoSignaturesReason(Question question) {
             this.question = question;

@@ -17,13 +17,13 @@ import java.util.Collections;
 import java.util.Set;
 
 public class DNSSECMessage extends DNSMessage {
-    private Set<Record> signatures;
-    private Set<UnverifiedReason> result;
+    private final Set<Record> signatures;
+    private final Set<UnverifiedReason> result;
 
-    public DNSSECMessage(DNSMessage copy, Record[] answers, Record[] nameserverRecords, Record[] additionalResourceRecords, Set<Record> signatures, Set<UnverifiedReason> result) {
+    DNSSECMessage(DNSMessage copy, Record[] answers, Record[] nameserverRecords, Record[] additionalResourceRecords, Set<Record> signatures, Set<UnverifiedReason> result) {
         super(copy, answers, nameserverRecords, additionalResourceRecords);
-        this.signatures = signatures;
-        this.result = result == null ? Collections.<UnverifiedReason>emptySet() : result;
+        this.signatures = Collections.unmodifiableSet(signatures);
+        this.result = result == null ? Collections.<UnverifiedReason>emptySet() : Collections.unmodifiableSet(result);
         setAuthenticData(this.result.isEmpty());
     }
 
