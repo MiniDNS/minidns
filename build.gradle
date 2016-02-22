@@ -175,6 +175,13 @@ task integrationTest {
 	dependsOn { project(':minidns-integration-test').tasks.run }
 }
 
+task checkFull {
+	dependsOn {
+		check
+		integrationTest
+	}
+}
+
 def getAndroidRuntimeJar() {
 	def androidHome = getAndroidHome()
 	def androidJar = new File("$androidHome/platforms/android-$minidnsMinAndroidSdk/android.jar")
