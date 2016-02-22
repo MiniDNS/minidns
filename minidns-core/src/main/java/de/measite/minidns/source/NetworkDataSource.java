@@ -11,6 +11,7 @@
 package de.measite.minidns.source;
 
 import de.measite.minidns.DNSMessage;
+import de.measite.minidns.util.MultipleIoException;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
@@ -19,21 +20,37 @@ import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.Socket;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class NetworkDataSource extends DNSDataSource {
 
-    public DNSMessage query(DNSMessage message, InetAddress address, int port) {
+    private static final Logger LOGGER = Logger.getLogger(NetworkDataSource.class.getName());
+
+    public DNSMessage query(DNSMessage message, InetAddress address, int port) throws IOException {
+        List<IOException> ioExceptions = new ArrayList<>(2);
         DNSMessage dnsMessage = null;
         try {
             dnsMessage = queryUdp(message, address, port);
-        } catch (IOException ignored) {
+        } catch (IOException e) {
+            ioExceptions.add(e);
         }
 
-        if (dnsMessage == null || dnsMessage.isTruncated()) {
-            try {
-                dnsMessage = queryTcp(message, address, port);
-            } catch (IOException ignored) {
-            }
+        if (dnsMessage != null && !dnsMessage.isTruncated()) {
+            return dnsMessage;
+        }
+
+        try {
+            dnsMessage = queryTcp(message, address, port);
+        } catch (IOException e) {
+            ioExceptions.add(e);
+            throw new MultipleIoException(ioExceptions);
+        }
+
+        if (dnsMessage != null && !ioExceptions.isEmpty()) {
+            LOGGER.log(Level.FINE, "IO Exception(s) while asking for " + message, new MultipleIoException(ioExceptions));
         }
 
         return dnsMessage;

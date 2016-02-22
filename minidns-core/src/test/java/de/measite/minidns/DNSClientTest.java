@@ -17,8 +17,10 @@ import de.measite.minidns.dnsserverlookup.DNSServerLookupMechanism;
 import de.measite.minidns.dnsserverlookup.HardcodedDNSServerAddresses;
 import de.measite.minidns.record.A;
 import de.measite.minidns.source.DNSDataSource;
+
 import org.junit.Test;
 
+import java.io.IOException;
 import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.List;
@@ -53,7 +55,7 @@ public class DNSClientTest {
     }
 
     @Test
-    public void testSingleRecordQuery() {
+    public void testSingleRecordQuery() throws IOException {
         DNSClient client = new DNSClient(new LRUCache(0));
         applyStubRecords(client, record("www.example.com", a("127.0.0.1")));
         DNSMessage response = client.query("www.example.com", TYPE.A);
@@ -68,7 +70,7 @@ public class DNSClientTest {
     }
 
     @Test
-    public void testReturnNullSource() {
+    public void testReturnNullSource() throws IOException {
         class NullSource extends DNSDataSource {
             boolean queried = false;
 

@@ -12,10 +12,11 @@ package de.measite.minidns.source;
 
 import de.measite.minidns.DNSMessage;
 
+import java.io.IOException;
 import java.net.InetAddress;
 
 public abstract class DNSDataSource {
-    public abstract DNSMessage query(DNSMessage message, InetAddress address, int port);
+    public abstract DNSMessage query(DNSMessage message, InetAddress address, int port) throws IOException;
 
     private int udpPayloadSize = 512;
 

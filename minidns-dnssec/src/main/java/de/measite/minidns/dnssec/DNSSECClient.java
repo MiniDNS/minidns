@@ -26,6 +26,7 @@ import de.measite.minidns.record.OPT;
 import de.measite.minidns.record.RRSIG;
 import de.measite.minidns.recursive.RecursiveDNSClient;
 
+import java.io.IOException;
 import java.math.BigInteger;
 import java.net.InetAddress;
 import java.util.ArrayList;
@@ -69,15 +70,15 @@ public class DNSSECClient extends RecursiveDNSClient {
     private String dlv;
 
     @Override
-    public DNSMessage query(Question q, InetAddress address, int port) {
+    public DNSMessage query(Question q, InetAddress address, int port) throws IOException {
         return queryDnssec(q, address, port);
     }
 
-    public DNSSECMessage queryDnssec(String name, TYPE type) {
+    public DNSSECMessage queryDnssec(String name, TYPE type) throws IOException {
         return (DNSSECMessage) super.query(name, type);
     }
 
-    public DNSSECMessage queryDnssec(Question q, InetAddress address, int port) {
+    public DNSSECMessage queryDnssec(Question q, InetAddress address, int port) throws IOException {
         DNSMessage dnsMessage = super.query(q, address, port);
         if (dnsMessage != null) {
             Set<UnverifiedReason> result;
@@ -154,7 +155,7 @@ public class DNSSECClient extends RecursiveDNSClient {
         return super.isResponseCacheable(q, dnsMessage);
     }
 
-    private Set<UnverifiedReason> verify(DNSMessage dnsMessage) {
+    private Set<UnverifiedReason> verify(DNSMessage dnsMessage) throws IOException {
         if (dnsMessage.getAnswers().length > 0) {
             return verifyAnswer(dnsMessage);
         } else {
@@ -162,7 +163,7 @@ public class DNSSECClient extends RecursiveDNSClient {
         }
     }
 
-    private Set<UnverifiedReason> verifyAnswer(DNSMessage dnsMessage) {
+    private Set<UnverifiedReason> verifyAnswer(DNSMessage dnsMessage) throws IOException {
         Question q = dnsMessage.getQuestions()[0];
         Record[] answers = dnsMessage.getAnswers();
         List<Record> toBeVerified = new ArrayList<>(Arrays.asList(answers));
@@ -207,7 +208,7 @@ public class DNSSECClient extends RecursiveDNSClient {
         return result;
     }
 
-    private Set<UnverifiedReason> verifyNsec(DNSMessage dnsMessage) {
+    private Set<UnverifiedReason> verifyNsec(DNSMessage dnsMessage) throws IOException {
         Set<UnverifiedReason> result = new HashSet<>();
         Question q = dnsMessage.getQuestions()[0];
         boolean validNsec = false;
@@ -261,7 +262,7 @@ public class DNSSECClient extends RecursiveDNSClient {
         Set<UnverifiedReason> reasons = new HashSet<>();
     }
 
-    private VerifySignaturesResult verifySignatures(Question q, Record[] reference, List<Record> toBeVerified) {
+    private VerifySignaturesResult verifySignatures(Question q, Record[] reference, List<Record> toBeVerified) throws IOException {
         Record sigRecord;
         VerifySignaturesResult result = new VerifySignaturesResult();
         while ((sigRecord = nextSignature(toBeVerified)) != null) {
@@ -327,7 +328,7 @@ public class DNSSECClient extends RecursiveDNSClient {
         return true;
     }
 
-    private Set<UnverifiedReason> verifySignedRecords(Question q, RRSIG rrsig, List<Record> records) {
+    private Set<UnverifiedReason> verifySignedRecords(Question q, RRSIG rrsig, List<Record> records) throws IOException {
         Set<UnverifiedReason> result = new HashSet<>();
         DNSKEY dnskey = null;
         if (rrsig.typeCovered == TYPE.DNSKEY) {
@@ -363,7 +364,7 @@ public class DNSSECClient extends RecursiveDNSClient {
         return result;
     }
 
-    private Set<UnverifiedReason> verifySecureEntryPoint(Question q, Record sepRecord) {
+    private Set<UnverifiedReason> verifySecureEntryPoint(Question q, Record sepRecord) throws IOException {
         Set<UnverifiedReason> unverifiedReasons = new HashSet<>();
         Set<UnverifiedReason> activeReasons = new HashSet<>();
         if (knownSeps.containsKey(sepRecord.name)) {

@@ -26,7 +26,7 @@ import static org.junit.Assert.assertTrue;
 
 public class CoreTest {
     @IntegrationTest
-    public static void testExampleCom() {
+    public static void testExampleCom() throws IOException {
         DNSClient client = new DNSClient(new LRUCache(1024));
         String exampleIp4 = "93.184.216.34"; // stable?
         String exampleIp6 = "2606:2800:220:1:248:1893:25c8:1946"; // stable?

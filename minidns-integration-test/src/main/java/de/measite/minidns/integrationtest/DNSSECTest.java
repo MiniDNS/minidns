@@ -10,11 +10,12 @@
  */
 package de.measite.minidns.integrationtest;
 
+import java.io.IOException;
+
 import de.measite.minidns.LRUCache;
 import de.measite.minidns.Record;
 import de.measite.minidns.dnssec.DNSSECClient;
 import de.measite.minidns.dnssec.DNSSECValidationFailedException;
-
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
@@ -27,19 +28,19 @@ public class DNSSECTest {
     }
 
     @IntegrationTest
-    public static void testUniDueSigOk() {
+    public static void testUniDueSigOk() throws IOException {
         DNSSECClient client = new DNSSECClient(new LRUCache(1024));
         assertTrue(client.query("sigok.verteiltesysteme.net", Record.TYPE.A).isAuthenticData());
     }
 
     @IntegrationTest(expected = DNSSECValidationFailedException.class)
-    public static void testUniDueSigFail() {
+    public static void testUniDueSigFail() throws IOException {
         DNSSECClient client = new DNSSECClient(new LRUCache(1024));
         client.query("sigfail.verteiltesysteme.net", Record.TYPE.A);
     }
 
     @IntegrationTest
-    public static void testCloudFlare() {
+    public static void testCloudFlare() throws IOException {
         DNSSECClient client = new DNSSECClient(new LRUCache(1024));
         assertTrue(client.query("www.cloudflare-dnssec-auth.com", Record.TYPE.A).isAuthenticData());
     }

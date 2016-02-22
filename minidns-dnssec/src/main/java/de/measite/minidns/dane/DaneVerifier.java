@@ -101,7 +101,12 @@ public class DaneVerifier {
      */
     public boolean verifyCertificateChain(X509Certificate[] chain, String hostName, int port) throws CertificateException {
         String req = "_" + port + "._tcp." + hostName;
-        DNSMessage res = client.query(req, Record.TYPE.TLSA);
+        DNSMessage res;
+        try {
+            res = client.query(req, Record.TYPE.TLSA);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
         if (!res.isAuthenticData()) {
             String msg = "Got TLSA response from DNS server, but was not signed properly.";
             if (res instanceof DNSSECMessage) {

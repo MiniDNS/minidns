@@ -95,7 +95,7 @@ public abstract class AbstractDNSClient {
      * @param clazz The class of the request (usually IN for Internet).
      * @return The response (or null on timeout/error).
      */
-    public final DNSMessage query(String name, TYPE type, CLASS clazz) {
+    public final DNSMessage query(String name, TYPE type, CLASS clazz) throws IOException {
         Question q = new Question(name, type, clazz);
         return query(q);
     }
@@ -107,8 +107,9 @@ public abstract class AbstractDNSClient {
      * @param name The DNS name to request.
      * @param type The DNS type to request (SRV, A, AAAA, ...).
      * @return The response (or null on timeout/error).
+     * @throws IOException if an IO error occurs.
      */
-    public final DNSMessage query(String name, TYPE type) {
+    public final DNSMessage query(String name, TYPE type) throws IOException {
         Question q = new Question(name, type, CLASS.IN);
         return query(q);
     }
@@ -118,11 +119,12 @@ public abstract class AbstractDNSClient {
      * Query the system DNS server for one entry.
      *
      * @param q The question section of the DNS query.
-     * @return The response (or null on timeout/error).
+     * @return The response (or null).
+     * @throws IOException if an IO error occurs.
      */
-    public abstract DNSMessage query(Question q);
+    public abstract DNSMessage query(Question q) throws IOException;
 
-    public DNSMessage query(Question q, InetAddress address, int port) {
+    public DNSMessage query(Question q, InetAddress address, int port) throws IOException {
         // See if we have the answer to this question already cached
         DNSMessage dnsMessage = (cache == null) ? null : cache.get(q);
         if (dnsMessage != null) {

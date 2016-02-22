@@ -19,6 +19,7 @@ import de.measite.minidns.Record.TYPE;
 import de.measite.minidns.record.A;
 import de.measite.minidns.record.CNAME;
 import de.measite.minidns.record.NS;
+import de.measite.minidns.util.MultipleIoException;
 
 import java.io.IOException;
 import java.net.InetAddress;
@@ -26,10 +27,13 @@ import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Level;
 
 public class RecursiveDNSClient extends AbstractDNSClient {
+
     protected static final InetAddress[] ROOT_SERVERS = new InetAddress[]{
         rootServerInetAddress("a.root-servers.net", new int[]{198,  41,   0,   4}),
         rootServerInetAddress("b.root-servers.net", new int[]{192, 228,  79, 201}),
@@ -71,32 +75,32 @@ public class RecursiveDNSClient extends AbstractDNSClient {
      *
      * @param q The question section of the DNS query.
      * @return The response (or null on timeout/error).
+     * @throws IOException if an IO error occurs.
      */
     @Override
-    public DNSMessage query(Question q) {
+    public DNSMessage query(Question q) throws IOException {
         DNSMessage message = queryRecursive(0, q);
         if (message == null) return null;
         // TODO: restrict to real answer or accept non-answers?
         return message;
     }
 
-    private DNSMessage queryRecursive(int depth, Question q) {
+    private DNSMessage queryRecursive(int depth, Question q) throws IOException {
         InetAddress target = ROOT_SERVERS[random.nextInt(ROOT_SERVERS.length)];
         return queryRecursive(depth, q, target);
     }
 
-    private DNSMessage queryRecursive(int depth, Question q, InetAddress address) {
+    private DNSMessage queryRecursive(int depth, Question q, InetAddress address) throws IOException {
         if (depth > maxDepth) return null;
-        DNSMessage resMessage;
-        try {
-            resMessage = query(q, address);
-        } catch (IOException e) {
-            return null;
-        }
+
+        DNSMessage resMessage = query(q, address);
+
         if (resMessage == null || resMessage.isAuthoritativeAnswer()) {
             return resMessage;
         }
         List<Record> authorities = new ArrayList<>(Arrays.asList(resMessage.getNameserverRecords()));
+
+        List<IOException> ioExceptions = new LinkedList<>();
 
         // Glued NS first
         for (Iterator<Record> iterator = authorities.iterator(); iterator.hasNext(); ) {
@@ -108,9 +112,16 @@ public class RecursiveDNSClient extends AbstractDNSClient {
             String name = ((NS) record.payloadData).name;
             InetAddress target = searchAdditional(resMessage, name);
             if (target != null) {
-                DNSMessage recursive = queryRecursive(depth + 1, q, target);
-                if (recursive != null) return recursive;
-                iterator.remove();
+                DNSMessage recursive = null;
+                try {
+                    recursive = queryRecursive(depth + 1, q, target);
+                } catch (IOException e) {
+                   LOGGER.log(Level.FINER, "Exception while recursing", e);
+                   ioExceptions.add(e);
+                   iterator.remove();
+                   continue;
+                }
+                return recursive;
             }
         }
 
@@ -118,17 +129,35 @@ public class RecursiveDNSClient extends AbstractDNSClient {
         for (Record record : authorities) {
             String name = ((NS) record.payloadData).name;
             if (!q.name.equals(name) || q.type != TYPE.A) {
-                InetAddress target = resolveIpRecursive(depth + 1, name);
-                if (target != null) {
-                    DNSMessage recursive = queryRecursive(depth + 1, q, target);
-                    if (recursive != null) return recursive;
+                InetAddress target = null;
+                try {
+                    target = resolveIpRecursive(depth + 1, name);
+                } catch (IOException e) {
+                    ioExceptions.add(e);
                 }
+                if (target == null) {
+                    continue;
+                }
+
+                DNSMessage recursive = null;
+                try {
+                    recursive = queryRecursive(depth + 1, q, target);
+                } catch (IOException e) {
+                    ioExceptions.add(e);
+                    continue;
+                }
+                return recursive;
             }
         }
+
+        if (!ioExceptions.isEmpty()) {
+            throw new MultipleIoException(ioExceptions);
+        }
+
         return null;
     }
 
-    private InetAddress resolveIpRecursive(int depth, String name) {
+    private InetAddress resolveIpRecursive(int depth, String name) throws IOException {
         // TODO: IPv6?
         Question question = new Question(name, TYPE.A);
         DNSMessage aMessage = queryRecursive(depth + 1, question);
@@ -141,6 +170,8 @@ public class RecursiveDNSClient extends AbstractDNSClient {
                 }
             }
         }
+        // TODO If there is no answer in the returned message, isn't this a
+        // violation of the DNS spec? If so, log warn?
         return null;
     }
 

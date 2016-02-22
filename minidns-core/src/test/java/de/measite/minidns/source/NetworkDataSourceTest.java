@@ -23,7 +23,7 @@ import static org.junit.Assert.assertTrue;
 public class NetworkDataSourceTest {
 
     @Test
-    public void udpTruncatedTcpFallbackTest() {
+    public void udpTruncatedTcpFallbackTest() throws IOException {
         class TestNetworkDataSource extends NetworkDataSource {
             boolean lastQueryUdp = false;
 

@@ -10,11 +10,14 @@
  */
 package de.measite.minidns.recursive;
 
+import java.io.IOException;
+
 import de.measite.minidns.DNSMessage;
 import de.measite.minidns.LRUCache;
 import de.measite.minidns.Record;
 import de.measite.minidns.Record.TYPE;
 import de.measite.minidns.record.A;
+
 import org.junit.Test;
 
 import static de.measite.minidns.DNSWorld.a;
@@ -30,7 +33,7 @@ import static org.junit.Assert.assertNull;
 
 public class RecursiveDNSClientTest {
     @Test
-    public void basicRecursionTest() {
+    public void basicRecursionTest() throws IOException {
         RecursiveDNSClient client = new RecursiveDNSClient(new LRUCache(0));
         applyZones(client,
                 rootZone(
@@ -52,7 +55,7 @@ public class RecursiveDNSClientTest {
     }
 
     @Test
-    public void loopRecursionTest() {
+    public void loopRecursionTest() throws IOException {
         RecursiveDNSClient client = new RecursiveDNSClient(new LRUCache(0));
         applyZones(client,
                 rootZone(
@@ -70,7 +73,7 @@ public class RecursiveDNSClientTest {
     }
 
     @Test
-    public void notGluedNsTest() {
+    public void notGluedNsTest() throws IOException {
         RecursiveDNSClient client = new RecursiveDNSClient(new LRUCache(0));
         applyZones(client,
                 rootZone(
