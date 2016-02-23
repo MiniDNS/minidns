@@ -17,6 +17,7 @@ import de.measite.minidns.Question;
 import de.measite.minidns.Record;
 import de.measite.minidns.Record.TYPE;
 import de.measite.minidns.record.A;
+import de.measite.minidns.record.AAAA;
 import de.measite.minidns.record.CNAME;
 import de.measite.minidns.record.NS;
 import de.measite.minidns.util.MultipleIoException;
@@ -110,8 +111,8 @@ public class RecursiveDNSClient extends AbstractDNSClient {
                 continue;
             }
             String name = ((NS) record.payloadData).name;
-            InetAddress target = searchAdditional(resMessage, name);
-            if (target != null) {
+            IpResultSet gluedNs = searchAdditional(resMessage, name);
+            for (InetAddress target : gluedNs.getAddresses()) {
                 DNSMessage recursive = null;
                 try {
                     recursive = queryRecursive(depth + 1, q, target);
@@ -129,24 +130,26 @@ public class RecursiveDNSClient extends AbstractDNSClient {
         for (Record record : authorities) {
             String name = ((NS) record.payloadData).name;
             if (!q.name.equals(name) || q.type != TYPE.A) {
-                InetAddress target = null;
+                IpResultSet res = null;
                 try {
-                    target = resolveIpRecursive(depth + 1, name);
+                    res = resolveIpRecursive(depth + 1, name);
                 } catch (IOException e) {
                     ioExceptions.add(e);
                 }
-                if (target == null) {
+                if (res == null) {
                     continue;
                 }
 
-                DNSMessage recursive = null;
-                try {
-                    recursive = queryRecursive(depth + 1, q, target);
-                } catch (IOException e) {
-                    ioExceptions.add(e);
-                    continue;
+                for (InetAddress target : res.getAddresses()) {
+                    DNSMessage recursive = null;
+                    try {
+                        recursive = queryRecursive(depth + 1, q, target);
+                    } catch (IOException e) {
+                        ioExceptions.add(e);
+                        continue;
+                    }
+                    return recursive;
                 }
-                return recursive;
             }
         }
 
@@ -157,35 +160,88 @@ public class RecursiveDNSClient extends AbstractDNSClient {
         return null;
     }
 
-    private InetAddress resolveIpRecursive(int depth, String name) throws IOException {
-        // TODO: IPv6?
-        Question question = new Question(name, TYPE.A);
-        DNSMessage aMessage = queryRecursive(depth + 1, question);
-        if (aMessage != null) {
-            for (Record answer : aMessage.getAnswers()) {
-                if (answer.isAnswer(question)) {
-                    return inetAddressFromRecord(name, (A) answer.payloadData);
-                } else if (answer.type == TYPE.CNAME && answer.name.equals(name)) {
-                    return resolveIpRecursive(depth + 1, ((CNAME) answer.payloadData).name);
+    public enum IpVersionSetting {
+        v4only,
+        v6only,
+        v4v6,
+        v6v4,
+        ;
+    }
+
+    private static IpVersionSetting ipVersionSetting = IpVersionSetting.v4v6;
+
+    public static void setPreferedIpVersion(IpVersionSetting preferedIpVersion) {
+        if (preferedIpVersion == null) {
+            throw new IllegalArgumentException();
+        }
+        RecursiveDNSClient.ipVersionSetting = preferedIpVersion;
+    }
+
+    private IpResultSet resolveIpRecursive(int depth, String name) throws IOException {
+        IpResultSet res = new IpResultSet();
+
+        if (ipVersionSetting != IpVersionSetting.v6only) {
+            Question question = new Question(name, TYPE.A);
+            DNSMessage aMessage = queryRecursive(depth + 1, question);
+            if (aMessage != null) {
+                for (Record answer : aMessage.getAnswers()) {
+                    if (answer.isAnswer(question)) {
+                        InetAddress inetAddress = inetAddressFromRecord(name, (A) answer.payloadData);
+                        res.ipv4Addresses.add(inetAddress);
+                    } else if (answer.type == TYPE.CNAME && answer.name.equals(name)) {
+                        return resolveIpRecursive(depth + 1, ((CNAME) answer.payloadData).name);
+                    }
                 }
             }
         }
-        // TODO If there is no answer in the returned message, isn't this a
-        // violation of the DNS spec? If so, log warn?
-        return null;
-    }
 
-    private static InetAddress searchAdditional(DNSMessage message, String name) {
-        for (Record record : message.getAdditionalResourceRecords()) {
-            // TODO: IPv6?
-            if (record.type == TYPE.A && record.name.equals(name)) {
-                return inetAddressFromRecord(name, ((A) record.payloadData));
+        if (ipVersionSetting != IpVersionSetting.v4only) {
+            Question question = new Question(name, TYPE.AAAA);
+            DNSMessage aMessage = queryRecursive(depth + 1, question);
+            if (aMessage != null) {
+                for (Record answer : aMessage.getAnswers()) {
+                    if (answer.isAnswer(question)) {
+                        InetAddress inetAddress = inetAddressFromRecord(name, (AAAA) answer.payloadData);
+                        res.ipv6Addresses.add(inetAddress);
+                    } else if (answer.type == TYPE.CNAME && answer.name.equals(name)) {
+                        return resolveIpRecursive(depth + 1, ((CNAME) answer.payloadData).name);
+                    }
+                }
             }
         }
-        return null;
+
+        return res;
+    }
+
+    @SuppressWarnings("incomplete-switch")
+    private static IpResultSet searchAdditional(DNSMessage message, String name) {
+        IpResultSet res = new IpResultSet();
+        for (Record record : message.getAdditionalResourceRecords()) {
+            if (!record.name.equals(name)) {
+                continue;
+            }
+            switch (record.type) {
+            case A:
+                res.ipv4Addresses.add(inetAddressFromRecord(name, ((A) record.payloadData)));
+                break;
+            case AAAA:
+                res.ipv6Addresses.add(inetAddressFromRecord(name, ((AAAA) record.payloadData)));
+                break;
+            }
+        }
+        return res;
     }
 
     private static InetAddress inetAddressFromRecord(String name, A recordPayload) {
+        try {
+            return InetAddress.getByAddress(name, recordPayload.ip);
+        } catch (UnknownHostException e) {
+            // This will never happen
+            throw new RuntimeException(e);
+        }
+    }
+
+    private static InetAddress inetAddressFromRecord(String name, AAAA recordPayload) {
         try {
             return InetAddress.getByAddress(name, recordPayload.ip);
         } catch (UnknownHostException e) {
@@ -216,5 +272,47 @@ public class RecursiveDNSClient extends AbstractDNSClient {
         message.setId(random.nextInt());
         message.setOptPseudoRecord(dataSource.getUdpPayloadSize(), 0);
         return message;
+    }
+
+    private static class IpResultSet {
+        final List<InetAddress> ipv4Addresses = new LinkedList<>();
+        final List<InetAddress> ipv6Addresses = new LinkedList<>();
+
+        List<InetAddress> getAddresses() {
+            int size;
+            switch (ipVersionSetting) {
+            case v4only:
+                size = ipv4Addresses.size();
+                break;
+            case v6only:
+                size = ipv6Addresses.size();
+                break;
+            case v4v6:
+            case v6v4:
+            default:
+                size = ipv4Addresses.size() + ipv6Addresses.size();
+                break;
+            }
+
+            List<InetAddress> addresses = new ArrayList<>(size);
+
+            switch (ipVersionSetting) {
+            case v4only:
+                addresses.addAll(ipv4Addresses);
+                break;
+            case v6only:
+                addresses.addAll(ipv6Addresses);
+                break;
+            case v4v6:
+                addresses.addAll(ipv4Addresses);
+                addresses.addAll(ipv6Addresses);
+                break;
+            case v6v4:
+                addresses.addAll(ipv6Addresses);
+                addresses.addAll(ipv4Addresses);
+                break;
+            }
+            return addresses;
+        }
     }
 }
