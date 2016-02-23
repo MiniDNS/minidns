@@ -14,6 +14,7 @@ import de.measite.minidns.dnsserverlookup.AndroidUsingExec;
 import de.measite.minidns.dnsserverlookup.AndroidUsingReflection;
 import de.measite.minidns.dnsserverlookup.DNSServerLookupMechanism;
 import de.measite.minidns.dnsserverlookup.HardcodedDNSServerAddresses;
+import de.measite.minidns.dnsserverlookup.UnixUsingEtcResolvConf;
 import de.measite.minidns.record.OPT;
 
 import java.io.IOException;
@@ -35,6 +36,7 @@ public class DNSClient extends AbstractDNSClient {
         addDnsServerLookupMechanism(AndroidUsingExec.INSTANCE);
         addDnsServerLookupMechanism(AndroidUsingReflection.INSTANCE);
         addDnsServerLookupMechanism(HardcodedDNSServerAddresses.INSTANCE);
+        addDnsServerLookupMechanism(UnixUsingEtcResolvConf.INSTANCE);
     }
 
     private boolean askForDnssec = false;
