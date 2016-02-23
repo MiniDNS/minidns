@@ -19,6 +19,8 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class UnixUsingEtcResolvConf extends AbstractDNSServerLookupMechanism {
 
@@ -26,7 +28,7 @@ public class UnixUsingEtcResolvConf extends AbstractDNSServerLookupMechanism {
     public static final int PRIORITY = 2000;
 
     private static final String RESOLV_CONF_FILE = "/etc/resolv.conf";
-    private static final String NAMESERVER_PREFIX = "nameserver ";
+    private static final Pattern NAMESERVER_PATTERN = Pattern.compile("^nameserver\\s+(.*)$");
 
     protected UnixUsingEtcResolvConf() {
         super(UnixUsingEtcResolvConf.class.getSimpleName(), PRIORITY);
@@ -51,8 +53,9 @@ public class UnixUsingEtcResolvConf extends AbstractDNSServerLookupMechanism {
             reader = new BufferedReader(new InputStreamReader(new FileInputStream(file)));
             String line;
             while ((line = reader.readLine()) != null) {
-                if (line.startsWith(NAMESERVER_PREFIX)) {
-                    servers.add(line.substring(NAMESERVER_PREFIX.length()));
+                Matcher matcher = NAMESERVER_PATTERN.matcher(line);
+                if (matcher.matches()) {
+                    servers.add(matcher.group(1).trim());
                 }
             }
         } catch (IOException e) {
