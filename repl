@@ -19,5 +19,5 @@ echo "Classpath computed, starting REPL"
 java \
 	-Dscala.usejavacp=true \
 	-classpath "${GRADLE_CLASSPATH}" \
-	scala.tools.nsc.MainGenericRunner \
-	-i minidns-repl/scala.repl
+	ammonite.repl.Main \
+	-f minidns-repl/scala.repl

@@ -7,7 +7,7 @@ dependencies {
     compile project(':minidns-recursive-resolver')
     compile project(':minidns-dnssec')
     compile 'junit:junit:4.11'
-    compile "org.scala-lang:scala-compiler:${scalaVersion}"
+    compile "com.lihaoyi:ammonite-repl_$scalaVersion:0.5.5"
 }
 
 task printClasspath(dependsOn: assemble) << {
