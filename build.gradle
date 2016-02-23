@@ -176,8 +176,8 @@ task integrationTest {
 }
 
 task checkFull {
+	dependsOn = subprojects.tasks.check
 	dependsOn {
-		check
 		integrationTest
 	}
 }
