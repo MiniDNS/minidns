@@ -12,7 +12,7 @@ while getopts d OPTION "$@"; do
 done
 
 echo "Compiling and computing classpath (May take a while)"
-declare -r GRADLE_CLASSPATH="$(gradle :minidns-repl:printClasspath --quiet |\
+declare -r GRADLE_CLASSPATH="$(./gradlew :minidns-repl:printClasspath --quiet |\
 	tail -n1)"
 echo "Classpath computed, starting REPL"
 
