@@ -1,12 +1,15 @@
 buildscript {
     repositories {
+        maven {
+            url "https://plugins.gradle.org/m2/"
+        }
         jcenter()
         mavenLocal()
         mavenCentral()
     }
 
     dependencies {
-        classpath 'org.gradle.api.plugins:gradle-nexus-plugin:0.7.1'
+        classpath 'com.bmuschko:gradle-nexus-plugin:2.3.1'
 		classpath "org.kt3k.gradle.plugin:coveralls-gradle-plugin:2.3.1"
     }
 }
@@ -15,7 +18,7 @@ allprojects {
 	apply plugin: 'java'
 	apply plugin: 'eclipse'
 	apply plugin: 'osgi'
-	apply plugin: 'nexus'
+	apply plugin: 'com.bmuschko.nexus'
 	apply plugin: 'checkstyle'
 	apply plugin: 'jacoco'
 
@@ -26,6 +29,7 @@ allprojects {
 	ext.isSnapshot = true
 
 	ext {
+		junitVersion = 4.11
 		minidnsMinAndroidSdk = 9
 		androidBootClasspath = getAndroidRuntimeJar()
 		rootConfigDir = new File(rootDir, 'config')
@@ -50,10 +54,11 @@ allprojects {
 	}
 
 	nexus {
-		attachSources = true
-		attachTests = false
-		attachJavadoc = true
 		sign = true
+	}
+
+	extraArchive {
+		tests = true
 	}
 
 	modifyPom {

@@ -17,5 +17,7 @@ dependencies {
     compile project(':minidns-core')
     compile project(':minidns-recursive-resolver')
     compile project(':minidns-dnssec')
-    compile 'junit:junit:4.11'
+    compile "junit:junit:$junitVersion"
+    testCompile project(path: ":minidns-core", configuration: "testRuntime")
+    testCompile project(path: ":minidns-core", configuration: "archives")
 }

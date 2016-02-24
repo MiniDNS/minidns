@@ -1,6 +1,6 @@
 dependencies {
     compile project(':minidns-core')
     compile project(':minidns-recursive-resolver')
-    testCompile 'junit:junit:4.11'
-    testCompile project(':minidns-core').sourceSets.test.output
+    testCompile project(path: ":minidns-core", configuration: "testRuntime")
+    testCompile project(path: ":minidns-core", configuration: "archives")
 }
