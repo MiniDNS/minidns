@@ -33,7 +33,7 @@ public class UnixUsingEtcResolvConf extends AbstractDNSServerLookupMechanism {
     private static String[] cached;
     private static long lastModified;
 
-    protected UnixUsingEtcResolvConf() {
+    private UnixUsingEtcResolvConf() {
         super(UnixUsingEtcResolvConf.class.getSimpleName(), PRIORITY);
     }
 
