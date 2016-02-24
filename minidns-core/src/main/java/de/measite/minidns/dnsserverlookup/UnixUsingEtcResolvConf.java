@@ -30,6 +30,9 @@ public class UnixUsingEtcResolvConf extends AbstractDNSServerLookupMechanism {
     private static final String RESOLV_CONF_FILE = "/etc/resolv.conf";
     private static final Pattern NAMESERVER_PATTERN = Pattern.compile("^nameserver\\s+(.*)$");
 
+    private static String[] cached;
+    private static long lastModified;
+
     protected UnixUsingEtcResolvConf() {
         super(UnixUsingEtcResolvConf.class.getSimpleName(), PRIORITY);
     }
@@ -45,6 +48,11 @@ public class UnixUsingEtcResolvConf extends AbstractDNSServerLookupMechanism {
         if (!file.exists()) {
             // Not very unixoid systems
             return null;
+        }
+
+        long currentLastModified = file.lastModified();
+        if (currentLastModified == lastModified && cached != null) {
+            return cached;
         }
 
         List<String> servers = new ArrayList<>();
@@ -71,6 +79,10 @@ public class UnixUsingEtcResolvConf extends AbstractDNSServerLookupMechanism {
         if (servers.isEmpty()) {
             return null;
         }
-        return servers.toArray(new String[servers.size()]);
+
+        cached = servers.toArray(new String[servers.size()]);
+        lastModified = currentLastModified;
+
+        return cached;
     }
 }
