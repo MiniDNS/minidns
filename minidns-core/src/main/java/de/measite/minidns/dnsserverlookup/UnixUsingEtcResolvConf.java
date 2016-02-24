@@ -19,6 +19,8 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -26,6 +28,8 @@ public class UnixUsingEtcResolvConf extends AbstractDNSServerLookupMechanism {
 
     public static final DNSServerLookupMechanism INSTANCE = new UnixUsingEtcResolvConf();
     public static final int PRIORITY = 2000;
+
+    private static final Logger LOGGER = Logger.getLogger(UnixUsingEtcResolvConf.class.getName());
 
     private static final String RESOLV_CONF_FILE = "/etc/resolv.conf";
     private static final Pattern NAMESERVER_PATTERN = Pattern.compile("^nameserver\\s+(.*)$");
@@ -67,16 +71,18 @@ public class UnixUsingEtcResolvConf extends AbstractDNSServerLookupMechanism {
                 }
             }
         } catch (IOException e) {
+            LOGGER.log(Level.WARNING, "Could not read from " + RESOLV_CONF_FILE, e);
             return null;
         } finally {
             if (reader != null) try {
                 reader.close();
-            } catch (IOException ignored) {
-                // continue
+            } catch (IOException e) {
+                LOGGER.log(Level.WARNING, "Could not close reader", e);
             }
         }
 
         if (servers.isEmpty()) {
+            LOGGER.fine("Could not find any nameservers in " + RESOLV_CONF_FILE);
             return null;
         }
 
