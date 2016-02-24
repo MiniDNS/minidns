@@ -94,6 +94,7 @@ public abstract class AbstractDNSClient {
      * @param type  The DNS type to request (SRV, A, AAAA, ...).
      * @param clazz The class of the request (usually IN for Internet).
      * @return The response (or null on timeout/error).
+     * @throws IOException if an IO error occurs.
      */
     public final DNSMessage query(String name, TYPE type, CLASS clazz) throws IOException {
         Question q = new Question(name, type, clazz);
