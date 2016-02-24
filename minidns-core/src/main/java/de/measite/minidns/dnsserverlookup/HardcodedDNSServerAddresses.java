@@ -27,4 +27,9 @@ public class HardcodedDNSServerAddresses extends AbstractDNSServerLookupMechanis
         return new String[]{"8.8.8.8", "[2001:4860:4860::8888]"};
     }
 
+    @Override
+    public boolean isAvailable() {
+        return true;
+    }
+
 }

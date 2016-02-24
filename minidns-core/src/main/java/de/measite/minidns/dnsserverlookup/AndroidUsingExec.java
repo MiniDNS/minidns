@@ -34,7 +34,6 @@ public class AndroidUsingExec extends AbstractDNSServerLookupMechanism {
 
     @Override
     public String[] getDnsServerAddresses() {
-        if (!PlatformDetection.isAndroid()) return null;
         try {
             Process process = Runtime.getRuntime().exec("getprop");
             InputStream inputStream = process.getInputStream();
@@ -74,6 +73,11 @@ public class AndroidUsingExec extends AbstractDNSServerLookupMechanism {
             LOGGER.log(Level.WARNING, "Exception in findDNSByExec", e);
         }
         return null;
+    }
+
+    @Override
+    public boolean isAvailable() {
+        return PlatformDetection.isAndroid();
     }
 
 }

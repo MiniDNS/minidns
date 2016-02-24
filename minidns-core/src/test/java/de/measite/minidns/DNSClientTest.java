@@ -11,6 +11,7 @@
 package de.measite.minidns;
 
 import de.measite.minidns.Record.TYPE;
+import de.measite.minidns.dnsserverlookup.AbstractDNSServerLookupMechanism;
 import de.measite.minidns.dnsserverlookup.AndroidUsingExec;
 import de.measite.minidns.dnsserverlookup.AndroidUsingReflection;
 import de.measite.minidns.dnsserverlookup.DNSServerLookupMechanism;
@@ -38,6 +39,9 @@ public class DNSClientTest {
 
     @Test
     public void testLookupMechanismOrder() {
+        DNSClient.addDnsServerLookupMechanism(new TestDnsServerLookupMechanism(AndroidUsingExec.INSTANCE));
+        DNSClient.addDnsServerLookupMechanism(new TestDnsServerLookupMechanism(AndroidUsingReflection.INSTANCE));
+
         List<DNSServerLookupMechanism> expectedOrder = new ArrayList<>();
         expectedOrder.add(0, AndroidUsingExec.INSTANCE);
         expectedOrder.add(1, AndroidUsingReflection.INSTANCE);
@@ -47,11 +51,25 @@ public class DNSClientTest {
                 break;
             }
             DNSServerLookupMechanism shouldBeRemovedNext = expectedOrder.get(0);
-            if (mechanism == shouldBeRemovedNext) {
+            if (mechanism.getName().equals(shouldBeRemovedNext.getName())) {
                 expectedOrder.remove(0);
             }
         }
         assertTrue(expectedOrder.isEmpty());
+    }
+
+    private static class TestDnsServerLookupMechanism extends AbstractDNSServerLookupMechanism {
+        protected TestDnsServerLookupMechanism(DNSServerLookupMechanism lookupMechanism) {
+            super(lookupMechanism.getName(), lookupMechanism.getPriority());
+        }
+        @Override
+        public boolean isAvailable() {
+            return true;
+        }
+        @Override
+        public String[] getDnsServerAddresses() {
+            return null;
+        }
     }
 
     @Test

@@ -43,11 +43,6 @@ public class UnixUsingEtcResolvConf extends AbstractDNSServerLookupMechanism {
 
     @Override
     public String[] getDnsServerAddresses() {
-        if (PlatformDetection.isAndroid()) {
-            // Don't rely on resolv.conf when on Android
-            return null;
-        }
-
         File file = new File(RESOLV_CONF_FILE);
         if (!file.exists()) {
             // Not very unixoid systems
@@ -91,4 +86,20 @@ public class UnixUsingEtcResolvConf extends AbstractDNSServerLookupMechanism {
 
         return cached;
     }
+
+    @Override
+    public boolean isAvailable() {
+        if (PlatformDetection.isAndroid()) {
+            // Don't rely on resolv.conf when on Android
+            return false;
+        }
+
+        File file = new File(RESOLV_CONF_FILE);
+        if (!file.exists()) {
+            // Not very unixoid systems
+            return false;
+        }
+        return true;
+    }
+
 }

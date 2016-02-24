@@ -120,6 +120,10 @@ public class DNSClient extends AbstractDNSClient {
     }
 
     public static synchronized void addDnsServerLookupMechanism(DNSServerLookupMechanism dnsServerLookup) {
+        if (!dnsServerLookup.isAvailable()) {
+            LOGGER.fine("Not adding " + dnsServerLookup.getName() + " as it is not available.");
+            return;
+        }
         LOOKUP_MECHANISMS.add(dnsServerLookup);
         Collections.sort(LOOKUP_MECHANISMS);
     }

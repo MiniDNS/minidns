@@ -16,6 +16,8 @@ public interface DNSServerLookupMechanism extends Comparable<DNSServerLookupMech
 
     public int getPriority();
 
+    public boolean isAvailable();
+
     public String[] getDnsServerAddresses();
 
 }

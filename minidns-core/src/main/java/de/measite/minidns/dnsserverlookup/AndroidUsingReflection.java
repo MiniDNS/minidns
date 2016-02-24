@@ -31,7 +31,6 @@ public class AndroidUsingReflection extends AbstractDNSServerLookupMechanism {
 
     @Override
     public String[] getDnsServerAddresses() {
-        if (!PlatformDetection.isAndroid()) return null;
         try {
             Class<?> SystemProperties =
                     Class.forName("android.os.SystemProperties");
@@ -70,6 +69,11 @@ public class AndroidUsingReflection extends AbstractDNSServerLookupMechanism {
             LOGGER.log(Level.WARNING, "Exception in findDNSByReflection", e);
         }
         return null;
+    }
+
+    @Override
+    public boolean isAvailable() {
+        return PlatformDetection.isAndroid();
     }
 
 }
