@@ -290,9 +290,6 @@ public class Record {
         this.clazzValue = dis.readUnsignedShort();
         this.clazz = CLASS.getClass(clazzValue & 0x7fff);
         this.unicastQuery = (clazzValue & 0x8000) > 0;
-        if (this.clazz == null) {
-            LOGGER.fine("Unknown class " + clazzValue);
-        }
         this.ttl = (((long)dis.readUnsignedShort()) << 16) +
                    dis.readUnsignedShort();
         int payloadLength = dis.readUnsignedShort();
@@ -361,6 +358,9 @@ public class Record {
                     dis.readByte();
                 }
                 break;
+        }
+        if (this.clazz == null) {
+            LOGGER.finest("Unknown class " + clazzValue + " in RR: \'" + name + "\' of type " + type + ": " + payloadData);
         }
     }
 
