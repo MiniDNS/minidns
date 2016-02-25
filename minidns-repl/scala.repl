@@ -6,6 +6,7 @@ import de.measite.minidns.Record.TYPE
 import de.measite.minidns.dnssec.DNSSECClient
 
 import de.measite.minidns.minidnsrepl.MiniDnsRepl.clearCache
+import de.measite.minidns.minidnsrepl.MiniDnsRepl.traceMinidns
 
 // Some standard values
 // TODO add recursive (rc) and dnssec-client (secc)
