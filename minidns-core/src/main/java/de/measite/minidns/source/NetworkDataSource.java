@@ -11,6 +11,7 @@
 package de.measite.minidns.source;
 
 import de.measite.minidns.DNSMessage;
+import de.measite.minidns.MiniDNSException;
 import de.measite.minidns.util.MultipleIoException;
 
 import java.io.DataInputStream;
@@ -74,7 +75,7 @@ public class NetworkDataSource extends DNSDataSource {
             socket.receive(packet);
             DNSMessage dnsMessage = new DNSMessage(packet.getData());
             if (dnsMessage.getId() != message.getId()) {
-                return null;
+                throw new MiniDNSException.IdMismatch(message, dnsMessage);
             }
             return dnsMessage;
         } finally {
@@ -105,7 +106,7 @@ public class NetworkDataSource extends DNSDataSource {
             }
             DNSMessage dnsMessage = new DNSMessage(data);
             if (dnsMessage.getId() != message.getId()) {
-                return null;
+                throw new MiniDNSException.IdMismatch(message, dnsMessage);
             }
             return dnsMessage;
         } finally {
