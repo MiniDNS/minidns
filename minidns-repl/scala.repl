@@ -3,6 +3,9 @@ de.measite.minidns.minidnsrepl.MiniDnsRepl.init()
 import de.measite.minidns._
 import de.measite.minidns.Record.TYPE
 
+import de.measite.minidns.dnssec.DNSSECClient
+
 // Some standard values
 // TODO add recursive (rc) and dnssec-client (secc)
 val c = de.measite.minidns.minidnsrepl.MiniDnsRepl.DNSCLIENT
+val dc = de.measite.minidns.minidnsrepl.MiniDnsRepl.DNSSECCLIENT

@@ -12,10 +12,13 @@ package de.measite.minidns.minidnsrepl;
 
 import de.measite.minidns.DNSCache;
 import de.measite.minidns.DNSClient;
+import de.measite.minidns.dnssec.DNSSECClient;
 
 public class MiniDnsRepl {
 
     public static final DNSClient DNSCLIENT = new DNSClient((DNSCache) null);
+    public static final DNSSECClient DNSSECCLIENT = new DNSSECClient((DNSCache) null);
+
 
     public static void init() {
         // CHECKSTYLE:OFF
