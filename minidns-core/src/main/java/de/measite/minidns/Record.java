@@ -181,7 +181,9 @@ public class Record {
     }
 
     /**
-     * The symbolic class of a DNS record (usually IN for Internet).
+     * The symbolic class of a DNS record (usually {@link CLASS#IN} for Internet).
+     *
+     * @see <a href="http://www.iana.org/assignments/dns-parameters/dns-parameters.xhtml#dns-parameters-2">IANA Domain Name System (DNS) Parameters - DNS CLASSes</a>
      */
     public static enum CLASS {
         IN(1),
