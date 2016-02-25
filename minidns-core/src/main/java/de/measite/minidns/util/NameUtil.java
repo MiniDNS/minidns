@@ -116,7 +116,8 @@ public final class NameUtil {
      * @return The parsed domain name.
      * @throws IllegalStateException on cycles.
      */
-    public static String parse(byte data[], int offset, HashSet<Integer> jumps) {
+    public static String parse(byte data[], int offset, HashSet<Integer> jumps)
+            throws IllegalStateException {
         int c = data[offset] & 0xff;
         if ((c & 0xc0) == 0xc0) {
             c = ((c & 0x3f) << 8) + (data[offset + 1] & 0xff);

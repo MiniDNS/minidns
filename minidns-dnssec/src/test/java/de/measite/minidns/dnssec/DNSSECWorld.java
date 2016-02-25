@@ -178,6 +178,11 @@ public class DNSSECWorld extends DNSWorld {
 
     /**
      * Convert ASN.1 to RFC 2536.
+     *
+     * @param privateKey the private key.
+     * @param bytes the bytes.
+     * @return the RFC 2536 bytes.
+     * @throws IOException if an IO error occurs.
      */
     public static byte[] convertAsn1ToRFC(DSAPrivateKey privateKey, byte[] bytes) throws IOException {
         DataInputStream dis = new DataInputStream(new ByteArrayInputStream(bytes));

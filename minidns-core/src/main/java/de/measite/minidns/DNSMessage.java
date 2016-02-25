@@ -78,7 +78,7 @@ public class DNSMessage {
          * @return The symbolic response code or null.
          * @throws IllegalArgumentException if the value is not in the range of 0..15.
          */
-        public static RESPONSE_CODE getResponseCode(int value) {
+        public static RESPONSE_CODE getResponseCode(int value) throws IllegalArgumentException {
             if (value < 0 || value > 15) {
                 throw new IllegalArgumentException();
             }
@@ -136,7 +136,7 @@ public class DNSMessage {
          * @throws IllegalArgumentException If the byte value is not in the
          *                                  range 0..15.
          */
-        public static OPCODE getOpcode(int value) {
+        public static OPCODE getOpcode(int value) throws IllegalArgumentException {
             if (value < 0 || value > 15) {
                 throw new IllegalArgumentException();
             }
