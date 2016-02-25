@@ -54,6 +54,13 @@ public class RecursiveDNSClient extends AbstractDNSClient {
     private int maxDepth = 128;
 
     /**
+     * Create a new recursive DNS client using the global default cache.
+     */
+    public RecursiveDNSClient() {
+        super();
+    }
+
+    /**
      * Create a new recursive DNS client with the given DNS cache.
      *
      * @param cache The backend DNS cache.

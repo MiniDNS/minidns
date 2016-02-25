@@ -42,6 +42,13 @@ public class DNSClient extends AbstractDNSClient {
     private boolean askForDnssec = false;
     private boolean disableResultFilter = false;
 
+    /**
+     * Create a new DNS client using the global default cache.
+     */
+    public DNSClient() {
+        super();
+    }
+
     public DNSClient(DNSCache dnsCache) {
         super(dnsCache);
     }

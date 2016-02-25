@@ -29,6 +29,8 @@ import java.util.logging.Logger;
  */
 public abstract class AbstractDNSClient {
 
+    private static final LRUCache DEFAULT_CACHE = new LRUCache(1024);
+
     protected static final Logger LOGGER = Logger.getLogger(AbstractDNSClient.class.getName());
 
     /**
@@ -39,7 +41,7 @@ public abstract class AbstractDNSClient {
     /**
      * The internal DNS cache.
      */
-    protected DNSCache cache;
+    protected final DNSCache cache;
     protected DNSDataSource dataSource = new NetworkDataSource();
 
     /**
@@ -48,7 +50,13 @@ public abstract class AbstractDNSClient {
      * @param cache The backend DNS cache.
      */
     protected AbstractDNSClient(DNSCache cache) {
-        this();
+        Random random;
+        try {
+            random = SecureRandom.getInstance("SHA1PRNG");
+        } catch (NoSuchAlgorithmException e1) {
+            random = new SecureRandom();
+        }
+        this.random = random;
         this.cache = cache;
     }
 
@@ -58,30 +66,22 @@ public abstract class AbstractDNSClient {
      * @param cache the Map to use as cache for DNS results.
      */
     protected AbstractDNSClient(final Map<Question, DNSMessage> cache) {
-        this();
-        if (cache != null)
-            this.cache = new DNSCache() {
-                public void put(Question q, DNSMessage message) {
-                    cache.put(q, message);
-                }
+        this(cache != null ? new DNSCache() {
+            public void put(Question q, DNSMessage message) {
+                cache.put(q, message);
+            }
 
-                public DNSMessage get(Question q) {
-                    return cache.get(q);
-                }
-            };
+            public DNSMessage get(Question q) {
+                return cache.get(q);
+            }
+        } : null);
     }
 
     /**
-     * Create a new DNS client without any caching.
+     * Create a new DNS client using the global default cache.
      */
     protected AbstractDNSClient() {
-        Random random;
-        try {
-            random = SecureRandom.getInstance("SHA1PRNG");
-        } catch (NoSuchAlgorithmException e1) {
-            random = new SecureRandom();
-        }
-        this.random = random;
+        this(DEFAULT_CACHE);
     }
 
     /**

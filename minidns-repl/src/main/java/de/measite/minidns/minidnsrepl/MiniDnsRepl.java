@@ -10,14 +10,17 @@
  */
 package de.measite.minidns.minidnsrepl;
 
-import de.measite.minidns.DNSCache;
+import java.lang.reflect.Field;
+
+import de.measite.minidns.AbstractDNSClient;
 import de.measite.minidns.DNSClient;
+import de.measite.minidns.LRUCache;
 import de.measite.minidns.dnssec.DNSSECClient;
 
 public class MiniDnsRepl {
 
-    public static final DNSClient DNSCLIENT = new DNSClient((DNSCache) null);
-    public static final DNSSECClient DNSSECCLIENT = new DNSSECClient((DNSCache) null);
+    public static final DNSClient DNSCLIENT = new DNSClient();
+    public static final DNSSECClient DNSSECCLIENT = new DNSSECClient();
 
 
     public static void init() {
@@ -26,4 +29,11 @@ public class MiniDnsRepl {
         // CHECKSTYLE:ON
     }
 
+    public static void clearCache() throws NoSuchFieldException, SecurityException, IllegalArgumentException,
+            IllegalAccessException {
+        Field defaultCacheField = AbstractDNSClient.class.getDeclaredField("DEFAULT_CACHE");
+        defaultCacheField.setAccessible(true);
+        LRUCache defaultCache = (LRUCache) defaultCacheField.get(null);
+        defaultCache.clear();
+    }
 }

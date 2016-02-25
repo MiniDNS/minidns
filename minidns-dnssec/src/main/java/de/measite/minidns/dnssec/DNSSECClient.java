@@ -44,6 +44,13 @@ public class DNSSECClient extends RecursiveDNSClient {
     private static final String DEFAULT_DLV = "dlv.isc.org";
 
     /**
+     * Create a new DNSSEC aware DNS client using the global default cache.
+     */
+    public DNSSECClient() {
+        super();
+    }
+
+    /**
      * Create a new DNSSEC aware DNS client with the given DNS cache.
      *
      * @param cache The backend DNS cache.
