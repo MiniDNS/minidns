@@ -45,6 +45,9 @@ public class NetworkDataSource extends DNSDataSource {
         try {
             dnsMessage = queryTcp(message, address, port);
         } catch (IOException e) {
+            if (ioExceptions.isEmpty()) {
+                throw e;
+            }
             ioExceptions.add(e);
             throw new MultipleIoException(ioExceptions);
         }
