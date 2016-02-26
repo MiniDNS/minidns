@@ -202,7 +202,13 @@ class Verifier {
     }
 
     /**
-     * Derived from RFC 5155 Section 5
+     * Derived from RFC 5155 Section 5.
+     *
+     * @param digestCalculator the digest calculator.
+     * @param salt the salt.
+     * @param data the data.
+     * @param iterations the number of iterations.
+     * @return the NSEC3 hash.
      */
     static byte[] nsec3hash(DigestCalculator digestCalculator, byte[] salt, byte[] data, int iterations) {
         while (iterations-- >= 0) {
