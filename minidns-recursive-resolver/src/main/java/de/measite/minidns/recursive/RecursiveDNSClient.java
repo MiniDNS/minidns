@@ -163,12 +163,7 @@ public class RecursiveDNSClient extends AbstractDNSClient {
             }
         }
 
-        if (!ioExceptions.isEmpty()) {
-            if (ioExceptions.size() == 1) {
-                throw ioExceptions.get(0);
-            }
-            throw new MultipleIoException(ioExceptions);
-        }
+        MultipleIoException.throwIfRequired(ioExceptions);
 
         return null;
     }

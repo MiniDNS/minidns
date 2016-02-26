@@ -25,11 +25,9 @@ public class MultipleIoException extends IOException {
 
     private final List<IOException> ioExceptions;
 
-    public MultipleIoException(List<IOException> ioExceptions) {
+    private MultipleIoException(List<? extends IOException> ioExceptions) {
         super(getMessage(ioExceptions));
-        if (ioExceptions == null || ioExceptions.isEmpty()) {
-            throw new IllegalArgumentException();
-        }
+        assert(!ioExceptions.isEmpty());
         this.ioExceptions = Collections.unmodifiableList(ioExceptions);
     }
 
@@ -47,5 +45,15 @@ public class MultipleIoException extends IOException {
             }
         }
         return sb.toString();
+    }
+
+    public static void throwIfRequired(List<? extends IOException> ioExceptions) throws IOException {
+        if (ioExceptions == null || ioExceptions.isEmpty()) {
+            return;
+        }
+        if (ioExceptions.size() == 1) {
+            throw ioExceptions.get(0);
+        }
+        throw new MultipleIoException(ioExceptions);
     }
 }

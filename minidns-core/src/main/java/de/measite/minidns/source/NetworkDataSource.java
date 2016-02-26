@@ -46,15 +46,14 @@ public class NetworkDataSource extends DNSDataSource {
         try {
             dnsMessage = queryTcp(message, address, port);
         } catch (IOException e) {
-            if (ioExceptions.isEmpty()) {
-                throw e;
-            }
             ioExceptions.add(e);
-            throw new MultipleIoException(ioExceptions);
+            MultipleIoException.throwIfRequired(ioExceptions);
         }
 
         if (dnsMessage != null && !ioExceptions.isEmpty()) {
-            LOGGER.log(Level.FINE, "IO Exception(s) while asking for " + message, new MultipleIoException(ioExceptions));
+            // In this case, there can only be one exception.
+            assert(ioExceptions.size() == 1);
+            LOGGER.log(Level.FINE, "IO Exception while asking for " + message, ioExceptions.get(0));
         }
 
         return dnsMessage;
