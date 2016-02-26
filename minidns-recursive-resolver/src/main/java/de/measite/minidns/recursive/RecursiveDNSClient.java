@@ -51,7 +51,7 @@ public class RecursiveDNSClient extends AbstractDNSClient {
         rootServerInetAddress("m.root-servers.net", new int[]{202,  12,  27,  33}),
         };
 
-    private int maxDepth = 128;
+    int maxSteps = 128;
 
     /**
      * Create a new recursive DNS client using the global default cache.
@@ -87,19 +87,19 @@ public class RecursiveDNSClient extends AbstractDNSClient {
      */
     @Override
     public DNSMessage query(Question q) throws IOException {
-        DNSMessage message = queryRecursive(0, q);
+        DNSMessage message = queryRecursive(new RecursionState(this), q);
         if (message == null) return null;
         // TODO: restrict to real answer or accept non-answers?
         return message;
     }
 
-    private DNSMessage queryRecursive(int depth, Question q) throws IOException {
+    private DNSMessage queryRecursive(RecursionState recursionState, Question q) throws IOException {
         InetAddress target = ROOT_SERVERS[random.nextInt(ROOT_SERVERS.length)];
-        return queryRecursive(depth, q, target);
+        return queryRecursive(recursionState, q, target);
     }
 
-    private DNSMessage queryRecursive(int depth, Question q, InetAddress address) throws IOException {
-        if (depth > maxDepth) return null;
+    private DNSMessage queryRecursive(RecursionState recursionState, Question q, InetAddress address) throws IOException {
+        recursionState.recurse(address, q);
 
         DNSMessage resMessage = query(q, address);
 
@@ -122,9 +122,10 @@ public class RecursiveDNSClient extends AbstractDNSClient {
             for (InetAddress target : gluedNs.getAddresses()) {
                 DNSMessage recursive = null;
                 try {
-                    recursive = queryRecursive(depth + 1, q, target);
+                    recursive = queryRecursive(recursionState, q, target);
                 } catch (IOException e) {
                    LOGGER.log(Level.FINER, "Exception while recursing", e);
+                   recursionState.decrementSteps();
                    ioExceptions.add(e);
                    iterator.remove();
                    continue;
@@ -139,8 +140,9 @@ public class RecursiveDNSClient extends AbstractDNSClient {
             if (!q.name.equals(name) || q.type != TYPE.A) {
                 IpResultSet res = null;
                 try {
-                    res = resolveIpRecursive(depth + 1, name);
+                    res = resolveIpRecursive(recursionState, name);
                 } catch (IOException e) {
+                    recursionState.decrementSteps();
                     ioExceptions.add(e);
                 }
                 if (res == null) {
@@ -150,8 +152,9 @@ public class RecursiveDNSClient extends AbstractDNSClient {
                 for (InetAddress target : res.getAddresses()) {
                     DNSMessage recursive = null;
                     try {
-                        recursive = queryRecursive(depth + 1, q, target);
+                        recursive = queryRecursive(recursionState, q, target);
                     } catch (IOException e) {
+                        recursionState.decrementSteps();
                         ioExceptions.add(e);
                         continue;
                     }
@@ -161,6 +164,9 @@ public class RecursiveDNSClient extends AbstractDNSClient {
         }
 
         if (!ioExceptions.isEmpty()) {
+            if (ioExceptions.size() == 1) {
+                throw ioExceptions.get(0);
+            }
             throw new MultipleIoException(ioExceptions);
         }
 
@@ -184,19 +190,19 @@ public class RecursiveDNSClient extends AbstractDNSClient {
         RecursiveDNSClient.ipVersionSetting = preferedIpVersion;
     }
 
-    private IpResultSet resolveIpRecursive(int depth, String name) throws IOException {
+    private IpResultSet resolveIpRecursive(RecursionState recursionState, String name) throws IOException {
         IpResultSet res = new IpResultSet();
 
         if (ipVersionSetting != IpVersionSetting.v6only) {
             Question question = new Question(name, TYPE.A);
-            DNSMessage aMessage = queryRecursive(depth + 1, question);
+            DNSMessage aMessage = queryRecursive(recursionState, question);
             if (aMessage != null) {
                 for (Record answer : aMessage.getAnswers()) {
                     if (answer.isAnswer(question)) {
                         InetAddress inetAddress = inetAddressFromRecord(name, (A) answer.payloadData);
                         res.ipv4Addresses.add(inetAddress);
                     } else if (answer.type == TYPE.CNAME && answer.name.equals(name)) {
-                        return resolveIpRecursive(depth + 1, ((CNAME) answer.payloadData).name);
+                        return resolveIpRecursive(recursionState, ((CNAME) answer.payloadData).name);
                     }
                 }
             }
@@ -204,14 +210,14 @@ public class RecursiveDNSClient extends AbstractDNSClient {
 
         if (ipVersionSetting != IpVersionSetting.v4only) {
             Question question = new Question(name, TYPE.AAAA);
-            DNSMessage aMessage = queryRecursive(depth + 1, question);
+            DNSMessage aMessage = queryRecursive(recursionState, question);
             if (aMessage != null) {
                 for (Record answer : aMessage.getAnswers()) {
                     if (answer.isAnswer(question)) {
                         InetAddress inetAddress = inetAddressFromRecord(name, (AAAA) answer.payloadData);
                         res.ipv6Addresses.add(inetAddress);
                     } else if (answer.type == TYPE.CNAME && answer.name.equals(name)) {
-                        return resolveIpRecursive(depth + 1, ((CNAME) answer.payloadData).name);
+                        return resolveIpRecursive(recursionState, ((CNAME) answer.payloadData).name);
                     }
                 }
             }

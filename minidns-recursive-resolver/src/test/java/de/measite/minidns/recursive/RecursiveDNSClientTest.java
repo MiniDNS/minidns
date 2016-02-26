@@ -18,7 +18,6 @@ import de.measite.minidns.Record;
 import de.measite.minidns.Record.TYPE;
 import de.measite.minidns.record.A;
 
-import org.junit.Ignore;
 import org.junit.Test;
 
 import static de.measite.minidns.DNSWorld.a;
@@ -55,8 +54,7 @@ public class RecursiveDNSClientTest {
         assertArrayEquals(new byte[]{1, 1, 1, 3}, ((A) answers[0].payloadData).ip);
     }
 
-    @Ignore
-    @Test
+    @Test(expected = RecursiveClientException.LoopDetected.class)
     public void loopRecursionTest() throws IOException {
         RecursiveDNSClient client = new RecursiveDNSClient(new LRUCache(0));
         applyZones(client,
