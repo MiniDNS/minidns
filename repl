@@ -17,6 +17,7 @@ declare -r GRADLE_CLASSPATH="$(gradle :minidns-repl:printClasspath --quiet |\
 echo "Classpath computed, starting REPL"
 
 java \
+	-ea \
 	-Dscala.usejavacp=true \
 	-classpath "${GRADLE_CLASSPATH}" \
 	ammonite.repl.Main \
