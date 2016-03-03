@@ -26,7 +26,9 @@ import java.util.logging.Logger;
 
 import de.measite.minidns.AbstractDNSClient;
 import de.measite.minidns.DNSClient;
+import de.measite.minidns.DNSMessage;
 import de.measite.minidns.LRUCache;
+import de.measite.minidns.Record.TYPE;
 import de.measite.minidns.dnssec.DNSSECClient;
 import de.measite.minidns.recursive.RecursiveDNSClient;
 
@@ -89,5 +91,9 @@ public class MiniDnsRepl {
             }
         });
         MINIDNS_LOGGER.addHandler(consoleHandler);
+    }
+
+    public static void main(String[] args) throws IOException {
+        DNSMessage res = RECURSIVEDNSCLIENT.query("mate.geekplace.eu", TYPE.A);
     }
 }
