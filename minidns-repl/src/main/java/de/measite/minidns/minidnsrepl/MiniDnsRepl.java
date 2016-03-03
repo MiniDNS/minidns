@@ -28,12 +28,27 @@ import de.measite.minidns.AbstractDNSClient;
 import de.measite.minidns.DNSClient;
 import de.measite.minidns.LRUCache;
 import de.measite.minidns.dnssec.DNSSECClient;
+import de.measite.minidns.recursive.RecursiveDNSClient;
 
 public class MiniDnsRepl {
 
     public static final DNSClient DNSCLIENT = new DNSClient();
+    public static final RecursiveDNSClient RECURSIVEDNSCLIENT = new RecursiveDNSClient();
     public static final DNSSECClient DNSSECCLIENT = new DNSSECClient();
 
+    static {
+        LRUCache cache = null;
+        try {
+            Field defaultCacheField = AbstractDNSClient.class.getDeclaredField("DEFAULT_CACHE");
+            defaultCacheField.setAccessible(true);
+            cache = (LRUCache) defaultCacheField.get(null);
+        } catch (IllegalAccessException | NoSuchFieldException | SecurityException e) {
+            throw new IllegalStateException(e);
+        }
+        DEFAULT_CACHE = cache;
+    }
+
+    public static final LRUCache DEFAULT_CACHE;
 
     public static void init() {
         // CHECKSTYLE:OFF
@@ -43,10 +58,7 @@ public class MiniDnsRepl {
 
     public static void clearCache() throws NoSuchFieldException, SecurityException, IllegalArgumentException,
             IllegalAccessException {
-        Field defaultCacheField = AbstractDNSClient.class.getDeclaredField("DEFAULT_CACHE");
-        defaultCacheField.setAccessible(true);
-        LRUCache defaultCache = (LRUCache) defaultCacheField.get(null);
-        defaultCache.clear();
+        DEFAULT_CACHE.clear();
     }
 
     private static final Logger MINIDNS_LOGGER = Logger.getLogger("de.measite.minidns");
