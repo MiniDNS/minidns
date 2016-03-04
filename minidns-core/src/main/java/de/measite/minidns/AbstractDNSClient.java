@@ -21,6 +21,7 @@ import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.util.Map;
 import java.util.Random;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
@@ -134,6 +135,7 @@ public abstract class AbstractDNSClient {
 
         DNSMessage message = buildMessage(q);
 
+        LOGGER.log(Level.FINE, "Asking {0} on {1} for {2}", new Object[] { address, port, q });
         dnsMessage = dataSource.query(message, address, port);
 
         if (dnsMessage == null) return null;
