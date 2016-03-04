@@ -359,9 +359,6 @@ public class Record {
                 }
                 break;
         }
-        if (this.clazz == null) {
-            LOGGER.finest("Unknown class " + clazzValue + " in RR: \'" + name + "\' of type " + type + ": " + payloadData);
-        }
     }
 
     public Record(String name, TYPE type, CLASS clazz, long ttl, Data payloadData, boolean unicastQuery) {
