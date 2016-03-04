@@ -86,7 +86,7 @@ public class MiniDnsRepl {
                     dateString = LOG_TIME_FORMAT.format(date);
                 }
                 sb.append(dateString).append(' ').append(logRecord.getLoggerName()).append(' ').append(logRecord.getSourceMethodName()).append('\n');
-                sb.append(logRecord.getLevel()).append(' ').append(logRecord.getMessage()).append('\n');
+                sb.append(logRecord.getLevel()).append(' ').append(formatMessage(logRecord)).append('\n');
                 return sb.toString();
             }
         });
