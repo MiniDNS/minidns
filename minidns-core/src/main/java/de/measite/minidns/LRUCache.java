@@ -93,10 +93,9 @@ public class LRUCache implements DNSCache {
         }
 
         long ttl = maxTTL;
+        // RFC 2181 § 5.2 says that all TTLs in a RRSet should be equal, if this isn't the case, then we assume the
+        // shortest TTL to be the effective one.
         for (Record r : message.getAnswers()) {
-            ttl = Math.min(ttl, r.ttl);
-        }
-        for (Record r : message.getAdditionalResourceRecords()) {
             ttl = Math.min(ttl, r.ttl);
         }
         if (message.getReceiveTimestamp() + ttl < System.currentTimeMillis()) {
