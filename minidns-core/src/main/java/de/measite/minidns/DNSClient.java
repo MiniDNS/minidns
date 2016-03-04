@@ -16,13 +16,13 @@ import de.measite.minidns.dnsserverlookup.DNSServerLookupMechanism;
 import de.measite.minidns.dnsserverlookup.HardcodedDNSServerAddresses;
 import de.measite.minidns.dnsserverlookup.UnixUsingEtcResolvConf;
 import de.measite.minidns.record.OPT;
+import de.measite.minidns.util.MultipleIoException;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.logging.Level;
 
 /**
  * A minimal DNS client for SRV/A/AAAA/NS and CNAME lookups, with IDN support.
@@ -72,8 +72,9 @@ public class DNSClient extends AbstractDNSClient {
      *
      * @param q The question section of the DNS query.
      * @return The response (or null on timeout/error).
+     * @throws IOException if an error occurs.
      */
-    public DNSMessage query(Question q) {
+    public DNSMessage query(Question q) throws IOException {
         // While this query method does in fact re-use query(Question, String)
         // we still do a cache lookup here in order to avoid unnecessary
         // findDNS()calls, which are expensive on Android. Note that we do not
@@ -85,6 +86,7 @@ public class DNSClient extends AbstractDNSClient {
         }
 
         String dnsServer[] = findDNS();
+        List<IOException> ioExceptions = new ArrayList<>(dnsServer.length);
         for (String dns : dnsServer) {
             try {
                 message = query(q, dns);
@@ -104,9 +106,10 @@ public class DNSClient extends AbstractDNSClient {
                     }
                 }
             } catch (IOException ioe) {
-                LOGGER.log(Level.FINE, "IOException in query", ioe);
+                ioExceptions.add(ioe);
             }
         }
+        MultipleIoException.throwIfRequired(ioExceptions);
         return null;
     }
 
