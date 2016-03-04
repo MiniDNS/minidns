@@ -74,6 +74,7 @@ public class DNSClient extends AbstractDNSClient {
      * @return The response (or null on timeout/error).
      * @throws IOException if an error occurs.
      */
+    @Override
     public DNSMessage query(Question q) throws IOException {
         // While this query method does in fact re-use query(Question, String)
         // we still do a cache lookup here in order to avoid unnecessary
