@@ -110,5 +110,9 @@ public class MiniDnsRepl {
     public static void main(String[] args) throws IOException {
         DNSSECMessage secRes = DNSSECCLIENT.queryDnssec("verteiltesysteme.net", TYPE.A);
         DNSMessage res = RECURSIVEDNSCLIENT.query("mate.geekplace.eu", TYPE.A);
+        // CHECKSTYLE:OFF
+        System.out.println(secRes);
+        System.out.println(res);
+        // CHCECKSTYLE:ON
     }
 }
