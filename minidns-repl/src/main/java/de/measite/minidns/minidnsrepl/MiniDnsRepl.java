@@ -13,6 +13,8 @@ package de.measite.minidns.minidnsrepl;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.lang.reflect.Field;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -87,7 +89,18 @@ public class MiniDnsRepl {
                     dateString = LOG_TIME_FORMAT.format(date);
                 }
                 sb.append(dateString).append(' ').append(logRecord.getLoggerName()).append(' ').append(logRecord.getSourceMethodName()).append('\n');
-                sb.append(logRecord.getLevel()).append(' ').append(formatMessage(logRecord)).append('\n');
+                sb.append(logRecord.getLevel()).append(' ').append(formatMessage(logRecord));
+                if (logRecord.getThrown() != null) {
+                    StringWriter sw = new StringWriter();
+                    PrintWriter pw = new PrintWriter(sw);
+                    // CHECKSTYLE:OFF
+                    pw.println();
+                    logRecord.getThrown().printStackTrace(pw);
+                    // CHECKSTYLE:ON
+                    pw.close();
+                    sb.append(sw);
+                }
+                sb.append('\n');
                 return sb.toString();
             }
         });
