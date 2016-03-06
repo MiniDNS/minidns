@@ -255,6 +255,9 @@ public abstract class AbstractDNSClient {
      * @param dataSource An implementation of DNSDataSource that shall be used.
      */
     public void setDataSource(DNSDataSource dataSource) {
+        if (dataSource == null) {
+            throw new IllegalArgumentException();
+        }
         this.dataSource = dataSource;
     }
 }
