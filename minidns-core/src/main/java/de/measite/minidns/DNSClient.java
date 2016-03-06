@@ -58,11 +58,8 @@ public class DNSClient extends AbstractDNSClient {
     }
 
     @Override
-    protected DNSMessage buildMessage(Question question) {
-        DNSMessage message = new DNSMessage();
-        message.setQuestions(question);
+    protected DNSMessage newQuestion(DNSMessage message) {
         message.setRecursionDesired(true);
-        message.setId(random.nextInt());
         message.setOptPseudoRecord(dataSource.getUdpPayloadSize(), askForDnssec ? OPT.FLAG_DNSSEC_OK : 0);
         return message;
     }

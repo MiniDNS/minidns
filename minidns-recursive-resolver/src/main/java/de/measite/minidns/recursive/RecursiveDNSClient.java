@@ -273,11 +273,8 @@ public class RecursiveDNSClient extends AbstractDNSClient {
     }
 
     @Override
-    protected DNSMessage buildMessage(Question question) {
-        DNSMessage message = new DNSMessage();
-        message.setQuestions(question);
+    protected DNSMessage newQuestion(DNSMessage message) {
         message.setRecursionDesired(false);
-        message.setId(random.nextInt());
         message.setOptPseudoRecord(dataSource.getUdpPayloadSize(), 0);
         return message;
     }

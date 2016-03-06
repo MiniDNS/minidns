@@ -445,8 +445,7 @@ public class DNSSECClient extends RecursiveDNSClient {
     }
 
     @Override
-    protected DNSMessage buildMessage(Question question) {
-        DNSMessage message = super.buildMessage(question);
+    protected DNSMessage newQuestion(DNSMessage message) {
         message.setOptPseudoRecord(getDataSource().getUdpPayloadSize(), OPT.FLAG_DNSSEC_OK);
         return message;
     }

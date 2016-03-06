@@ -168,7 +168,15 @@ public abstract class AbstractDNSClient {
      * @param question {@link Question} to be put in the DNS request.
      * @return A {@link DNSMessage} requesting the answer for the given Question.
      */
-    protected abstract DNSMessage buildMessage(Question question);
+    final DNSMessage buildMessage(Question question) {
+        DNSMessage message = new DNSMessage();
+        message.setQuestions(question);
+        message.setId(random.nextInt());
+        message = newQuestion(message);
+        return message;
+    }
+
+    protected abstract DNSMessage newQuestion(DNSMessage questionMessage);
 
     /**
      * Query a nameserver for a single entry.
