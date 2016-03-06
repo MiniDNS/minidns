@@ -87,7 +87,8 @@ public class RecursiveDNSClient extends AbstractDNSClient {
      */
     @Override
     public DNSMessage query(Question q) throws IOException {
-        DNSMessage message = queryRecursive(new RecursionState(this), q);
+        RecursionState recursionState = new RecursionState(this);
+        DNSMessage message = queryRecursive(recursionState, q);
         if (message == null) return null;
         // TODO: restrict to real answer or accept non-answers?
         return message;

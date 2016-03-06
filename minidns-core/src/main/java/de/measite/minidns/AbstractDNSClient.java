@@ -220,7 +220,8 @@ public abstract class AbstractDNSClient {
      * @throws IOException On IOErrors.
      */
     public DNSMessage query(Question q, String host) throws IOException {
-        return query(q, InetAddress.getByName(host), 53);
+        InetAddress hostAddress = InetAddress.getByName(host);
+        return query(q, hostAddress, 53);
     }
 
     /**
