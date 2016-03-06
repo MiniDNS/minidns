@@ -60,16 +60,6 @@ public class DNSSECClient extends RecursiveDNSClient {
         addSecureEntryPoint("", rootEntryKey.toByteArray());
     }
 
-    /**
-     * Creates a new DNSSEC aware client that uses the given Map as cache.
-     *
-     * @param cache the Map to use as cache for DNS results.
-     */
-    public DNSSECClient(Map<Question, DNSMessage> cache) {
-        super(cache);
-        addSecureEntryPoint("", rootEntryKey.toByteArray());
-    }
-
     private Verifier verifier = new Verifier();
     private Map<String, byte[]> knownSeps = new ConcurrentHashMap<>();
     private Map<String, DS> knownDelegations = new ConcurrentHashMap<>();

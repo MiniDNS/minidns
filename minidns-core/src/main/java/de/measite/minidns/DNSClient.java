@@ -22,7 +22,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 
 /**
  * A minimal DNS client for SRV/A/AAAA/NS and CNAME lookups, with IDN support.
@@ -51,10 +50,6 @@ public class DNSClient extends AbstractDNSClient {
 
     public DNSClient(DNSCache dnsCache) {
         super(dnsCache);
-    }
-
-    public DNSClient(final Map<Question, DNSMessage> cache) {
-        super(cache);
     }
 
     @Override

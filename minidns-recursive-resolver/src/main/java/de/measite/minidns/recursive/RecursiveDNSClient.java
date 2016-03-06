@@ -30,7 +30,6 @@ import java.util.Arrays;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 import java.util.logging.Level;
 
 public class RecursiveDNSClient extends AbstractDNSClient {
@@ -66,15 +65,6 @@ public class RecursiveDNSClient extends AbstractDNSClient {
      * @param cache The backend DNS cache.
      */
     public RecursiveDNSClient(DNSCache cache) {
-        super(cache);
-    }
-
-    /**
-     * Creates a new recursive DNS client that uses the given Map as cache.
-     *
-     * @param cache the Map to use as cache for DNS results.
-     */
-    public RecursiveDNSClient(Map<Question, DNSMessage> cache) {
         super(cache);
     }
 

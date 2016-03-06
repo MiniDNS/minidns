@@ -19,7 +19,6 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
-import java.util.Map;
 import java.util.Random;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -59,23 +58,6 @@ public abstract class AbstractDNSClient {
         }
         this.random = random;
         this.cache = cache;
-    }
-
-    /**
-     * Creates a new client that uses the given Map as cache.
-     *
-     * @param cache the Map to use as cache for DNS results.
-     */
-    protected AbstractDNSClient(final Map<Question, DNSMessage> cache) {
-        this(cache != null ? new DNSCache() {
-            public void put(Question q, DNSMessage message) {
-                cache.put(q, message);
-            }
-
-            public DNSMessage get(Question q) {
-                return cache.get(q);
-            }
-        } : null);
     }
 
     /**
