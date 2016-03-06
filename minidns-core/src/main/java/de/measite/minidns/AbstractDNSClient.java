@@ -29,7 +29,7 @@ import java.util.logging.Logger;
  */
 public abstract class AbstractDNSClient {
 
-    private static final LRUCache DEFAULT_CACHE = new LRUCache(1024);
+    protected static final LRUCache DEFAULT_CACHE = new LRUCache(1024);
 
     protected static final Logger LOGGER = Logger.getLogger(AbstractDNSClient.class.getName());
 

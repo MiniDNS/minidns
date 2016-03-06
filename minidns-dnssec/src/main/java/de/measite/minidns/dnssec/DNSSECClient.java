@@ -14,6 +14,7 @@ import de.measite.minidns.DNSCache;
 import de.measite.minidns.DNSMessage;
 import de.measite.minidns.Question;
 import de.measite.minidns.Record;
+import de.measite.minidns.Record.CLASS;
 import de.measite.minidns.Record.TYPE;
 import de.measite.minidns.dnssec.UnverifiedReason.IncomptibleDelegationReason;
 import de.measite.minidns.dnssec.UnverifiedReason.NoSecureEntryPointReason;
@@ -24,7 +25,7 @@ import de.measite.minidns.record.DNSKEY;
 import de.measite.minidns.record.DS;
 import de.measite.minidns.record.OPT;
 import de.measite.minidns.record.RRSIG;
-import de.measite.minidns.recursive.RecursiveDNSClient;
+import de.measite.minidns.recursive.ReliableResolver;
 
 import java.io.IOException;
 import java.math.BigInteger;
@@ -39,7 +40,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
-public class DNSSECClient extends RecursiveDNSClient {
+public class DNSSECClient extends ReliableResolver {
     private static final BigInteger rootEntryKey = new BigInteger("03010001a80020a95566ba42e886bb804cda84e47ef56dbd7aec612615552cec906d2116d0ef207028c51554144dfeafe7c7cb8f005dd18234133ac0710a81182ce1fd14ad2283bc83435f9df2f6313251931a176df0da51e54f42e604860dfb359580250f559cc543c4ffd51cbe3de8cfd06719237f9fc47ee729da06835fa452e825e9a18ebc2ecbcf563474652c33cf56a9033bcdf5d973121797ec8089041b6e03a1b72d0a735b984e03687309332324f27c2dba85e9db15e83a0143382e974b0621c18e625ecec907577d9e7bade95241a81ebbe8a901d4d3276e40b114c0a2e6fc38d19c2e6aab02644b2813f575fc21601e0dee49cd9ee96a43103e524d62873d", 16);
     private static final String DEFAULT_DLV = "dlv.isc.org";
 
@@ -72,44 +73,51 @@ public class DNSSECClient extends RecursiveDNSClient {
     }
 
     public DNSSECMessage queryDnssec(String name, TYPE type) throws IOException {
-        return (DNSSECMessage) super.query(name, type);
+        Question q = new Question(name, type, CLASS.IN);
+        DNSMessage dnsMessage = super.query(q);
+        DNSSECMessage dnssecMessage = performVerification(q, dnsMessage);
+        return dnssecMessage;
     }
 
     public DNSSECMessage queryDnssec(Question q, InetAddress address, int port) throws IOException {
         DNSMessage dnsMessage = super.query(q, address, port);
-        if (dnsMessage != null) {
-            Set<UnverifiedReason> result;
-            if (dnsMessage.isAuthoritativeAnswer()) {
-                if (dnsMessage.isAuthenticData()) {
-                    result = null;
-                } else {
-                    result = verify(dnsMessage);
-                }
-            } else {
-                List<Record> dss = new ArrayList<>();
-                RRSIG dsSig = null;
-                for (Record record : dnsMessage.getNameserverRecords()) {
-                    if (record.type == TYPE.DS) dss.add(record);
-                    if (record.type == TYPE.RRSIG && ((RRSIG) record.payloadData).typeCovered == TYPE.DS)
-                        dsSig = (RRSIG) record.payloadData;
-                }
-                if (dsSig != null) {
-                    try {
-                        Set<UnverifiedReason> unverifiedReasons = verifySignedRecords(q, dsSig, dss);
-                        if (unverifiedReasons.isEmpty()) {
-                            for (Record dsRecord : dss) {
-                                knownDelegations.put(dsRecord.name, (DS) dsRecord.payloadData);
-                            }
-                        }
-                    } catch (DNSSECValidationFailedException ignored) {
-                        // Not actually a problem, just an incomplete hint.
-                    }
-                }
+        DNSSECMessage dnssecMessage = performVerification(q, dnsMessage);
+        return dnssecMessage;
+    }
+
+    private DNSSECMessage performVerification(Question q, DNSMessage dnsMessage) throws IOException {
+        if (dnsMessage == null) return null;
+
+        Set<UnverifiedReason> result;
+        if (dnsMessage.isAuthoritativeAnswer()) {
+            if (dnsMessage.isAuthenticData()) {
                 result = null;
+            } else {
+                result = verify(dnsMessage);
             }
-            return createDnssecMessage(dnsMessage, result);
+        } else {
+            List<Record> dss = new ArrayList<>();
+            RRSIG dsSig = null;
+            for (Record record : dnsMessage.getNameserverRecords()) {
+                if (record.type == TYPE.DS) dss.add(record);
+                if (record.type == TYPE.RRSIG && ((RRSIG) record.payloadData).typeCovered == TYPE.DS)
+                    dsSig = (RRSIG) record.payloadData;
+            }
+            if (dsSig != null) {
+                try {
+                    Set<UnverifiedReason> unverifiedReasons = verifySignedRecords(q, dsSig, dss);
+                    if (unverifiedReasons.isEmpty()) {
+                        for (Record dsRecord : dss) {
+                            knownDelegations.put(dsRecord.name, (DS) dsRecord.payloadData);
+                        }
+                    }
+                } catch (DNSSECValidationFailedException ignored) {
+                    // Not actually a problem, just an incomplete hint.
+                }
+            }
+            result = null;
         }
-        return null;
+        return createDnssecMessage(dnsMessage, result);
     }
 
     private DNSSECMessage createDnssecMessage(DNSMessage dnsMessage, Set<UnverifiedReason> result) {
