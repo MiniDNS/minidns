@@ -29,7 +29,6 @@ import de.measite.minidns.recursive.ReliableResolver;
 
 import java.io.IOException;
 import java.math.BigInteger;
-import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
@@ -68,8 +67,8 @@ public class DNSSECClient extends ReliableResolver {
     private String dlv;
 
     @Override
-    public DNSMessage query(Question q, InetAddress address, int port) throws IOException {
-        return queryDnssec(q, address, port);
+    public DNSMessage query(Question q) throws IOException {
+        return queryDnssec(q);
     }
 
     public DNSSECMessage queryDnssec(String name, TYPE type) throws IOException {
@@ -79,8 +78,8 @@ public class DNSSECClient extends ReliableResolver {
         return dnssecMessage;
     }
 
-    public DNSSECMessage queryDnssec(Question q, InetAddress address, int port) throws IOException {
-        DNSMessage dnsMessage = super.query(q, address, port);
+    public DNSSECMessage queryDnssec(Question q) throws IOException {
+        DNSMessage dnsMessage = super.query(q);
         DNSSECMessage dnssecMessage = performVerification(q, dnsMessage);
         return dnssecMessage;
     }
