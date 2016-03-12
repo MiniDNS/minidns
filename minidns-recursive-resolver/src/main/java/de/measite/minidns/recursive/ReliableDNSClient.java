@@ -22,38 +22,38 @@ import de.measite.minidns.Question;
 import de.measite.minidns.source.DNSDataSource;
 import de.measite.minidns.util.MultipleIoException;
 
-public class ReliableResolver extends AbstractDNSClient {
+public class ReliableDNSClient extends AbstractDNSClient {
 
     private final RecursiveDNSClient recursiveDnsClient;
     private final DNSClient dnsClient;
 
-    public ReliableResolver(DNSCache dnsCache) {
+    public ReliableDNSClient(DNSCache dnsCache) {
         super(dnsCache);
         recursiveDnsClient = new RecursiveDNSClient(dnsCache) {
             @Override
             protected DNSMessage newQuestion(DNSMessage questionMessage) {
-                return ReliableResolver.this.newQuestion(questionMessage);
+                return ReliableDNSClient.this.newQuestion(questionMessage);
             }
             @Override
             protected boolean isResponseCacheable(Question q, DNSMessage dnsMessage) {
                 boolean res = super.isResponseCacheable(q, dnsMessage);
-                return ReliableResolver.this.isResponseCacheable(q, dnsMessage) && res;
+                return ReliableDNSClient.this.isResponseCacheable(q, dnsMessage) && res;
             }
         };
         dnsClient = new DNSClient(dnsCache) {
             @Override
             protected DNSMessage newQuestion(DNSMessage questionMessage) {
-                return ReliableResolver.this.newQuestion(questionMessage);
+                return ReliableDNSClient.this.newQuestion(questionMessage);
             }
             @Override
             protected boolean isResponseCacheable(Question q, DNSMessage dnsMessage) {
                 boolean res = super.isResponseCacheable(q, dnsMessage);
-                return ReliableResolver.this.isResponseCacheable(q, dnsMessage) && res;
+                return ReliableDNSClient.this.isResponseCacheable(q, dnsMessage) && res;
             }
         };
     }
 
-    public ReliableResolver() {
+    public ReliableDNSClient() {
         this(DEFAULT_CACHE);
     }
 
