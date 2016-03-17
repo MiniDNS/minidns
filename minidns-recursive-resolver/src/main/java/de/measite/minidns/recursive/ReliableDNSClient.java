@@ -22,6 +22,11 @@ import de.measite.minidns.Question;
 import de.measite.minidns.source.DNSDataSource;
 import de.measite.minidns.util.MultipleIoException;
 
+/**
+ * A DNS client using a reliable strategy. First the configured resolver of the
+ * system are used, then, in case there is no answer, a fall back to recursively
+ * resolving is performed.
+ */
 public class ReliableDNSClient extends AbstractDNSClient {
 
     private final RecursiveDNSClient recursiveDnsClient;
