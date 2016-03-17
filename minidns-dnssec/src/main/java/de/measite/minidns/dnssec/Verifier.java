@@ -12,6 +12,7 @@ package de.measite.minidns.dnssec;
 
 import de.measite.minidns.Question;
 import de.measite.minidns.Record;
+import de.measite.minidns.Record.TYPE;
 import de.measite.minidns.dnssec.UnverifiedReason.AlgorithmExceptionThrownReason;
 import de.measite.minidns.dnssec.UnverifiedReason.AlgorithmNotSupportedReason;
 import de.measite.minidns.dnssec.UnverifiedReason.NSECDoesNotMatchReason;
@@ -96,11 +97,12 @@ class Verifier {
         byte[] bytes = nsec3hash(digestCalculator, nsec3.salt, NameUtil.toByteArray(q.name.toLowerCase()), nsec3.iterations);
         String s = Base32.encodeToString(bytes);
         if (nsec3record.name.equals(s + "." + zone)) {
-            if (Arrays.asList(nsec3.types).contains(q.type)) {
-                return new NSECDoesNotMatchReason(q, nsec3record);
-            } else {
-                return null;
+            for (TYPE type : nsec3.types) {
+                if (type.equals(q.type)) {
+                    return new NSECDoesNotMatchReason(q, nsec3record);
+                }
             }
+            return null;
         }
         if (nsecMatches(s, nsec3record.name.split("\\.")[0], Base32.encodeToString(nsec3.nextHashed))) {
             return null;
