@@ -20,6 +20,7 @@ import de.measite.minidns.record.A;
 import de.measite.minidns.record.AAAA;
 import de.measite.minidns.record.CNAME;
 import de.measite.minidns.record.NS;
+import de.measite.minidns.recursive.RecursiveClientException.LoopDetected;
 import de.measite.minidns.util.MultipleIoException;
 
 import java.io.IOException;
@@ -34,21 +35,34 @@ import java.util.logging.Level;
 
 public class RecursiveDNSClient extends AbstractDNSClient {
 
-    protected static final InetAddress[] ROOT_SERVERS = new InetAddress[]{
-        rootServerInetAddress("a.root-servers.net", new int[]{198,  41,   0,   4}),
-        rootServerInetAddress("b.root-servers.net", new int[]{192, 228,  79, 201}),
-        rootServerInetAddress("c.root-servers.net", new int[]{192,  33,   4,  12}),
-        rootServerInetAddress("d.root-servers.net", new int[]{199,   7,  91 , 13}),
-        rootServerInetAddress("e.root-servers.net", new int[]{192, 203, 230,  10}),
-        rootServerInetAddress("f.root-servers.net", new int[]{192,   5,   5, 241}),
-        rootServerInetAddress("g.root-servers.net", new int[]{192, 112,  36,   4}),
-        rootServerInetAddress("h.root-servers.net", new int[]{128,  63,   2,  53}),
-        rootServerInetAddress("i.root-servers.net", new int[]{192,  36, 148,  17}),
-        rootServerInetAddress("j.root-servers.net", new int[]{192,  58, 128,  30}),
-        rootServerInetAddress("k.root-servers.net", new int[]{193,   0,  14, 129}),
-        rootServerInetAddress("l.root-servers.net", new int[]{199,   7,  83,  42}),
-        rootServerInetAddress("m.root-servers.net", new int[]{202,  12,  27,  33}),
-        };
+    protected static final InetAddress[] IPV4_ROOT_SERVERS = new InetAddress[] {
+        rootServerInetAddress('a', new int[]{198,  41,   0,   4}),
+        rootServerInetAddress('b', new int[]{192, 228,  79, 201}),
+        rootServerInetAddress('c', new int[]{192,  33,   4,  12}),
+        rootServerInetAddress('d', new int[]{199,   7,  91 , 13}),
+        rootServerInetAddress('e', new int[]{192, 203, 230,  10}),
+        rootServerInetAddress('f', new int[]{192,   5,   5, 241}),
+        rootServerInetAddress('g', new int[]{192, 112,  36,   4}),
+        rootServerInetAddress('h', new int[]{128,  63,   2,  53}),
+        rootServerInetAddress('i', new int[]{192,  36, 148,  17}),
+        rootServerInetAddress('j', new int[]{192,  58, 128,  30}),
+        rootServerInetAddress('k', new int[]{193,   0,  14, 129}),
+        rootServerInetAddress('l', new int[]{199,   7,  83,  42}),
+        rootServerInetAddress('m', new int[]{202,  12,  27,  33}),
+    };
+
+    protected static final InetAddress[] IPV6_ROOT_SERVERS = new InetAddress[] {
+        rootServerInetAddress('a', new int[]{0x2001, 0x503, 0xba3e, 0x0, 0x0, 0x0, 0x2, 0x30}),
+        rootServerInetAddress('b', new int[]{0x2001, 0x500, 0x84, 0x0, 0x0, 0x0, 0x0, 0xb}),
+        rootServerInetAddress('c', new int[]{0x2001, 0x500, 0x2, 0x0, 0x0, 0x0, 0x0, 0xc}),
+        rootServerInetAddress('d', new int[]{0x2001, 0x500, 0x2d, 0x0, 0x0, 0x0, 0x0, 0xd}),
+        rootServerInetAddress('f', new int[]{0x2001, 0x500, 0x2f, 0x0, 0x0, 0x0, 0x0, 0xf}),
+        rootServerInetAddress('h', new int[]{0x2001, 0x500, 0x1, 0x0, 0x0, 0x0, 0x0, 0x53}),
+        rootServerInetAddress('i', new int[]{0x2001, 0x7fe, 0x0, 0x0, 0x0, 0x0, 0x0, 0x53}),
+        rootServerInetAddress('j', new int[]{0x2001, 0x503, 0xc27, 0x0, 0x0, 0x0, 0x2, 0x30}),
+        rootServerInetAddress('l', new int[]{0x2001, 0x500, 0x3, 0x0, 0x0, 0x0, 0x0, 0x42}),
+        rootServerInetAddress('m', new int[]{0x2001, 0xdc3, 0x0, 0x0, 0x0, 0x0, 0x0, 0x35}),
+    };
 
     int maxSteps = 128;
 
@@ -84,9 +98,52 @@ public class RecursiveDNSClient extends AbstractDNSClient {
         return message;
     }
 
+    private InetAddress getRandomIpv4RootServer() {
+        return IPV4_ROOT_SERVERS[insecureRandom.nextInt(IPV4_ROOT_SERVERS.length)];
+    }
+
+    private InetAddress getRandomIpv6RootServer() {
+        return IPV6_ROOT_SERVERS[insecureRandom.nextInt(IPV6_ROOT_SERVERS.length)];
+    }
+
     private DNSMessage queryRecursive(RecursionState recursionState, Question q) throws IOException {
-        InetAddress target = ROOT_SERVERS[random.nextInt(ROOT_SERVERS.length)];
-        return queryRecursive(recursionState, q, target);
+        InetAddress primaryTarget = null, secondaryTarget = null;
+        switch (ipVersionSetting) {
+        case v4only:
+            primaryTarget = getRandomIpv4RootServer();
+            break;
+        case v6only:
+            primaryTarget = getRandomIpv6RootServer();
+            break;
+        case v4v6:
+            primaryTarget = getRandomIpv4RootServer();
+            secondaryTarget = getRandomIpv6RootServer();
+            break;
+        case v6v4:
+            primaryTarget = getRandomIpv6RootServer();
+            secondaryTarget = getRandomIpv4RootServer();
+            break;
+        }
+
+        List<IOException> ioExceptions = new LinkedList<>();
+
+        try {
+            return queryRecursive(recursionState, q, primaryTarget);
+        } catch (IOException ioException) {
+            abortIfFatal(ioException);
+            ioExceptions.add(ioException);
+        }
+
+        if (secondaryTarget != null) {
+            try {
+                return queryRecursive(recursionState, q, secondaryTarget);
+            } catch (IOException ioException) {
+                ioExceptions.add(ioException);
+            }
+        }
+
+        MultipleIoException.throwIfRequired(ioExceptions);
+        return null;
     }
 
     private DNSMessage queryRecursive(RecursionState recursionState, Question q, InetAddress address) throws IOException {
@@ -249,12 +306,32 @@ public class RecursiveDNSClient extends AbstractDNSClient {
         }
     }
 
-    private static InetAddress rootServerInetAddress(String name, int[] addr) {
-        try {
-            return InetAddress.getByAddress(name, new byte[]{(byte) addr[0], (byte) addr[1], (byte) addr[2], (byte) addr[3]});
-        } catch (UnknownHostException e) {
-            // This should never happen, if it does it's our fault!
-            throw new RuntimeException(e);
+    private static InetAddress rootServerInetAddress(char rootServerId, int[] addr) {
+        String name = rootServerId + ".root-servers.net";
+        if (addr.length == 4) {
+            try {
+                return InetAddress.getByAddress(name, new byte[] { (byte) addr[0], (byte) addr[1], (byte) addr[2],
+                        (byte) addr[3] });
+            } catch (UnknownHostException e) {
+                // This should never happen, if it does it's our fault!
+                throw new RuntimeException(e);
+            }
+        } else if (addr.length == 8) {
+            try {
+                return InetAddress.getByAddress(name, new byte[]{
+                        // @formatter:off
+                        (byte) (addr[0] >> 8), (byte) addr[0], (byte) (addr[1] >> 8), (byte) addr[1],
+                        (byte) (addr[2] >> 8), (byte) addr[2], (byte) (addr[3] >> 8), (byte) addr[3],
+                        (byte) (addr[4] >> 8), (byte) addr[4], (byte) (addr[5] >> 8), (byte) addr[5],
+                        (byte) (addr[6] >> 8), (byte) addr[6], (byte) (addr[7] >> 8), (byte) addr[7]
+                        // @formatter:on
+                });
+            } catch (UnknownHostException e) {
+                // This should never happen, if it does it's our fault!
+                throw new RuntimeException(e);
+            }
+        } else {
+            throw new IllegalArgumentException();
         }
     }
 
@@ -309,6 +386,12 @@ public class RecursiveDNSClient extends AbstractDNSClient {
                 break;
             }
             return addresses;
+        }
+    }
+
+    protected static void abortIfFatal(IOException ioException) throws IOException {
+        if (ioException instanceof LoopDetected) {
+            throw ioException;
         }
     }
 }

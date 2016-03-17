@@ -38,6 +38,8 @@ public abstract class AbstractDNSClient {
      */
     protected final Random random;
 
+    protected final Random insecureRandom = new Random();
+
     /**
      * The internal DNS cache.
      */
