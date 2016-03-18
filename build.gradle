@@ -33,6 +33,8 @@ allprojects {
 		minidnsMinAndroidSdk = 9
 		androidBootClasspath = getAndroidRuntimeJar()
 		rootConfigDir = new File(rootDir, 'config')
+		gitCommit = getGitCommit()
+		builtDate = (new java.text.SimpleDateFormat("yyyy-MM-dd")).format(new Date())
 	}
 
 	if (!ext.isSnapshot && 'git rev-parse --abbrev-ref HEAD'.execute().text.trim() == 'master') {
@@ -205,4 +207,15 @@ def getAndroidHome() {
 	def androidHome = new File(androidHomeEnv)
 	if (!androidHome.isDirectory()) throw new Exception("Environment variable ANDROID_HOME is not pointing to a directory")
 	return androidHome
+}
+
+def getGitCommit() {
+	def dotGit = new File("$projectDir/.git")
+	if (!dotGit.isDirectory()) return 'non-git build'
+
+	def cmd = 'git describe --always --tags --dirty=+'
+	def proc = cmd.execute()
+	def gitCommit = proc.text.trim()
+	assert !gitCommit.isEmpty()
+	gitCommit
 }
