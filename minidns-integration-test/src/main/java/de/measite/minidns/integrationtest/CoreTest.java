@@ -12,8 +12,8 @@ package de.measite.minidns.integrationtest;
 
 import de.measite.minidns.DNSClient;
 import de.measite.minidns.DNSMessage;
-import de.measite.minidns.LRUCache;
 import de.measite.minidns.Record;
+import de.measite.minidns.cache.LRUCache;
 
 import java.io.IOException;
 import java.util.ArrayList;

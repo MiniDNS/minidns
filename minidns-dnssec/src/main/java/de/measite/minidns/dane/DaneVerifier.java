@@ -12,8 +12,8 @@ package de.measite.minidns.dane;
 
 import de.measite.minidns.AbstractDNSClient;
 import de.measite.minidns.DNSMessage;
-import de.measite.minidns.LRUCache;
 import de.measite.minidns.Record;
+import de.measite.minidns.cache.LRUCache;
 import de.measite.minidns.dnssec.DNSSECClient;
 import de.measite.minidns.dnssec.DNSSECMessage;
 import de.measite.minidns.dnssec.UnverifiedReason;
@@ -27,6 +27,7 @@ import javax.net.ssl.SSLSocket;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
 import javax.security.cert.CertificateEncodingException;
+
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.security.KeyManagementException;

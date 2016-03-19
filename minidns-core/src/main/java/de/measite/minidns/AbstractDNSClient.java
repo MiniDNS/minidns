@@ -12,6 +12,7 @@ package de.measite.minidns;
 
 import de.measite.minidns.Record.CLASS;
 import de.measite.minidns.Record.TYPE;
+import de.measite.minidns.cache.LRUCache;
 import de.measite.minidns.source.DNSDataSource;
 import de.measite.minidns.source.NetworkDataSource;
 

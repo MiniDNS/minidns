@@ -13,9 +13,9 @@ package de.measite.minidns.recursive;
 import java.io.IOException;
 
 import de.measite.minidns.DNSMessage;
-import de.measite.minidns.LRUCache;
 import de.measite.minidns.Record;
 import de.measite.minidns.Record.TYPE;
+import de.measite.minidns.cache.LRUCache;
 import de.measite.minidns.record.A;
 
 import org.junit.Test;

@@ -12,8 +12,8 @@ package de.measite.minidns.integrationtest;
 
 import java.io.IOException;
 
-import de.measite.minidns.LRUCache;
 import de.measite.minidns.Record;
+import de.measite.minidns.cache.LRUCache;
 import de.measite.minidns.dnssec.DNSSECClient;
 import de.measite.minidns.dnssec.DNSSECValidationFailedException;
 import static org.junit.Assert.assertFalse;

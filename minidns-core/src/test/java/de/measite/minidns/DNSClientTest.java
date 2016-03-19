@@ -11,6 +11,7 @@
 package de.measite.minidns;
 
 import de.measite.minidns.Record.TYPE;
+import de.measite.minidns.cache.LRUCache;
 import de.measite.minidns.dnsserverlookup.AbstractDNSServerLookupMechanism;
 import de.measite.minidns.dnsserverlookup.AndroidUsingExec;
 import de.measite.minidns.dnsserverlookup.AndroidUsingReflection;

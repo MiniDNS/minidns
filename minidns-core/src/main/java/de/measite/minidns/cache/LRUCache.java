@@ -8,10 +8,15 @@
  * upon the condition that you accept all of the terms of either
  * the Apache License 2.0, the LGPL 2.1+ or the WTFPL.
  */
-package de.measite.minidns;
+package de.measite.minidns.cache;
 
 import java.util.LinkedHashMap;
 import java.util.Map.Entry;
+
+import de.measite.minidns.DNSCache;
+import de.measite.minidns.DNSMessage;
+import de.measite.minidns.Question;
+import de.measite.minidns.Record;
 
 /**
  * LRU based DNSCache backed by a LinkedHashMap.

@@ -13,6 +13,7 @@ package de.measite.minidns;
 import org.junit.Before;
 import org.junit.Test;
 
+import de.measite.minidns.cache.LRUCache;
 import static de.measite.minidns.DNSWorld.a;
 import static de.measite.minidns.DNSWorld.ns;
 import static de.measite.minidns.DNSWorld.record;
