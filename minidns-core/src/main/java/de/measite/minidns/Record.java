@@ -37,13 +37,11 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.util.HashMap;
-import java.util.logging.Logger;
 
 /**
  * A generic DNS record.
  */
 public class Record {
-    private static final Logger LOGGER = Logger.getLogger(Record.class.getName());
 
     /**
      * The record type.
