@@ -10,8 +10,8 @@
  */
 package de.measite.minidns.record;
 
+import de.measite.minidns.DNSName;
 import de.measite.minidns.Record.TYPE;
-import de.measite.minidns.util.NameUtil;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -30,7 +30,7 @@ public class NSEC implements Data {
     /**
      * The next owner name that contains a authoritative data or a delegation point.
      */
-    public final String next;
+    public final DNSName next;
 
     private final byte[] typeBitmap;
 
@@ -40,15 +40,19 @@ public class NSEC implements Data {
     public final TYPE[] types;
 
     public static NSEC parse(DataInputStream dis, byte[] data, int length) throws IOException {
-        String next = NameUtil.parse(dis, data);
+        DNSName next = DNSName.parse(dis, data);
 
-        byte[] typeBitmap = new byte[length - NameUtil.size(next)];
+        byte[] typeBitmap = new byte[length - next.size()];
         if (dis.read(typeBitmap) != typeBitmap.length) throw new IOException();
         TYPE[] types = readTypeBitMap(typeBitmap);
         return new NSEC(next, types);
     }
 
     public NSEC(String next, TYPE[] types) {
+        this(DNSName.from(next), types);
+    }
+
+    public NSEC(DNSName next, TYPE[] types) {
         this.next = next;
         this.types = types;
         this.typeBitmap = createTypeBitMap(types);
@@ -64,7 +68,7 @@ public class NSEC implements Data {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         DataOutputStream dos = new DataOutputStream(baos);
         try {
-            dos.write(NameUtil.toByteArray(next));
+            next.writeToStream(dos);
             dos.write(typeBitmap);
         } catch (IOException e) {
             // Should never happen

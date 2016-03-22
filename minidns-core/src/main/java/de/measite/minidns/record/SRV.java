@@ -15,8 +15,8 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 
+import de.measite.minidns.DNSName;
 import de.measite.minidns.Record.TYPE;
-import de.measite.minidns.util.NameUtil;
 
 /**
  * SRV record payload (service pointer).
@@ -42,7 +42,7 @@ public class SRV implements Data {
     /**
      * The target server.
      */
-    public final String name;
+    public final DNSName name;
 
     public static SRV parse(DataInputStream dis, byte[] data)
         throws IOException
@@ -50,11 +50,15 @@ public class SRV implements Data {
         int priority = dis.readUnsignedShort();
         int weight = dis.readUnsignedShort();
         int port = dis.readUnsignedShort();
-        String name = NameUtil.parse(dis, data);
+        DNSName name = DNSName.parse(dis, data);
         return new SRV(priority, weight, port, name);
     }
 
     public SRV(int priority, int weight, int port, String name) {
+        this(priority, weight, port, DNSName.from(name));
+    }
+
+    public SRV(int priority, int weight, int port, DNSName name) {
         this.priority = priority;
         this.weight = weight;
         this.port = port;
@@ -69,7 +73,7 @@ public class SRV implements Data {
             dos.writeShort(priority);
             dos.writeShort(weight);
             dos.writeShort(port);
-            dos.write(NameUtil.toByteArray(name));
+            name.writeToStream(dos);
         } catch (IOException e) {
             // Should never happen
             throw new RuntimeException(e);

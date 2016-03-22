@@ -13,6 +13,7 @@ package de.measite.minidns.recursive;
 import de.measite.minidns.AbstractDNSClient;
 import de.measite.minidns.DNSCache;
 import de.measite.minidns.DNSMessage;
+import de.measite.minidns.DNSName;
 import de.measite.minidns.Question;
 import de.measite.minidns.Record;
 import de.measite.minidns.Record.TYPE;
@@ -165,7 +166,7 @@ public class RecursiveDNSClient extends AbstractDNSClient {
                 iterator.remove();
                 continue;
             }
-            String name = ((NS) record.payloadData).name;
+            DNSName name = ((NS) record.payloadData).name;
             IpResultSet gluedNs = searchAdditional(resMessage, name);
             for (InetAddress target : gluedNs.getAddresses()) {
                 DNSMessage recursive = null;
@@ -184,7 +185,7 @@ public class RecursiveDNSClient extends AbstractDNSClient {
 
         // Try non-glued NS
         for (Record record : authorities) {
-            String name = ((NS) record.payloadData).name;
+            DNSName name = ((NS) record.payloadData).name;
             if (!q.name.equals(name) || q.type != TYPE.A) {
                 IpResultSet res = null;
                 try {
@@ -233,7 +234,7 @@ public class RecursiveDNSClient extends AbstractDNSClient {
         RecursiveDNSClient.ipVersionSetting = preferedIpVersion;
     }
 
-    private IpResultSet resolveIpRecursive(RecursionState recursionState, String name) throws IOException {
+    private IpResultSet resolveIpRecursive(RecursionState recursionState, DNSName name) throws IOException {
         IpResultSet res = new IpResultSet();
 
         if (ipVersionSetting != IpVersionSetting.v6only) {
@@ -242,7 +243,7 @@ public class RecursiveDNSClient extends AbstractDNSClient {
             if (aMessage != null) {
                 for (Record answer : aMessage.getAnswers()) {
                     if (answer.isAnswer(question)) {
-                        InetAddress inetAddress = inetAddressFromRecord(name, (A) answer.payloadData);
+                        InetAddress inetAddress = inetAddressFromRecord(name.ace, (A) answer.payloadData);
                         res.ipv4Addresses.add(inetAddress);
                     } else if (answer.type == TYPE.CNAME && answer.name.equals(name)) {
                         return resolveIpRecursive(recursionState, ((CNAME) answer.payloadData).name);
@@ -257,7 +258,7 @@ public class RecursiveDNSClient extends AbstractDNSClient {
             if (aMessage != null) {
                 for (Record answer : aMessage.getAnswers()) {
                     if (answer.isAnswer(question)) {
-                        InetAddress inetAddress = inetAddressFromRecord(name, (AAAA) answer.payloadData);
+                        InetAddress inetAddress = inetAddressFromRecord(name.ace, (AAAA) answer.payloadData);
                         res.ipv6Addresses.add(inetAddress);
                     } else if (answer.type == TYPE.CNAME && answer.name.equals(name)) {
                         return resolveIpRecursive(recursionState, ((CNAME) answer.payloadData).name);
@@ -270,7 +271,7 @@ public class RecursiveDNSClient extends AbstractDNSClient {
     }
 
     @SuppressWarnings("incomplete-switch")
-    private static IpResultSet searchAdditional(DNSMessage message, String name) {
+    private static IpResultSet searchAdditional(DNSMessage message, DNSName name) {
         IpResultSet res = new IpResultSet();
         for (Record record : message.getAdditionalResourceRecords()) {
             if (!record.name.equals(name)) {
@@ -278,10 +279,10 @@ public class RecursiveDNSClient extends AbstractDNSClient {
             }
             switch (record.type) {
             case A:
-                res.ipv4Addresses.add(inetAddressFromRecord(name, ((A) record.payloadData)));
+                res.ipv4Addresses.add(inetAddressFromRecord(name.ace, ((A) record.payloadData)));
                 break;
             case AAAA:
-                res.ipv6Addresses.add(inetAddressFromRecord(name, ((AAAA) record.payloadData)));
+                res.ipv6Addresses.add(inetAddressFromRecord(name.ace, ((AAAA) record.payloadData)));
                 break;
             }
         }

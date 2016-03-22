@@ -15,8 +15,8 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 
+import de.measite.minidns.DNSName;
 import de.measite.minidns.Record.TYPE;
-import de.measite.minidns.util.NameUtil;
 
 /**
  * MX record payload (mail service pointer).
@@ -31,17 +31,21 @@ public class MX implements Data {
     /**
      * The name of the target server.
      */
-    public final String name;
+    public final DNSName name;
 
     public static MX parse(DataInputStream dis, byte[] data)
         throws IOException
     {
         int priority = dis.readUnsignedShort();
-        String name = NameUtil.parse(dis, data);
+        DNSName name = DNSName.parse(dis, data);
         return new MX(priority, name);
     }
 
     public MX(int priority, String name) {
+        this(priority, DNSName.from(name));
+    }
+
+    public MX(int priority, DNSName name) {
         this.priority = priority;
         this.name = name;
     }
@@ -52,7 +56,7 @@ public class MX implements Data {
         DataOutputStream dos = new DataOutputStream(baos);
         try {
             dos.writeShort(priority);
-            dos.write(NameUtil.toByteArray(name));
+            name.writeToStream(dos);
         } catch (IOException e) {
             // Should never happen
             throw new RuntimeException(e);

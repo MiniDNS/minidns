@@ -22,6 +22,8 @@ import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
 import java.util.Date;
 
+import static de.measite.minidns.Assert.assertCsEquals;
+
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 
@@ -71,7 +73,7 @@ public class RecordsTest {
         assertEquals(TYPE.CNAME, cname.getType());
         byte[] cnameb = cname.toByteArray();
         cname = CNAME.parse(new DataInputStream(new ByteArrayInputStream(cnameb)), cnameb);
-        assertEquals("www.example.com", cname.name);
+        assertCsEquals("www.example.com", cname.name);
     }
 
     @Test
@@ -123,7 +125,7 @@ public class RecordsTest {
         byte[] mxb = mx.toByteArray();
         mx = MX.parse(new DataInputStream(new ByteArrayInputStream(mxb)), mxb);
         assertEquals(10, mx.priority);
-        assertEquals("mx.example.com", mx.name);
+        assertCsEquals("mx.example.com", mx.name);
     }
 
     @Test
@@ -133,7 +135,7 @@ public class RecordsTest {
         assertEquals(TYPE.NSEC, nsec.getType());
         byte[] nsecb = nsec.toByteArray();
         nsec = NSEC.parse(new DataInputStream(new ByteArrayInputStream(nsecb)), nsecb, nsecb.length);
-        assertEquals("example.com", nsec.next);
+        assertCsEquals("example.com", nsec.next);
         assertArrayEquals(new TYPE[]{TYPE.A, TYPE.RRSIG, TYPE.DLV}, nsec.types);
 
         assertEquals(0, NSEC.readTypeBitMap(NSEC.createTypeBitMap(new TYPE[0])).length);
@@ -189,7 +191,7 @@ public class RecordsTest {
         assertEquals(TYPE.PTR, ptr.getType());
         byte[] ptrb = ptr.toByteArray();
         ptr = PTR.parse(new DataInputStream(new ByteArrayInputStream(ptrb)), ptrb);
-        assertEquals("ptr.example.com", ptr.name);
+        assertCsEquals("ptr.example.com", ptr.name);
     }
 
     @Test
@@ -207,7 +209,7 @@ public class RecordsTest {
         assertEquals(new Date(1000), rrsig.signatureExpiration);
         assertEquals(new Date(0), rrsig.signatureInception);
         assertEquals(42, rrsig.keyTag);
-        assertEquals("example.com", rrsig.signerName);
+        assertCsEquals("example.com", rrsig.signerName);
         assertArrayEquals(new byte[]{42}, rrsig.signature);
     }
 
@@ -218,8 +220,8 @@ public class RecordsTest {
         assertEquals(TYPE.SOA, soa.getType());
         byte[] soab = soa.toByteArray();
         soa = SOA.parse(new DataInputStream(new ByteArrayInputStream(soab)), soab);
-        assertEquals("sns.dns.icann.org", soa.mname);
-        assertEquals("noc.dns.icann.org", soa.rname);
+        assertCsEquals("sns.dns.icann.org", soa.mname);
+        assertCsEquals("noc.dns.icann.org", soa.rname);
         assertEquals(2015060341, soa.serial);
         assertEquals(7200, soa.refresh);
         assertEquals(3600, soa.retry);
@@ -237,7 +239,7 @@ public class RecordsTest {
         assertEquals(30, srv.priority);
         assertEquals(31, srv.weight);
         assertEquals(5222, srv.port);
-        assertEquals("hermes.jabber.org", srv.name);
+        assertCsEquals("hermes.jabber.org", srv.name);
     }
 
     @Test

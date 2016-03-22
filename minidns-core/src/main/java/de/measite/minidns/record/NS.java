@@ -13,6 +13,7 @@ package de.measite.minidns.record;
 import java.io.DataInputStream;
 import java.io.IOException;
 
+import de.measite.minidns.DNSName;
 import de.measite.minidns.Record.TYPE;
 
 /**
@@ -25,7 +26,7 @@ public class NS extends CNAME {
         return new NS(cname.name);
     }
 
-    public NS(String name) {
+    public NS(DNSName name) {
         super(name);
     }
 

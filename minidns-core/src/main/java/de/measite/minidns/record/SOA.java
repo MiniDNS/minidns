@@ -10,8 +10,8 @@
  */
 package de.measite.minidns.record;
 
+import de.measite.minidns.DNSName;
 import de.measite.minidns.Record.TYPE;
-import de.measite.minidns.util.NameUtil;
 
 import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
@@ -26,12 +26,12 @@ public class SOA implements Data {
     /**
      * The domain name of the name server that was the original or primary source of data for this zone.
      */
-    public final String mname;
+    public final DNSName mname;
 
     /**
      * A domain name which specifies the mailbox of the person responsible for this zone.
      */
-    public final String rname;
+    public final DNSName rname;
 
     /**
      * The unsigned 32 bit version number of the original copy of the zone.  Zone transfers preserve this value.  This
@@ -62,8 +62,8 @@ public class SOA implements Data {
 
     public static SOA parse(DataInputStream dis, byte[] data)
             throws IOException {
-        String mname = NameUtil.parse(dis, data);
-        String rname = NameUtil.parse(dis, data);
+        DNSName mname = DNSName.parse(dis, data);
+        DNSName rname = DNSName.parse(dis, data);
         long serial = dis.readInt() & 0xFFFFFFFFL;
         int refresh = dis.readInt();
         int retry = dis.readInt();
@@ -73,6 +73,10 @@ public class SOA implements Data {
     }
 
     public SOA(String mname, String rname, long serial, int refresh, int retry, int expire, long minimum) {
+        this(DNSName.from(mname), DNSName.from(rname), serial, refresh, retry, expire, minimum);
+    }
+
+    public SOA(DNSName mname, DNSName rname, long serial, int refresh, int retry, int expire, long minimum) {
         this.mname = mname;
         this.rname = rname;
         this.serial = serial;
@@ -93,8 +97,8 @@ public class SOA implements Data {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         DataOutputStream dos = new DataOutputStream(baos);
         try {
-            dos.write(NameUtil.toByteArray(mname));
-            dos.write(NameUtil.toByteArray(rname));
+            mname.writeToStream(dos);
+            rname.writeToStream(dos);
             dos.writeInt((int) serial);
             dos.writeInt(refresh);
             dos.writeInt(retry);

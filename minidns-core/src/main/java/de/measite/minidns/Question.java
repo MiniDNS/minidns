@@ -18,7 +18,6 @@ import java.util.Arrays;
 
 import de.measite.minidns.Record.CLASS;
 import de.measite.minidns.Record.TYPE;
-import de.measite.minidns.util.NameUtil;
 
 /**
  * A DNS question (request).
@@ -28,7 +27,7 @@ public class Question {
     /**
      * The question string (e.g. "measite.de").
      */
-    public final String name;
+    public final DNSName name;
 
     /**
      * The question type (e.g. A).
@@ -57,7 +56,11 @@ public class Question {
      * @param clazz The class, usually IN (internet).
      * @param unicastQuery True if this is a unicast query.
      */
-    public Question(String name, TYPE type, CLASS clazz, boolean unicastQuery) {
+    public Question(CharSequence name, TYPE type, CLASS clazz, boolean unicastQuery) {
+        this(DNSName.from(name), type, clazz, unicastQuery);
+    }
+
+    public Question(DNSName name, TYPE type, CLASS clazz, boolean unicastQuery) {
         this.name = name;
         this.type = type;
         this.clazz = clazz;
@@ -70,7 +73,7 @@ public class Question {
      * @param type The type, e.g. A.
      * @param clazz The class, usually IN (internet).
      */
-    public Question(String name, TYPE type, CLASS clazz) {
+    public Question(DNSName name, TYPE type, CLASS clazz) {
         this(name, type, clazz, false);
     }
 
@@ -79,8 +82,27 @@ public class Question {
      * @param name The name e.g. "measite.de".
      * @param type The type, e.g. A.
      */
-    public Question(String name, TYPE type) {
+    public Question(DNSName name, TYPE type) {
         this(name, type, CLASS.IN);
+    }
+
+    /**
+     * Create a dns question for the given name/type/class.
+     * @param name The name e.g. "measite.de".
+     * @param type The type, e.g. A.
+     * @param clazz The class, usually IN (internet).
+     */
+    public Question(CharSequence name, TYPE type, CLASS clazz) {
+        this(DNSName.from(name), type, clazz);
+    }
+
+    /**
+     * Create a dns question for the given name/type/IN (internet class).
+     * @param name The name e.g. "measite.de".
+     * @param type The type, e.g. A.
+     */
+    public Question(CharSequence name, TYPE type) {
+        this(DNSName.from(name), type);
     }
 
     /**
@@ -90,7 +112,7 @@ public class Question {
      * @throws IOException On errors (read outside of packet).
      */
     public Question(DataInputStream dis, byte[] data) throws IOException {
-        name = NameUtil.parse(dis, data);
+        name = DNSName.parse(dis, data);
         type = TYPE.getType(dis.readUnsignedShort());
         clazz = CLASS.getClass(dis.readUnsignedShort());
         unicastQuery = false;
@@ -106,7 +128,7 @@ public class Question {
             DataOutputStream dos = new DataOutputStream(baos);
 
             try {
-                dos.write(NameUtil.toByteArray(this.name));
+                name.writeToStream(dos);
                 dos.writeShort(type.getValue());
                 dos.writeShort(clazz.getValue() | (unicastQuery ? (1 << 15) : 0));
                 dos.flush();

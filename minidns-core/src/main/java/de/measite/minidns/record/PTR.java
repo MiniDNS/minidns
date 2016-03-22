@@ -13,6 +13,7 @@ package de.measite.minidns.record;
 import java.io.DataInputStream;
 import java.io.IOException;
 
+import de.measite.minidns.DNSName;
 import de.measite.minidns.Record.TYPE;
 
 /**
@@ -26,6 +27,10 @@ public class PTR extends CNAME {
     }
 
     PTR(String name) {
+        this(DNSName.from(name));
+    }
+
+    PTR(DNSName name) {
         super(name);
     }
 

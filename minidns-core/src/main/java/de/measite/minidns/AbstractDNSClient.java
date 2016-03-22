@@ -96,11 +96,24 @@ public abstract class AbstractDNSClient {
      * @return The response (or null on timeout/error).
      * @throws IOException if an IO error occurs.
      */
-    public final DNSMessage query(String name, TYPE type) throws IOException {
+    public final DNSMessage query(DNSName name, TYPE type) throws IOException {
         Question q = new Question(name, type, CLASS.IN);
         return query(q);
     }
 
+    /**
+     * Query the system nameservers for a single entry of the class IN
+     * (which is used for MX, SRV, A, AAAA and most other RRs).
+     *
+     * @param name The DNS name to request.
+     * @param type The DNS type to request (SRV, A, AAAA, ...).
+     * @return The response (or null on timeout/error).
+     * @throws IOException if an IO error occurs.
+     */
+    public final DNSMessage query(CharSequence name, TYPE type) throws IOException {
+        Question q = new Question(name, type, CLASS.IN);
+        return query(q);
+    }
 
     /**
      * Query the system DNS server for one entry.

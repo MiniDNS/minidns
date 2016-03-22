@@ -10,6 +10,7 @@
  */
 package de.measite.minidns.dnssec;
 
+import de.measite.minidns.DNSName;
 import de.measite.minidns.Question;
 import de.measite.minidns.Record;
 import de.measite.minidns.Record.TYPE;
@@ -23,7 +24,6 @@ import de.measite.minidns.record.NSEC;
 import de.measite.minidns.record.NSEC3;
 import de.measite.minidns.record.RRSIG;
 import de.measite.minidns.util.Base32;
-import de.measite.minidns.util.NameUtil;
 
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
@@ -45,7 +45,7 @@ class Verifier {
         }
 
         byte[] dnskeyData = dnskey.toByteArray();
-        byte[] dnskeyOwner = NameUtil.toByteArray(dnskeyRecord.getName());
+        byte[] dnskeyOwner = dnskeyRecord.name.getBytes();
         byte[] combined = new byte[dnskeyOwner.length + dnskeyData.length];
         System.arraycopy(dnskeyOwner, 0, combined, 0, dnskeyOwner.length);
         System.arraycopy(dnskeyData, 0, combined, dnskeyOwner.length, dnskeyData.length);
@@ -81,22 +81,27 @@ class Verifier {
         if (nsecRecord.name.equals(q.name) && !Arrays.asList(nsec.types).contains(q.type)) {
             // records with same name but different types exist
             return null;
-        } else if (nsecMatches(q.name, nsecRecord.name, nsec.next)) {
+        } else if (nsecMatches(q.name.ace, nsecRecord.name.ace, nsec.next.ace)) {
             return null;
         }
         return new NSECDoesNotMatchReason(q, nsecRecord);
     }
 
-    public UnverifiedReason verifyNsec3(String zone, Record nsec3record, Question q) {
+    public UnverifiedReason verifyNsec3(CharSequence zone, Record nsec3Record, Question q) {
+        return verifyNsec3(DNSName.from(zone), nsec3Record, q);
+    }
+
+    public UnverifiedReason verifyNsec3(DNSName zone, Record nsec3record, Question q) {
         NSEC3 nsec3 = (NSEC3) nsec3record.payloadData;
         DigestCalculator digestCalculator = algorithmMap.getNsecDigestCalculator(nsec3.hashAlgorithm);
         if (digestCalculator == null) {
             return new AlgorithmNotSupportedReason(nsec3.hashAlgorithmByte, "NSEC3", nsec3record);
         }
 
-        byte[] bytes = nsec3hash(digestCalculator, nsec3.salt, NameUtil.toByteArray(q.name.toLowerCase()), nsec3.iterations);
+        byte[] bytes = nsec3hash(digestCalculator, nsec3.salt, q.name.getBytes(), nsec3.iterations);
         String s = Base32.encodeToString(bytes);
-        if (nsec3record.name.equals(s + "." + zone)) {
+        DNSName computedNsec3Record = DNSName.from(s + "." + zone);
+        if (nsec3record.name.equals(computedNsec3Record)) {
             for (TYPE type : nsec3.types) {
                 if (type.equals(q.type)) {
                     return new NSECDoesNotMatchReason(q, nsec3record);
@@ -104,7 +109,7 @@ class Verifier {
             }
             return null;
         }
-        if (nsecMatches(s, nsec3record.name.split("\\.")[0], Base32.encodeToString(nsec3.nextHashed))) {
+        if (nsecMatches(s, nsec3record.name.getHostpart(), Base32.encodeToString(nsec3.nextHashed))) {
             return null;
         }
         return new NSECDoesNotMatchReason(q, nsec3record);
@@ -118,7 +123,8 @@ class Verifier {
         try {
             rrsig.writePartialSignature(dos);
 
-            String sigName = records.get(0).name;
+            // TODO Convert sigName from String to DNSName.
+            String sigName = records.get(0).name.ace;
             if (!sigName.isEmpty()) {
                 String[] name = sigName.split("\\.");
                 if (name.length > rrsig.labels) {
@@ -140,7 +146,7 @@ class Verifier {
             }
 
             // Sort correctly (cause they might be ordered randomly)
-            final int offset = NameUtil.size(sigName) + 10; // Where the RDATA begins
+            final int offset = (DNSName.from(sigName)).size() + 10; // Where the RDATA begins
             Collections.sort(recordBytes, new Comparator<byte[]>() {
                 @Override
                 public int compare(byte[] b1, byte[] b2) {

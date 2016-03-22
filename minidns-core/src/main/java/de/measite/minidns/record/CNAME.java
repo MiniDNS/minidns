@@ -10,8 +10,8 @@
  */
 package de.measite.minidns.record;
 
+import de.measite.minidns.DNSName;
 import de.measite.minidns.Record.TYPE;
-import de.measite.minidns.util.NameUtil;
 
 import java.io.DataInputStream;
 import java.io.IOException;
@@ -21,19 +21,23 @@ import java.io.IOException;
  */
 public class CNAME implements Data {
 
-    public final String name;
+    public final DNSName name;
 
     @Override
     public byte[] toByteArray() {
-        return NameUtil.toByteArray(name);
+        return name.getBytes();
     }
 
     public static CNAME parse(DataInputStream dis, byte[] data) throws IOException {
-        String name = NameUtil.parse(dis, data);
+        DNSName name = DNSName.parse(dis, data);
         return new CNAME(name);
     }
 
     public CNAME(String name) {
+        this(DNSName.from(name));
+    }
+
+    public CNAME(DNSName name) {
         this.name = name;
     }
 

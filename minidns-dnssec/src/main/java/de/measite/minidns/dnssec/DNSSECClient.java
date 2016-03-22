@@ -12,6 +12,7 @@ package de.measite.minidns.dnssec;
 
 import de.measite.minidns.DNSCache;
 import de.measite.minidns.DNSMessage;
+import de.measite.minidns.DNSName;
 import de.measite.minidns.Question;
 import de.measite.minidns.Record;
 import de.measite.minidns.Record.CLASS;
@@ -57,12 +58,12 @@ public class DNSSECClient extends ReliableDNSClient {
      */
     public DNSSECClient(DNSCache cache) {
         super(cache);
-        addSecureEntryPoint("", rootEntryKey.toByteArray());
+        addSecureEntryPoint(DNSName.EMPTY, rootEntryKey.toByteArray());
     }
 
     private Verifier verifier = new Verifier();
-    private Map<String, byte[]> knownSeps = new ConcurrentHashMap<>();
-    private Map<String, DS> knownDelegations = new ConcurrentHashMap<>();
+    private Map<DNSName, byte[]> knownSeps = new ConcurrentHashMap<>();
+    private Map<DNSName, DS> knownDelegations = new ConcurrentHashMap<>();
     private boolean stripSignatureRecords = true;
     private String dlv;
 
@@ -71,7 +72,7 @@ public class DNSSECClient extends ReliableDNSClient {
         return queryDnssec(q);
     }
 
-    public DNSSECMessage queryDnssec(String name, TYPE type) throws IOException {
+    public DNSSECMessage queryDnssec(CharSequence name, TYPE type) throws IOException {
         Question q = new Question(name, type, CLASS.IN);
         DNSMessage dnsMessage = super.query(q);
         DNSSECMessage dnssecMessage = performVerification(q, dnsMessage);
@@ -200,7 +201,7 @@ public class DNSSECClient extends ReliableDNSClient {
             result.addAll(sepReasons);
         }
         if (verifiedSignatures.sepSignatureRequired && !verifiedSignatures.sepSignaturePresent) {
-            result.add(new NoSecureEntryPointReason(q.name));
+            result.add(new NoSecureEntryPointReason(q.name.ace));
         }
         if (!toBeVerified.isEmpty()) {
             if (toBeVerified.size() != answers.length) {
@@ -217,7 +218,7 @@ public class DNSSECClient extends ReliableDNSClient {
         Question q = dnsMessage.getQuestions()[0];
         boolean validNsec = false;
         boolean nsecPresent = false;
-        String zone = null;
+        DNSName zone = null;
         Record[] nameserverRecords = dnsMessage.getNameserverRecords();
         for (Record nameserverRecord : nameserverRecords) {
             if (nameserverRecord.type == TYPE.SOA)
@@ -305,7 +306,7 @@ public class DNSSECClient extends ReliableDNSClient {
                 result.sepSignatureRequired = true;
             }
 
-            if (!isParentOrSelf(sigRecord.name, rrsig.signerName)) {
+            if (!isParentOrSelf(sigRecord.name.ace, rrsig.signerName.ace)) {
                 LOGGER.finer("Records at " + sigRecord.name + " are cross-signed with a key from " + rrsig.signerName);
             } else {
                 toBeVerified.removeAll(records);
@@ -344,7 +345,7 @@ public class DNSSECClient extends ReliableDNSClient {
             }
         } else if (q.type == TYPE.DS && rrsig.signerName.equals(q.name)) {
             // We should not probe for the self signed DS negative response, as it will be an endless loop.
-            result.add(new NoTrustAnchorReason(q.name));
+            result.add(new NoTrustAnchorReason(q.name.ace));
             return result;
         } else {
             DNSSECMessage dnskeyRes = queryDnssec(rrsig.signerName, TYPE.DNSKEY);
@@ -405,7 +406,7 @@ public class DNSSECClient extends ReliableDNSClient {
                 }
             }
         }
-        if (delegation == null && dlv != null && !dlv.endsWith(sepRecord.name)) {
+        if (delegation == null && dlv != null && !dlv.endsWith(sepRecord.name.ace)) {
             DNSSECMessage dlvResp = queryDnssec(sepRecord.name + "." + dlv, TYPE.DLV);
             if (dlvResp != null) {
                 unverifiedReasons.addAll(dlvResp.getUnverifiedReasons());
@@ -427,7 +428,7 @@ public class DNSSECClient extends ReliableDNSClient {
                 unverifiedReasons = activeReasons;
             }
         } else {
-            unverifiedReasons.add(new NoTrustAnchorReason(sepRecord.name));
+            unverifiedReasons.add(new NoTrustAnchorReason(sepRecord.name.ace));
         }
         return unverifiedReasons;
     }
@@ -460,7 +461,7 @@ public class DNSSECClient extends ReliableDNSClient {
      *             the DNSKEY record for the domain and using the key with first flags bit set
      *             (also called key signing key)
      */
-    public void addSecureEntryPoint(String name, byte[] key) {
+    public void addSecureEntryPoint(DNSName name, byte[] key) {
         knownSeps.put(name, key);
     }
 

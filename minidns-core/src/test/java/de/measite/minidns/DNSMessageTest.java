@@ -44,6 +44,7 @@ import java.util.Map;
 import java.util.TimeZone;
 import java.util.TreeMap;
 
+import static de.measite.minidns.Assert.assertCsEquals;
 import static de.measite.minidns.DNSWorld.a;
 import static de.measite.minidns.DNSWorld.aaaa;
 import static de.measite.minidns.DNSWorld.ns;
@@ -90,13 +91,13 @@ public class DNSMessageTest {
             cname = 1;
         assertTrue(answers[cname].getPayload() instanceof CNAME);
         assertEquals(TYPE.CNAME, answers[cname].getPayload().getType());
-        assertEquals("legacy-sun.oraclegha.com",
+        assertCsEquals("legacy-sun.oraclegha.com",
                      ((CNAME)(answers[cname].getPayload())).name);
 
-        assertEquals("legacy-sun.oraclegha.com", answers[1-cname].getName());
+        assertCsEquals("legacy-sun.oraclegha.com", answers[1-cname].getName());
         assertTrue(answers[1 - cname].getPayload() instanceof A);
         assertEquals(TYPE.A, answers[1 - cname].getPayload().getType());
-        assertEquals("156.151.59.35", answers[1 - cname].getPayload().toString());
+        assertCsEquals("156.151.59.35", answers[1 - cname].getPayload().toString());
     }
 
 
@@ -106,10 +107,10 @@ public class DNSMessageTest {
         assertFalse(m.isAuthoritativeAnswer());
         Record[] answers = m.getAnswers();
         assertEquals(1, answers.length);
-        assertEquals("google.com", answers[0].getName());
+        assertCsEquals("google.com", answers[0].getName());
         assertTrue(answers[0].getPayload() instanceof AAAA);
         assertEquals(TYPE.AAAA, answers[0].getPayload().getType());
-        assertEquals("2a00:1450:400c:c02:0:0:0:8a", answers[0].getPayload().toString());
+        assertCsEquals("2a00:1450:400c:c02:0:0:0:8a", answers[0].getPayload().toString());
     }
 
 
@@ -119,19 +120,19 @@ public class DNSMessageTest {
         assertFalse(m.isAuthoritativeAnswer());
         Record[] answers = m.getAnswers();
         assertEquals(5, answers.length);
-        Map<Integer, String> mxes = new TreeMap<>();
+        Map<Integer, DNSName> mxes = new TreeMap<>();
         for(Record r : answers) {
-            assertEquals("gmail.com", r.getName());
+            assertCsEquals("gmail.com", r.getName());
             Data d = r.getPayload();
             assertTrue(d instanceof MX);
             assertEquals(TYPE.MX, d.getType());
             mxes.put(((MX)d).priority, ((MX)d).name);
         }
-        assertEquals("gmail-smtp-in.l.google.com", mxes.get(5));
-        assertEquals("alt1.gmail-smtp-in.l.google.com", mxes.get(10));
-        assertEquals("alt2.gmail-smtp-in.l.google.com", mxes.get(20));
-        assertEquals("alt3.gmail-smtp-in.l.google.com", mxes.get(30));
-        assertEquals("alt4.gmail-smtp-in.l.google.com", mxes.get(40));
+        assertCsEquals("gmail-smtp-in.l.google.com", mxes.get(5));
+        assertCsEquals("alt1.gmail-smtp-in.l.google.com", mxes.get(10));
+        assertCsEquals("alt2.gmail-smtp-in.l.google.com", mxes.get(20));
+        assertCsEquals("alt3.gmail-smtp-in.l.google.com", mxes.get(30));
+        assertCsEquals("alt4.gmail-smtp-in.l.google.com", mxes.get(40));
     }
 
 
@@ -144,7 +145,7 @@ public class DNSMessageTest {
         assertTrue(answers[0].getPayload() instanceof SRV);
         assertEquals(TYPE.SRV, answers[0].getPayload().getType());
         SRV r = (SRV)(answers[0].getPayload());
-        assertEquals("raven.toroid.org", r.name);
+        assertCsEquals("raven.toroid.org", r.name);
         assertEquals(5222, r.port);
         assertEquals(0, r.priority);
     }
@@ -158,7 +159,7 @@ public class DNSMessageTest {
         txtToBeFound.add("v=spf1 include:spf.mandrillapp.com ~all");
         Record[] answers = m.getAnswers();
         for(Record r : answers) {
-            assertEquals("codinghorror.com", r.getName());
+            assertCsEquals("codinghorror.com", r.getName());
             Data d = r.getPayload();
             assertTrue(d instanceof TXT);
             assertEquals(TYPE.TXT, d.getType());
@@ -179,8 +180,8 @@ public class DNSMessageTest {
         assertTrue(answers[0].getPayload() instanceof SOA);
         assertEquals(TYPE.SOA, answers[0].getPayload().getType());
         SOA soa = (SOA) answers[0].getPayload();
-        assertEquals("orcldns1.ultradns.com", soa.mname);
-        assertEquals("hostmaster\\@oracle.com", soa.rname);
+        assertCsEquals("orcldns1.ultradns.com", soa.mname);
+        assertCsEquals("hostmaster\\@oracle.com", soa.rname);
         assertEquals(2015032404L, soa.serial);
         assertEquals(10800, soa.refresh);
         assertEquals(3600, soa.retry);
@@ -199,11 +200,11 @@ public class DNSMessageTest {
         Record[] answers = m.getAnswers();
         assertEquals(13, answers.length);
         for (Record answer : answers) {
-            assertEquals("com", answer.name);
+            assertCsEquals("com", answer.name);
             assertEquals(Record.CLASS.IN, answer.clazz);
             assertEquals(TYPE.NS, answer.type);
             assertEquals(112028, answer.ttl);
-            assertTrue(((NS) answer.payloadData).name.endsWith(".gtld-servers.net"));
+            assertTrue(((NS) answer.payloadData).name.ace.endsWith(".gtld-servers.net"));
         }
         Record[] arr = m.getAdditionalResourceRecords();
         assertEquals(1, arr.length);
@@ -222,7 +223,7 @@ public class DNSMessageTest {
         assertEquals(3, answers.length);
         for (int i = 0; i < answers.length; i++) {
             Record answer = answers[i];
-            assertEquals("", answer.getName());
+            assertCsEquals("", answer.getName());
             assertEquals(19593, answer.getTtl());
             assertEquals(TYPE.DNSKEY, answer.type);
             assertEquals(TYPE.DNSKEY, answer.getPayload().getType());
@@ -271,7 +272,7 @@ public class DNSMessageTest {
         assertEquals(30909, ds.keyTag);
         assertEquals(SignatureAlgorithm.RSASHA256, ds.algorithm);
         assertEquals(DigestAlgorithm.SHA256, ds.digestType);
-        assertEquals("E2D3C916F6DEEAC73294E8268FB5885044A833FC5459588F4A9184CFC41A5766",
+        assertCsEquals("E2D3C916F6DEEAC73294E8268FB5885044A833FC5459588F4A9184CFC41A5766",
                 new BigInteger(1, ds.digest).toString(16).toUpperCase());
 
         assertEquals(TYPE.RRSIG, answers[1].type);
@@ -283,10 +284,10 @@ public class DNSMessageTest {
         assertEquals(86400, rrsig.originalTtl);
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMddHHmmss");
         dateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
-        assertEquals("20150629170000", dateFormat.format(rrsig.signatureExpiration));
-        assertEquals("20150619160000", dateFormat.format(rrsig.signatureInception));
+        assertCsEquals("20150629170000", dateFormat.format(rrsig.signatureExpiration));
+        assertCsEquals("20150619160000", dateFormat.format(rrsig.signatureInception));
         assertEquals(48613, rrsig.keyTag);
-        assertEquals("", rrsig.signerName);
+        assertCsEquals("", rrsig.signerName);
         assertEquals(128, rrsig.signature.length);
 
         Record[] arr = m.getAdditionalResourceRecords();
@@ -306,7 +307,7 @@ public class DNSMessageTest {
         assertEquals(TYPE.NSEC, answers[0].type);
         assertEquals(TYPE.NSEC, answers[0].payloadData.getType());
         NSEC nsec = (NSEC) answers[0].getPayload();
-        assertEquals("www.example.com", nsec.next);
+        assertCsEquals("www.example.com", nsec.next);
         ArrayList<TYPE> types = new ArrayList<>(Arrays.asList(
                 TYPE.A, TYPE.NS, TYPE.SOA, TYPE.TXT,
                 TYPE.AAAA, TYPE.RRSIG, TYPE.NSEC, TYPE.DNSKEY));
@@ -332,17 +333,17 @@ public class DNSMessageTest {
                 assertEquals(1, nsec3.flags);
                 assertEquals(0, nsec3.iterations);
                 assertEquals(0, nsec3.salt.length);
-                switch (record.name) {
+                switch (record.name.ace) {
                     case "CK0POJMG874LJREF7EFN8430QVIT8BSM.com":
-                        assertEquals("CK0QFMDQRCSRU0651QLVA1JQB21IF7UR", Base32.encodeToString(nsec3.nextHashed));
+                        assertCsEquals("CK0QFMDQRCSRU0651QLVA1JQB21IF7UR", Base32.encodeToString(nsec3.nextHashed));
                         assertArrayContentEquals(new TYPE[]{TYPE.NS, TYPE.SOA, TYPE.RRSIG, TYPE.DNSKEY, TYPE.NSEC3PARAM}, nsec3.types);
                         break;
                     case "V2I33UBTHNVNSP9NS85CURCLSTFPTE24.com":
-                        assertEquals("V2I4KPUS7NGDML5EEJU3MVHO26GKB6PA", Base32.encodeToString(nsec3.nextHashed));
+                        assertCsEquals("V2I4KPUS7NGDML5EEJU3MVHO26GKB6PA", Base32.encodeToString(nsec3.nextHashed));
                         assertArrayContentEquals(new TYPE[]{TYPE.NS, TYPE.DS, TYPE.RRSIG}, nsec3.types);
                         break;
                     case "3RL20VCNK6KV8OT9TDIJPI0JU1SS6ONS.com":
-                        assertEquals("3RL3UFVFRUE94PV5888AIC2TPS0JA9V2", Base32.encodeToString(nsec3.nextHashed));
+                        assertCsEquals("3RL3UFVFRUE94PV5888AIC2TPS0JA9V2", Base32.encodeToString(nsec3.nextHashed));
                         assertArrayContentEquals(new TYPE[]{TYPE.NS, TYPE.DS, TYPE.RRSIG}, nsec3.types);
                         break;
                 }
@@ -375,7 +376,7 @@ public class DNSMessageTest {
         assertTrue(message.isRecursionDesired());
         assertTrue(message.isQuery());
         assertEquals(42, message.getId());
-        assertEquals("www.example.com", message.questions[0].name);
+        assertCsEquals("www.example.com", message.questions[0].name);
         assertEquals(TYPE.A, message.questions[0].type);
     }
 
@@ -400,12 +401,12 @@ public class DNSMessageTest {
         assertTrue(message.isCheckDisabled());
         assertFalse(message.isQuery());
         assertEquals(43, message.getId());
-        assertEquals("www.example.com", message.answers[0].name);
+        assertCsEquals("www.example.com", message.answers[0].name);
         assertEquals(TYPE.A, message.answers[0].type);
-        assertEquals("127.0.0.1", message.answers[0].payloadData.toString());
-        assertEquals("www.example.com", message.answers[1].name);
+        assertCsEquals("127.0.0.1", message.answers[0].payloadData.toString());
+        assertCsEquals("www.example.com", message.answers[1].name);
         assertEquals(TYPE.NS, message.answers[1].type);
-        assertEquals("example.com.", message.answers[1].payloadData.toString());
+        assertCsEquals("example.com.", message.answers[1].payloadData.toString());
     }
 
     @Test
@@ -438,20 +439,20 @@ public class DNSMessageTest {
         assertEquals(DNSMessage.OPCODE.QUERY, message.getOpcode());
         assertEquals(DNSMessage.RESPONSE_CODE.NO_ERROR, message.getResponseCode());
 
-        assertEquals("www.example.com", message.questions[0].name);
+        assertCsEquals("www.example.com", message.questions[0].name);
         assertEquals(TYPE.NS, message.questions[0].type);
 
-        assertEquals("www.example.com", message.answers[0].name);
+        assertCsEquals("www.example.com", message.answers[0].name);
         assertEquals(TYPE.NS, message.answers[0].type);
-        assertEquals("ns.example.com.", message.answers[0].payloadData.toString());
+        assertCsEquals("ns.example.com.", message.answers[0].payloadData.toString());
 
-        assertEquals("ns.example.com", message.additionalResourceRecords[0].name);
+        assertCsEquals("ns.example.com", message.additionalResourceRecords[0].name);
         assertEquals(TYPE.A, message.additionalResourceRecords[0].type);
-        assertEquals("127.0.0.1", message.additionalResourceRecords[0].payloadData.toString());
+        assertCsEquals("127.0.0.1", message.additionalResourceRecords[0].payloadData.toString());
 
-        assertEquals("ns.example.com", message.nameserverRecords[0].name);
+        assertCsEquals("ns.example.com", message.nameserverRecords[0].name);
         assertEquals(TYPE.AAAA, message.nameserverRecords[0].type);
-        assertEquals("2001:0:0:0:0:0:0:1", message.nameserverRecords[0].payloadData.toString());
+        assertCsEquals("2001:0:0:0:0:0:0:1", message.nameserverRecords[0].payloadData.toString());
     }
 
     @Test
@@ -474,10 +475,10 @@ public class DNSMessageTest {
         message = new DNSMessage(message.toArray());
 
         assertEquals(2, message.additionalResourceRecords.length);
-        assertEquals("www.example.com", message.additionalResourceRecords[0].name);
+        assertCsEquals("www.example.com", message.additionalResourceRecords[0].name);
         assertEquals(TYPE.A, message.additionalResourceRecords[0].type);
-        assertEquals("127.0.0.1", message.additionalResourceRecords[0].payloadData.toString());
-        assertEquals("EDNS: version: 0, flags: do; udp: 512", OPT.optRecordToString(message.additionalResourceRecords[1]));
+        assertCsEquals("127.0.0.1", message.additionalResourceRecords[0].payloadData.toString());
+        assertCsEquals("EDNS: version: 0, flags: do; udp: 512", OPT.optRecordToString(message.additionalResourceRecords[1]));
     }
 
     @Test

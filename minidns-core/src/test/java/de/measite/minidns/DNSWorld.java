@@ -167,17 +167,17 @@ public class DNSWorld extends DNSDataSource {
     }
 
     public abstract static class HintsResponse implements PreparedResponse {
-        final String ending;
+        final DNSName ending;
         final DNSMessage response;
 
-        public HintsResponse(String ending, DNSMessage response) {
+        public HintsResponse(DNSName ending, DNSMessage response) {
             this.ending = ending;
             this.response = response;
         }
 
         boolean questionHintable(DNSMessage request) {
             for (Question question : request.questions) {
-                if (question.name.endsWith("." + ending) || question.name.equals(ending)) {
+                if (question.name.ace.endsWith("." + ending) || question.name.equals(ending)) {
                     return true;
                 }
             }
@@ -199,7 +199,7 @@ public class DNSWorld extends DNSDataSource {
 
     public static class RootHintsResponse extends HintsResponse {
 
-        public RootHintsResponse(String ending, DNSMessage response) {
+        public RootHintsResponse(DNSName ending, DNSMessage response) {
             super(ending, response);
         }
 
@@ -212,7 +212,7 @@ public class DNSWorld extends DNSDataSource {
     public static class AddressedHintsResponse extends HintsResponse {
         final InetAddress address;
 
-        public AddressedHintsResponse(InetAddress address, String ending, DNSMessage response) {
+        public AddressedHintsResponse(InetAddress address, DNSName ending, DNSMessage response) {
             super(ending, response);
             this.address = address;
         }
@@ -262,7 +262,7 @@ public class DNSWorld extends DNSDataSource {
     }
 
     private static class RRSet {
-        String name;
+        DNSName name;
         TYPE type;
         CLASS clazz;
         Set<Record> records = new HashSet<>();
@@ -352,7 +352,7 @@ public class DNSWorld extends DNSDataSource {
         }
     }
 
-    private static List<Record> findGlues(String name, Record[] records) {
+    private static List<Record> findGlues(DNSName name, Record[] records) {
         List<Record> glues = new ArrayList<>();
         for (Record record : records) {
             if (record.name.equals(name)) {
@@ -401,6 +401,10 @@ public class DNSWorld extends DNSDataSource {
         return new Record(name, data.getType(), CLASS.IN, ttl, data, false);
     }
 
+    public static Record record(DNSName name, long ttl, Data data) {
+        return new Record(name, data.getType(), CLASS.IN, ttl, data, false);
+    }
+
     public static Record record(String name, Data data) {
         return record(name, 3600, data);
     }
@@ -422,6 +426,10 @@ public class DNSWorld extends DNSDataSource {
     }
 
     public static CNAME cname(String name) {
+        return cname(DNSName.from(name));
+    }
+
+    public static CNAME cname(DNSName name) {
         return new CNAME(name);
     }
 
@@ -446,6 +454,10 @@ public class DNSWorld extends DNSDataSource {
     }
 
     public static MX mx(int priority, String name) {
+        return mx(priority, DNSName.from(name));
+    }
+
+    public static MX mx(int priority, DNSName name) {
         return new MX(priority, name);
     }
 
@@ -454,10 +466,18 @@ public class DNSWorld extends DNSDataSource {
     }
 
     public static NS ns(String name) {
+        return ns(DNSName.from(name));
+    }
+
+    public static NS ns(DNSName name) {
         return new NS(name);
     }
 
     public static NSEC nsec(String next, TYPE... types) {
+        return nsec(DNSName.from(next), types);
+    }
+
+    public static NSEC nsec(DNSName next, TYPE... types) {
         return new NSEC(next, types);
     }
 
@@ -467,13 +487,28 @@ public class DNSWorld extends DNSDataSource {
 
     public static RRSIG rrsig(TYPE typeCovered, SignatureAlgorithm algorithm, int labels, long originalTtl, Date signatureExpiration,
                               Date signatureInception, int keyTag, String signerName, byte[] signature) {
-        return new RRSIG(typeCovered, algorithm, (byte) labels, originalTtl, signatureExpiration,
-                signatureInception, keyTag, signerName, signature);
+        return rrsig(typeCovered, algorithm, (byte) labels, originalTtl, signatureExpiration,
+                signatureInception, keyTag, DNSName.from(signerName), signature);
+    }
+
+    public static RRSIG rrsig(TYPE typeCovered, SignatureAlgorithm algorithm, int labels, long originalTtl,
+            Date signatureExpiration, Date signatureInception, int keyTag, DNSName signerName, byte[] signature) {
+        return new RRSIG(typeCovered, algorithm, (byte) labels, originalTtl, signatureExpiration, signatureInception,
+                keyTag, signerName, signature);
     }
 
     public static RRSIG rrsig(TYPE typeCovered, int algorithm,
             int labels, long originalTtl, Date signatureExpiration,
             Date signatureInception, int keyTag, String signerName,
+            byte[] signature) {
+        return rrsig(typeCovered, algorithm, (byte) labels,
+                originalTtl, signatureExpiration, signatureInception, keyTag,
+                DNSName.from(signerName), signature);
+    }
+
+    public static RRSIG rrsig(TYPE typeCovered, int algorithm,
+            int labels, long originalTtl, Date signatureExpiration,
+            Date signatureInception, int keyTag, DNSName signerName,
             byte[] signature) {
         return new RRSIG(typeCovered, algorithm, (byte) labels,
                 originalTtl, signatureExpiration, signatureInception, keyTag,
@@ -481,10 +516,18 @@ public class DNSWorld extends DNSDataSource {
     }
 
     public static SOA soa(String mname, String rname, long serial, int refresh, int retry, int expire, long minimum) {
+        return soa(DNSName.from(mname), DNSName.from(rname), serial, refresh, retry, expire, minimum);
+    }
+
+    public static SOA soa(DNSName mname, DNSName rname, long serial, int refresh, int retry, int expire, long minimum) {
         return new SOA(mname, rname, serial, refresh, retry, expire, minimum);
     }
 
     public static SRV srv(int priority, int weight, int port, String name) {
+        return srv(priority, weight, port, DNSName.from(name));
+    }
+
+    public static SRV srv(int priority, int weight, int port, DNSName name) {
         return new SRV(priority, weight, port, name);
     }
 

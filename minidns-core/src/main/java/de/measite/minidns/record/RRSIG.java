@@ -10,10 +10,10 @@
  */
 package de.measite.minidns.record;
 
+import de.measite.minidns.DNSName;
 import de.measite.minidns.DNSSECConstants.SignatureAlgorithm;
 import de.measite.minidns.Record.TYPE;
 import de.measite.minidns.util.Base64;
-import de.measite.minidns.util.NameUtil;
 
 import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
@@ -71,7 +71,7 @@ public class RRSIG implements Data {
     /**
      * The owner name of the DNSKEY RR that a validator is supposed to use.
      */
-    public final String signerName;
+    public final DNSName signerName;
 
     /**
      * Signature that covers RRSIG RDATA (excluding the signature field) and RRset data.
@@ -86,8 +86,8 @@ public class RRSIG implements Data {
         Date signatureExpiration = new Date((dis.readInt() & 0xFFFFFFFFL) * 1000);
         Date signatureInception = new Date((dis.readInt() & 0xFFFFFFFFL) * 1000);
         int keyTag = dis.readUnsignedShort();
-        String signerName = NameUtil.parse(dis, data);
-        int sigSize = length - NameUtil.size(signerName) - 18;
+        DNSName signerName = DNSName.parse(dis, data);
+        int sigSize = length - signerName.size() - 18;
         byte[] signature = new byte[sigSize];
         if (dis.read(signature) != signature.length) throw new IOException();
         return new RRSIG(typeCovered, null, algorithm, labels, originalTtl, signatureExpiration, signatureInception, keyTag, signerName,
@@ -95,7 +95,7 @@ public class RRSIG implements Data {
     }
 
     private  RRSIG(TYPE typeCovered, SignatureAlgorithm algorithm, byte algorithmByte, byte labels, long originalTtl, Date signatureExpiration, 
-            Date signatureInception, int keyTag, String signerName, byte[] signature) {
+            Date signatureInception, int keyTag, DNSName signerName, byte[] signature) {
         this.typeCovered = typeCovered;
 
         assert algorithmByte == (algorithm != null ? algorithm.number : algorithmByte);
@@ -112,14 +112,25 @@ public class RRSIG implements Data {
     }
 
     public RRSIG(TYPE typeCovered, int algorithm, byte labels, long originalTtl, Date signatureExpiration, 
-            Date signatureInception, int keyTag, String signerName, byte[] signature) {
+            Date signatureInception, int keyTag, DNSName signerName, byte[] signature) {
             this(typeCovered, null, (byte) algorithm, labels, originalTtl, signatureExpiration, signatureInception, keyTag, signerName, signature);
+    }
+
+    public RRSIG(TYPE typeCovered, int algorithm, byte labels, long originalTtl, Date signatureExpiration, 
+            Date signatureInception, int keyTag, String signerName, byte[] signature) {
+            this(typeCovered, null, (byte) algorithm, labels, originalTtl, signatureExpiration, signatureInception, keyTag, DNSName.from(signerName), signature);
+    }
+
+    public RRSIG(TYPE typeCovered, SignatureAlgorithm algorithm, byte labels,
+            long originalTtl, Date signatureExpiration, Date signatureInception,
+            int keyTag, DNSName signerName, byte[] signature) {
+        this(typeCovered,algorithm.number, labels, originalTtl, signatureExpiration, signatureInception, keyTag, signerName, signature);
     }
 
     public RRSIG(TYPE typeCovered, SignatureAlgorithm algorithm, byte labels,
             long originalTtl, Date signatureExpiration, Date signatureInception,
             int keyTag, String signerName, byte[] signature) {
-        this(typeCovered,algorithm.number, labels, originalTtl, signatureExpiration, signatureInception, keyTag, signerName, signature);
+        this(typeCovered,algorithm.number, labels, originalTtl, signatureExpiration, signatureInception, keyTag, DNSName.from(signerName), signature);
     }
 
     @Override
@@ -150,7 +161,7 @@ public class RRSIG implements Data {
         dos.writeInt((int) (signatureExpiration.getTime()/1000));
         dos.writeInt((int) (signatureInception.getTime()/1000));
         dos.writeShort(keyTag);
-        dos.write(NameUtil.toByteArray(signerName));
+        signerName.writeToStream(dos);
     }
 
     @Override

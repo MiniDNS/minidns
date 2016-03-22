@@ -12,6 +12,7 @@ package de.measite.minidns.dane;
 
 import de.measite.minidns.AbstractDNSClient;
 import de.measite.minidns.DNSMessage;
+import de.measite.minidns.DNSName;
 import de.measite.minidns.Record;
 import de.measite.minidns.cache.LRUCache;
 import de.measite.minidns.dnssec.DNSSECClient;
@@ -101,7 +102,7 @@ public class DaneVerifier {
      * @throws CertificateException if the certificate chain provided differs from the one enforced using DANE.
      */
     public boolean verifyCertificateChain(X509Certificate[] chain, String hostName, int port) throws CertificateException {
-        String req = "_" + port + "._tcp." + hostName;
+        DNSName req = DNSName.from("_" + port + "._tcp." + hostName);
         DNSMessage res;
         try {
             res = client.query(req, Record.TYPE.TLSA);

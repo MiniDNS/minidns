@@ -30,7 +30,6 @@ import de.measite.minidns.record.SOA;
 import de.measite.minidns.record.SRV;
 import de.measite.minidns.record.TLSA;
 import de.measite.minidns.record.TXT;
-import de.measite.minidns.util.NameUtil;
 
 import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
@@ -239,7 +238,7 @@ public class Record {
     /**
      * The generic name of this record.
      */
-    public final String name;
+    public final DNSName name;
 
     /**
      * The type (and payload type) of this record.
@@ -282,7 +281,7 @@ public class Record {
      * @throws IOException In case of malformed replies.
      */
     public Record(DataInputStream dis, byte[] data) throws IOException {
-        this.name = NameUtil.parse(dis, data);
+        this.name = DNSName.parse(dis, data);
         int typeValue = dis.readUnsignedShort();
         this.type = TYPE.getType(typeValue);
         this.clazzValue = dis.readUnsignedShort();
@@ -359,7 +358,7 @@ public class Record {
         }
     }
 
-    public Record(String name, TYPE type, CLASS clazz, long ttl, Data payloadData, boolean unicastQuery) {
+    public Record(DNSName name, TYPE type, CLASS clazz, long ttl, Data payloadData, boolean unicastQuery) {
         this.name = name;
         this.type = type;
         this.clazz = clazz;
@@ -369,8 +368,12 @@ public class Record {
         this.clazzValue = clazz.getValue() + (unicastQuery ? 0x8000 : 0);
     }
 
+    public Record(String name, TYPE type, CLASS clazz, long ttl, Data payloadData, boolean unicastQuery) {
+        this(DNSName.from(name), type, clazz, ttl, payloadData, unicastQuery);
+    }
+
     public Record(String name, TYPE type, int clazzValue, long ttl, Data payloadData) {
-        this.name = name;
+        this.name = DNSName.from(name);
         this.type = type;
         this.clazz = CLASS.NONE;
         this.clazzValue = clazzValue;
@@ -383,10 +386,10 @@ public class Record {
             throw new IllegalStateException("Empty Record has no byte representation");
         }
         byte[] payload = payloadData.toByteArray();
-        ByteArrayOutputStream baos = new ByteArrayOutputStream(NameUtil.size(name) + 8 + payload.length);
+        ByteArrayOutputStream baos = new ByteArrayOutputStream(name.size() + 8 + payload.length);
         DataOutputStream dos = new DataOutputStream(baos);
         try {
-            dos.write(NameUtil.toByteArray(name));
+            name.writeToStream(dos);
             dos.writeShort(type.getValue());
             dos.writeShort(clazzValue);
             dos.writeInt((int) ttl);
@@ -431,8 +434,9 @@ public class Record {
      * The generic record name, e.g. "measite.de".
      * @return The record name.
      */
+    // TODO deprecate since 'name' is public
     public String getName() {
-        return name;
+        return name.ace;
     }
 
     /**

@@ -13,6 +13,7 @@ package de.measite.minidns.dnssec;
 import de.measite.minidns.DNSMessage;
 import de.measite.minidns.DNSSECConstants.DigestAlgorithm;
 import de.measite.minidns.DNSSECConstants.SignatureAlgorithm;
+import de.measite.minidns.DNSName;
 import de.measite.minidns.DNSWorld;
 import de.measite.minidns.Record;
 import de.measite.minidns.cache.LRUCache;
@@ -81,7 +82,7 @@ public class DNSSECClientTest {
     @Before
     public void setUp() throws Exception {
         client = new DNSSECClient(new LRUCache(0));
-        client.addSecureEntryPoint("", rootKSK.key);
+        client.addSecureEntryPoint(DNSName.EMPTY, rootKSK.key);
     }
 
     void checkCorrectExampleMessage(DNSMessage message) {

@@ -11,6 +11,7 @@
 package de.measite.minidns.dnssec;
 
 import de.measite.minidns.DNSMessage;
+import de.measite.minidns.DNSName;
 import de.measite.minidns.DNSWorld;
 import de.measite.minidns.Record;
 import de.measite.minidns.DNSSECConstants.DigestAlgorithm;
@@ -21,7 +22,6 @@ import de.measite.minidns.record.DNSKEY;
 import de.measite.minidns.record.DS;
 import de.measite.minidns.record.NSEC;
 import de.measite.minidns.record.RRSIG;
-import de.measite.minidns.util.NameUtil;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -94,7 +94,7 @@ public class DNSSECWorld extends DNSWorld {
 
     public static Record rrsigRecord(DNSKEY key, String signerName, PrivateKey privateKey, SignatureAlgorithm algorithm, Record... records) {
         Record.TYPE typeCovered = records[0].type;
-        String name = records[0].name;
+        String name = records[0].name.ace;
         int labels = name.isEmpty() ? 0 : name.split("\\.").length;
         long originalTtl = records[0].ttl;
         Date signatureExpiration = new Date(System.currentTimeMillis() + 14 * 24 * 60 * 60 * 1000);
@@ -112,18 +112,26 @@ public class DNSSECWorld extends DNSWorld {
     }
 
     public static DS ds(String name, DigestAlgorithm digestType, DNSKEY dnskey) {
+        return ds(DNSName.from(name), digestType, dnskey);
+    }
+
+    public static DS ds(DNSName name, DigestAlgorithm digestType, DNSKEY dnskey) {
         return ds(dnskey.getKeyTag(), dnskey.algorithm, digestType, calculateDsDigest(name, digestType, dnskey));
     }
 
     public static DLV dlv(String name, DigestAlgorithm digestType, DNSKEY dnskey) {
+        return dlv(DNSName.from(name), digestType, dnskey);
+    }
+
+    public static DLV dlv(DNSName name, DigestAlgorithm digestType, DNSKEY dnskey) {
         return dlv(dnskey.getKeyTag(), dnskey.algorithm, digestType, calculateDsDigest(name, digestType, dnskey));
     }
 
-    public static byte[] calculateDsDigest(String name, DigestAlgorithm digestType, DNSKEY dnskey) {
+    public static byte[] calculateDsDigest(DNSName name, DigestAlgorithm digestType, DNSKEY dnskey) {
         DigestCalculator digestCalculator = AlgorithmMap.INSTANCE.getDsDigestCalculator(digestType);
 
         byte[] dnskeyData = dnskey.toByteArray();
-        byte[] dnskeyOwner = NameUtil.toByteArray(name);
+        byte[] dnskeyOwner = name.getBytes();
         byte[] combined = new byte[dnskeyOwner.length + dnskeyData.length];
         System.arraycopy(dnskeyOwner, 0, combined, 0, dnskeyOwner.length);
         System.arraycopy(dnskeyData, 0, combined, dnskeyOwner.length, dnskeyData.length);
@@ -346,7 +354,7 @@ public class DNSSECWorld extends DNSWorld {
                 if (record.type == Record.TYPE.NSEC)
                     nsecRecord = record;
             }
-            return address.equals(this.address) && Verifier.nsecMatches(request.getQuestions()[0].name, nsecRecord.name, ((NSEC) nsecRecord.payloadData).next);
+            return address.equals(this.address) && Verifier.nsecMatches(request.getQuestions()[0].name.ace, nsecRecord.name.ace, ((NSEC) nsecRecord.payloadData).next.ace);
         }
 
         @Override
