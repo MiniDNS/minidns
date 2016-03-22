@@ -120,6 +120,13 @@ public class DNSWorld extends DNSDataSource {
             }
             return false;
         }
+
+        @Override
+        public String toString() {
+            return
+                    "req: " + request + '\n'
+                  + "res: " + response + '\n';
+        }
     }
 
     public static class RootAnswerResponse extends AnswerResponse {
@@ -131,6 +138,11 @@ public class DNSWorld extends DNSDataSource {
         @Override
         public boolean isResponse(DNSMessage request, InetAddress address) {
             return address.getHostName().endsWith(".root-servers.net") && super.isResponse(request, address);
+        }
+
+        @Override
+        public String toString() {
+            return getClass().getSimpleName() + '\n' + super.toString();
         }
     }
 
@@ -146,6 +158,11 @@ public class DNSWorld extends DNSDataSource {
         @Override
         public boolean isResponse(DNSMessage request, InetAddress address) {
             return address.equals(this.address) && super.isResponse(request, address);
+        }
+
+        @Override
+        public String toString() {
+            return getClass().getSimpleName() + ": " + address + '\n' + super.toString();
         }
     }
 
@@ -170,6 +187,13 @@ public class DNSWorld extends DNSDataSource {
         @Override
         public DNSMessage getResponse() {
             return response;
+        }
+
+        @Override
+        public String toString() {
+            return
+                    getClass().getSimpleName() + ": " + ending + '\n'
+                  + response;
         }
     }
 
@@ -196,6 +220,13 @@ public class DNSWorld extends DNSDataSource {
         @Override
         public boolean isResponse(DNSMessage request, InetAddress address) {
             return address.equals(this.address) && questionHintable(request);
+        }
+
+        @Override
+        public String toString() {
+            return
+                    getClass().getSimpleName() + ": " + address + '\n'
+                  + response;
         }
     }
 
