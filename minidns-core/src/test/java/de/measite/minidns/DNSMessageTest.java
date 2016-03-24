@@ -87,14 +87,14 @@ public class DNSMessageTest {
         assertEquals(2, answers.length);
 
         int cname = 0;
-        if(answers[1].getName().equalsIgnoreCase("www.sun.com"))
+        if(answers[1].name.ace.equalsIgnoreCase("www.sun.com"))
             cname = 1;
         assertTrue(answers[cname].getPayload() instanceof CNAME);
         assertEquals(TYPE.CNAME, answers[cname].getPayload().getType());
         assertCsEquals("legacy-sun.oraclegha.com",
                      ((CNAME)(answers[cname].getPayload())).name);
 
-        assertCsEquals("legacy-sun.oraclegha.com", answers[1-cname].getName());
+        assertCsEquals("legacy-sun.oraclegha.com", answers[1-cname].name);
         assertTrue(answers[1 - cname].getPayload() instanceof A);
         assertEquals(TYPE.A, answers[1 - cname].getPayload().getType());
         assertCsEquals("156.151.59.35", answers[1 - cname].getPayload().toString());
@@ -107,7 +107,7 @@ public class DNSMessageTest {
         assertFalse(m.isAuthoritativeAnswer());
         Record[] answers = m.getAnswers();
         assertEquals(1, answers.length);
-        assertCsEquals("google.com", answers[0].getName());
+        assertCsEquals("google.com", answers[0].name);
         assertTrue(answers[0].getPayload() instanceof AAAA);
         assertEquals(TYPE.AAAA, answers[0].getPayload().getType());
         assertCsEquals("2a00:1450:400c:c02:0:0:0:8a", answers[0].getPayload().toString());
@@ -122,7 +122,7 @@ public class DNSMessageTest {
         assertEquals(5, answers.length);
         Map<Integer, DNSName> mxes = new TreeMap<>();
         for(Record r : answers) {
-            assertCsEquals("gmail.com", r.getName());
+            assertCsEquals("gmail.com", r.name);
             Data d = r.getPayload();
             assertTrue(d instanceof MX);
             assertEquals(TYPE.MX, d.getType());
@@ -159,7 +159,7 @@ public class DNSMessageTest {
         txtToBeFound.add("v=spf1 include:spf.mandrillapp.com ~all");
         Record[] answers = m.getAnswers();
         for(Record r : answers) {
-            assertCsEquals("codinghorror.com", r.getName());
+            assertCsEquals("codinghorror.com", r.name);
             Data d = r.getPayload();
             assertTrue(d instanceof TXT);
             assertEquals(TYPE.TXT, d.getType());
@@ -223,7 +223,7 @@ public class DNSMessageTest {
         assertEquals(3, answers.length);
         for (int i = 0; i < answers.length; i++) {
             Record answer = answers[i];
-            assertCsEquals("", answer.getName());
+            assertCsEquals("", answer.name);
             assertEquals(19593, answer.getTtl());
             assertEquals(TYPE.DNSKEY, answer.type);
             assertEquals(TYPE.DNSKEY, answer.getPayload().getType());

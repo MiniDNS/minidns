@@ -431,15 +431,6 @@ public class Record {
     }
 
     /**
-     * The generic record name, e.g. "measite.de".
-     * @return The record name.
-     */
-    // TODO deprecate since 'name' is public
-    public String getName() {
-        return name.ace;
-    }
-
-    /**
      * The payload data, usually a subclass of data (A, AAAA, CNAME, ...).
      * @return The payload data.
      */
