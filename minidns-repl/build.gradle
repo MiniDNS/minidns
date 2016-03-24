@@ -6,6 +6,7 @@ dependencies {
     compile project(':minidns-core')
     compile project(':minidns-recursive-resolver')
     compile project(':minidns-dnssec')
+    compile project(':minidns-integration-test')
     compile "com.lihaoyi:ammonite-repl_$scalaVersion:0.5.5"
     testCompile project(path: ":minidns-core", configuration: "testRuntime")
     testCompile project(path: ":minidns-core", configuration: "archives")
