@@ -177,7 +177,7 @@ public class DNSWorld extends DNSDataSource {
 
         boolean questionHintable(DNSMessage request) {
             for (Question question : request.questions) {
-                if (question.name.ace.endsWith("." + ending) || question.name.equals(ending)) {
+                if (question.name.isChildOf(ending) || question.name.equals(ending)) {
                     return true;
                 }
             }

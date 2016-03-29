@@ -55,24 +55,6 @@ public class VerifierTest {
     }
 
     @Test
-    public void testStripToParts() {
-        assertEquals("www.example.com", Verifier.stripToParts("www.example.com", 3));
-        assertEquals("example.com", Verifier.stripToParts("www.example.com", 2));
-        assertEquals("com", Verifier.stripToParts("www.example.com", 1));
-        assertEquals("", Verifier.stripToParts("www.example.com", 0));
-    }
-
-    @Test(expected = IllegalArgumentException.class)
-    public void testStripToPartsIllegal() {
-        Verifier.stripToParts("", 1);
-    }
-
-    @Test(expected = IllegalArgumentException.class)
-    public void testStripToPartsIllegalLong() {
-        Verifier.stripToParts("example.com", 3);
-    }
-
-    @Test
     public void testVerifyNsec() {
         Record nsecRecord = record("example.com", nsec("www.example.com", TYPE.A, TYPE.NS, TYPE.SOA, TYPE.TXT, TYPE.AAAA, TYPE.RRSIG, TYPE.NSEC, TYPE.DNSKEY));
         assertNull(verifier.verifyNsec(nsecRecord, new Question("nsec.example.com", TYPE.A)));

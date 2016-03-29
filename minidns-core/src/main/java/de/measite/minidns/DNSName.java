@@ -32,6 +32,8 @@ public class DNSName implements CharSequence, Serializable, Comparable<DNSName> 
      */
     private static final String LABEL_SEP_REGEX = "[.\u3002\uFF0E\uFF61]";
 
+    public static final int MAX_LABELS = 128;
+
     public static final DNSName EMPTY = new DNSName("", false);
 
     /**
@@ -47,6 +49,9 @@ public class DNSName implements CharSequence, Serializable, Comparable<DNSName> 
 
     private transient String hostpart;
 
+    /**
+     * The labels in <b>reverse</b> order.
+     */
     private transient String[] labels;
 
     private transient int hashCode;
@@ -63,6 +68,21 @@ public class DNSName implements CharSequence, Serializable, Comparable<DNSName> 
         } else {
             ace = name.toLowerCase(Locale.US);
         }
+    }
+
+    private DNSName(String[] labels) {
+        this.labels = labels;
+
+        int size = 0;
+        for (String label : labels) {
+            size += label.length() + 1;
+        }
+        StringBuilder sb = new StringBuilder(size);
+        for (int i = labels.length - 1; i >= 0; i--) {
+            sb.append(labels[i]).append('.');
+        }
+        sb.setLength(sb.length() - 1);
+        ace = sb.toString();
     }
 
     public void writeToStream(OutputStream os) throws IOException {
@@ -85,14 +105,13 @@ public class DNSName implements CharSequence, Serializable, Comparable<DNSName> 
             return;
 
         ByteArrayOutputStream baos = new ByteArrayOutputStream(64);
-        if (!ace.isEmpty()) {
-            setLabelsIfRequired();
-            for (String s : labels) {
-                byte[] buffer = s.getBytes();
-                baos.write(buffer.length);
-                baos.write(buffer, 0, buffer.length);
-            }
+        setLabelsIfRequired();
+        for (int i = labels.length - 1; i >= 0; i--) {
+            byte[] buffer = labels[i].getBytes();
+            baos.write(buffer.length);
+            baos.write(buffer, 0, buffer.length);
         }
+
         baos.write(0);
         bytes = baos.toByteArray();
     }
@@ -100,7 +119,20 @@ public class DNSName implements CharSequence, Serializable, Comparable<DNSName> 
     private void setLabelsIfRequired() {
         if (labels != null) return;
 
-        labels = ace.split(LABEL_SEP_REGEX);
+        if (isRootLabel()) {
+            labels = new String[0];
+            return;
+        }
+
+        labels = ace.split(LABEL_SEP_REGEX, MAX_LABELS);
+
+        // Reverse the labels, so that 'foo, example, org' becomes 'org, example, foo'.
+        for (int i = 0; i < labels.length / 2; i++) {
+            String t = labels[i];
+            int j = labels.length - i - 1;
+            labels[i] = labels[j];
+            labels[j] = t;
+        }
     }
 
     public String asIdn() {
@@ -145,7 +177,7 @@ public class DNSName implements CharSequence, Serializable, Comparable<DNSName> 
 
     public int size() {
         if (size < 0) {
-            if (ace.isEmpty()) {
+            if (isRootLabel()) {
                 size = 1;
             } else {
                 size = ace.length() + 2;
@@ -265,10 +297,73 @@ public class DNSName implements CharSequence, Serializable, Comparable<DNSName> 
 
     @Override
     public int hashCode() {
-        if (hashCode == 0 && !ace.isEmpty()) {
+        if (hashCode == 0 && !isRootLabel()) {
             setBytesIfRequired();
             hashCode = Arrays.hashCode(bytes);
         }
         return hashCode;
+    }
+
+    public boolean isDirectChildOf(DNSName parent) {
+        setLabelsIfRequired();
+        parent.setLabelsIfRequired();
+        int parentLabelsCount = parent.labels.length;
+
+        if (labels.length - 1 != parentLabelsCount)
+            return false;
+
+        for (int i = 0; i < parent.labels.length; i++) {
+            if (!labels[i].equals(parent.labels[i]))
+                return false;
+        }
+
+        return true;
+    }
+
+    public boolean isChildOf(DNSName parent) {
+        setLabelsIfRequired();
+        parent.setLabelsIfRequired();
+
+        if (labels.length < parent.labels.length)
+            return false;
+
+        for (int i = 0; i < parent.labels.length; i++) {
+            if (!labels[i].equals(parent.labels[i]))
+                return false;
+        }
+
+        return true;
+    }
+
+    public int getLabelCount() {
+        setLabelsIfRequired();
+        return labels.length;
+    }
+
+    public DNSName stripToLabels(int labelCount) {
+        setLabelsIfRequired();
+
+        if (labelCount > labels.length) {
+            throw new IllegalArgumentException();
+        }
+
+        if (labelCount == labels.length) {
+            return this;
+        }
+
+        if (labelCount == 0) {
+            return EMPTY;
+        }
+
+        String[] stripedLabels = new String[labelCount];
+        for (int i = 0; i < labelCount; i++) {
+            stripedLabels[i] = labels[i];
+        }
+
+        return new DNSName(stripedLabels);
+    }
+
+    public boolean isRootLabel() {
+        return ace.isEmpty() || ace.equals(".");
     }
 }

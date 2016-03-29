@@ -50,4 +50,22 @@ public class DNSNameTest {
     public void equalsTest() {
         assertEquals(DNSName.from(""), DNSName.from("."));
     }
+
+    @Test
+    public void testStripToParts() {
+        assertCsEquals(DNSName.from("www.example.com"), DNSName.from("www.example.com").stripToLabels(3));
+        assertCsEquals(DNSName.from("example.com"), DNSName.from("www.example.com").stripToLabels(2));
+        assertCsEquals(DNSName.from("com"), DNSName.from("www.example.com").stripToLabels(1));
+        assertCsEquals(DNSName.from(""), DNSName.from("www.example.com").stripToLabels(0));
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void testStripToPartsIllegal() {
+        DNSName.from("").stripToLabels(1);
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void testStripToPartsIllegalLong() {
+       DNSName.from("example.com").stripToLabels(3);
+    }
 }

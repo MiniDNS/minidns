@@ -81,7 +81,7 @@ class Verifier {
         if (nsecRecord.name.equals(q.name) && !Arrays.asList(nsec.types).contains(q.type)) {
             // records with same name but different types exist
             return null;
-        } else if (nsecMatches(q.name.ace, nsecRecord.name.ace, nsec.next.ace)) {
+        } else if (nsecMatches(q.name, nsecRecord.name, nsec.next)) {
             return null;
         }
         return new NSECDoesNotMatchReason(q, nsecRecord);
@@ -170,6 +170,10 @@ class Verifier {
         return bos.toByteArray();
     }
 
+    static boolean nsecMatches(String test, String lowerBound, String upperBound) {
+        return nsecMatches(DNSName.from(test), DNSName.from(lowerBound), DNSName.from(upperBound));
+    }
+
     /**
      * Tests if a nsec domain name is part of an NSEC record.
      *
@@ -178,19 +182,20 @@ class Verifier {
      * @param upperBound exclusive upper bound
      * @return test domain name is covered by NSEC record
      */
-    static boolean nsecMatches(String test, String lowerBound, String upperBound) {
-        int lowerParts = 0, upperParts = 0, testParts = 0;
-        if (!lowerBound.isEmpty()) lowerParts = lowerBound.split("\\.").length;
-        if (!upperBound.isEmpty()) upperParts = upperBound.split("\\.").length;
-        if (!test.isEmpty()) testParts = test.split("\\.").length;
+    static boolean nsecMatches(DNSName test, DNSName lowerBound, DNSName upperBound) {
+        int lowerParts = lowerBound.getLabelCount();
+        int upperParts = upperBound.getLabelCount();
+        int testParts = test.getLabelCount();
 
-        if (testParts > lowerParts && !test.endsWith(lowerBound) && stripToParts(test, lowerParts).compareTo(lowerBound) < 0)
+        if (testParts > lowerParts && !test.isChildOf(lowerBound) && test.stripToLabels(lowerParts).compareTo(lowerBound) < 0)
             return false;
-        if (testParts <= lowerParts && test.compareTo(stripToParts(lowerBound, testParts)) < 0) return false;
+        if (testParts <= lowerParts && test.compareTo(lowerBound.stripToLabels(testParts)) < 0)
+            return false;
 
-        if (testParts > upperParts && !test.endsWith(upperBound) && stripToParts(test, upperParts).compareTo(upperBound) > 0)
+        if (testParts > upperParts && !test.isChildOf(upperBound) && test.stripToLabels(upperParts).compareTo(upperBound) > 0)
             return false;
-        if (testParts <= upperParts && test.compareTo(stripToParts(upperBound, testParts)) >= 0) return false;
+        if (testParts <= upperParts && test.compareTo(upperBound.stripToLabels(testParts)) >= 0)
+            return false;
 
         return true;
     }
