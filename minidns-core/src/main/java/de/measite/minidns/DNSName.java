@@ -254,7 +254,7 @@ public class DNSName implements CharSequence, Serializable, Comparable<DNSName> 
      * @return The parsed domain name.
      * @throws IllegalStateException on cycles.
      */
-    public static DNSName parse(byte data[], int offset, HashSet<Integer> jumps)
+    private static DNSName parse(byte data[], int offset, HashSet<Integer> jumps)
             throws IllegalStateException {
         int c = data[offset] & 0xff;
         if ((c & 0xc0) == 0xc0) {
