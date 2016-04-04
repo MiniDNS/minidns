@@ -45,6 +45,7 @@ public abstract class AbstractDNSClient {
      * The internal DNS cache.
      */
     protected final DNSCache cache;
+
     protected DNSDataSource dataSource = new NetworkDataSource();
 
     /**
@@ -257,5 +258,14 @@ public abstract class AbstractDNSClient {
             throw new IllegalArgumentException();
         }
         this.dataSource = dataSource;
+    }
+
+    /**
+     * Get the cache used by this DNS client.
+     *
+     * @return the cached used by this DNS client or <code>null</code>.
+     */
+    public DNSCache getCache() {
+        return cache;
     }
 }

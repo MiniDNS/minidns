@@ -28,7 +28,7 @@ import java.util.logging.Logger;
 
 public class NetworkDataSource extends DNSDataSource {
 
-    private static final Logger LOGGER = Logger.getLogger(NetworkDataSource.class.getName());
+    protected static final Logger LOGGER = Logger.getLogger(NetworkDataSource.class.getName());
 
     public DNSMessage query(DNSMessage message, InetAddress address, int port) throws IOException {
         List<IOException> ioExceptions = new ArrayList<>(2);

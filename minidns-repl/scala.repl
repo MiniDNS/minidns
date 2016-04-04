@@ -8,8 +8,9 @@ import de.measite.minidns.dnssec.DNSSECClient
 import de.measite.minidns.minidnsrepl.MiniDnsRepl.clearCache
 import de.measite.minidns.minidnsrepl.MiniDnsRepl.traceMinidns
 
+import de.measite.minidns.minidnsrepl.MiniDNSStats._
+
 // Some standard values
-// TODO add recursive (rc) and dnssec-client (secc)
 val c = de.measite.minidns.minidnsrepl.MiniDnsRepl.DNSCLIENT
 val rc = de.measite.minidns.minidnsrepl.MiniDnsRepl.RECURSIVEDNSCLIENT
 val dc = de.measite.minidns.minidnsrepl.MiniDnsRepl.DNSSECCLIENT
