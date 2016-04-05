@@ -19,12 +19,18 @@ import de.measite.minidns.AbstractDNSClient;
 import de.measite.minidns.DNSCache;
 import de.measite.minidns.DNSMessage;
 import de.measite.minidns.Record.TYPE;
+import de.measite.minidns.cache.ExtendedLRUCache;
+import de.measite.minidns.cache.FullLRUCache;
 import de.measite.minidns.cache.LRUCache;
 import de.measite.minidns.dnssec.DNSSECClient;
 import de.measite.minidns.source.DNSDataSource;
 import de.measite.minidns.source.NetworkDataSourceWithAccounting;
 
 public class MiniDNSStats {
+
+    public static void main(String[] args) throws IOException {
+        showDnssecStats();
+    }
 
     public static void showDnssecStats() throws IOException {
         showDnssecStats("siccegge.de", TYPE.A);
@@ -33,14 +39,24 @@ public class MiniDNSStats {
     public static void showDnssecStats(String name, TYPE type) throws IOException {
         DNSSECClient client;
 
-        client = getClient(false);
+        client = getClient(CacheConfig.without);
         // CHECKSTYLE:OFF
         out.println(gatherStatsFor(client, "Without Cache", name, type));
         // CHECKSTYLE:ON
 
-        client = getClient(true);
+        client = getClient(CacheConfig.normal);
         // CHECKSTYLE:OFF
         out.println(gatherStatsFor(client, "With Cache", name, type));
+        // CHECKSTYLE:ON
+
+        client = getClient(CacheConfig.extended);
+        // CHECKSTYLE:OFF
+        out.println(gatherStatsFor(client, "With Extended Cache", name, type));
+        // CHECKSTYLE:ON
+
+        client = getClient(CacheConfig.full);
+        // CHECKSTYLE:OFF
+        out.println(gatherStatsFor(client, "With Full Cache", name, type));
         // CHECKSTYLE:ON
     }
 
@@ -65,11 +81,33 @@ public class MiniDNSStats {
         return sb;
     }
 
-    public static DNSSECClient getClient(boolean withCache) {
-        DNSCache cache = null;
-        if (withCache) {
+    public enum CacheConfig {
+        without,
+        normal,
+        extended,
+        full,
+        ;
+    }
+
+    public static DNSSECClient getClient(CacheConfig cacheConfig) {
+        DNSCache cache;
+        switch (cacheConfig) {
+        case without:
+            cache = null;
+            break;
+        case normal:
             cache = new LRUCache(1024);
+            break;
+        case extended:
+            cache = new ExtendedLRUCache(1024);
+            break;
+        case full:
+            cache = new FullLRUCache(1024);
+            break;
+        default:
+            throw new IllegalStateException();
         }
+
         DNSSECClient client = new DNSSECClient(cache);
         client.setDataSource(new NetworkDataSourceWithAccounting());
         return client;

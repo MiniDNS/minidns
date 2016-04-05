@@ -446,4 +446,17 @@ public class Record {
         return ttl;
     }
 
+    /**
+     * Get the question asking for this resource record. This will return <code>null</code> if the record is not retrievable, i.e.
+     * {@link TYPE#OPT}.
+     *
+     * @return the question for this resource record or <code>null</code>.
+     */
+    public Question getQuestion() {
+        if (type == TYPE.OPT) {
+            // OPT records are not retrievable.
+            return null;
+        }
+        return new Question(name, type, clazz);
+    }
 }
