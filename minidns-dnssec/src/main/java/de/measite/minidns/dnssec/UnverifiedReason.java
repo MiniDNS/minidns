@@ -13,7 +13,6 @@ package de.measite.minidns.dnssec;
 import de.measite.minidns.Question;
 import de.measite.minidns.Record;
 import de.measite.minidns.DNSSECConstants.DigestAlgorithm;
-import de.measite.minidns.record.DS;
 
 public abstract class UnverifiedReason {
     public abstract String getReasonString();
@@ -66,21 +65,6 @@ public abstract class UnverifiedReason {
         @Override
         public String getReasonString() {
             return kind + " algorithm " + algorithmNumber + " threw exception while verifying " + record.name + ": " + reason;
-        }
-    }
-
-    public static class IncomptibleDelegationReason extends UnverifiedReason {
-        private final DS delegation;
-        private final Record record;
-
-        public IncomptibleDelegationReason(DS ds, Record record) {
-            this.delegation = ds;
-            this.record = record;
-        }
-
-        @Override
-        public String getReasonString() {
-            return "Prefetched delegation " + delegation + " is invalid for " + record.type + " at " +record.name;
         }
     }
 

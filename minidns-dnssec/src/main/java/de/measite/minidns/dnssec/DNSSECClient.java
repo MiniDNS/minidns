@@ -17,7 +17,6 @@ import de.measite.minidns.Question;
 import de.measite.minidns.Record;
 import de.measite.minidns.Record.CLASS;
 import de.measite.minidns.Record.TYPE;
-import de.measite.minidns.dnssec.UnverifiedReason.IncomptibleDelegationReason;
 import de.measite.minidns.dnssec.UnverifiedReason.NoSecureEntryPointReason;
 import de.measite.minidns.dnssec.UnverifiedReason.NoSignaturesReason;
 import de.measite.minidns.dnssec.UnverifiedReason.NoTrustAnchorReason;
@@ -63,7 +62,6 @@ public class DNSSECClient extends ReliableDNSClient {
 
     private Verifier verifier = new Verifier();
     private Map<DNSName, byte[]> knownSeps = new ConcurrentHashMap<>();
-    private Map<DNSName, DS> knownDelegations = new ConcurrentHashMap<>();
     private boolean stripSignatureRecords = true;
     private String dlv;
 
@@ -88,36 +86,12 @@ public class DNSSECClient extends ReliableDNSClient {
     private DNSSECMessage performVerification(Question q, DNSMessage dnsMessage) throws IOException {
         if (dnsMessage == null) return null;
 
-        Set<UnverifiedReason> result;
-        if (dnsMessage.isAuthoritativeAnswer()) {
-            if (dnsMessage.isAuthenticData()) {
-                result = null;
-            } else {
-                result = verify(dnsMessage);
-            }
-        } else {
-            List<Record> dss = new ArrayList<>();
-            RRSIG dsSig = null;
-            for (Record record : dnsMessage.getNameserverRecords()) {
-                if (record.type == TYPE.DS) dss.add(record);
-                if (record.type == TYPE.RRSIG && ((RRSIG) record.payloadData).typeCovered == TYPE.DS)
-                    dsSig = (RRSIG) record.payloadData;
-            }
-            if (dsSig != null) {
-                try {
-                    Set<UnverifiedReason> unverifiedReasons = verifySignedRecords(q, dsSig, dss);
-                    if (unverifiedReasons.isEmpty()) {
-                        for (Record dsRecord : dss) {
-                            knownDelegations.put(dsRecord.name, (DS) dsRecord.payloadData);
-                        }
-                    }
-                } catch (DNSSECValidationFailedException ignored) {
-                    // Not actually a problem, just an incomplete hint.
-                }
-            }
-            result = null;
-        }
-        return createDnssecMessage(dnsMessage, result);
+        // At this state, a DNSMessage is never authentic!
+        dnsMessage.setAuthenticData(false);
+
+        Set<UnverifiedReason> unverifiedReasons = verify(dnsMessage);
+
+        return createDnssecMessage(dnsMessage, unverifiedReasons);
     }
 
     private DNSSECMessage createDnssecMessage(DNSMessage dnsMessage, Set<UnverifiedReason> result) {
@@ -156,7 +130,6 @@ public class DNSSECClient extends ReliableDNSClient {
 
     @Override
     protected boolean isResponseCacheable(Question q, DNSMessage dnsMessage) {
-        dnsMessage.setAuthenticData(false); // At this state, a DNSMessage is never authentic!
         return super.isResponseCacheable(q, dnsMessage);
     }
 
@@ -380,32 +353,23 @@ public class DNSSECClient extends ReliableDNSClient {
             }
         }
         DS delegation = null;
-        if (knownDelegations.containsKey(sepRecord.name)) {
-            DS ds = knownDelegations.get(sepRecord.name);
-            if (((DNSKEY) sepRecord.payloadData).getKeyTag() == ds.keyTag) {
-                delegation = ds;
-            } else {
-                unverifiedReasons.add(new IncomptibleDelegationReason(ds, sepRecord));
-            }
-        }
-        if (delegation == null) {
-            DNSSECMessage dsResp = queryDnssec(sepRecord.name, TYPE.DS);
-            if (dsResp == null) {
-                LOGGER.fine("There is no DS record for " + sepRecord.name + ", server gives no result");
-            } else {
-                unverifiedReasons.addAll(dsResp.getUnverifiedReasons());
-                for (Record record : dsResp.getAnswers()) {
-                    if (record.type == TYPE.DS && ((DNSKEY) sepRecord.payloadData).getKeyTag() == ((DS) record.payloadData).keyTag) {
-                        delegation = (DS) record.payloadData;
-                        activeReasons = dsResp.getUnverifiedReasons();
-                        break;
-                    }
-                }
-                if (delegation == null) {
-                    LOGGER.fine("There is no DS record for " + sepRecord.name + ", server gives empty result");
+        DNSSECMessage dsResp = queryDnssec(sepRecord.name, TYPE.DS);
+        if (dsResp == null) {
+            LOGGER.fine("There is no DS record for " + sepRecord.name + ", server gives no result");
+        } else {
+            unverifiedReasons.addAll(dsResp.getUnverifiedReasons());
+            for (Record record : dsResp.getAnswers()) {
+               if (record.type == TYPE.DS && ((DNSKEY) sepRecord.payloadData).getKeyTag() == ((DS) record.payloadData).keyTag) {
+                    delegation = (DS) record.payloadData;
+                    activeReasons = dsResp.getUnverifiedReasons();
+                    break;
                 }
             }
+            if (delegation == null) {
+                LOGGER.fine("There is no DS record for " + sepRecord.name + ", server gives empty result");
+            }
         }
+
         if (delegation == null && dlv != null && !dlv.endsWith(sepRecord.name.ace)) {
             DNSSECMessage dlvResp = queryDnssec(sepRecord.name + "." + dlv, TYPE.DLV);
             if (dlvResp != null) {
