@@ -37,6 +37,7 @@ public class ReliableDNSClient extends AbstractDNSClient {
         recursiveDnsClient = new RecursiveDNSClient(dnsCache) {
             @Override
             protected DNSMessage newQuestion(DNSMessage questionMessage) {
+                questionMessage = super.newQuestion(questionMessage);
                 return ReliableDNSClient.this.newQuestion(questionMessage);
             }
             @Override
@@ -48,6 +49,7 @@ public class ReliableDNSClient extends AbstractDNSClient {
         dnsClient = new DNSClient(dnsCache) {
             @Override
             protected DNSMessage newQuestion(DNSMessage questionMessage) {
+                questionMessage = super.newQuestion(questionMessage);
                 return ReliableDNSClient.this.newQuestion(questionMessage);
             }
             @Override
