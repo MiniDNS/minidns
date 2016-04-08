@@ -120,34 +120,30 @@ public class DaneVerifier {
             LOGGER.info(msg);
             return false;
         }
-        TLSA tlsa = null;
+        boolean verified = false;
         for (Record record : res.getAnswers()) {
             if (record.type == Record.TYPE.TLSA && record.name.equals(req)) {
-                tlsa = (TLSA) record.payloadData;
-                break;
+                TLSA tlsa = (TLSA) record.payloadData;
+                verified |= checkCertificateMatches(chain[0], tlsa, hostName);
+                if (verified) break;
             }
         }
-        if (tlsa != null) {
-            switch (tlsa.certUsage) {
-                case TLSA.CERT_USAGE_SERVICE_CERTIFICATE_CONSTRAINT:
-                case TLSA.CERT_USAGE_DOMAIN_ISSUED_CERTIFICATE:
-                    if (!checkCertificateMatches(chain[0], tlsa)) {
-                        throw new CertificateException("Verification using TLSA failed: certificate differs");
-                    }
-                    // domain issued certificate does not require further verification, 
-                    // service certificate constraint does.
-                    return tlsa.certUsage == TLSA.CERT_USAGE_DOMAIN_ISSUED_CERTIFICATE;
-                case TLSA.CERT_USAGE_CA_CONSTRAINT:
-                case TLSA.CRET_USAGE_TRUST_ANCHOR_ASSERTION:
-                default:
-                    LOGGER.info("TLSA certificate usage " + tlsa.certUsage + " not supported for " + hostName);
-                    return false;
-            }
-        }
-        return false;
+
+        return verified;
     }
 
-    private static boolean checkCertificateMatches(X509Certificate cert, TLSA tlsa) throws CertificateException {
+    private static boolean checkCertificateMatches(X509Certificate cert, TLSA tlsa, String hostName) throws CertificateException {
+        switch (tlsa.certUsage) {
+        case TLSA.CERT_USAGE_SERVICE_CERTIFICATE_CONSTRAINT:
+        case TLSA.CERT_USAGE_DOMAIN_ISSUED_CERTIFICATE:
+            break;
+        case TLSA.CERT_USAGE_CA_CONSTRAINT:
+        case TLSA.CRET_USAGE_TRUST_ANCHOR_ASSERTION:
+        default:
+            LOGGER.warning("TLSA certificate usage " + tlsa.certUsage + " not supported while verifying " + hostName);
+            return false;
+        }
+
         byte[] comp = null;
         switch (tlsa.selector) {
             case TLSA.SELECTOR_FULL_CERTIFICATE:
@@ -156,10 +152,12 @@ public class DaneVerifier {
             case TLSA.SELECTOR_SUBJECT_PUBLIC_KEY_INFO:
                 comp = cert.getPublicKey().getEncoded();
                 break;
+            default:
+                LOGGER.warning("TLSA selector " + tlsa.selector + " not supported while verifying " + hostName);
+                return false;
+
         }
-        if (comp == null) {
-            throw new CertificateException("Verification using TLSA failed: could not create matching bytes");
-        }
+
         switch (tlsa.matchingType) {
             case TLSA.MATCHING_TYPE_NO_HASH:
                 break;
@@ -177,8 +175,19 @@ public class DaneVerifier {
                     throw new CertificateException("Verification using TLSA failed: could not SHA-512 for matching", e);
                 }
                 break;
+            default:
+                LOGGER.warning("TLSA matching type " + tlsa.matchingType + " not supported while verifying " + hostName);
+                return false;
         }
-        return Arrays.equals(comp, tlsa.certificateAssociation);
+
+        boolean matches = Arrays.equals(comp, tlsa.certificateAssociation);
+        if (!matches) {
+            throw new CertificateException("Verification using TLSA failed");
+        }
+
+        // domain issued certificate does not require further verification,
+        // service certificate constraint does.
+        return tlsa.certUsage == TLSA.CERT_USAGE_DOMAIN_ISSUED_CERTIFICATE;
     }
 
     /**
