@@ -200,8 +200,9 @@ public class DaneVerifier {
      * @param conn connection to be connected.
      * @return The {@link HttpsURLConnection} after being connected.
      * @throws IOException when the connection could not be established.
+     * @throws CertificateException if there was an exception while verifying the certificate.
      */
-    public HttpsURLConnection verifiedConnect(HttpsURLConnection conn) throws IOException {
+    public HttpsURLConnection verifiedConnect(HttpsURLConnection conn) throws IOException, CertificateException {
         return verifiedConnect(conn, null);
     }
 
@@ -215,8 +216,9 @@ public class DaneVerifier {
      * @param trustManager A non-default {@link TrustManager} to be used.
      * @return The {@link HttpsURLConnection} after being connected.
      * @throws IOException when the connection could not be established.
+     * @throws CertificateException if there was an exception while verifying the certificate.
      */
-    public HttpsURLConnection verifiedConnect(HttpsURLConnection conn, X509TrustManager trustManager) throws IOException {
+    public HttpsURLConnection verifiedConnect(HttpsURLConnection conn, X509TrustManager trustManager) throws IOException, CertificateException {
         try {
             SSLContext context = SSLContext.getInstance("TLS");
             ExpectingTrustManager expectingTrustManager = new ExpectingTrustManager(trustManager);
@@ -231,8 +233,6 @@ public class DaneVerifier {
             return conn;
         } catch (NoSuchAlgorithmException | KeyManagementException e) {
             throw new RuntimeException(e);
-        } catch (CertificateException e) {
-            throw new IOException("Peer verification failed using DANE", e);
         }
     }
 
