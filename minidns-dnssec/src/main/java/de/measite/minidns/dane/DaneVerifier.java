@@ -40,6 +40,7 @@ import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -120,13 +121,26 @@ public class DaneVerifier {
             LOGGER.info(msg);
             return false;
         }
+
+        List<DaneCertificateException.CertificateMismatch> certificateMismatchExceptions = new LinkedList<>();
         boolean verified = false;
         for (Record record : res.getAnswers()) {
             if (record.type == Record.TYPE.TLSA && record.name.equals(req)) {
                 TLSA tlsa = (TLSA) record.payloadData;
-                verified |= checkCertificateMatches(chain[0], tlsa, hostName);
+                try {
+                    verified |= checkCertificateMatches(chain[0], tlsa, hostName);
+                } catch (DaneCertificateException.CertificateMismatch certificateMismatchException) {
+                    // Record the mismatch and only throw an exception if no
+                    // TLSA RR is able to verify the cert. This allows for TLSA
+                    // certificate rollover.
+                    certificateMismatchExceptions.add(certificateMismatchException);
+                }
                 if (verified) break;
             }
+        }
+
+        if (!verified && !certificateMismatchExceptions.isEmpty()) {
+            throw new DaneCertificateException.MultipleCertificateMismatchExceptions(certificateMismatchExceptions);
         }
 
         return verified;
@@ -182,7 +196,7 @@ public class DaneVerifier {
 
         boolean matches = Arrays.equals(comp, tlsa.certificateAssociation);
         if (!matches) {
-            throw new CertificateException("Verification using TLSA failed");
+            throw new DaneCertificateException.CertificateMismatch(tlsa, comp);
         }
 
         // domain issued certificate does not require further verification,
