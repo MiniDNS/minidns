@@ -123,30 +123,26 @@ class Verifier {
         try {
             rrsig.writePartialSignature(dos);
 
-            // TODO Convert sigName from String to DNSName.
-            String sigName = records.get(0).name.ace;
-            if (!sigName.isEmpty()) {
-                String[] name = sigName.split("\\.");
-                if (name.length > rrsig.labels) {
-                    // Expand wildcards
-                    sigName = name[name.length - 1];
-                    for (int i = 1; i < rrsig.labels; i++) {
-                        sigName = name[name.length - i - 1] + "." + sigName;
-                    }
-                    sigName = "*." + sigName;
-                } else if (name.length < rrsig.labels) {
+            DNSName sigName = records.get(0).name;
+            if (!sigName.isRootLabel()) {
+                if (sigName.getLabelCount() < rrsig.labels) {
                     throw new DNSSECValidationFailedException("Invalid RRsig record");
+                }
+
+                if (sigName.getLabelCount() > rrsig.labels) {
+                    // Expand wildcards
+                    sigName = DNSName.from("*." + sigName.stripToLabels(rrsig.labels));
                 }
             }
 
             List<byte[]> recordBytes = new ArrayList<>();
             for (Record record : records) {
-                Record ref = new Record(sigName.toLowerCase(), record.type, record.clazzValue, rrsig.originalTtl, record.payloadData);
+                Record ref = new Record(sigName, record.type, record.clazzValue, rrsig.originalTtl, record.payloadData);
                 recordBytes.add(ref.toByteArray());
             }
 
             // Sort correctly (cause they might be ordered randomly)
-            final int offset = (DNSName.from(sigName)).size() + 10; // Where the RDATA begins
+            final int offset = sigName.size() + 10; // Where the RDATA begins
             Collections.sort(recordBytes, new Comparator<byte[]>() {
                 @Override
                 public int compare(byte[] b1, byte[] b2) {

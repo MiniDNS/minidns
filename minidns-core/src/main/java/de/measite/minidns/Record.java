@@ -427,6 +427,15 @@ public class Record {
         this.payloadData = payloadData;
     }
 
+    public Record(DNSName name, TYPE type, int clazzValue, long ttl, Data payloadData) {
+        this.name = name;
+        this.type = type;
+        this.clazz = CLASS.NONE;
+        this.clazzValue = clazzValue;
+        this.ttl = ttl;
+        this.payloadData = payloadData;
+    }
+
     public byte[] toByteArray() {
         if (payloadData == null) {
             throw new IllegalStateException("Empty Record has no byte representation");
