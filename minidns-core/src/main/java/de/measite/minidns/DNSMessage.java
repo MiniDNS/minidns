@@ -21,39 +21,67 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- * A DNS message as defined by rfc1035. The message consists of a header and
+ * A DNS message as defined by RFC 1035. The message consists of a header and
  * 4 sections: question, answer, nameserver and addition resource record
  * section.
  * A message can either be parsed ({@link #DNSMessage(byte[])}) or serialized
  * ({@link DNSMessage#toArray()}).
+ * 
+ * @see <a href="https://www.ietf.org/rfc/rfc1035.txt">RFC 1035</a>
  */
 public class DNSMessage {
 
     private static final Logger LOGGER = Logger.getLogger(DNSMessage.class.getName());
 
     /**
-     * Possible DNS reply codes.
+     * Possible DNS response codes.
+     * 
+     * @see <a href=
+     *      "http://www.iana.org/assignments/dns-parameters/dns-parameters.xhtml#dns-parameters-6">
+     *      IANA Domain Name System (DNS) Paramters - DNS RCODEs</a>
+     * @see <a href="http://tools.ietf.org/html/rfc6895#section-2.3">RFC 6895 § 2.3</a>
      */
     public static enum RESPONSE_CODE {
-        NO_ERROR(0), FORMAT_ERR(1), SERVER_FAIL(2), NX_DOMAIN(3),
-        NO_IMP(4), REFUSED(5), YXDOMAIN(6), YXRRSET(7),
-        NXRRSET(8), NOT_AUTH(9), NOT_ZONE(10);
+        NO_ERROR(0),
+        FORMAT_ERR(1),
+        SERVER_FAIL(2),
+        NX_DOMAIN(3),
+        NO_IMP(4),
+        REFUSED(5),
+        YXDOMAIN(6),
+        YXRRSET(7),
+        NXRRSET(8),
+        NOT_AUTH(9),
+        NOT_ZONE(10),
+        BADVERS_BADSIG(16),
+        BADKEY(17),
+        BADTIME(18),
+        BADMODE(19),
+        BADNAME(20),
+        BADALG(21),
+        BADTRUNC(22),
+        BADCOOKIE(23),
+        ;
 
         /**
          * Reverse lookup table for response codes.
          */
-        private final static RESPONSE_CODE INVERSE_LUT[] = new RESPONSE_CODE[]{
-                NO_ERROR, FORMAT_ERR, SERVER_FAIL, NX_DOMAIN, NO_IMP,
-                REFUSED, YXDOMAIN, YXRRSET, NXRRSET, NOT_AUTH, NOT_ZONE,
-                null, null, null, null, null
-        };
+        private final static Map<Integer, RESPONSE_CODE> INVERSE_LUT = new HashMap<>(RESPONSE_CODE.values().length);
+
+        static {
+            for (RESPONSE_CODE responseCode : RESPONSE_CODE.values()) {
+                INVERSE_LUT.put((int) responseCode.value, responseCode);
+            }
+        }
 
         /**
          * The response code value.
@@ -86,31 +114,43 @@ public class DNSMessage {
          * @throws IllegalArgumentException if the value is not in the range of 0..15.
          */
         public static RESPONSE_CODE getResponseCode(int value) throws IllegalArgumentException {
-            if (value < 0 || value > 15) {
+            if (value < 0 || value > 65535) {
                 throw new IllegalArgumentException();
             }
-            return INVERSE_LUT[value];
+            return INVERSE_LUT.get(value);
         }
 
     }
 
     /**
      * Symbolic DNS Opcode values.
+     * 
+     * @see <a href=
+     *      "http://www.iana.org/assignments/dns-parameters/dns-parameters.xhtml#dns-parameters-5">
+     *      IANA Domain Name System (DNS) Paramters - DNS OpCodes</a>
      */
     public static enum OPCODE {
-        QUERY(0),
-        INVERSE_QUERY(1),
-        STATUS(2),
-        NOTIFY(4),
-        UPDATE(5);
+        QUERY,
+        INVERSE_QUERY,
+        STATUS,
+        UNASSIGNED3,
+        NOTIFY,
+        UPDATE,
+        ;
 
         /**
-         * Lookup table for for obcode reolution.
+         * Lookup table for for opcode resolution.
          */
-        private final static OPCODE INVERSE_LUT[] = new OPCODE[]{
-                QUERY, INVERSE_QUERY, STATUS, null, NOTIFY, UPDATE, null,
-                null, null, null, null, null, null, null, null
-        };
+        private final static OPCODE INVERSE_LUT[] = new OPCODE[OPCODE.values().length];
+
+        static {
+            for (OPCODE opcode : OPCODE.values()) {
+                if (INVERSE_LUT[opcode.getValue()] != null) {
+                    throw new IllegalStateException();
+                }
+                INVERSE_LUT[opcode.getValue()] = opcode;
+            }
+        }
 
         /**
          * The value of this opcode.
@@ -120,10 +160,9 @@ public class DNSMessage {
         /**
          * Create a new opcode for a given byte value.
          *
-         * @param value The byte value of the opcode.
          */
-        private OPCODE(int value) {
-            this.value = (byte) value;
+        private OPCODE() {
+            this.value = (byte) this.ordinal();
         }
 
         /**
@@ -146,6 +185,9 @@ public class DNSMessage {
         public static OPCODE getOpcode(int value) throws IllegalArgumentException {
             if (value < 0 || value > 15) {
                 throw new IllegalArgumentException();
+            }
+            if (value >= INVERSE_LUT.length) {
+                return null;
             }
             return INVERSE_LUT[value];
         }
