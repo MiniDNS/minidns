@@ -33,6 +33,7 @@ public class IntegrationTestHelper {
         testClasses.add(CoreTest.class);
         testClasses.add(DNSSECTest.class);
         testClasses.add(DaneTest.class);
+        testClasses.add(HlaTest.class);
     }
 
     public static void main(String[] args) {

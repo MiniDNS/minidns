@@ -10,6 +10,7 @@
  */
 package de.measite.minidns;
 
+import de.measite.minidns.record.Data;
 import de.measite.minidns.record.OPT;
 
 import java.io.ByteArrayInputStream;
@@ -20,7 +21,11 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.Iterator;
+import java.util.Set;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * A DNS message as defined by rfc1035. The message consists of a header and
@@ -30,6 +35,8 @@ import java.util.Iterator;
  * ({@link DNSMessage#toArray()}).
  */
 public class DNSMessage {
+
+    private static final Logger LOGGER = Logger.getLogger(DNSMessage.class.getName());
 
     /**
      * Possible DNS reply codes.
@@ -732,4 +739,24 @@ public class DNSMessage {
         return sb.append("\n;; WHEN: ").append(new Date(receiveTimestamp).toString()).toString();
     }
 
+    public <D extends Data> Set<D> getAnswersFor(Question q) {
+        if (responseCode != RESPONSE_CODE.NO_ERROR) return null;
+
+        // It would be great if we could verify that D matches q.type at this
+        // point. But on the other hand, if it does not, then the cast to D
+        // below will fail.
+        Set<D> res = new HashSet<>(answers.length);
+        for (Record record : answers) {
+            if (!record.isAnswer(q)) continue;
+
+            Data data = record.getPayload();
+            @SuppressWarnings("unchecked")
+            D d = (D) data;
+            boolean isNew = res.add(d);
+            if (!isNew) {
+                LOGGER.log(Level.WARNING, "DNSMessage contains duplicate answers. Record: " + record + "; DNSMessage: " + this);
+            }
+        }
+        return res;
+    }
 }

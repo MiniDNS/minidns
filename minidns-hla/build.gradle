@@ -1,0 +1,6 @@
+dependencies {
+    compile project(':minidns-dnssec')
+    testCompile project(path: ":minidns-core", configuration: "testRuntime")
+    testCompile project(path: ":minidns-core", configuration: "archives")
+    testCompile project(path: ":minidns-dnssec", configuration: "archives")
+}

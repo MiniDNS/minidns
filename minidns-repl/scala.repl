@@ -14,3 +14,7 @@ import de.measite.minidns.minidnsrepl.MiniDNSStats._
 val c = de.measite.minidns.minidnsrepl.MiniDnsRepl.DNSCLIENT
 val rc = de.measite.minidns.minidnsrepl.MiniDnsRepl.RECURSIVEDNSCLIENT
 val dc = de.measite.minidns.minidnsrepl.MiniDnsRepl.DNSSECCLIENT
+// A normal resolver
+val r = de.measite.minidns.hla.ResolverApi.NON_DNSSEC
+// A DNSSEC resolver
+val dr = de.measite.minidns.hla.ResolverApi.DNSSEC

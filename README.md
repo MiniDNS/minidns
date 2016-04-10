@@ -9,6 +9,31 @@ of resource records (A, AAAA, NS, SRV) and is easy to use and extend.
 This library is not intended to be used as a DNS server. You might want to
 look into dnsjava for such functionality.
 
+Quickstart
+----------
+
+The easiest way to use MiniDNS is by its high-level API. Simply add the minidns-hla Maven artifact to your projects dependencies. For example with gradle
+
+```groovy
+compile "de.measite.minidns:minidns-hla:$minidnsVersion"
+```
+
+Then you can use the `ResolverApi` like this
+
+```java
+ResolverResult<A> result = ResolverApi.DNSSEC.resolve("verteiltesysteme.net", A.class);
+if (!result.wasSuccessful()) {
+	RESPONSE_CODE responseCode = result.getResponseCode();
+	// Error handling
+	return;
+}
+if (!result.isAuthenticData()) {
+	// Response was not secured with DNSSEC
+	return;
+}
+Set<A> answers = result.getAnswers();
+```
+
 REPL
 ----
 

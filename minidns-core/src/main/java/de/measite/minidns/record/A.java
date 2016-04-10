@@ -35,6 +35,13 @@ public class A implements Data {
         return ip;
     }
 
+    public A(int q1, int q2, int q3, int q4) {
+        if (q1 < 0 || q1 > 255 || q2 < 0 || q2 > 255 || q3 < 0 || q3 > 255 || q4 < 0 || q4 > 255) {
+            throw new IllegalArgumentException();
+        }
+        this.ip = new byte[] { (byte) q1, (byte) q2, (byte) q3, (byte) q4 };
+    }
+
     public A(byte[] ip) {
         if (ip.length != 4) {
             throw new IllegalArgumentException("IPv4 address in A record is always 4 byte");
