@@ -142,11 +142,11 @@ public class Record {
         private final int value;
 
         private final Class<?> dataClass;
+
         /**
          * Internal lookup table to map values to types.
          */
-        private final static HashMap<Integer, TYPE> INVERSE_LUT =
-                                        new HashMap<Integer, TYPE>();
+        private final static Map<Integer, TYPE> INVERSE_LUT = new HashMap<>();
 
         private final static Map<Class<?>, TYPE> DATA_LUT = new HashMap<>();
 
