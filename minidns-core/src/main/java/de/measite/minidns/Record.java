@@ -36,6 +36,7 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.Map;
 
 /**
  * A generic DNS record.
@@ -43,27 +44,30 @@ import java.util.HashMap;
 public class Record {
 
     /**
-     * The record type.
-     * @see <a href="http://www.iana.org/assignments/dns-parameters">IANA DNS Parameters</a>
+     * The resource record type.
+     * 
+     * @see <a href=
+     *      "http://www.iana.org/assignments/dns-parameters/dns-parameters.xhtml#dns-parameters-4">
+     *      IANA DNS Parameters - Resource Record (RR) TYPEs</a>
      */
     public static enum TYPE {
         UNKNOWN(-1),
-        A(1),
-        NS(2),
+        A(1, A.class),
+        NS(2, NS.class),
         MD(3),
         MF(4),
-        CNAME(5),
-        SOA(6),
+        CNAME(5, CNAME.class),
+        SOA(6, SOA.class),
         MB(7),
         MG(8),
         MR(9),
         NULL(10),
         WKS(11),
-        PTR(12),
+        PTR(12, PTR.class),
         HINFO(13),
         MINFO(14),
-        MX(15),
-        TXT(16),
+        MX(15, MX.class),
+        TXT(16, TXT.class),
         RP(17),
         AFSDB(18),
         X25(19),
@@ -75,12 +79,12 @@ public class Record {
         KEY(25),
         PX(26),
         GPOS(27),
-        AAAA(28),
+        AAAA(28, AAAA.class),
         LOC(29),
         NXT(30),
         EID(31),
         NIMLOC(32),
-        SRV(33),
+        SRV(33, SRV.class),
         ATMA(34),
         NAPTR(35),
         KX(36),
@@ -88,25 +92,25 @@ public class Record {
         A6(38),
         DNAME(39),
         SINK(40),
-        OPT(41),
+        OPT(41, OPT.class),
         APL(42),
-        DS(43),
+        DS(43, DS.class),
         SSHFP(44),
         IPSECKEY(45),
-        RRSIG(46),
-        NSEC(47),
+        RRSIG(46, RRSIG.class),
+        NSEC(47, NSEC.class),
         DNSKEY(48),
         DHCID(49),
-        NSEC3(50),
-        NSEC3PARAM(51),
-        TLSA(52),
+        NSEC3(50, NSEC3.class),
+        NSEC3PARAM(51, NSEC3PARAM.class),
+        TLSA(52, TLSA.class),
         HIP(55),
         NINFO(56),
         RKEY(57),
         TALINK(58),
         CDS(59),
         CDNSKEY(60),
-        OPENPGPKEY(61),
+        OPENPGPKEY(61, OPENPGPKEY.class),
         CSYNC(62),
         SPF(99),
         UINFO(100),
@@ -129,32 +133,52 @@ public class Record {
         URI(256),
         CAA(257),
         TA(32768),
-        DLV(32769);
+        DLV(32769, DLV.class),
+        ;
 
         /**
          * The value of this DNS record type.
          */
         private final int value;
 
+        private final Class<?> dataClass;
         /**
          * Internal lookup table to map values to types.
          */
         private final static HashMap<Integer, TYPE> INVERSE_LUT =
                                         new HashMap<Integer, TYPE>();
 
+        private final static Map<Class<?>, TYPE> DATA_LUT = new HashMap<>();
+
         static {
             // Initialize the reverse lookup table.
             for(TYPE t: TYPE.values()) {
                 INVERSE_LUT.put(t.getValue(), t);
+                if (t.dataClass != null) {
+                    DATA_LUT.put(t.dataClass, t);
+                }
             }
         }
 
         /**
          * Create a new record type.
+         * 
          * @param value The binary value of this type.
          */
         private TYPE(int value) {
+            this(value, null);
+        }
+
+        /**
+         * Create a new record type.
+         *
+         * @param <D> The class for this type.
+         * @param dataClass The class for this type.
+         * @param value The binary value of this type.
+         */
+        private <D extends Data> TYPE(int value, Class<D> dataClass) {
             this.value = value;
+            this.dataClass = dataClass;
         }
 
         /**
@@ -166,6 +190,17 @@ public class Record {
         }
 
         /**
+         * Get the {@link Data} class for this type.
+         *
+         * @param <D> The class for this type.
+         * @return the {@link Data} class for this type.
+         */
+        @SuppressWarnings("unchecked")
+        public <D extends Data> Class<D> getDataClass() {
+            return (Class<D>) dataClass;
+        }
+
+        /**
          * Retrieve the symbolic type of the binary value.
          * @param value The binary type value.
          * @return The symbolic tpye.
@@ -174,6 +209,17 @@ public class Record {
             TYPE type = INVERSE_LUT.get(value);
             if (type == null) return UNKNOWN;
             return type;
+        }
+
+        /**
+         * Retrieve the type for a given {@link Data} class.
+         *
+         * @param <D> The class for this type.
+         * @param dataClass the class to lookup the type for.
+         * @return the type for the given data class.
+         */
+        public static <D extends Data> TYPE getType(Class<D> dataClass) {
+            return DATA_LUT.get(dataClass);
         }
     }
 
