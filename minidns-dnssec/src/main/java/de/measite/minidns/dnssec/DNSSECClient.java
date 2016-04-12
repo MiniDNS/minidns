@@ -409,7 +409,13 @@ public class DNSSECClient extends ReliableDNSClient {
     @Override
     protected DNSMessage newQuestion(DNSMessage message) {
         message.setOptPseudoRecord(getDataSource().getUdpPayloadSize(), OPT.FLAG_DNSSEC_OK);
-        return message;
+        return super.newQuestion(message);
+    }
+
+    @Override
+    protected boolean isResponseAcceptable(DNSMessage response) {
+        boolean dnssecOk = response.isDnssecOk();
+        return dnssecOk && super.isResponseAcceptable(response);
     }
 
     /**

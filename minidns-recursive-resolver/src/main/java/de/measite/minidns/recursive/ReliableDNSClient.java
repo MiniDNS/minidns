@@ -70,7 +70,9 @@ public class ReliableDNSClient extends AbstractDNSClient {
         List<IOException> ioExceptions = new LinkedList<>();
         try {
             dnsMessage = dnsClient.query(q);
-            if (dnsMessage != null) return dnsMessage;
+            if (dnsMessage != null && isResponseAcceptable(dnsMessage)) {
+                return dnsMessage;
+            }
         } catch (IOException ioException) {
             ioExceptions.add(ioException);
         }
@@ -95,6 +97,18 @@ public class ReliableDNSClient extends AbstractDNSClient {
 
     @Override
     protected boolean isResponseCacheable(Question q, DNSMessage dnsMessage) {
+        return true;
+    }
+
+    /**
+     * Check if the response from the system's nameserver is acceptable. If the
+     * response is not acceptable then {@link ReliableDNSClient} will fall back
+     * to resolve the query iteratively.
+     *
+     * @param response the response we got from the system's nameserver.
+     * @return <code>true</code> if the response is acceptable, <code>false</code> if not.
+     */
+    protected boolean isResponseAcceptable(DNSMessage response) {
         return true;
     }
 

@@ -676,6 +676,24 @@ public class DNSMessage {
         }
     }
 
+    /**
+     * Check if the EDNS DO (DNSSEC OK) flag is set.
+     *
+     * @return true if the DO flag is set.
+     */
+    public boolean isDnssecOk() {
+        if (additionalResourceRecords == null)
+            return false;
+
+        for (Record record : additionalResourceRecords) {
+            if (record.type != Record.TYPE.OPT) continue;
+            int ednsFlags = OPT.readEdnsFlags(record);
+            return (ednsFlags & OPT.FLAG_DNSSEC_OK) > 0;
+        }
+
+        return false;
+    }
+
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder("DNSMessage@")
