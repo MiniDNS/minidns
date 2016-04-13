@@ -11,13 +11,16 @@
 package de.measite.minidns.integrationtest;
 
 import java.io.IOException;
+import java.util.Iterator;
 
 import de.measite.minidns.Record;
 import de.measite.minidns.cache.LRUCache;
 import de.measite.minidns.dnssec.DNSSECClient;
+import de.measite.minidns.dnssec.DNSSECMessage;
 import de.measite.minidns.dnssec.DNSSECValidationFailedException;
+import de.measite.minidns.dnssec.UnverifiedReason;
+
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
 
 public class DNSSECTest {
 
@@ -30,7 +33,7 @@ public class DNSSECTest {
     @IntegrationTest
     public static void testUniDueSigOk() throws IOException {
         DNSSECClient client = new DNSSECClient(new LRUCache(1024));
-        assertTrue(client.query("sigok.verteiltesysteme.net", Record.TYPE.A).isAuthenticData());
+        assertAuthentic(client.queryDnssec("sigok.verteiltesysteme.net", Record.TYPE.A));
     }
 
     @IntegrationTest(expected = DNSSECValidationFailedException.class)
@@ -42,6 +45,19 @@ public class DNSSECTest {
     @IntegrationTest
     public static void testCloudFlare() throws IOException {
         DNSSECClient client = new DNSSECClient(new LRUCache(1024));
-        assertTrue(client.query("www.cloudflare-dnssec-auth.com", Record.TYPE.A).isAuthenticData());
+        assertAuthentic(client.queryDnssec("www.cloudflare-dnssec-auth.com", Record.TYPE.A));
+    }
+
+    private static void assertAuthentic(DNSSECMessage dnssecMessage) {
+        if (dnssecMessage.isAuthenticData()) return;
+
+        StringBuilder sb = new StringBuilder();
+        sb.append("Answer should contain authentic data while it does not. Reasons:\n");
+        for (Iterator<UnverifiedReason> it = dnssecMessage.getUnverifiedReasons().iterator(); it.hasNext(); ) {
+            UnverifiedReason unverifiedReason = it.next();
+            sb.append(unverifiedReason);
+            if (it.hasNext()) sb.append('\n');
+        }
+        throw new AssertionError(sb.toString());
     }
 }
