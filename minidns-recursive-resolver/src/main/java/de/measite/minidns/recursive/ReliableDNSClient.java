@@ -13,6 +13,7 @@ package de.measite.minidns.recursive;
 import java.io.IOException;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.logging.Level;
 
 import de.measite.minidns.AbstractDNSClient;
 import de.measite.minidns.DNSCache;
@@ -67,14 +68,34 @@ public class ReliableDNSClient extends AbstractDNSClient {
     @Override
     public DNSMessage query(Question q) throws IOException {
         DNSMessage dnsMessage = null;
+        String unacceptableReason = null;
         List<IOException> ioExceptions = new LinkedList<>();
         try {
             dnsMessage = dnsClient.query(q);
-            if (dnsMessage != null && isResponseAcceptable(dnsMessage)) {
-                return dnsMessage;
+            if (dnsMessage != null) {
+                unacceptableReason = isResponseAcceptable(dnsMessage);
+                if (unacceptableReason == null) {
+                    return dnsMessage;
+                }
             }
         } catch (IOException ioException) {
             ioExceptions.add(ioException);
+        }
+
+        // Eventually log that we fall back to iterative mode.
+        final Level FALLBACK_LOG_LEVEL = Level.FINE;
+        if (LOGGER.isLoggable(FALLBACK_LOG_LEVEL)) {
+            String logString = "Resolution fall back to iterative mode because: ";
+            if (!ioExceptions.isEmpty()) {
+                logString += ioExceptions.get(0);
+            } else if (dnsMessage == null) {
+                logString += " DNSClient did not return a response";
+            } else if (unacceptableReason != null) {
+                logString += " response was not acceptable: " + unacceptableReason + ". Response: " + dnsMessage;
+            } else {
+                throw new AssertionError("This should never been reached");
+            }
+            LOGGER.log(FALLBACK_LOG_LEVEL, logString);
         }
 
         try {
@@ -101,15 +122,15 @@ public class ReliableDNSClient extends AbstractDNSClient {
     }
 
     /**
-     * Check if the response from the system's nameserver is acceptable. If the
-     * response is not acceptable then {@link ReliableDNSClient} will fall back
-     * to resolve the query iteratively.
+     * Check if the response from the system's nameserver is acceptable. Must return <code>null</code> if the response
+     * is acceptable, or a String describing why it is not acceptable. If the response is not acceptable then
+     * {@link ReliableDNSClient} will fall back to resolve the query iteratively.
      *
      * @param response the response we got from the system's nameserver.
-     * @return <code>true</code> if the response is acceptable, <code>false</code> if not.
+     * @return <code>null</code> if the response is acceptable, or a String if not.
      */
-    protected boolean isResponseAcceptable(DNSMessage response) {
-        return true;
+    protected String isResponseAcceptable(DNSMessage response) {
+        return null;
     }
 
     @Override

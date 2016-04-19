@@ -413,9 +413,12 @@ public class DNSSECClient extends ReliableDNSClient {
     }
 
     @Override
-    protected boolean isResponseAcceptable(DNSMessage response) {
+    protected String isResponseAcceptable(DNSMessage response) {
         boolean dnssecOk = response.isDnssecOk();
-        return dnssecOk && super.isResponseAcceptable(response);
+        if (!dnssecOk) {
+            return "DNSSEC OK (DO) flag not set in response";
+        }
+        return super.isResponseAcceptable(response);
     }
 
     /**
