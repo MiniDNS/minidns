@@ -47,7 +47,7 @@ public class DNSSECClient extends ReliableDNSClient {
      * Create a new DNSSEC aware DNS client using the global default cache.
      */
     public DNSSECClient() {
-        super();
+        this(DEFAULT_CACHE);
     }
 
     /**
