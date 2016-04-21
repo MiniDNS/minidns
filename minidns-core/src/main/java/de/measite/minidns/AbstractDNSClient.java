@@ -134,8 +134,21 @@ public abstract class AbstractDNSClient {
 
         DNSMessage message = buildMessage(q);
 
-        LOGGER.log(Level.FINE, "Asking {0} on {1} for {2}", new Object[] { address, port, q });
-        dnsMessage = dataSource.query(message, address, port);
+        final Level TRACE_LOG_LEVEL = Level.FINE;
+        LOGGER.log(TRACE_LOG_LEVEL, "Asking {0} on {1} for {2}", new Object[] { address, port, q });
+
+        try {
+            dnsMessage = dataSource.query(message, address, port);
+        } catch (IOException e) {
+            LOGGER.log(TRACE_LOG_LEVEL, "IOException {0} on {1} while resolving {2}: {3}", new Object[] { address, port, q, e});
+            throw e;
+        }
+        if (dnsMessage != null) {
+            LOGGER.log(TRACE_LOG_LEVEL, "Response from {0} on {1} for {2}:\n{3}", new Object[] { address, port, q, dnsMessage });
+        } else {
+            // TODO When should this ever happen?
+            LOGGER.log(Level.SEVERE, "NULL response from " + address + " on " + port + " for " + q);
+        }
 
         if (dnsMessage == null) return null;
 

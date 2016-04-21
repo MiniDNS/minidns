@@ -696,8 +696,8 @@ public class DNSMessage {
 
     @Override
     public String toString() {
-        StringBuilder sb = new StringBuilder("DNSMessage@")
-                .append(id).append('(')
+        StringBuilder sb = new StringBuilder("DNSMessage")
+                .append('(').append(id).append(' ')
                 .append(opcode).append(' ')
                 .append(responseCode);
         if (!query) sb.append(" qr");
@@ -707,32 +707,40 @@ public class DNSMessage {
         if (recursionAvailable) sb.append(" ra");
         if (authenticData) sb.append(" ad");
         if (checkDisabled) sb.append(" cd");
-        sb.append("){");
+        sb.append(")\n");
         if (questions != null) {
             for (Question question : questions) {
-                sb.append("[Q: ").append(question.toString()).append(']');
+                sb.append("[Q: ").append(question).append("]\n");
             }
         }
         if (answers != null) {
             for (Record record : answers) {
-                sb.append(" [A: ").append(record.toString()).append(']');
+                sb.append("[A: ").append(record).append("]\n");
             }
         }
         if (nameserverRecords != null) {
             for (Record record : nameserverRecords) {
-                sb.append(" [N: ").append(record.toString()).append(']');
+                sb.append("[N: ").append(record).append("]\n");
             }
         }
         if (additionalResourceRecords != null) {
             for (Record record : additionalResourceRecords) {
+                sb.append("[X: ");
                 if (record.type == Record.TYPE.OPT) {
-                    sb.append(" [X: ").append(OPT.optRecordToString(record)).append(']');
+                    sb.append(OPT.optRecordToString(record));
                 } else {
-                    sb.append(" [X: ").append(record.toString()).append(']');
+                    sb.append(record);
                 }
+                sb.append("]\n");
             }
         }
-        return sb.append('}').toString();
+
+        // Strip trailing newline.
+        if (sb.charAt(sb.length() - 1) == '\n') {
+            sb.setLength(sb.length() - 1);
+        }
+
+        return sb.toString();
     }
 
     /**
