@@ -62,7 +62,12 @@ public class DNSSECClient extends ReliableDNSClient {
     }
 
     private Verifier verifier = new Verifier();
-    private Map<DNSName, byte[]> knownSeps = new ConcurrentHashMap<>();
+
+    /**
+     * Known secure entry points (SEPs).
+     */
+    private final Map<DNSName, byte[]> knownSeps = new ConcurrentHashMap<>();
+
     private boolean stripSignatureRecords = true;
 
     /**
