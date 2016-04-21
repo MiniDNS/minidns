@@ -214,6 +214,16 @@ public class DNSName implements CharSequence, Serializable, Comparable<DNSName> 
         return new DNSName(name, true);
     }
 
+    public static DNSName from(DNSName left, DNSName right) {
+        left.setLabelsIfRequired();
+        right.setLabelsIfRequired();
+
+        String[] labels = new String[left.labels.length + right.labels.length];
+        System.arraycopy(right.labels, 0, labels, 0, right.labels.length);
+        System.arraycopy(left.labels, 0, labels, right.labels.length, left.labels.length);
+        return new DNSName(labels);
+    }
+
     /**
      * Parse a domain name starting at the current offset and moving the input
      * stream pointer past this domain name (even if cross references occure).

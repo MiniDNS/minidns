@@ -68,4 +68,16 @@ public class DNSNameTest {
     public void testStripToPartsIllegalLong() {
        DNSName.from("example.com").stripToLabels(3);
     }
+
+    @Test
+    public void testConcact() {
+        String leftString = "foo.bar.de";
+        String rightString = "example.org";
+        DNSName left = DNSName.from(leftString);
+        DNSName right = DNSName.from(rightString);
+
+        DNSName concated = DNSName.from(left, right);
+        DNSName expected = DNSName.from(leftString + '.' + rightString);
+        assertEquals(expected, concated);
+    }
 }
