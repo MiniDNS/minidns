@@ -444,7 +444,7 @@ public class DNSSECClient extends ReliableDNSClient {
      * @param name The domain name of which the corresponding secure entry point shall be removed. For the root zone,
      *             use the empty string here.
      */
-    public void removeSecureEntryPoint(String name) {
+    public void removeSecureEntryPoint(DNSName name) {
         knownSeps.remove(name);
     }
 
