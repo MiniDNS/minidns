@@ -495,7 +495,7 @@ public class DNSSECClientTest {
                                 record("com.dlv", dlv("com", digestType, comKSK)))
                 )
         );
-        client.configureLookasideValidation("dlv");
+        client.configureLookasideValidation(DNSName.from("dlv"));
         DNSMessage message = client.query("example.com", Record.TYPE.A);
         assertNotNull(message);
         assertTrue(message.isAuthenticData());

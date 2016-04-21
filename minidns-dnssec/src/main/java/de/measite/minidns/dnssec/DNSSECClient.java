@@ -41,7 +41,8 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class DNSSECClient extends ReliableDNSClient {
     private static final BigInteger rootEntryKey = new BigInteger("03010001a80020a95566ba42e886bb804cda84e47ef56dbd7aec612615552cec906d2116d0ef207028c51554144dfeafe7c7cb8f005dd18234133ac0710a81182ce1fd14ad2283bc83435f9df2f6313251931a176df0da51e54f42e604860dfb359580250f559cc543c4ffd51cbe3de8cfd06719237f9fc47ee729da06835fa452e825e9a18ebc2ecbcf563474652c33cf56a9033bcdf5d973121797ec8089041b6e03a1b72d0a735b984e03687309332324f27c2dba85e9db15e83a0143382e974b0621c18e625ecec907577d9e7bade95241a81ebbe8a901d4d3276e40b114c0a2e6fc38d19c2e6aab02644b2813f575fc21601e0dee49cd9ee96a43103e524d62873d", 16);
-    private static final String DEFAULT_DLV = "dlv.isc.org";
+
+    private static final DNSName DEFAULT_DLV = DNSName.from("dlv.isc.org");
 
     /**
      * Create a new DNSSEC aware DNS client using the global default cache.
@@ -63,7 +64,11 @@ public class DNSSECClient extends ReliableDNSClient {
     private Verifier verifier = new Verifier();
     private Map<DNSName, byte[]> knownSeps = new ConcurrentHashMap<>();
     private boolean stripSignatureRecords = true;
-    private String dlv;
+
+    /**
+     * The active DNSSEC Look-aside Validation Registry. May be <code>null</code>.
+     */
+    private DNSName dlv;
 
     @Override
     public DNSMessage query(Question q) throws IOException {
@@ -370,8 +375,8 @@ public class DNSSECClient extends ReliableDNSClient {
             }
         }
 
-        if (delegation == null && dlv != null && !dlv.endsWith(sepRecord.name.ace)) {
-            DNSSECMessage dlvResp = queryDnssec(sepRecord.name + "." + dlv, TYPE.DLV);
+        if (delegation == null && dlv != null && !dlv.isChildOf(sepRecord.name)) {
+            DNSSECMessage dlvResp = queryDnssec(DNSName.from(sepRecord.name, dlv), TYPE.DLV);
             if (dlvResp != null) {
                 unverifiedReasons.addAll(dlvResp.getUnverifiedReasons());
                 for (Record record : dlvResp.getAnswers()) {
@@ -497,7 +502,7 @@ public class DNSSECClient extends ReliableDNSClient {
      *
      * @param dlv The domain name of the DLV service to be used or {@code null} to disable DLV.
      */
-    public void configureLookasideValidation(String dlv) {
+    public void configureLookasideValidation(DNSName dlv) {
         this.dlv = dlv;
     }
 }
