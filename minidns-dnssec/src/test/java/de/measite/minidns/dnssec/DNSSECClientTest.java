@@ -187,10 +187,12 @@ public class DNSSECClientTest {
                                 record("example.com", a("1.1.1.2")))
                 )
         );
-        DNSMessage message = client.query("example.com", Record.TYPE.A);
+        DNSSECMessage message = client.queryDnssec("example.com", Record.TYPE.A);
         assertNotNull(message);
         assertFalse(message.isAuthenticData());
         checkCorrectExampleMessage(message);
+        assertEquals(1, message.getUnverifiedReasons().size());
+        assertTrue(message.getUnverifiedReasons().iterator().next() instanceof UnverifiedReason.NoRootSecureEntryPointReason);
     }
 
     @Test

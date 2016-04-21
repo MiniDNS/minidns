@@ -362,6 +362,14 @@ public class DNSSECClient extends ReliableDNSClient {
                 throw new DNSSECValidationFailedException(q, "Secure entry point " + sepRecord.name + " is in list of known SEPs, but mismatches response!");
             }
         }
+
+        // If we are looking for the SEP of the root zone at this point, then the client was not
+        // configured with one and we can abort stating the reason.
+        if (sepRecord.name.isRootLabel()) {
+           unverifiedReasons.add(new UnverifiedReason.NoRootSecureEntryPointReason());
+           return unverifiedReasons;
+        }
+
         DS delegation = null;
         DNSSECMessage dsResp = queryDnssec(sepRecord.name, TYPE.DS);
         if (dsResp == null) {

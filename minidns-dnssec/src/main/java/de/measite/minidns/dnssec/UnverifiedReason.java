@@ -94,6 +94,16 @@ public abstract class UnverifiedReason {
         }
     }
 
+    public static class NoRootSecureEntryPointReason extends UnverifiedReason {
+        public NoRootSecureEntryPointReason() {
+        }
+
+        @Override
+        public String getReasonString() {
+            return "No secure entry point was found for the root zone (\"Did you forget to configure a root SEP?\")";
+        }
+    }
+
     public static class NoSignaturesReason extends UnverifiedReason {
         private final Question question;
 
