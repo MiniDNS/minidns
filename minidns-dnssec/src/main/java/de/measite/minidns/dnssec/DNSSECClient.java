@@ -252,11 +252,11 @@ public class DNSSECClient extends ReliableDNSClient {
 
     private VerifySignaturesResult verifySignatures(Question q, Record[] reference, List<Record> toBeVerified) throws IOException {
         Record sigRecord;
+        final Date now = new Date();
         VerifySignaturesResult result = new VerifySignaturesResult();
         while ((sigRecord = nextSignature(toBeVerified)) != null) {
             RRSIG rrsig = (RRSIG) sigRecord.payloadData;
 
-            Date now = new Date(); 
             if (rrsig.signatureExpiration.compareTo(now) < 0 || rrsig.signatureInception.compareTo(now) > 0) {
                 // This RRSIG is out of date, but there might be one that is not.
                 toBeVerified.remove(sigRecord);
