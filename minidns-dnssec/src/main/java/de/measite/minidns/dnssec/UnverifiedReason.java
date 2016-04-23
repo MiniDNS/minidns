@@ -10,9 +10,13 @@
  */
 package de.measite.minidns.dnssec;
 
+import java.util.Collections;
+import java.util.List;
+
 import de.measite.minidns.Question;
 import de.measite.minidns.Record;
 import de.measite.minidns.DNSSECConstants.DigestAlgorithm;
+import de.measite.minidns.record.RRSIG;
 
 public abstract class UnverifiedReason {
     public abstract String getReasonString();
@@ -113,7 +117,27 @@ public abstract class UnverifiedReason {
 
         @Override
         public String getReasonString() {
-            return "No (currently active) signatures were attached to answer on question for " + question.type + " at " + question.name;
+            return "No signatures were attached to answer on question for " + question.type + " at " + question.name;
+        }
+    }
+
+    public static class NoActiveSignaturesReason extends UnverifiedReason {
+        private final Question question;
+        private final List<RRSIG> outdatedRrSigs;
+
+        public NoActiveSignaturesReason(Question question, List<RRSIG> outdatedRrSigs) {
+            this.question = question;
+            assert !outdatedRrSigs.isEmpty();
+            this.outdatedRrSigs = Collections.unmodifiableList(outdatedRrSigs);
+        }
+
+        @Override
+        public String getReasonString() {
+            return "No currently active signatures were attached to answer on question for " + question.type + " at " + question.name;
+        }
+
+        public List<RRSIG> getOutdatedRrSigs() {
+            return outdatedRrSigs;
         }
     }
 

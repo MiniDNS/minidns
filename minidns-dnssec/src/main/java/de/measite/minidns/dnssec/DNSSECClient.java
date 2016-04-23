@@ -18,6 +18,7 @@ import de.measite.minidns.Record;
 import de.measite.minidns.Record.CLASS;
 import de.measite.minidns.Record.TYPE;
 import de.measite.minidns.dnssec.UnverifiedReason.NoSecureEntryPointReason;
+import de.measite.minidns.dnssec.UnverifiedReason.NoActiveSignaturesReason;
 import de.measite.minidns.dnssec.UnverifiedReason.NoSignaturesReason;
 import de.measite.minidns.dnssec.UnverifiedReason.NoTrustAnchorReason;
 import de.measite.minidns.record.DLV;
@@ -34,6 +35,7 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -250,24 +252,38 @@ public class DNSSECClient extends ReliableDNSClient {
     private class VerifySignaturesResult {
         boolean sepSignatureRequired = false;
         boolean sepSignaturePresent = false;
-        boolean signaturesPresent = false;
         Set<UnverifiedReason> reasons = new HashSet<>();
     }
 
     private VerifySignaturesResult verifySignatures(Question q, Record[] reference, List<Record> toBeVerified) throws IOException {
-        Record sigRecord;
         final Date now = new Date();
+        final List<RRSIG> outdatedRrSigs = new LinkedList<>();
         VerifySignaturesResult result = new VerifySignaturesResult();
-        while ((sigRecord = nextSignature(toBeVerified)) != null) {
-            RRSIG rrsig = (RRSIG) sigRecord.payloadData;
+        final List<Record> rrsigs = new ArrayList<>(toBeVerified.size());
+
+        for (Record record : toBeVerified) {
+            if (record.type != TYPE.RRSIG) continue;
+            RRSIG rrsig = (RRSIG) record.payloadData;
 
             if (rrsig.signatureExpiration.compareTo(now) < 0 || rrsig.signatureInception.compareTo(now) > 0) {
                 // This RRSIG is out of date, but there might be one that is not.
-                toBeVerified.remove(sigRecord);
+                outdatedRrSigs.add(rrsig);
                 continue;
             }
+            rrsigs.add(record);
+        }
 
-            result.signaturesPresent = true;
+        if (rrsigs.isEmpty()) {
+            if (!outdatedRrSigs.isEmpty()) {
+                result.reasons.add(new NoActiveSignaturesReason(q, outdatedRrSigs));
+            } else {
+                result.reasons.add(new NoSignaturesReason(q));
+            }
+            return result;
+        }
+
+        for (Record sigRecord : rrsigs) {
+            RRSIG rrsig = (RRSIG) sigRecord.payloadData;
 
             List<Record> records = new ArrayList<>(reference.length);
             for (Record record : reference) {
@@ -299,9 +315,6 @@ public class DNSSECClient extends ReliableDNSClient {
                 toBeVerified.removeAll(records);
             }
             toBeVerified.remove(sigRecord);
-        }
-        if (!result.signaturesPresent) {
-            result.reasons.add(new NoSignaturesReason(q));
         }
         return result;
     }
@@ -417,15 +430,6 @@ public class DNSSECClient extends ReliableDNSClient {
             unverifiedReasons.add(new NoTrustAnchorReason(sepRecord.name.ace));
         }
         return unverifiedReasons;
-    }
-
-    private static Record nextSignature(List<Record> records) {
-        for (Record record : records) {
-            if (record.type == TYPE.RRSIG) {
-                return record;
-            }
-        }
-        return null;
     }
 
     @Override
