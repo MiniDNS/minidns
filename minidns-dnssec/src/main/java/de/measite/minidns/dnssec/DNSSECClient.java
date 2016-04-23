@@ -265,7 +265,7 @@ public class DNSSECClient extends ReliableDNSClient {
 
             result.signaturesPresent = true;
 
-            List<Record> records = new ArrayList<>();
+            List<Record> records = new ArrayList<>(reference.length);
             for (Record record : reference) {
                 if (record.type == rrsig.typeCovered && record.name.equals(sigRecord.name)) {
                     records.add(record);
