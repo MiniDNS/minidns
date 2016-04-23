@@ -212,15 +212,19 @@ public class DNSSECClient extends ReliableDNSClient {
         for (Record record : nameserverRecords) {
             UnverifiedReason reason;
 
-            if (record.type == TYPE.NSEC) {
+            switch (record.type) {
+            case NSEC:
                 nsecPresent = true;
                 reason = verifier.verifyNsec(record, q);
-            } else if (record.type == TYPE.NSEC3) {
+                break;
+            case NSEC3:
                 nsecPresent = true;
                 reason = verifier.verifyNsec3(zone, record, q);
-            } else {
+                break;
+            default:
                 continue;
             }
+
             if (reason != null) {
                 result.add(reason);
             } else {
