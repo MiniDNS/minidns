@@ -43,17 +43,14 @@ public class NetworkDataSource extends DNSDataSource {
             return dnsMessage;
         }
 
+        assert(dnsMessage == null || dnsMessage.isTruncated() || ioExceptions.size() == 1);
+        LOGGER.log(Level.FINE, "Fallback to TCP because {}", new Object[] { dnsMessage != null ? "response is truncated" : ioExceptions.get(0) });
+
         try {
             dnsMessage = queryTcp(message, address, port);
         } catch (IOException e) {
             ioExceptions.add(e);
             MultipleIoException.throwIfRequired(ioExceptions);
-        }
-
-        if (dnsMessage != null && !ioExceptions.isEmpty()) {
-            // In this case, there can only be one exception.
-            assert(ioExceptions.size() == 1);
-            LOGGER.log(Level.FINE, "IO Exception while asking for " + message, ioExceptions.get(0));
         }
 
         return dnsMessage;
