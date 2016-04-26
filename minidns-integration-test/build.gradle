@@ -22,3 +22,9 @@ dependencies {
     testCompile project(path: ":minidns-core", configuration: "testRuntime")
     testCompile project(path: ":minidns-core", configuration: "archives")
 }
+
+run {
+   // Pass all system properties down to the "application" run.
+   // Used e.g. for integration test configuration via properties.
+   systemProperties System.getProperties()
+}

@@ -6,9 +6,10 @@ import de.measite.minidns.Record.TYPE
 import de.measite.minidns.dnssec.DNSSECClient
 
 import de.measite.minidns.minidnsrepl.MiniDnsRepl.clearCache
-import de.measite.minidns.minidnsrepl.MiniDnsRepl.traceMinidns
 
 import de.measite.minidns.minidnsrepl.MiniDNSStats._
+
+import de.measite.minidns.jul.MiniDnsJul._
 
 // Some standard values
 val c = de.measite.minidns.minidnsrepl.MiniDnsRepl.DNSCLIENT

@@ -15,9 +15,12 @@ import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Properties;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
+import de.measite.minidns.jul.MiniDnsJul;
 
 public class IntegrationTestHelper {
     private static Set<Class<?>> testClasses = new HashSet<>();
@@ -36,7 +39,17 @@ public class IntegrationTestHelper {
         testClasses.add(HlaTest.class);
     }
 
+    private static final String MINTTEST = "minttest.";
+
     public static void main(String[] args) {
+        Properties systemProperties = System.getProperties();
+        String debugString = systemProperties.getProperty(MINTTEST + "debug", Boolean.toString(false));
+        boolean debug = Boolean.parseBoolean(debugString);
+        if (debug) {
+            LOGGER.info("Enabling debug and trace output");
+            MiniDnsJul.enableMiniDnsTrace();
+        }
+
         int testsRun = 0;
         List<Method> successfulTests = new ArrayList<>();
         List<Method> failedTests = new ArrayList<>();
