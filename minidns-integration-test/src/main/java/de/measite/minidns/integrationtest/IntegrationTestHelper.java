@@ -86,26 +86,30 @@ public class IntegrationTestHelper {
         Class<?> expected = method.getAnnotation(IntegrationTest.class).expected();
         if (!Exception.class.isAssignableFrom(expected)) expected = null;
 
+        String testClassName = method.getDeclaringClass().getSimpleName();
+        String testMethodName = method.getName();
+
+        LOGGER.logp(Level.INFO, testClassName, testMethodName, "Test start.");
         try {
             method.invoke(null);
 
             if (expected != null) {
-                LOGGER.logp(Level.WARNING, aClass.getName(), method.getName(), "Test failed: expected exception " + expected + " was not thrown!");
+                LOGGER.logp(Level.WARNING, testClassName, testMethodName, "Test failed: expected exception " + expected + " was not thrown!");
                 return TestResult.Failure;
             } else {
-                LOGGER.logp(Level.INFO, aClass.getName(), method.getName(), "Test suceeded.");
+                LOGGER.logp(Level.INFO, testClassName, testMethodName, "Test suceeded.");
                 return TestResult.Success;
             }
         } catch (InvocationTargetException e) {
             if (expected != null && expected.isAssignableFrom(e.getTargetException().getClass())) {
-                LOGGER.logp(Level.INFO, aClass.getName(), method.getName(), "Test suceeded.");
+                LOGGER.logp(Level.INFO, testClassName, testMethodName, "Test suceeded.");
                 return TestResult.Success;
             } else {
-                LOGGER.logp(Level.WARNING, aClass.getName(), method.getName(), "Test failed: unexpected exception was thrown: ", e.getTargetException());
+                LOGGER.logp(Level.WARNING, testClassName, testMethodName, "Test failed: unexpected exception was thrown: ", e.getTargetException());
                 return TestResult.Failure;
             }
         } catch (IllegalAccessException | NullPointerException e) {
-            LOGGER.logp(Level.SEVERE, aClass.getName(), method.getName(), "Test failed: could not invoke test, is it public static?");
+            LOGGER.logp(Level.SEVERE, testClassName, testMethodName, "Test failed: could not invoke test, is it public static?");
             return TestResult.Failure;
         }
     }
