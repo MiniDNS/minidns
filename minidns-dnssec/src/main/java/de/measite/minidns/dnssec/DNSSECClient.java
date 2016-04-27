@@ -435,6 +435,7 @@ public class DNSSECClient extends ReliableDNSClient {
     @Override
     protected DNSMessage newQuestion(DNSMessage message) {
         message.setOptPseudoRecord(getDataSource().getUdpPayloadSize(), OPT.FLAG_DNSSEC_OK);
+        message.setCheckDisabled(true);
         return super.newQuestion(message);
     }
 
@@ -443,6 +444,10 @@ public class DNSSECClient extends ReliableDNSClient {
         boolean dnssecOk = response.isDnssecOk();
         if (!dnssecOk) {
             return "DNSSEC OK (DO) flag not set in response";
+        }
+        boolean checkingDisabled = response.isCheckDisabled();
+        if (!checkingDisabled) {
+            return "CHECKING DISABLED (CD) flag not set in response";
         }
         return super.isResponseAcceptable(response);
     }
