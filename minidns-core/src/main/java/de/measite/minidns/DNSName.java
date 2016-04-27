@@ -373,6 +373,22 @@ public class DNSName implements CharSequence, Serializable, Comparable<DNSName> 
         return new DNSName(stripedLabels);
     }
 
+    /**
+     * Return the parent of this DNS label. Will return the root label if this label itself is the root label (because there is no parent of root).
+     * <p>
+     * For example:
+     * </p>
+     * <ul>
+     *  <li><code>"foo.bar.org".getParent() == "bar.org"</code></li>
+     *  <li><code> ".".getParent() == "."</code></li>
+     * </ul>
+     * @return the parent of this DNS label.
+     */
+    public DNSName getParent() {
+        if (isRootLabel()) return EMPTY;
+        return stripToLabels(getLabelCount() - 1);
+    }
+
     public boolean isRootLabel() {
         return ace.isEmpty() || ace.equals(".");
     }
