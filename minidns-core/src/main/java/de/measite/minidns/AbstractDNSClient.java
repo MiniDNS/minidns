@@ -135,7 +135,7 @@ public abstract class AbstractDNSClient {
         DNSMessage message = buildMessage(q);
 
         final Level TRACE_LOG_LEVEL = Level.FINE;
-        LOGGER.log(TRACE_LOG_LEVEL, "Asking {0} on {1} for {2}", new Object[] { address, port, q });
+        LOGGER.log(TRACE_LOG_LEVEL, "Asking {0} on {1} for {2} with:\n{3}", new Object[] { address, port, q, message });
 
         try {
             dnsMessage = dataSource.query(message, address, port);

@@ -36,9 +36,13 @@ public class MiniDnsJul {
 );
 // @formatter:on
 
-    private static final SimpleDateFormat LOG_TIME_FORMAT = new SimpleDateFormat("hh:mm:ss.SSS");
+    private static final SimpleDateFormat LONG_LOG_TIME_FORMAT = new SimpleDateFormat("hh:mm:ss.SSS");
+
+    private static final SimpleDateFormat SHORT_LOG_TIME_FORMAT = new SimpleDateFormat("mm:ss.SSS");
 
     private static final Handler CONSOLE_HANDLER = new ConsoleHandler();
+
+    private static boolean shortLog = true;
 
     static {
         try {
@@ -52,13 +56,41 @@ public class MiniDnsJul {
             @Override
             public String format(LogRecord logRecord) {
                 StringBuilder sb = new StringBuilder(256);
+
+                String level = logRecord.getLevel().toString();
+                if (shortLog) {
+                    level = level.substring(0, 1);
+                }
+                sb.append(level).append(' ');
+
                 Date date = new Date(logRecord.getMillis());
                 String dateString;
-                synchronized (LOG_TIME_FORMAT) {
-                    dateString = LOG_TIME_FORMAT.format(date);
+                if (shortLog) {
+                    synchronized (SHORT_LOG_TIME_FORMAT) {
+                        dateString = SHORT_LOG_TIME_FORMAT.format(date);
+                    }
+                } else {
+                    synchronized (LONG_LOG_TIME_FORMAT) {
+                        dateString = LONG_LOG_TIME_FORMAT.format(date);
+                    }
                 }
-                sb.append(dateString).append(' ').append(logRecord.getLoggerName()).append(' ').append(logRecord.getSourceMethodName()).append('\n');
-                sb.append(logRecord.getLevel()).append(' ').append(formatMessage(logRecord));
+                sb.append(dateString).append(' ');
+
+                String loggerName = logRecord.getLoggerName();
+                if (shortLog) {
+                    String[] parts = loggerName.split("\\.");
+                    loggerName = parts[parts.length > 1 ? parts.length - 1 : 0];
+                }
+                sb.append(loggerName);
+                sb.append(' ').append(logRecord.getSourceMethodName());
+
+                if (shortLog) {
+                    sb.append(' ');
+                } else {
+                    sb.append('\n');
+                }
+
+                sb.append(formatMessage(logRecord));
                 if (logRecord.getThrown() != null) {
                     StringWriter sw = new StringWriter();
                     PrintWriter pw = new PrintWriter(sw);
@@ -77,6 +109,11 @@ public class MiniDnsJul {
     }
 
     public static void enableMiniDnsTrace() {
+        enableMiniDnsTrace(true);
+    }
+
+    public static void enableMiniDnsTrace(boolean shortLog) {
+        MiniDnsJul.shortLog = shortLog;
         CONSOLE_HANDLER.setLevel(Level.FINEST);
     }
 

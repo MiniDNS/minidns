@@ -91,7 +91,7 @@ public class ReliableDNSClient extends AbstractDNSClient {
             } else if (dnsMessage == null) {
                 logString += " DNSClient did not return a response";
             } else if (unacceptableReason != null) {
-                logString += " response was not acceptable: " + unacceptableReason + ". Response: " + dnsMessage;
+                logString += unacceptableReason + ". Response:\n" + dnsMessage;
             } else {
                 throw new AssertionError("This should never been reached");
             }
