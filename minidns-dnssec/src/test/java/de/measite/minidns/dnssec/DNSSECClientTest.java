@@ -449,14 +449,15 @@ public class DNSSECClientTest {
                                 record("example.com", a("1.1.1.2")))
                 )
         );
-        DNSMessage nsecMessage = new DNSMessage(DNSWorld.createEmptyResponseMessage(), null, DNSSECWorld.merge(
+        DNSMessage.Builder nsecMessage = DNSMessage.builder();
+        Record[] records = DNSSECWorld.merge(
                                 sign(comZSK, "com", comPrivateZSK, algorithm,
                                         record("example.com", nsec("www.example.com", Record.TYPE.A))),
                                 sign(comZSK, "com", comPrivateZSK, algorithm,
-                                        record("example.com", soa("sns.dns.icann.org", "noc.dns.icann.org", 2015081265, 7200, 3600, 1209600, 3600)))),
-                        null);
+                                        record("example.com", soa("sns.dns.icann.org", "noc.dns.icann.org", 2015081265, 7200, 3600, 1209600, 3600))));
+        nsecMessage.setNameserverRecords(records);
         nsecMessage.setAuthoritativeAnswer(true);
-        world.addPreparedResponse(new DNSSECWorld.AddressedNsecResponse(InetAddress.getByAddress("ns.com", new byte[]{1, 1, 1, 1}), nsecMessage));
+        world.addPreparedResponse(new DNSSECWorld.AddressedNsecResponse(InetAddress.getByAddress("ns.com", new byte[]{1, 1, 1, 1}), nsecMessage.build()));
         DNSMessage message = client.query("nsec.example.com", Record.TYPE.A);
         client.setStripSignatureRecords(false);
         assertNotNull(message);

@@ -83,7 +83,7 @@ public class LRUCache implements DNSCache {
 
     @Override
     public synchronized void put(Question q, DNSMessage message) {
-        if (message.getReceiveTimestamp() <= 0L) {
+        if (message.receiveTimestamp <= 0L) {
             return;
         }
         backend.put(q, message);
@@ -100,10 +100,10 @@ public class LRUCache implements DNSCache {
         long ttl = maxTTL;
         // RFC 2181 § 5.2 says that all TTLs in a RRSet should be equal, if this isn't the case, then we assume the
         // shortest TTL to be the effective one.
-        for (Record r : message.getAnswers()) {
+        for (Record r : message.answers) {
             ttl = Math.min(ttl, r.ttl);
         }
-        if (message.getReceiveTimestamp() + ttl < System.currentTimeMillis()) {
+        if (message.receiveTimestamp + ttl < System.currentTimeMillis()) {
             missCount++;
             expireCount++;
             backend.remove(q);

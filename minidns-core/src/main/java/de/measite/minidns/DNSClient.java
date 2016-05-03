@@ -53,7 +53,7 @@ public class DNSClient extends AbstractDNSClient {
     }
 
     @Override
-    protected DNSMessage newQuestion(DNSMessage message) {
+    protected DNSMessage.Builder newQuestion(DNSMessage.Builder message) {
         message.setRecursionDesired(true);
         message.setOptPseudoRecord(dataSource.getUdpPayloadSize(), askForDnssec ? OPT.FLAG_DNSSEC_OK : 0);
         return message;
@@ -89,11 +89,11 @@ public class DNSClient extends AbstractDNSClient {
                 if (disableResultFilter) {
                     return message;
                 }
-                if (message.getResponseCode() !=
+                if (message.responseCode !=
                         DNSMessage.RESPONSE_CODE.NO_ERROR) {
                     continue;
                 }
-                for (Record record : message.getAnswers()) {
+                for (Record record : message.answers) {
                     if (record.isAnswer(q)) {
                         return message;
                     }

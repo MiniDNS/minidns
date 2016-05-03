@@ -36,23 +36,20 @@ public class ExtendedLRUCache extends LRUCache {
     @Override
     public void put(Question q, DNSMessage message) {
         super.put(q, message);
+        Map<Question, List<Record>> extraCaches = new HashMap<>(message.additionalResourceRecords.size());
 
-        Map<Question, List<Record>> extraCaches = new HashMap<>(message.getAdditionalResourceRecords().length);
-
-        gather(extraCaches, q, message.getAnswers());
-        gather(extraCaches, q, message.getNameserverRecords());
-        gather(extraCaches, q, message.getAdditionalResourceRecords());
+        gather(extraCaches, q, message.answers);
+        gather(extraCaches, q, message.nameserverRecords);
+        gather(extraCaches, q, message.additionalResourceRecords);
 
         for (Entry<Question, List<Record>> entry : extraCaches.entrySet()) {
-            Record[] answerRecords = new Record[entry.getValue().size()];
-            entry.getValue().toArray(answerRecords);
-            DNSMessage answer = new DNSMessage(message, answerRecords, null, null);
+            DNSMessage answer = message.asBuilder().addAnswers(entry.getValue()).build();
             Question question = entry.getKey();
             super.put(question, answer);
         }
     }
 
-    private final void gather(Map<Question, List<Record>> extraCaches, Question q, Record[] records) {
+    private final void gather(Map<Question, List<Record>> extraCaches, Question q, List<Record> records) {
         for (Record extraRecord : records) {
             if (!shouldGather(extraRecord, q))
                 continue;

@@ -32,6 +32,7 @@ import java.io.IOException;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -99,7 +100,9 @@ public class DNSSECClient extends ReliableDNSClient {
         if (dnsMessage == null) return null;
 
         // At this state, a DNSMessage is never authentic!
-        dnsMessage.setAuthenticData(false);
+        if (dnsMessage.authenticData) {
+            dnsMessage = dnsMessage.asBuilder().setAuthenticData(false).build();
+        }
 
         Set<UnverifiedReason> unverifiedReasons = verify(dnsMessage);
 
@@ -107,37 +110,38 @@ public class DNSSECClient extends ReliableDNSClient {
     }
 
     private DNSSECMessage createDnssecMessage(DNSMessage dnsMessage, Set<UnverifiedReason> result) {
-        Record[] answers = dnsMessage.getAnswers();
-        Record[] nameserverRecords = dnsMessage.getNameserverRecords();
-        Record[] additionalResourceRecords = dnsMessage.getAdditionalResourceRecords();
+        List<Record> answers = dnsMessage.answers;
+        List<Record> nameserverRecords = dnsMessage.nameserverRecords;
+        List<Record> additionalResourceRecords = dnsMessage.additionalResourceRecords;
         Set<Record> signatures = new HashSet<>();
         extractSignatureRecords(signatures, answers);
         extractSignatureRecords(signatures, nameserverRecords);
         extractSignatureRecords(signatures, additionalResourceRecords);
+        DNSMessage.Builder messageBuilder = dnsMessage.asBuilder();
         if (stripSignatureRecords) {
-            answers = stripSignatureRecords(answers);
-            nameserverRecords = stripSignatureRecords(nameserverRecords);
-            additionalResourceRecords = stripSignatureRecords(additionalResourceRecords);
+            messageBuilder.setAnswers(stripSignatureRecords(answers));
+            messageBuilder.setNameserverRecords(stripSignatureRecords(nameserverRecords));
+            messageBuilder.setAdditionalResourceRecords(stripSignatureRecords(additionalResourceRecords));
         }
-        return new DNSSECMessage(dnsMessage, answers, nameserverRecords, additionalResourceRecords, signatures, result);
+        return new DNSSECMessage(messageBuilder, signatures, result);
     }
 
-    private static void extractSignatureRecords(Set<Record> signatures, Record[] records) {
+    private static void extractSignatureRecords(Set<Record> signatures, Collection<Record> records) {
         for (Record record : records) {
             if (record.type == TYPE.RRSIG)
                 signatures.add(record);
         }
     }
 
-    private static Record[] stripSignatureRecords(Record[] records) {
-        if (records.length == 0) return records;
-        List<Record> recordList = new ArrayList<>();
+    private static List<Record> stripSignatureRecords(List<Record> records) {
+        if (records.isEmpty()) return records;
+        List<Record> recordList = new ArrayList<>(records.size());
         for (Record record : records) {
             if (record.type != TYPE.RRSIG) {
                 recordList.add(record);
             }
         }
-        return recordList.toArray(new Record[recordList.size()]);
+        return recordList;
     }
 
     @Override
@@ -433,9 +437,9 @@ public class DNSSECClient extends ReliableDNSClient {
     }
 
     @Override
-    protected DNSMessage newQuestion(DNSMessage message) {
+    protected DNSMessage.Builder newQuestion(DNSMessage.Builder message) {
         message.setOptPseudoRecord(getDataSource().getUdpPayloadSize(), OPT.FLAG_DNSSEC_OK);
-        message.setCheckDisabled(true);
+        message.setCheckingDisabled(true);
         return super.newQuestion(message);
     }
 

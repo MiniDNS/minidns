@@ -31,9 +31,9 @@ public class NetworkDataSourceTest {
             protected DNSMessage queryUdp(DNSMessage message, InetAddress address, int port) throws IOException {
                 assertFalse(lastQueryUdp);
                 lastQueryUdp = true;
-                DNSMessage msg = new DNSMessage();
+                DNSMessage.Builder msg = DNSMessage.builder();
                 msg.setTruncated(true);
-                return msg;
+                return msg.build();
             }
 
             @Override
@@ -44,7 +44,7 @@ public class NetworkDataSourceTest {
             }
         }
         TestNetworkDataSource world = new TestNetworkDataSource();
-        assertNull(world.query(new DNSMessage(), null, 53));
+        assertNull(world.query(DNSMessage.builder().build(), null, 53));
         assertFalse(world.lastQueryUdp);
     }
 }

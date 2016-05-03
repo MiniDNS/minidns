@@ -31,8 +31,7 @@ public class LRUCacheTest {
 
     @Test
     public void testOutdatedCacheEntry() {
-        DNSMessage message = createSampleMessage();
-        message.receiveTimestamp = 1;
+        DNSMessage message = createSampleMessage(1);
         Question question = new Question("", Record.TYPE.A);
         lruCache.put(question, message);
 
@@ -60,10 +59,14 @@ public class LRUCacheTest {
     }
 
     private static DNSMessage createSampleMessage() {
-        DNSMessage message = new DNSMessage();
-        message.receiveTimestamp = System.currentTimeMillis();
-        message.answers = new Record[]{record("", ns("a.root-servers.net"))};
-        message.additionalResourceRecords = new Record[]{record("a.root-servers.net", a("127.0.0.1"))};
-        return message;
+        return createSampleMessage(System.currentTimeMillis());
+    }
+
+    private static DNSMessage createSampleMessage(long receiveTimestamp) {
+        DNSMessage.Builder message = DNSMessage.builder();
+        message.setReceiveTimestamp(receiveTimestamp);
+        message.addAnswer(record("", ns("a.root-servers.net")));
+        message.addAdditionalResourceRecords(record("a.root-servers.net", a("127.0.0.1")));
+        return message.build();
     }
 }

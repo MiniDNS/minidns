@@ -342,7 +342,7 @@ public class RecursiveDNSClient extends AbstractDNSClient {
     }
 
     @Override
-    protected DNSMessage newQuestion(DNSMessage message) {
+    protected DNSMessage.Builder newQuestion(DNSMessage.Builder message) {
         message.setRecursionDesired(false);
         message.setOptPseudoRecord(dataSource.getUdpPayloadSize(), 0);
         return message;

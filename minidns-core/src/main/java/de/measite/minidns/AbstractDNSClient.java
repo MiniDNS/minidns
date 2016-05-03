@@ -132,7 +132,8 @@ public abstract class AbstractDNSClient {
             return dnsMessage;
         }
 
-        DNSMessage message = buildMessage(q);
+        DNSMessage.Builder messageBuilder = buildMessage(q);
+        DNSMessage message = messageBuilder.build();
 
         final Level TRACE_LOG_LEVEL = Level.FINE;
         LOGGER.log(TRACE_LOG_LEVEL, "Asking {0} on {1} for {2} with:\n{3}", new Object[] { address, port, q, message });
@@ -166,7 +167,7 @@ public abstract class AbstractDNSClient {
      * @return True, if the response should be cached, false otherwise.
      */
     protected boolean isResponseCacheable(Question q, DNSMessage dnsMessage) {
-        for (Record record : dnsMessage.getAnswers()) {
+        for (Record record : dnsMessage.answers) {
             if (record.isAnswer(q)) {
                 return true;
             }
@@ -180,15 +181,15 @@ public abstract class AbstractDNSClient {
      * @param question {@link Question} to be put in the DNS request.
      * @return A {@link DNSMessage} requesting the answer for the given Question.
      */
-    final DNSMessage buildMessage(Question question) {
-        DNSMessage message = new DNSMessage();
+    final DNSMessage.Builder buildMessage(Question question) {
+        DNSMessage.Builder message = DNSMessage.builder();
         message.setQuestions(question);
         message.setId(random.nextInt());
         message = newQuestion(message);
         return message;
     }
 
-    protected abstract DNSMessage newQuestion(DNSMessage questionMessage);
+    protected abstract DNSMessage.Builder newQuestion(DNSMessage.Builder questionMessage);
 
     /**
      * Query a nameserver for a single entry.

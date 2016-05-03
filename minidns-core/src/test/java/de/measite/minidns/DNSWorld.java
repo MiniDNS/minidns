@@ -10,8 +10,6 @@
  */
 package de.measite.minidns;
 
-import de.measite.minidns.DNSMessage.OPCODE;
-import de.measite.minidns.DNSMessage.RESPONSE_CODE;
 import de.measite.minidns.DNSSECConstants.DigestAlgorithm;
 import de.measite.minidns.DNSSECConstants.SignatureAlgorithm;
 import de.measite.minidns.Record.CLASS;
@@ -35,7 +33,7 @@ import de.measite.minidns.source.DNSDataSource;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.Collection;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -56,10 +54,10 @@ public class DNSWorld extends DNSDataSource {
 
         for (PreparedResponse answer : answers) {
             if (answer.isResponse(message, address)) {
-                DNSMessage response = answer.getResponse();
-                response.id = message.id;
-                response.questions = message.questions.clone();
-                return response;
+                DNSMessage.Builder response = answer.getResponse().asBuilder();
+                response.setId(message.id);
+                response.setQuestions(message.questions);
+                return response.build();
             }
         }
         return null;
@@ -67,17 +65,6 @@ public class DNSWorld extends DNSDataSource {
 
     public void addPreparedResponse(PreparedResponse answer) {
         answers.add(answer);
-    }
-
-    public static DNSMessage createEmptyResponseMessage() {
-        DNSMessage message = new DNSMessage();
-        message.answers = new Record[0];
-        message.nameserverRecords = new Record[0];
-        message.questions = new Question[0];
-        message.additionalResourceRecords = new Record[0];
-        message.responseCode = RESPONSE_CODE.NO_ERROR;
-        message.opcode = OPCODE.QUERY;
-        return message;
     }
 
     public interface PreparedResponse {
@@ -97,7 +84,7 @@ public class DNSWorld extends DNSDataSource {
 
         @Override
         public boolean isResponse(DNSMessage request, InetAddress address) {
-            ArrayList<Question> questions = new ArrayList<>(Arrays.asList(this.request.questions));
+            List<Question> questions = this.request.copyQuestions();
             for (Question q : request.questions) {
                 if (!hasQuestion(questions, q)) {
                     return false;
@@ -111,7 +98,7 @@ public class DNSWorld extends DNSDataSource {
             return response;
         }
 
-        private static boolean hasQuestion(ArrayList<Question> questions, Question q) {
+        private static boolean hasQuestion(Collection<Question> questions, Question q) {
             for (Iterator<Question> iterator = questions.iterator(); iterator.hasNext(); ) {
                 if (iterator.next().equals(q)) {
                     iterator.remove();
@@ -281,21 +268,24 @@ public class DNSWorld extends DNSDataSource {
         client.setDataSource(world);
         for (Zone zone : zones) {
             for (RRSet rrSet : zone.getRRSets()) {
-                DNSMessage request = client.buildMessage(new Question(rrSet.name, rrSet.type, rrSet.clazz, false));
-                DNSMessage response = createEmptyResponseMessage();
-                response.answers = rrSet.records.toArray(new Record[rrSet.records.size()]);
-                response.authoritativeAnswer = true;
-                attachGlues(response, response.answers, zone.records);
-                attachSignatures(response, zone.records);
+                DNSMessage.Builder req = client.buildMessage(new Question(rrSet.name, rrSet.type, rrSet.clazz, false));
+                DNSMessage.Builder resp = DNSMessage.builder();
+                resp.setAnswers(rrSet.records);
+                resp.setAuthoritativeAnswer(true);
+                attachGlues(resp, rrSet.records, zone.records);
+                attachSignatures(resp, zone.records);
+                DNSMessage request = req.build();
+                DNSMessage response = resp.build();
                 if (zone.isRootZone()) {
                     world.addPreparedResponse(new RootAnswerResponse(request, response));
                 } else {
                     world.addPreparedResponse(new AddressedAnswerResponse(zone.address, request, response));
                 }
                 if (rrSet.type == TYPE.NS) {
-                    DNSMessage hintsResponse = createEmptyResponseMessage();
-                    hintsResponse.nameserverRecords = rrSet.records.toArray(new Record[rrSet.records.size()]);
-                    hintsResponse.additionalResourceRecords = response.additionalResourceRecords;
+                    DNSMessage.Builder hintsResp = DNSMessage.builder();
+                    hintsResp.setNameserverRecords(rrSet.records);
+                    hintsResp.setAdditionalResourceRecords(response.additionalResourceRecords);
+                    DNSMessage hintsResponse = hintsResp.build();
                     if (zone.isRootZone()) {
                         world.addPreparedResponse(new RootHintsResponse(rrSet.name, hintsResponse));
                     } else {
@@ -307,35 +297,30 @@ public class DNSWorld extends DNSDataSource {
         return world;
     }
 
-    static void attachSignatures(DNSMessage response, Record[] records) {
-        List<Record> recordList = new ArrayList<>();
-        for (Record record : response.answers) {
+    static void attachSignatures(DNSMessage.Builder response, Record[] records) {
+        List<Record> recordList = new ArrayList<>(records.length);
+        for (Record record : response.getAnswers()) {
             for (Record r : records) {
                 if (r.name.equals(record.name) && r.type == TYPE.RRSIG && ((RRSIG) r.payloadData).typeCovered == record.type) {
                     recordList.add(r);
                 }
             }
         }
-        if (!recordList.isEmpty()) {
-            recordList.addAll(Arrays.asList(response.answers));
-            response.answers = recordList.toArray(new Record[recordList.size()]);
-        }
+        response.addAnswers(recordList);
 
-        recordList = new ArrayList<>();
-        for (Record record : response.additionalResourceRecords) {
+        recordList.clear();
+
+        for (Record record : response.getAdditionalResourceRecords()) {
             for (Record r : records) {
                 if (r.name.equals(record.name) && r.type == TYPE.RRSIG && ((RRSIG) r.payloadData).typeCovered == record.type) {
                     recordList.add(r);
                 }
             }
         }
-        if (!recordList.isEmpty()) {
-            recordList.addAll(Arrays.asList(response.additionalResourceRecords));
-            response.additionalResourceRecords = recordList.toArray(new Record[recordList.size()]);
-        }
+        response.addAdditionalResourceRecords(recordList);
     }
 
-    static void attachGlues(DNSMessage response, Record[] answers, Record[] records) {
+    static void attachGlues(DNSMessage.Builder response, Collection<Record> answers, Record[] records) {
         List<Record> glues = new ArrayList<>();
         for (Record record : answers) {
             if (record.type == TYPE.CNAME) {
@@ -348,7 +333,7 @@ public class DNSWorld extends DNSDataSource {
         }
 
         if (!glues.isEmpty()) {
-            response.additionalResourceRecords = glues.toArray(new Record[glues.size()]);
+            response.setAdditionalResourceRecords(glues);
         }
     }
 
@@ -370,12 +355,12 @@ public class DNSWorld extends DNSDataSource {
         DNSWorld world = new DNSWorld();
         client.setDataSource(world);
         for (Record record : records) {
-            DNSMessage request = client.buildMessage(new Question(record.name, record.type, record.clazz, record.unicastQuery));
-            request.recursionDesired = true;
-            DNSMessage response = createEmptyResponseMessage();
-            response.answers = new Record[]{record};
-            response.recursionAvailable = true;
-            world.addPreparedResponse(new AnswerResponse(request, response));
+            DNSMessage.Builder request = client.buildMessage(new Question(record.name, record.type, record.clazz, record.unicastQuery));
+            request.setRecursionDesired(true);
+            DNSMessage.Builder response = DNSMessage.builder();
+            response.setAnswers(record);
+            response.setRecursionAvailable(true);
+            world.addPreparedResponse(new AnswerResponse(request.build(), response.build()));
         }
         return world;
     }

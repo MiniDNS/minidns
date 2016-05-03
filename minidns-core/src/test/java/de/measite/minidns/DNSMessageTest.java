@@ -196,7 +196,7 @@ public class DNSMessageTest {
         assertFalse(m.isAuthenticData());
         assertTrue(m.isRecursionDesired());
         assertTrue(m.isRecursionAvailable());
-        assertFalse(m.isQuery());
+        assertTrue(m.qr);
         Record[] answers = m.getAnswers();
         assertEquals(13, answers.length);
         for (Record answer : answers) {
@@ -206,9 +206,9 @@ public class DNSMessageTest {
             assertEquals(112028, answer.ttl);
             assertTrue(((NS) answer.payloadData).name.ace.endsWith(".gtld-servers.net"));
         }
-        Record[] arr = m.getAdditionalResourceRecords();
-        assertEquals(1, arr.length);
-        Record opt = arr[0];
+        List<Record> arr = m.additionalResourceRecords;
+        assertEquals(1, arr.size());
+        Record opt = arr.get(0);
         assertEquals(4096, OPT.readEdnsUdpPayloadSize(opt));
         assertEquals(0, OPT.readEdnsVersion(opt));
     }
@@ -250,9 +250,9 @@ public class DNSMessageTest {
                     break;
             }
         }
-        Record[] arr = m.getAdditionalResourceRecords();
-        assertEquals(1, arr.length);
-        Record opt = arr[0];
+        List<Record> arr = m.additionalResourceRecords;
+        assertEquals(1, arr.size());
+        Record opt = arr.get(0);
         assertEquals(512, OPT.readEdnsUdpPayloadSize(opt));
         assertEquals(0, OPT.readEdnsVersion(opt));
     }
@@ -263,21 +263,21 @@ public class DNSMessageTest {
         assertFalse(m.isAuthoritativeAnswer());
         assertTrue(m.isRecursionDesired());
         assertTrue(m.isRecursionAvailable());
-        Record[] answers = m.getAnswers();
-        assertEquals(2, answers.length);
+        List<Record> answers = m.answers;
+        assertEquals(2, answers.size());
 
-        assertEquals(TYPE.DS, answers[0].type);
-        assertEquals(TYPE.DS, answers[0].payloadData.getType());
-        DS ds = (DS) answers[0].payloadData;
+        assertEquals(TYPE.DS, answers.get(0).type);
+        assertEquals(TYPE.DS, answers.get(0).payloadData.getType());
+        DS ds = (DS) answers.get(0).payloadData;
         assertEquals(30909, ds.keyTag);
         assertEquals(SignatureAlgorithm.RSASHA256, ds.algorithm);
         assertEquals(DigestAlgorithm.SHA256, ds.digestType);
         assertCsEquals("E2D3C916F6DEEAC73294E8268FB5885044A833FC5459588F4A9184CFC41A5766",
                 new BigInteger(1, ds.digest).toString(16).toUpperCase());
 
-        assertEquals(TYPE.RRSIG, answers[1].type);
-        assertEquals(TYPE.RRSIG, answers[1].payloadData.getType());
-        RRSIG rrsig = (RRSIG) answers[1].payloadData;
+        assertEquals(TYPE.RRSIG, answers.get(1).type);
+        assertEquals(TYPE.RRSIG, answers.get(1).payloadData.getType());
+        RRSIG rrsig = (RRSIG) answers.get(1).payloadData;
         assertEquals(TYPE.DS, rrsig.typeCovered);
         assertEquals(SignatureAlgorithm.RSASHA256, rrsig.algorithm);
         assertEquals(1, rrsig.labels);
@@ -290,10 +290,10 @@ public class DNSMessageTest {
         assertCsEquals("", rrsig.signerName);
         assertEquals(128, rrsig.signature.length);
 
-        Record[] arr = m.getAdditionalResourceRecords();
-        assertEquals(1, arr.length);
-        assertEquals(TYPE.OPT, arr[0].getPayload().getType());
-        Record opt = arr[0];
+        List<Record> arr = m.additionalResourceRecords;
+        assertEquals(1, arr.size());
+        assertEquals(TYPE.OPT, arr.get(0).getPayload().getType());
+        Record opt = arr.get(0);
         assertEquals(512, OPT.readEdnsUdpPayloadSize(opt));
         assertEquals(0, OPT.readEdnsVersion(opt));
         assertTrue((OPT.readEdnsFlags(opt) & OPT.FLAG_DNSSEC_OK) > 0);
@@ -302,11 +302,11 @@ public class DNSMessageTest {
     @Test
     public void testExampleNsecLookup() throws Exception {
         DNSMessage m = getMessageFromResource("example-nsec");
-        Record[] answers = m.getAnswers();
-        assertEquals(1, answers.length);
-        assertEquals(TYPE.NSEC, answers[0].type);
-        assertEquals(TYPE.NSEC, answers[0].payloadData.getType());
-        NSEC nsec = (NSEC) answers[0].getPayload();
+        List<Record> answers = m.answers;
+        assertEquals(1, answers.size());
+        assertEquals(TYPE.NSEC, answers.get(0).type);
+        assertEquals(TYPE.NSEC, answers.get(0).payloadData.getType());
+        NSEC nsec = (NSEC) answers.get(0).getPayload();
         assertCsEquals("www.example.com", nsec.next);
         ArrayList<TYPE> types = new ArrayList<>(Arrays.asList(
                 TYPE.A, TYPE.NS, TYPE.SOA, TYPE.TXT,
@@ -362,35 +362,35 @@ public class DNSMessageTest {
 
     @Test
     public void testMessageSelfQuestionReconstruction() throws Exception {
-        DNSMessage message = new DNSMessage();
-        message.setQuestions(new Question("www.example.com", TYPE.A));
-        message.setRecursionDesired(true);
-        message.setId(42);
-        message.setQuery(true);
-        message = new DNSMessage(message.toArray());
+        DNSMessage.Builder dmb = DNSMessage.builder();
+        dmb.setQuestions(new Question("www.example.com", TYPE.A));
+        dmb.setRecursionDesired(true);
+        dmb.setId(42);
+        dmb.setQrFlag(true);
+        DNSMessage message = new DNSMessage(dmb.build().toArray());
 
-        assertEquals(1, message.getQuestions().length);
+        assertEquals(1, message.questions.size());
         assertEquals(0, message.getAnswers().length);
         assertEquals(0, message.getAdditionalResourceRecords().length);
         assertEquals(0, message.getNameserverRecords().length);
         assertTrue(message.isRecursionDesired());
-        assertTrue(message.isQuery());
+        assertTrue(message.qr);
         assertEquals(42, message.getId());
-        assertCsEquals("www.example.com", message.questions[0].name);
-        assertEquals(TYPE.A, message.questions[0].type);
+        assertCsEquals("www.example.com", message.questions.get(0).name);
+        assertEquals(TYPE.A, message.questions.get(0).type);
     }
 
     @Test
     public void testMessageSelfEasyAnswersReconstruction() throws Exception {
-        DNSMessage message = new DNSMessage();
-        message.answers = new Record[]{
+        DNSMessage.Builder dmb = DNSMessage.builder();
+        dmb.setAnswers(new Record[]{
                 record("www.example.com", a("127.0.0.1")), 
-                record("www.example.com", ns("example.com"))};
-        message.setRecursionAvailable(true);
-        message.setCheckDisabled(true);
-        message.setQuery(false);
-        message.setId(43);
-        message = new DNSMessage(message.toArray());
+                record("www.example.com", ns("example.com"))});
+        dmb.setRecursionAvailable(true);
+        dmb.setCheckingDisabled(true);
+        dmb.setQrFlag(false);
+        dmb.setId(43);
+        DNSMessage message = new DNSMessage(dmb.build().toArray());
 
         assertEquals(0, message.getQuestions().length);
         assertEquals(2, message.getAnswers().length);
@@ -399,31 +399,31 @@ public class DNSMessageTest {
         assertTrue(message.isRecursionAvailable());
         assertFalse(message.isAuthenticData());
         assertTrue(message.isCheckDisabled());
-        assertFalse(message.isQuery());
+        assertFalse(message.qr);
         assertEquals(43, message.getId());
-        assertCsEquals("www.example.com", message.answers[0].name);
-        assertEquals(TYPE.A, message.answers[0].type);
-        assertCsEquals("127.0.0.1", message.answers[0].payloadData.toString());
-        assertCsEquals("www.example.com", message.answers[1].name);
-        assertEquals(TYPE.NS, message.answers[1].type);
-        assertCsEquals("example.com.", message.answers[1].payloadData.toString());
+        assertCsEquals("www.example.com", message.answers.get(0).name);
+        assertEquals(TYPE.A, message.answers.get(0).type);
+        assertCsEquals("127.0.0.1", message.answers.get(0).payloadData.toString());
+        assertCsEquals("www.example.com", message.answers.get(1).name);
+        assertEquals(TYPE.NS, message.answers.get(1).type);
+        assertCsEquals("example.com.", message.answers.get(1).payloadData.toString());
     }
 
     @Test
     public void testMessageSelfComplexReconstruction() throws Exception {
-        DNSMessage message = new DNSMessage();
-        message.questions = new Question[]{new Question("www.example.com", TYPE.NS)};
-        message.answers = new Record[]{record("www.example.com", ns("ns.example.com"))};
-        message.additionalResourceRecords = new Record[]{record("ns.example.com", a("127.0.0.1"))};
-        message.nameserverRecords = new Record[]{record("ns.example.com", aaaa("2001::1"))};
-        message.opcode = DNSMessage.OPCODE.QUERY;
-        message.responseCode = DNSMessage.RESPONSE_CODE.NO_ERROR;
-        message.setRecursionAvailable(false);
-        message.setAuthoritativeAnswer(true);
-        message.setAuthenticData(true);
-        message.setQuery(false);
-        message.setId(43);
-        message = new DNSMessage(message.toArray());
+        DNSMessage.Builder dmb = DNSMessage.builder();
+        dmb.addQuestion(new Question("www.example.com", TYPE.NS));
+        dmb.addAnswer(record("www.example.com", ns("ns.example.com")));
+        dmb.addAdditionalResourceRecords(record("ns.example.com", a("127.0.0.1")));
+        dmb.addNameserverRecords(record("ns.example.com", aaaa("2001::1")));
+        dmb.setOpcode(DNSMessage.OPCODE.QUERY);
+        dmb.setResponseCode(DNSMessage.RESPONSE_CODE.NO_ERROR);
+        dmb.setRecursionAvailable(false);
+        dmb.setAuthoritativeAnswer(true);
+        dmb.setAuthenticData(true);
+        dmb.setQrFlag(false);
+        dmb.setId(43);
+        DNSMessage message = new DNSMessage(dmb.build().toArray());
 
         assertEquals(1, message.getQuestions().length);
         assertEquals(1, message.getAnswers().length);
@@ -433,102 +433,102 @@ public class DNSMessageTest {
         assertFalse(message.isRecursionAvailable());
         assertTrue(message.isAuthenticData());
         assertFalse(message.isCheckDisabled());
-        assertFalse(message.isQuery());
+        assertFalse(message.qr);
         assertTrue(message.isAuthoritativeAnswer());
         assertEquals(43, message.getId());
         assertEquals(DNSMessage.OPCODE.QUERY, message.getOpcode());
         assertEquals(DNSMessage.RESPONSE_CODE.NO_ERROR, message.getResponseCode());
 
-        assertCsEquals("www.example.com", message.questions[0].name);
-        assertEquals(TYPE.NS, message.questions[0].type);
+        assertCsEquals("www.example.com", message.questions.get(0).name);
+        assertEquals(TYPE.NS, message.questions.get(0).type);
 
-        assertCsEquals("www.example.com", message.answers[0].name);
-        assertEquals(TYPE.NS, message.answers[0].type);
-        assertCsEquals("ns.example.com.", message.answers[0].payloadData.toString());
+        assertCsEquals("www.example.com", message.answers.get(0).name);
+        assertEquals(TYPE.NS, message.answers.get(0).type);
+        assertCsEquals("ns.example.com.", message.answers.get(0).payloadData.toString());
 
-        assertCsEquals("ns.example.com", message.additionalResourceRecords[0].name);
-        assertEquals(TYPE.A, message.additionalResourceRecords[0].type);
-        assertCsEquals("127.0.0.1", message.additionalResourceRecords[0].payloadData.toString());
+        assertCsEquals("ns.example.com", message.additionalResourceRecords.get(0).name);
+        assertEquals(TYPE.A, message.additionalResourceRecords.get(0).type);
+        assertCsEquals("127.0.0.1", message.additionalResourceRecords.get(0).payloadData.toString());
 
-        assertCsEquals("ns.example.com", message.nameserverRecords[0].name);
-        assertEquals(TYPE.AAAA, message.nameserverRecords[0].type);
-        assertCsEquals("2001:0:0:0:0:0:0:1", message.nameserverRecords[0].payloadData.toString());
+        assertCsEquals("ns.example.com", message.nameserverRecords.get(0).name);
+        assertEquals(TYPE.AAAA, message.nameserverRecords.get(0).type);
+        assertCsEquals("2001:0:0:0:0:0:0:1", message.nameserverRecords.get(0).payloadData.toString());
     }
 
     @Test
     public void testMessageSelfTruncatedReconstruction() throws Exception {
-        DNSMessage message = new DNSMessage();
-        message.setTruncated(true);
-        message.setQuery(false);
-        message.setId(44);
-        message = new DNSMessage(message.toArray());
+        DNSMessage.Builder dmb = DNSMessage.builder();
+        dmb.setTruncated(true);
+        dmb.setQrFlag(false);
+        dmb.setId(44);
+        DNSMessage message = new DNSMessage(dmb.build().toArray());
         assertEquals(44, message.getId());
-        assertFalse(message.isQuery());
+        assertFalse(message.qr);
         assertTrue(message.isTruncated());
     }
 
     @Test
     public void testMessageSelfOptRecordReconstructione() throws Exception {
-        DNSMessage message = new DNSMessage();
-        message.additionalResourceRecords = new Record[]{record("www.example.com", a("127.0.0.1"))};
-        message.setOptPseudoRecord(512, OPT.FLAG_DNSSEC_OK);
-        message = new DNSMessage(message.toArray());
+        DNSMessage.Builder m = DNSMessage.builder();
+        m.addAdditionalResourceRecords(record("www.example.com", a("127.0.0.1")));
+        m.setOptPseudoRecord(512, OPT.FLAG_DNSSEC_OK);
+        DNSMessage message = new DNSMessage(m.build().toArray());
 
-        assertEquals(2, message.additionalResourceRecords.length);
-        assertCsEquals("www.example.com", message.additionalResourceRecords[0].name);
-        assertEquals(TYPE.A, message.additionalResourceRecords[0].type);
-        assertCsEquals("127.0.0.1", message.additionalResourceRecords[0].payloadData.toString());
-        assertCsEquals("EDNS: version: 0, flags: do; udp: 512", OPT.optRecordToString(message.additionalResourceRecords[1]));
+        assertEquals(2, message.additionalResourceRecords.size());
+        assertCsEquals("www.example.com", message.additionalResourceRecords.get(0).name);
+        assertEquals(TYPE.A, message.additionalResourceRecords.get(0).type);
+        assertCsEquals("127.0.0.1", message.additionalResourceRecords.get(0).payloadData.toString());
+        assertCsEquals("EDNS: version: 0, flags: do; udp: 512", OPT.optRecordToString(message.additionalResourceRecords.get(1)));
     }
 
     @Test
     public void testEmptyMessageToString() throws Exception {
         // toString() should never throw an exception or be null
-        DNSMessage message = new DNSMessage();
+        DNSMessage message = DNSMessage.builder().build();
         assertNotNull(message.toString());
     }
 
     @Test
     public void testFilledMessageToString() throws Exception {
         // toString() should never throw an exception or be null
-        DNSMessage message = new DNSMessage();
-        message.opcode = DNSMessage.OPCODE.QUERY;
-        message.responseCode = DNSMessage.RESPONSE_CODE.NO_ERROR;
+        DNSMessage.Builder message = DNSMessage.builder();
+        message.setOpcode(DNSMessage.OPCODE.QUERY);
+        message.setResponseCode(DNSMessage.RESPONSE_CODE.NO_ERROR);
         message.setId(1337);
         message.setAuthoritativeAnswer(true);
-        message.questions = new Question[]{new Question("www.example.com", TYPE.A)};
-        message.answers = new Record[]{record("www.example.com", a("127.0.0.1"))};
-        message.nameserverRecords = new Record[]{record("example.com", ns("ns.example.com"))};
-        message.additionalResourceRecords = new Record[]{record("ns.example.com", a("127.0.0.1"))};
+        message.addQuestion(new Question("www.example.com", TYPE.A));
+        message.addAnswer(record("www.example.com", a("127.0.0.1")));
+        message.addNameserverRecords(record("example.com", ns("ns.example.com")));
+        message.addAdditionalResourceRecords(record("ns.example.com", a("127.0.0.1")));
         message.setOptPseudoRecord(512, 0);
-        assertNotNull(message.toString());
+        assertNotNull(message.build().toString());
     }
 
     @Test
     public void testEmptyMessageTerminalOutput() throws Exception {
         // asTerminalOutput() follows a certain design, however it might change in the future.
         // Once asTerminalOutput() is changed, it might be required to update this test routine.
-        DNSMessage message = new DNSMessage();
-        message.opcode = DNSMessage.OPCODE.QUERY;
-        message.responseCode = DNSMessage.RESPONSE_CODE.NO_ERROR;
+        DNSMessage.Builder message = DNSMessage.builder();
+        message.setOpcode(DNSMessage.OPCODE.QUERY);
+        message.setResponseCode(DNSMessage.RESPONSE_CODE.NO_ERROR);
         message.setId(1337);
-        assertNotNull(message.asTerminalOutput());
+        assertNotNull(message.build().asTerminalOutput());
     }
 
     @Test
     public void testFilledMessageTerminalOutput() throws Exception {
         // asTerminalOutput() follows a certain design, however it might change in the future.
         // Once asTerminalOutput() is changed, it might be required to update this test routine.
-        DNSMessage message = new DNSMessage();
-        message.opcode = DNSMessage.OPCODE.QUERY;
-        message.responseCode = DNSMessage.RESPONSE_CODE.NO_ERROR;
+        DNSMessage.Builder message = DNSMessage.builder();
+        message.setOpcode(DNSMessage.OPCODE.QUERY);
+        message.setResponseCode(DNSMessage.RESPONSE_CODE.NO_ERROR);
         message.setId(1337);
         message.setAuthoritativeAnswer(true);
-        message.questions = new Question[]{new Question("www.example.com", TYPE.A)};
-        message.answers = new Record[]{record("www.example.com", a("127.0.0.1"))};
-        message.nameserverRecords = new Record[]{record("example.com", ns("ns.example.com"))};
-        message.additionalResourceRecords = new Record[]{record("ns.example.com", a("127.0.0.1"))};
+        message.addQuestion(new Question("www.example.com", TYPE.A));
+        message.addAnswer(record("www.example.com", a("127.0.0.1")));
+        message.addNameserverRecords(record("example.com", ns("ns.example.com")));
+        message.addAdditionalResourceRecords(record("ns.example.com", a("127.0.0.1")));
         message.setOptPseudoRecord(512, 0);
-        assertNotNull(message.asTerminalOutput());
+        assertNotNull(message.build().asTerminalOutput());
     }
 }

@@ -39,11 +39,11 @@ public class NetworkDataSource extends DNSDataSource {
             ioExceptions.add(e);
         }
 
-        if (dnsMessage != null && !dnsMessage.isTruncated()) {
+        if (dnsMessage != null && !dnsMessage.truncated) {
             return dnsMessage;
         }
 
-        assert(dnsMessage == null || dnsMessage.isTruncated() || ioExceptions.size() == 1);
+        assert(dnsMessage == null || dnsMessage.truncated || ioExceptions.size() == 1);
         LOGGER.log(Level.FINE, "Fallback to TCP because {0}", new Object[] { dnsMessage != null ? "response is truncated" : ioExceptions.get(0) });
 
         try {
@@ -57,20 +57,18 @@ public class NetworkDataSource extends DNSDataSource {
     }
 
     protected DNSMessage queryUdp(DNSMessage message, InetAddress address, int port) throws IOException {
-        byte[] buf = message.toArray();
         // TODO Use a try-with-resource statement here once miniDNS minimum
         // required Android API level is >= 19
         DatagramSocket socket = null;
+        DatagramPacket packet = message.asDatagram(address, port);
         try {
             socket = new DatagramSocket();
-            DatagramPacket packet = new DatagramPacket(buf, buf.length,
-                    address, port);
             socket.setSoTimeout(timeout);
             socket.send(packet);
             packet = new DatagramPacket(new byte[bufferSize], bufferSize);
             socket.receive(packet);
             DNSMessage dnsMessage = new DNSMessage(packet.getData());
-            if (dnsMessage.getId() != message.getId()) {
+            if (dnsMessage.id != message.id) {
                 throw new MiniDNSException.IdMismatch(message, dnsMessage);
             }
             return dnsMessage;
@@ -82,7 +80,6 @@ public class NetworkDataSource extends DNSDataSource {
     }
 
     protected DNSMessage queryTcp(DNSMessage message, InetAddress address, int port) throws IOException {
-        byte[] buf = message.toArray();
         // TODO Use a try-with-resource statement here once miniDNS minimum
         // required Android API level is >= 19
         Socket socket = null;
@@ -90,8 +87,7 @@ public class NetworkDataSource extends DNSDataSource {
             socket = new Socket(address, port);
             socket.setSoTimeout(timeout);
             DataOutputStream dos = new DataOutputStream(socket.getOutputStream());
-            dos.writeShort(buf.length);
-            dos.write(buf);
+            message.writeTo(dos);
             dos.flush();
             DataInputStream dis = new DataInputStream(socket.getInputStream());
             int length = dis.readUnsignedShort();
@@ -101,7 +97,7 @@ public class NetworkDataSource extends DNSDataSource {
                 read += dis.read(data, read, length-read);
             }
             DNSMessage dnsMessage = new DNSMessage(data);
-            if (dnsMessage.getId() != message.getId()) {
+            if (dnsMessage.id != message.id) {
                 throw new MiniDNSException.IdMismatch(message, dnsMessage);
             }
             return dnsMessage;
