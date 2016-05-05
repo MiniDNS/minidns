@@ -42,7 +42,7 @@ public class RecordsTest {
         Assert.assertEquals(TYPE.A, a.getType());
         byte[] ab = a.toByteArray();
         a = A.parse(new DataInputStream(new ByteArrayInputStream(ab)));
-        assertArrayEquals(new byte[]{127, 0, 0, 1}, a.ip);
+        assertArrayEquals(new byte[]{127, 0, 0, 1}, a.getIp());
     }
 
     @Test(expected = IllegalArgumentException.class)
@@ -58,7 +58,7 @@ public class RecordsTest {
         Assert.assertEquals(TYPE.AAAA, aaaa.getType());
         byte[] aaaab  = aaaa.toByteArray();
         aaaa = AAAA.parse(new DataInputStream(new ByteArrayInputStream(aaaab)));
-        assertArrayEquals(new byte[]{0x20, 0x01, 0x0d, (byte) 0xb8, (byte) 0x85, (byte) 0xa3, 0x08, (byte) 0xd3, 0x13, 0x19, (byte) 0x8a, 0x2e, 0x03, 0x70, 0x73, 0x44}, aaaa.ip);
+        assertArrayEquals(new byte[]{0x20, 0x01, 0x0d, (byte) 0xb8, (byte) 0x85, (byte) 0xa3, 0x08, (byte) 0xd3, 0x13, 0x19, (byte) 0x8a, 0x2e, 0x03, 0x70, 0x73, 0x44}, aaaa.getIp());
     }
 
     @Test(expected = IllegalArgumentException.class)
@@ -94,14 +94,14 @@ public class RecordsTest {
     public void testDnskeyRecord() throws Exception {
         DNSKEY dnskey = new DNSKEY(DNSKEY.FLAG_ZONE, (byte) 3, (byte) 1, new byte[]{42});
         // TODO: Compare with real Base64 once done
-        assertEquals("256 3 RSAMD5 " + Base64.encodeToString(dnskey.key), dnskey.toString());
+        assertEquals("256 3 RSAMD5 " + dnskey.getKeyBase64(), dnskey.toString());
         assertEquals(TYPE.DNSKEY, dnskey.getType());
         byte[] dnskeyb = dnskey.toByteArray();
         dnskey = DNSKEY.parse(new DataInputStream(new ByteArrayInputStream(dnskeyb)), dnskeyb.length);
         assertEquals(256, dnskey.flags);
         assertEquals(3, dnskey.protocol);
         assertEquals(SignatureAlgorithm.RSAMD5, dnskey.algorithm);
-        assertArrayEquals(new byte[]{42}, dnskey.key);
+        assertArrayEquals(new byte[]{42}, dnskey.getKey());
     }
 
     @Test
@@ -169,7 +169,7 @@ public class RecordsTest {
         assertEquals(1, nsec3param.hashAlgorithmByte);
         assertEquals(1, nsec3param.flags);
         assertEquals(1, nsec3param.iterations);
-        assertEquals(0, nsec3param.salt.length);
+        assertEquals(0, nsec3param.getSaltLength());
 
         assertEquals("SHA1 1 1 1337", new NSEC3PARAM((byte) 1, (byte) 1, 1, new byte[]{0x13, 0x37}).toString());
     }
@@ -181,7 +181,7 @@ public class RecordsTest {
         assertEquals(TYPE.OPENPGPKEY, openpgpkey.getType());
         byte[] openpgpkeyb = openpgpkey.toByteArray();
         openpgpkey = OPENPGPKEY.parse(new DataInputStream(new ByteArrayInputStream(openpgpkeyb)), openpgpkeyb.length);
-        assertArrayEquals(new byte[]{0x13, 0x37}, openpgpkey.publicKeyPacket);
+        assertArrayEquals(new byte[]{0x13, 0x37}, openpgpkey.getPublicKeyPacket());
     }
 
     @Test
@@ -252,6 +252,6 @@ public class RecordsTest {
         assertEquals(1, tlsa.certUsage);
         assertEquals(1, tlsa.selector);
         assertEquals(1, tlsa.matchingType);
-        assertArrayEquals(new byte[]{0x13, 0x37}, tlsa.certificateAssociation);
+        assertArrayEquals(new byte[]{0x13, 0x37}, tlsa.getCertificateAssociation());
     }
 }

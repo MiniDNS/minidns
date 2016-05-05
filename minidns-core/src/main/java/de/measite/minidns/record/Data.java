@@ -10,23 +10,68 @@
  */
 package de.measite.minidns.record;
 
+import java.io.ByteArrayOutputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
+
 import de.measite.minidns.Record.TYPE;
 
 /**
  * Generic payload class.
  */
-public interface Data {
+public abstract class Data {
+
+    Data() {
+    }
 
     /**
      * The payload type.
      * @return The payload type.
      */
-    TYPE getType();
+    public abstract TYPE getType();
 
     /**
-     * Binary representation of this payload.
-     * @return The binary representation of this payload.
+     * The internal method used to serialize Data subclasses.
+     *
+     * @param dos the output stream to serialize to.
+     * @throws IOException if an I/O error occurs.
      */
-    byte[] toByteArray();
+    protected abstract void serialize(DataOutputStream dos) throws IOException;
 
+    private byte[] bytes;
+
+    private final void setBytes() {
+        if (bytes != null) return;
+
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        DataOutputStream dos = new DataOutputStream(baos);
+        try {
+            serialize(dos);
+        } catch (IOException e) {
+            // Should never happen.
+            throw new AssertionError(e);
+        }
+        bytes = baos.toByteArray();
+    }
+
+    public final int length() {
+        setBytes();
+        return bytes.length;
+    }
+
+    /**
+     * Write the binary representation of this payload to the given {@link DataOutputStream}.
+     *
+     * @param dos the DataOutputStream to write to.
+     * @throws IOException if an I/O error occurs.
+     */
+    public void toOutputStream(DataOutputStream dos) throws IOException {
+        setBytes();
+        dos.write(bytes);
+    }
+
+    public final byte[] toByteArray() {
+        setBytes();
+        return bytes.clone();
+    }
 }

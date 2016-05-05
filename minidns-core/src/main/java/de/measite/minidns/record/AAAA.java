@@ -11,6 +11,7 @@
 package de.measite.minidns.record;
 
 import java.io.DataInputStream;
+import java.io.DataOutputStream;
 import java.io.IOException;
 
 import de.measite.minidns.Record.TYPE;
@@ -18,12 +19,12 @@ import de.measite.minidns.Record.TYPE;
 /**
  * AAAA payload (an ipv6 pointer).
  */
-public class AAAA implements Data {
+public class AAAA extends Data {
 
     /**
      * The ipv6 address.
      */
-    public final byte[] ip;
+    private final byte[] ip;
 
     @Override
     public TYPE getType() {
@@ -31,8 +32,8 @@ public class AAAA implements Data {
     }
 
     @Override
-    public byte[] toByteArray() {
-        return ip;
+    public void serialize(DataOutputStream dos) throws IOException {
+        dos.write(ip);
     }
 
     public AAAA(byte[] ip) {
@@ -47,6 +48,10 @@ public class AAAA implements Data {
         byte[] ip = new byte[16];
         dis.readFully(ip);
         return new AAAA(ip);
+    }
+
+    public byte[] getIp() {
+        return ip.clone();
     }
 
     @Override

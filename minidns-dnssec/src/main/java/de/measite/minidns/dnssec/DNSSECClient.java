@@ -377,7 +377,7 @@ public class DNSSECClient extends ReliableDNSClient {
         Set<UnverifiedReason> unverifiedReasons = new HashSet<>();
         Set<UnverifiedReason> activeReasons = new HashSet<>();
         if (knownSeps.containsKey(sepRecord.name)) {
-            if (Arrays.equals(((DNSKEY) sepRecord.payloadData).key, knownSeps.get(sepRecord.name))) {
+            if (((DNSKEY) sepRecord.payloadData).keyEquals(knownSeps.get(sepRecord.name))) {
                 return unverifiedReasons;
             } else {
                 throw new DNSSECValidationFailedException(q, "Secure entry point " + sepRecord.name + " is in list of known SEPs, but mismatches response!");

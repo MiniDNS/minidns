@@ -25,7 +25,7 @@ import java.util.List;
 /**
  * NSEC record payload.
  */
-public class NSEC implements Data {
+public class NSEC extends Data {
 
     /**
      * The next owner name that contains a authoritative data or a delegation point.
@@ -64,18 +64,9 @@ public class NSEC implements Data {
     }
 
     @Override
-    public byte[] toByteArray() {
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        DataOutputStream dos = new DataOutputStream(baos);
-        try {
-            next.writeToStream(dos);
-            dos.write(typeBitmap);
-        } catch (IOException e) {
-            // Should never happen
-            throw new RuntimeException(e);
-        }
-
-        return baos.toByteArray();
+    public void serialize(DataOutputStream dos) throws IOException {
+        next.writeToStream(dos);
+        dos.write(typeBitmap);
     }
 
     @Override

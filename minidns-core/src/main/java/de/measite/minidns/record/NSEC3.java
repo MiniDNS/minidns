@@ -13,7 +13,6 @@ package de.measite.minidns.record;
 import de.measite.minidns.Record.TYPE;
 import de.measite.minidns.util.Base32;
 
-import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -24,7 +23,7 @@ import java.util.Map;
 /**
  * NSEC3 record payload.
  */
-public class NSEC3 implements Data {
+public class NSEC3 extends Data {
 
     /**
      * This Flag indicates whether this NSEC3 RR may cover unsigned
@@ -143,24 +142,15 @@ public class NSEC3 implements Data {
     }
 
     @Override
-    public byte[] toByteArray() {
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        DataOutputStream dos = new DataOutputStream(baos);
-        try {
-            dos.writeByte(hashAlgorithmByte);
-            dos.writeByte(flags);
-            dos.writeShort(iterations);
-            dos.writeByte(salt.length);
-            dos.write(salt);
-            dos.writeByte(nextHashed.length);
-            dos.write(nextHashed);
-            dos.write(typeBitmap);
-        } catch (IOException e) {
-            // Should never happen
-            throw new RuntimeException(e);
-        }
-
-        return baos.toByteArray();
+    public void serialize(DataOutputStream dos) throws IOException {
+        dos.writeByte(hashAlgorithmByte);
+        dos.writeByte(flags);
+        dos.writeShort(iterations);
+        dos.writeByte(salt.length);
+        dos.write(salt);
+        dos.writeByte(nextHashed.length);
+        dos.write(nextHashed);
+        dos.write(typeBitmap);
     }
 
     @Override

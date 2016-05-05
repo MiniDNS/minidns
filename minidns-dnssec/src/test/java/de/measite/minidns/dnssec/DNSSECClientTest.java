@@ -82,14 +82,14 @@ public class DNSSECClientTest {
     @Before
     public void setUp() throws Exception {
         client = new DNSSECClient(new LRUCache(0));
-        client.addSecureEntryPoint(DNSName.EMPTY, rootKSK.key);
+        client.addSecureEntryPoint(DNSName.EMPTY, rootKSK.getKey());
     }
 
     void checkCorrectExampleMessage(DNSMessage message) {
         Record[] answers = message.getAnswers();
         assertEquals(1, answers.length);
         assertEquals(Record.TYPE.A, answers[0].type);
-        assertArrayEquals(new byte[]{1, 1, 1, 2}, ((A) answers[0].payloadData).ip);
+        assertArrayEquals(new byte[]{1, 1, 1, 2}, ((A) answers[0].payloadData).getIp());
     }
 
     @Test

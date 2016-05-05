@@ -56,7 +56,7 @@ class Verifier {
             return new AlgorithmExceptionThrownReason(ds.digestType, "DS", dnskeyRecord, e);
         }
 
-        if (!Arrays.equals(digest, ds.digest)) {
+        if (!ds.digestEquals(digest)) {
             throw new DNSSECValidationFailedException(dnskeyRecord, "SEP is not properly signed by parent DS!");
         }
         return null;
@@ -69,7 +69,7 @@ class Verifier {
         }
 
         byte[] combine = combine(rrsig, records);
-        if (signatureVerifier.verify(combine, rrsig.signature, key.key)) {
+        if (signatureVerifier.verify(combine, rrsig.signature, key.getKey())) {
             return null;
         } else {
             throw new DNSSECValidationFailedException(records, "Signature is invalid.");

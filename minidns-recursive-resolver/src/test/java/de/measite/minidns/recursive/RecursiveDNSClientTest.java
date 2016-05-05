@@ -51,7 +51,7 @@ public class RecursiveDNSClientTest {
         Record[] answers = message.getAnswers();
         assertEquals(1, answers.length);
         assertEquals(TYPE.A, answers[0].type);
-        assertArrayEquals(new byte[]{1, 1, 1, 3}, ((A) answers[0].payloadData).ip);
+        assertArrayEquals(new byte[]{1, 1, 1, 3}, ((A) answers[0].payloadData).getIp());
     }
 
     @Test(expected = RecursiveClientException.LoopDetected.class)
@@ -94,6 +94,6 @@ public class RecursiveDNSClientTest {
         Record[] answers = message.getAnswers();
         assertEquals(1, answers.length);
         assertEquals(TYPE.A, answers[0].type);
-        assertArrayEquals(new byte[]{1, 1, 1, 3}, ((A) answers[0].payloadData).ip);
+        assertArrayEquals(new byte[]{1, 1, 1, 3}, ((A) answers[0].payloadData).getIp());
     }
 }

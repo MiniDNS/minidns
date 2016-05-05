@@ -14,12 +14,13 @@ import de.measite.minidns.Record;
 import de.measite.minidns.Record.TYPE;
 
 import java.io.DataInputStream;
+import java.io.DataOutputStream;
 import java.io.IOException;
 
 /**
  * OPT payload (see RFC 2671 for details).
  */
-public class OPT implements Data {
+public class OPT extends Data {
 
     /**
      * Inform the dns server that the client supports DNSSEC.
@@ -29,7 +30,7 @@ public class OPT implements Data {
     /**
      * Raw encoded RDATA of an OPT RR.
      */
-    public final byte[] encodedOptData;
+    private final byte[] encodedOptData;
 
     public OPT() {
         this(new byte[0]);
@@ -51,8 +52,8 @@ public class OPT implements Data {
     }
 
     @Override
-    public byte[] toByteArray() {
-        return encodedOptData;
+    public void serialize(DataOutputStream dos) throws IOException {
+        dos.write(encodedOptData);
     }
 
     public static Record createEdnsOptRecord(int udpPayloadSize, int optFlags) {

@@ -10,7 +10,6 @@
  */
 package de.measite.minidns.record;
 
-import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -21,7 +20,7 @@ import de.measite.minidns.Record.TYPE;
 /**
  * MX record payload (mail service pointer).
  */
-public class MX implements Data {
+public class MX extends Data {
 
     /**
      * The priority of this service. Lower values mean higher priority.
@@ -51,18 +50,9 @@ public class MX implements Data {
     }
 
     @Override
-    public byte[] toByteArray() {
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        DataOutputStream dos = new DataOutputStream(baos);
-        try {
-            dos.writeShort(priority);
-            name.writeToStream(dos);
-        } catch (IOException e) {
-            // Should never happen
-            throw new RuntimeException(e);
-        }
-
-        return baos.toByteArray();
+    public void serialize(DataOutputStream dos) throws IOException {
+        dos.writeShort(priority);
+        name.writeToStream(dos);
     }
 
     @Override

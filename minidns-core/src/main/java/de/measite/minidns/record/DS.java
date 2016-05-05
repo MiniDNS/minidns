@@ -14,16 +14,16 @@ import de.measite.minidns.DNSSECConstants.DigestAlgorithm;
 import de.measite.minidns.DNSSECConstants.SignatureAlgorithm;
 import de.measite.minidns.Record.TYPE;
 
-import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.math.BigInteger;
+import java.util.Arrays;
 
 /**
  * DS record payload.
  */
-public class DS implements Data {
+public class DS extends Data {
 
     /**
      * The key tag value of the DNSKEY RR that validates this signature.
@@ -61,7 +61,7 @@ public class DS implements Data {
     /**
      * The digest build from a DNSKEY.
      */
-    public final byte[] digest;
+    protected final byte[] digest;
 
     public static DS parse(DataInputStream dis, int length) throws IOException {
         int keyTag = dis.readUnsignedShort();
@@ -105,20 +105,11 @@ public class DS implements Data {
     }
 
     @Override
-    public byte[] toByteArray() {
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        DataOutputStream dos = new DataOutputStream(baos);
-        try {
-            dos.writeShort(keyTag);
-            dos.writeByte(algorithmByte);
-            dos.writeByte(digestTypeByte);
-            dos.write(digest);
-        } catch (IOException e) {
-            // Should never happen
-            throw new RuntimeException(e);
-        }
-
-        return baos.toByteArray();
+    public void serialize(DataOutputStream dos) throws IOException {
+        dos.writeShort(keyTag);
+        dos.writeByte(algorithmByte);
+        dos.writeByte(digestTypeByte);
+        dos.write(digest);
     }
 
     @Override
@@ -129,5 +120,27 @@ public class DS implements Data {
                 .append(digestType).append(' ')
                 .append(new BigInteger(1, digest).toString(16).toUpperCase());
         return sb.toString();
+    }
+
+    private BigInteger digestBigIntCache;
+
+    public BigInteger getDigestBigInteger() {
+        if (digestBigIntCache == null) {
+            digestBigIntCache = new BigInteger(1, digest);
+        }
+        return digestBigIntCache;
+    }
+
+    private String digestHexCache;
+
+    public String getDigestHex() {
+        if (digestHexCache == null) {
+            digestHexCache = getDigestBigInteger().toString(16).toUpperCase();
+        }
+        return digestHexCache;
+    }
+
+    public boolean digestEquals(byte[] otherDigest) {
+        return Arrays.equals(digest, otherDigest);
     }
 }

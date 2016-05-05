@@ -10,7 +10,6 @@
  */
 package de.measite.minidns.record;
 
-import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -21,7 +20,7 @@ import de.measite.minidns.Record.TYPE;
 /**
  * SRV record payload (service pointer).
  */
-public class SRV implements Data {
+public class SRV extends Data {
 
     /**
      * The priority of this service. Lower values mean higher priority.
@@ -66,20 +65,11 @@ public class SRV implements Data {
     }
 
     @Override
-    public byte[] toByteArray() {
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        DataOutputStream dos = new DataOutputStream(baos);
-        try {
-            dos.writeShort(priority);
-            dos.writeShort(weight);
-            dos.writeShort(port);
-            name.writeToStream(dos);
-        } catch (IOException e) {
-            // Should never happen
-            throw new RuntimeException(e);
-        }
-
-        return baos.toByteArray();
+    public void serialize(DataOutputStream dos) throws IOException {
+        dos.writeShort(priority);
+        dos.writeShort(weight);
+        dos.writeShort(port);
+        name.writeToStream(dos);
     }
 
     @Override

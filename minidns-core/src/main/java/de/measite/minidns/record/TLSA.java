@@ -12,13 +12,13 @@ package de.measite.minidns.record;
 
 import de.measite.minidns.Record;
 
-import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.math.BigInteger;
+import java.util.Arrays;
 
-public class TLSA implements Data {
+public class TLSA extends Data {
 
     public static final byte CERT_USAGE_CA_CONSTRAINT = 0;
     public static final byte CERT_USAGE_SERVICE_CERTIFICATE_CONSTRAINT = 1;
@@ -52,7 +52,7 @@ public class TLSA implements Data {
     /**
      * The "certificate association data" to be matched.
      */
-    public final byte[] certificateAssociation;
+    private final byte[] certificateAssociation;
 
     public static TLSA parse(DataInputStream dis, int length) throws IOException {
         byte certUsage = dis.readByte();
@@ -76,19 +76,11 @@ public class TLSA implements Data {
     }
 
     @Override
-    public byte[] toByteArray() {
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        DataOutputStream dos = new DataOutputStream(baos);
-        try {
-            dos.writeByte(certUsage);
-            dos.writeByte(selector);
-            dos.writeByte(matchingType);
-            dos.write(certificateAssociation);
-        } catch (IOException e) {
-            // Should never happen
-            throw new RuntimeException(e);
-        }
-        return baos.toByteArray();
+    public void serialize(DataOutputStream dos) throws IOException {
+        dos.writeByte(certUsage);
+        dos.writeByte(selector);
+        dos.writeByte(matchingType);
+        dos.write(certificateAssociation);
     }
 
     @Override
@@ -98,5 +90,13 @@ public class TLSA implements Data {
                 .append(selector).append(' ')
                 .append(matchingType).append(' ')
                 .append(new BigInteger(1, certificateAssociation).toString(16)).toString();
+    }
+
+    public byte[] getCertificateAssociation() {
+        return certificateAssociation.clone();
+    }
+
+    public boolean certificateAssociationEquals(byte[] otherCertificateAssociation) {
+        return Arrays.equals(certificateAssociation, otherCertificateAssociation);
     }
 }

@@ -34,7 +34,6 @@ import org.junit.Test;
 
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
-import java.math.BigInteger;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -235,17 +234,17 @@ public class DNSMessageTest {
             switch (i) {
                 case 0:
                     assertTrue((dnskey.flags & DNSKEY.FLAG_SECURE_ENTRY_POINT) > 0);
-                    assertEquals(260, dnskey.key.length);
+                    assertEquals(260, dnskey.getKeyLength());
                     assertEquals(19036, dnskey.getKeyTag());
                     break;
                 case 1:
                     assertEquals(DNSKEY.FLAG_ZONE, dnskey.flags);
-                    assertEquals(132, dnskey.key.length);
+                    assertEquals(132, dnskey.getKeyLength());
                     assertEquals(48613, dnskey.getKeyTag());
                     break;
                 case 2:
                     assertEquals(DNSKEY.FLAG_ZONE, dnskey.flags);
-                    assertEquals(132, dnskey.key.length);
+                    assertEquals(132, dnskey.getKeyLength());
                     assertEquals(1518, dnskey.getKeyTag());
                     break;
             }
@@ -273,7 +272,7 @@ public class DNSMessageTest {
         assertEquals(SignatureAlgorithm.RSASHA256, ds.algorithm);
         assertEquals(DigestAlgorithm.SHA256, ds.digestType);
         assertCsEquals("E2D3C916F6DEEAC73294E8268FB5885044A833FC5459588F4A9184CFC41A5766",
-                new BigInteger(1, ds.digest).toString(16).toUpperCase());
+                ds.getDigestHex());
 
         assertEquals(TYPE.RRSIG, answers.get(1).type);
         assertEquals(TYPE.RRSIG, answers.get(1).payloadData.getType());

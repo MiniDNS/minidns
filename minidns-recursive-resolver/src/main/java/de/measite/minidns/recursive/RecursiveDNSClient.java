@@ -291,7 +291,7 @@ public class RecursiveDNSClient extends AbstractDNSClient {
 
     private static InetAddress inetAddressFromRecord(String name, A recordPayload) {
         try {
-            return InetAddress.getByAddress(name, recordPayload.ip);
+            return InetAddress.getByAddress(name, recordPayload.getIp());
         } catch (UnknownHostException e) {
             // This will never happen
             throw new RuntimeException(e);
@@ -300,7 +300,7 @@ public class RecursiveDNSClient extends AbstractDNSClient {
 
     private static InetAddress inetAddressFromRecord(String name, AAAA recordPayload) {
         try {
-            return InetAddress.getByAddress(name, recordPayload.ip);
+            return InetAddress.getByAddress(name, recordPayload.getIp());
         } catch (UnknownHostException e) {
             // This will never happen
             throw new RuntimeException(e);

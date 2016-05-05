@@ -11,6 +11,7 @@
 package de.measite.minidns.record;
 
 import java.io.DataInputStream;
+import java.io.DataOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -23,9 +24,9 @@ import de.measite.minidns.Record.TYPE;
  *  followed by that many bytes of data, which can usually be interpreted as ASCII strings
  *  but not always.
  */
-public class TXT implements Data {
+public class TXT extends Data {
 
-    protected final byte[] blob;
+    private final byte[] blob;
 
     public static TXT parse(DataInputStream dis, int length) throws IOException {
         byte[] blob = new byte[length];
@@ -38,7 +39,7 @@ public class TXT implements Data {
     }
 
     public byte[] getBlob() {
-        return blob;
+        return blob.clone();
     }
 
     public String getText() {
@@ -67,8 +68,8 @@ public class TXT implements Data {
     }
 
     @Override
-    public byte[] toByteArray() {
-        return blob;
+    public void serialize(DataOutputStream dos) throws IOException {
+        dos.write(blob);
     }
 
     @Override

@@ -14,15 +14,15 @@ import de.measite.minidns.DNSSECConstants.SignatureAlgorithm;
 import de.measite.minidns.Record.TYPE;
 import de.measite.minidns.util.Base64;
 
-import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.util.Arrays;
 
 /**
  * DNSKEY record payload.
  */
-public class DNSKEY implements Data {
+public class DNSKEY extends Data {
     /**
      * Whether the key should be used as a secure entry point key.
      *
@@ -70,7 +70,7 @@ public class DNSKEY implements Data {
     /**
      * The public key material. The format depends on the algorithm of the key being stored.
      */
-    public final byte[] key;
+    private final byte[] key;
 
     /**
      * This DNSKEY's key tag. Calculated just-in-time when using {@link #getKeyTag()}
@@ -133,20 +133,11 @@ public class DNSKEY implements Data {
     }
 
     @Override
-    public byte[] toByteArray() {
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        DataOutputStream dos = new DataOutputStream(baos);
-        try {
-            dos.writeShort(flags);
-            dos.writeByte(protocol);
-            dos.writeByte(algorithm.number);
-            dos.write(key);
-        } catch (IOException e) {
-            // Should never happen
-            throw new RuntimeException(e);
-        }
-
-        return baos.toByteArray();
+    public void serialize(DataOutputStream dos) throws IOException {
+        dos.writeShort(flags);
+        dos.writeByte(protocol);
+        dos.writeByte(algorithm.number);
+        dos.write(key);
     }
 
     @Override
@@ -157,5 +148,26 @@ public class DNSKEY implements Data {
                 .append(algorithm).append(' ')
                 .append(Base64.encodeToString(key));
         return sb.toString();
+    }
+
+    public int getKeyLength() {
+        return key.length;
+    }
+
+    public byte[] getKey() {
+        return key.clone();
+    }
+
+    private String keyBase64Cache;
+
+    public String getKeyBase64() {
+        if (keyBase64Cache == null) {
+            keyBase64Cache = Base64.encodeToString(key);
+        }
+        return keyBase64Cache;
+    }
+
+    public boolean keyEquals(byte[] otherKey) {
+        return Arrays.equals(key, otherKey);
     }
 }

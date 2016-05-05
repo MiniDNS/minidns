@@ -13,7 +13,6 @@ package de.measite.minidns.record;
 import de.measite.minidns.Record.TYPE;
 import de.measite.minidns.record.NSEC3.HashAlgorithm;
 
-import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -22,7 +21,7 @@ import java.math.BigInteger;
 /**
  * NSEC3PARAM record payload.
  */
-public class NSEC3PARAM implements Data {
+public class NSEC3PARAM extends Data {
 
     /**
      * The cryptographic hash algorithm used.
@@ -46,7 +45,7 @@ public class NSEC3PARAM implements Data {
     /**
      * The salt appended to the next owner name before hashing.
      */
-    public final byte[] salt;
+    private final byte[] salt;
 
     public static NSEC3PARAM parse(DataInputStream dis) throws IOException {
         byte hashAlgorithm = dis.readByte();
@@ -78,21 +77,12 @@ public class NSEC3PARAM implements Data {
     }
 
     @Override
-    public byte[] toByteArray() {
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        DataOutputStream dos = new DataOutputStream(baos);
-        try {
-            dos.writeByte(hashAlgorithmByte);
-            dos.writeByte(flags);
-            dos.writeShort(iterations);
-            dos.writeByte(salt.length);
-            dos.write(salt);
-        } catch (IOException e) {
-            // Should never happen
-            throw new RuntimeException(e);
-        }
-
-        return baos.toByteArray();
+    public void serialize(DataOutputStream dos) throws IOException {
+        dos.writeByte(hashAlgorithmByte);
+        dos.writeByte(flags);
+        dos.writeShort(iterations);
+        dos.writeByte(salt.length);
+        dos.write(salt);
     }
 
     @Override
@@ -103,5 +93,9 @@ public class NSEC3PARAM implements Data {
                 .append(iterations).append(' ')
                 .append(salt.length == 0 ? "-" : new BigInteger(1, salt).toString(16).toUpperCase());
         return sb.toString();
+    }
+
+    public int getSaltLength() {
+        return salt.length;
     }
 }

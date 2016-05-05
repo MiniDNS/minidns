@@ -11,6 +11,7 @@
 package de.measite.minidns.record;
 
 import java.io.DataInputStream;
+import java.io.DataOutputStream;
 import java.io.IOException;
 
 import de.measite.minidns.Record.TYPE;
@@ -18,12 +19,12 @@ import de.measite.minidns.Record.TYPE;
 /**
  * A record payload (ip pointer).
  */
-public class A implements Data {
+public class A extends Data {
 
     /**
      * Target IP.
      */
-    public final byte[] ip;
+    private final byte[] ip;
 
     @Override
     public TYPE getType() {
@@ -31,8 +32,8 @@ public class A implements Data {
     }
 
     @Override
-    public byte[] toByteArray() {
-        return ip;
+    public void serialize(DataOutputStream dos) throws IOException {
+        dos.write(ip);
     }
 
     public A(int q1, int q2, int q3, int q4) {
@@ -47,6 +48,10 @@ public class A implements Data {
             throw new IllegalArgumentException("IPv4 address in A record is always 4 byte");
         }
         this.ip = ip;
+    }
+
+    public byte[] getIp() {
+        return ip.clone();
     }
 
     public static A parse(DataInputStream dis)

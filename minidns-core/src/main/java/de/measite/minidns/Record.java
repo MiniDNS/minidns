@@ -436,25 +436,35 @@ public class Record {
         this.payloadData = payloadData;
     }
 
-    public byte[] toByteArray() {
+    public void toOutputStream(DataOutputStream dos) throws IOException {
         if (payloadData == null) {
             throw new IllegalStateException("Empty Record has no byte representation");
         }
-        byte[] payload = payloadData.toByteArray();
-        ByteArrayOutputStream baos = new ByteArrayOutputStream(name.size() + 8 + payload.length);
-        DataOutputStream dos = new DataOutputStream(baos);
-        try {
-            name.writeToStream(dos);
-            dos.writeShort(type.getValue());
-            dos.writeShort(clazzValue);
-            dos.writeInt((int) ttl);
-            dos.writeShort(payload.length);
-            dos.write(payload);
-        } catch (IOException e) {
-            // Should never happen
-            throw new RuntimeException(e);
+
+        name.writeToStream(dos);
+        dos.writeShort(type.getValue());
+        dos.writeShort(clazzValue);
+        dos.writeInt((int) ttl);
+
+        dos.writeShort(payloadData.length());
+        payloadData.toOutputStream(dos);
+    }
+
+    private byte[] bytes;
+
+    public byte[] toByteArray() {
+        if (bytes == null) {
+            ByteArrayOutputStream baos = new ByteArrayOutputStream(name.size() + 8 + payloadData.length());
+            DataOutputStream dos = new DataOutputStream(baos);
+            try {
+                toOutputStream(dos);
+            } catch (IOException e) {
+                // Should never happen.
+                throw new AssertionError(e);
+            }
+            bytes = baos.toByteArray();
         }
-        return baos.toByteArray();
+        return bytes.clone();
     }
 
     /**

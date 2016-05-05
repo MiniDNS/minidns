@@ -14,11 +14,12 @@ import de.measite.minidns.Record;
 import de.measite.minidns.util.Base64;
 
 import java.io.DataInputStream;
+import java.io.DataOutputStream;
 import java.io.IOException;
 
-public class OPENPGPKEY implements Data {
+public class OPENPGPKEY extends Data {
 
-    public final byte[] publicKeyPacket;
+    private final byte[] publicKeyPacket;
 
     public static OPENPGPKEY parse(DataInputStream dis, int length) throws IOException {
         byte[] publicKeyPacket = new byte[length];
@@ -36,12 +37,25 @@ public class OPENPGPKEY implements Data {
     }
 
     @Override
-    public byte[] toByteArray() {
-        return publicKeyPacket;
+    public void serialize(DataOutputStream dos) throws IOException {
+        dos.write(publicKeyPacket);
     }
 
     @Override
     public String toString() {
-        return Base64.encodeToString(publicKeyPacket);
+        return getPublicKeyPacketBase64();
+    }
+
+    private String publicKeyPacketBase64Cache;
+
+    public String getPublicKeyPacketBase64() {
+        if (publicKeyPacketBase64Cache == null) {
+            publicKeyPacketBase64Cache = Base64.encodeToString(publicKeyPacket);
+        }
+        return publicKeyPacketBase64Cache;
+    }
+
+    public byte[] getPublicKeyPacket() {
+        return publicKeyPacket.clone();
     }
 }

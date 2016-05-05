@@ -15,7 +15,6 @@ import de.measite.minidns.DNSSECConstants.SignatureAlgorithm;
 import de.measite.minidns.Record.TYPE;
 import de.measite.minidns.util.Base64;
 
-import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -26,7 +25,7 @@ import java.util.TimeZone;
 /**
  * RRSIG record payload.
  */
-public class RRSIG implements Data {
+public class RRSIG extends Data {
 
     /**
      * The type of RRset covered by this signature.
@@ -139,18 +138,9 @@ public class RRSIG implements Data {
     }
 
     @Override
-    public byte[] toByteArray() {
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        DataOutputStream dos = new DataOutputStream(baos);
-        try {
-            writePartialSignature(dos);
-            dos.write(signature);
-        } catch (IOException e) {
-            // Should never happen
-            throw new RuntimeException(e);
-        }
-
-        return baos.toByteArray();
+    public void serialize(DataOutputStream dos) throws IOException {
+        writePartialSignature(dos);
+        dos.write(signature);
     }
 
     public void writePartialSignature(DataOutputStream dos) throws IOException {

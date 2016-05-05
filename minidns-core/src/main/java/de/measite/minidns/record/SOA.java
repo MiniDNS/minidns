@@ -13,7 +13,6 @@ package de.measite.minidns.record;
 import de.measite.minidns.DNSName;
 import de.measite.minidns.Record.TYPE;
 
-import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -21,7 +20,7 @@ import java.io.IOException;
 /**
  * SOA (start of authority) record payload.
  */
-public class SOA implements Data {
+public class SOA extends Data {
 
     /**
      * The domain name of the name server that was the original or primary source of data for this zone.
@@ -92,24 +91,14 @@ public class SOA implements Data {
     }
 
     @Override
-    public byte[] toByteArray() {
-
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        DataOutputStream dos = new DataOutputStream(baos);
-        try {
-            mname.writeToStream(dos);
-            rname.writeToStream(dos);
-            dos.writeInt((int) serial);
-            dos.writeInt(refresh);
-            dos.writeInt(retry);
-            dos.writeInt(expire);
-            dos.writeInt((int) minimum);
-        } catch (IOException e) {
-            // Should never happen
-            throw new RuntimeException(e);
-        }
-
-        return baos.toByteArray();
+    public void serialize(DataOutputStream dos) throws IOException {
+        mname.writeToStream(dos);
+        rname.writeToStream(dos);
+        dos.writeInt((int) serial);
+        dos.writeInt(refresh);
+        dos.writeInt(retry);
+        dos.writeInt(expire);
+        dos.writeInt((int) minimum);
     }
 
     @Override

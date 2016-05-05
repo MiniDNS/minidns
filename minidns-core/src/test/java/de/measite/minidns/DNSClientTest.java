@@ -81,7 +81,7 @@ public class DNSClientTest {
         assertNotNull(response);
         assertEquals(1, response.answers.size());
         assertEquals(TYPE.A, response.answers.get(0).type);
-        assertArrayEquals(new byte[]{127, 0, 0, 1}, ((A) response.answers.get(0).payloadData).ip);
+        assertArrayEquals(new byte[]{127, 0, 0, 1}, ((A) response.answers.get(0).payloadData).getIp());
         response = client.query("www2.example.com", TYPE.A);
         assertNull(response);
         response = client.query("www.example.com", TYPE.CNAME);

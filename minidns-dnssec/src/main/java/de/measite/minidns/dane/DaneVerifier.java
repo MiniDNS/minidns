@@ -39,7 +39,6 @@ import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.logging.Level;
@@ -194,7 +193,7 @@ public class DaneVerifier {
                 return false;
         }
 
-        boolean matches = Arrays.equals(comp, tlsa.certificateAssociation);
+        boolean matches = tlsa.certificateAssociationEquals(comp);
         if (!matches) {
             throw new DaneCertificateException.CertificateMismatch(tlsa, comp);
         }
