@@ -47,6 +47,8 @@ public class DNSKEY extends Data {
 
     /**
      * Bitmap of flags: {@link #FLAG_SECURE_ENTRY_POINT}, {@link #FLAG_REVOKE}, {@link #FLAG_ZONE}.
+     *
+     * @see <a href="https://www.iana.org/assignments/dnskey-flags/dnskey-flags.xhtml">IANA - DNSKEY RR Flags</a>
      */
     public final short flags;
 
@@ -169,5 +171,9 @@ public class DNSKEY extends Data {
 
     public boolean keyEquals(byte[] otherKey) {
         return Arrays.equals(key, otherKey);
+    }
+
+    public boolean isSecureEntryPoint() {
+        return (flags & FLAG_SECURE_ENTRY_POINT) == 1;
     }
 }

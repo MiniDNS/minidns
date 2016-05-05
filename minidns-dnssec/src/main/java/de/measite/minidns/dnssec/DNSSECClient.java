@@ -172,7 +172,12 @@ public class DNSSECClient extends ReliableDNSClient {
         Set<UnverifiedReason> sepReasons = new HashSet<>();
         for (Iterator<Record> iterator = toBeVerified.iterator(); iterator.hasNext(); ) {
             Record record = iterator.next();
-            if (record.type == TYPE.DNSKEY && (((DNSKEY) record.payloadData).flags & DNSKEY.FLAG_SECURE_ENTRY_POINT) > 0) {
+            if (record.type == TYPE.DNSKEY) {
+                DNSKEY dnskey = (DNSKEY) record.payloadData;
+                if (!dnskey.isSecureEntryPoint()) {
+                    continue;
+                }
+
                 Set<UnverifiedReason> reasons = verifySecureEntryPoint(q, record);
                 if (reasons.isEmpty()) {
                     sepSignatureValid = true;
@@ -301,7 +306,7 @@ public class DNSSECClient extends ReliableDNSClient {
             if (q.name.equals(rrsig.signerName) && rrsig.typeCovered == TYPE.DNSKEY) {
                 for (Iterator<Record> iterator = records.iterator(); iterator.hasNext(); ) {
                     DNSKEY dnskey = (DNSKEY) iterator.next().payloadData;
-                    if ((dnskey.flags & DNSKEY.FLAG_SECURE_ENTRY_POINT) > 0) {
+                    if (dnskey.isSecureEntryPoint()) {
                         // SEPs are verified separately, so don't mark them verified now.
                         iterator.remove();
                         if (dnskey.getKeyTag() == rrsig.keyTag) {
