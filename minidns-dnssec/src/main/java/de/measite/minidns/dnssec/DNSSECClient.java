@@ -167,7 +167,7 @@ public class DNSSECClient extends ReliableDNSClient {
             return result;
         }
 
-        // Keep SEPs seperated, we only need one valid SEP.
+        // Keep SEPs separated, we only need one valid SEP.
         boolean sepSignatureValid = false;
         Set<UnverifiedReason> sepReasons = new HashSet<>();
         for (Iterator<Record> iterator = toBeVerified.iterator(); iterator.hasNext(); ) {
