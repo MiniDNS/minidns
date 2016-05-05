@@ -31,7 +31,6 @@ import de.measite.minidns.recursive.ReliableDNSClient;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashSet;
@@ -158,9 +157,9 @@ public class DNSSECClient extends ReliableDNSClient {
     }
 
     private Set<UnverifiedReason> verifyAnswer(DNSMessage dnsMessage) throws IOException {
-        Question q = dnsMessage.getQuestions()[0];
-        Record[] answers = dnsMessage.getAnswers();
-        List<Record> toBeVerified = new ArrayList<>(Arrays.asList(answers));
+        Question q = dnsMessage.questions.get(0);
+        List<Record> answers = dnsMessage.answers;
+        List<Record> toBeVerified = dnsMessage.copyAnswers();
         VerifySignaturesResult verifiedSignatures = verifySignatures(q, answers, toBeVerified);
         Set<UnverifiedReason> result = verifiedSignatures.reasons;
         if (!result.isEmpty()) {
@@ -198,7 +197,7 @@ public class DNSSECClient extends ReliableDNSClient {
             result.add(new NoSecureEntryPointReason(q.name.ace));
         }
         if (!toBeVerified.isEmpty()) {
-            if (toBeVerified.size() != answers.length) {
+            if (toBeVerified.size() != answers.size()) {
                 throw new DNSSECValidationFailedException(q, "Only some records are signed!");
             } else {
                 result.add(new NoSignaturesReason(q));
@@ -209,11 +208,11 @@ public class DNSSECClient extends ReliableDNSClient {
 
     private Set<UnverifiedReason> verifyNsec(DNSMessage dnsMessage) throws IOException {
         Set<UnverifiedReason> result = new HashSet<>();
-        Question q = dnsMessage.getQuestions()[0];
+        Question q = dnsMessage.questions.get(0);
         boolean validNsec = false;
         boolean nsecPresent = false;
         DNSName zone = null;
-        Record[] nameserverRecords = dnsMessage.getNameserverRecords();
+        List<Record> nameserverRecords = dnsMessage.nameserverRecords;
         for (Record nameserverRecord : nameserverRecords) {
             if (nameserverRecord.type == TYPE.SOA)
                 zone = nameserverRecord.name;
@@ -245,14 +244,14 @@ public class DNSSECClient extends ReliableDNSClient {
         if (nsecPresent && !validNsec) {
             throw new DNSSECValidationFailedException(q, "Invalid NSEC!");
         }
-        List<Record> toBeVerified = new ArrayList<>(Arrays.asList(nameserverRecords));
+        List<Record> toBeVerified = dnsMessage.copyNameserverRecords();
         VerifySignaturesResult verifiedSignatures = verifySignatures(q, nameserverRecords, toBeVerified);
         if (validNsec && verifiedSignatures.reasons.isEmpty()) {
             result.clear();
         } else {
             result.addAll(verifiedSignatures.reasons);
         }
-        if (!toBeVerified.isEmpty() && toBeVerified.size() != nameserverRecords.length) {
+        if (!toBeVerified.isEmpty() && toBeVerified.size() != nameserverRecords.size()) {
             throw new DNSSECValidationFailedException(q, "Only some nameserver records are signed!");
         }
         return result;
@@ -264,7 +263,7 @@ public class DNSSECClient extends ReliableDNSClient {
         Set<UnverifiedReason> reasons = new HashSet<>();
     }
 
-    private VerifySignaturesResult verifySignatures(Question q, Record[] reference, List<Record> toBeVerified) throws IOException {
+    private VerifySignaturesResult verifySignatures(Question q, Collection<Record> reference, List<Record> toBeVerified) throws IOException {
         final Date now = new Date();
         final List<RRSIG> outdatedRrSigs = new LinkedList<>();
         VerifySignaturesResult result = new VerifySignaturesResult();
@@ -294,7 +293,7 @@ public class DNSSECClient extends ReliableDNSClient {
         for (Record sigRecord : rrsigs) {
             RRSIG rrsig = (RRSIG) sigRecord.payloadData;
 
-            List<Record> records = new ArrayList<>(reference.length);
+            List<Record> records = new ArrayList<>(reference.size());
             for (Record record : reference) {
                 if (record.type == rrsig.typeCovered && record.name.equals(sigRecord.name)) {
                     records.add(record);

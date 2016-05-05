@@ -630,6 +630,12 @@ public class DNSMessage {
         return answers.toArray(new Record[answers.size()]);
     }
 
+    public List<Record> copyAnswers() {
+        List<Record> res = new ArrayList<>(answers.size());
+        res.addAll(answers);
+        return res;
+    }
+
     /**
      * Retrieve the nameserver records of this DNS message.
      *
@@ -638,6 +644,12 @@ public class DNSMessage {
 //  TODO  @Deprecated
     public Record[] getNameserverRecords() {
         return nameserverRecords.toArray(new Record[nameserverRecords.size()]);
+    }
+
+    public List<Record> copyNameserverRecords() {
+        List<Record> res = new ArrayList<>(nameserverRecords.size());
+        res.addAll(nameserverRecords);
+        return res;
     }
 
     /**
@@ -1177,4 +1189,5 @@ public class DNSMessage {
         }
 
     }
+
 }
