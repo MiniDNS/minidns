@@ -91,6 +91,8 @@ public class DNSClient extends AbstractDNSClient {
                 }
                 if (message.responseCode !=
                         DNSMessage.RESPONSE_CODE.NO_ERROR) {
+                    LOGGER.warning("Response from " + dns + " asked for " + q + " with error code: "
+                            + message.responseCode + ".\n" + message);
                     continue;
                 }
                 for (Record record : message.answers) {
@@ -98,6 +100,8 @@ public class DNSClient extends AbstractDNSClient {
                         return message;
                     }
                 }
+                LOGGER.warning("Response from " + dns + " asked for " + q
+                        + " did not contain an answer to the query.\n" + message);
             } catch (IOException ioe) {
                 ioExceptions.add(ioe);
             }
