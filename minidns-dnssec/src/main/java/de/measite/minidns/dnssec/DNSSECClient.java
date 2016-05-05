@@ -379,10 +379,13 @@ public class DNSSECClient extends ReliableDNSClient {
     }
 
     private Set<UnverifiedReason> verifySecureEntryPoint(Question q, Record sepRecord) throws IOException {
+        // The given RR must be a DNSKEY.
+        final DNSKEY dnskey = (DNSKEY) sepRecord.payloadData;
+
         Set<UnverifiedReason> unverifiedReasons = new HashSet<>();
         Set<UnverifiedReason> activeReasons = new HashSet<>();
         if (knownSeps.containsKey(sepRecord.name)) {
-            if (((DNSKEY) sepRecord.payloadData).keyEquals(knownSeps.get(sepRecord.name))) {
+            if (dnskey.keyEquals(knownSeps.get(sepRecord.name))) {
                 return unverifiedReasons;
             } else {
                 throw new DNSSECValidationFailedException(q, "Secure entry point " + sepRecord.name + " is in list of known SEPs, but mismatches response!");
@@ -403,8 +406,12 @@ public class DNSSECClient extends ReliableDNSClient {
         } else {
             unverifiedReasons.addAll(dsResp.getUnverifiedReasons());
             for (Record record : dsResp.getAnswers()) {
-               if (record.type == TYPE.DS && ((DNSKEY) sepRecord.payloadData).getKeyTag() == ((DS) record.payloadData).keyTag) {
-                    delegation = (DS) record.payloadData;
+               if (record.type != TYPE.DS) {
+                   continue;
+               }
+               DS ds = (DS) record.payloadData;
+               if (dnskey.getKeyTag() == ds.keyTag) {
+                    delegation = ds;
                     activeReasons = dsResp.getUnverifiedReasons();
                     break;
                 }
