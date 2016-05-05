@@ -73,35 +73,35 @@ public class DNSClient extends AbstractDNSClient {
         // findDNS()calls, which are expensive on Android. Note that we do not
         // put the results back into the Cache, as this is already done by
         // query(Question, String).
-        DNSMessage message = (cache == null) ? null : cache.get(q);
-        if (message != null) {
-            return message;
+        DNSMessage responseMessage = (cache == null) ? null : cache.get(q);
+        if (responseMessage != null) {
+            return responseMessage;
         }
 
         String dnsServer[] = findDNS();
         List<IOException> ioExceptions = new ArrayList<>(dnsServer.length);
         for (String dns : dnsServer) {
             try {
-                message = query(q, dns);
-                if (message == null) {
+                responseMessage = query(q, dns);
+                if (responseMessage == null) {
                     continue;
                 }
                 if (disableResultFilter) {
-                    return message;
+                    return responseMessage;
                 }
-                if (message.responseCode !=
+                if (responseMessage.responseCode !=
                         DNSMessage.RESPONSE_CODE.NO_ERROR) {
                     LOGGER.warning("Response from " + dns + " asked for " + q + " with error code: "
-                            + message.responseCode + ".\n" + message);
+                            + responseMessage.responseCode + ".\n" + responseMessage);
                     continue;
                 }
-                for (Record record : message.answers) {
+                for (Record record : responseMessage.answers) {
                     if (record.isAnswer(q)) {
-                        return message;
+                        return responseMessage;
                     }
                 }
                 LOGGER.warning("Response from " + dns + " asked for " + q
-                        + " did not contain an answer to the query.\n" + message);
+                        + " did not contain an answer to the query.\n" + responseMessage);
             } catch (IOException ioe) {
                 ioExceptions.add(ioe);
             }

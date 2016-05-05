@@ -127,36 +127,36 @@ public abstract class AbstractDNSClient {
 
     public DNSMessage query(Question q, InetAddress address, int port) throws IOException {
         // See if we have the answer to this question already cached
-        DNSMessage dnsMessage = (cache == null) ? null : cache.get(q);
-        if (dnsMessage != null) {
-            return dnsMessage;
+        DNSMessage responseMessage = (cache == null) ? null : cache.get(q);
+        if (responseMessage != null) {
+            return responseMessage;
         }
 
         DNSMessage.Builder messageBuilder = buildMessage(q);
-        DNSMessage message = messageBuilder.build();
+        DNSMessage requestMessage = messageBuilder.build();
 
         final Level TRACE_LOG_LEVEL = Level.FINE;
-        LOGGER.log(TRACE_LOG_LEVEL, "Asking {0} on {1} for {2} with:\n{3}", new Object[] { address, port, q, message });
+        LOGGER.log(TRACE_LOG_LEVEL, "Asking {0} on {1} for {2} with:\n{3}", new Object[] { address, port, q, requestMessage });
 
         try {
-            dnsMessage = dataSource.query(message, address, port);
+            responseMessage = dataSource.query(requestMessage, address, port);
         } catch (IOException e) {
             LOGGER.log(TRACE_LOG_LEVEL, "IOException {0} on {1} while resolving {2}: {3}", new Object[] { address, port, q, e});
             throw e;
         }
-        if (dnsMessage != null) {
-            LOGGER.log(TRACE_LOG_LEVEL, "Response from {0} on {1} for {2}:\n{3}", new Object[] { address, port, q, dnsMessage });
+        if (responseMessage != null) {
+            LOGGER.log(TRACE_LOG_LEVEL, "Response from {0} on {1} for {2}:\n{3}", new Object[] { address, port, q, responseMessage });
         } else {
             // TODO When should this ever happen?
             LOGGER.log(Level.SEVERE, "NULL response from " + address + " on " + port + " for " + q);
         }
 
-        if (dnsMessage == null) return null;
+        if (responseMessage == null) return null;
 
-        if (cache != null && isResponseCacheable(q, dnsMessage)) {
-            cache.put(q, dnsMessage);
+        if (cache != null && isResponseCacheable(q, responseMessage)) {
+            cache.put(q, responseMessage);
         }
-        return dnsMessage;
+        return responseMessage;
     }
 
     /**
