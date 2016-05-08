@@ -94,10 +94,6 @@ public class DNSClient extends AbstractDNSClient {
                         return responseMessage;
                     }
                 }
-                // TODO Remove the following warning. This is a perfectly valid situation: If there is no RRset of the
-                // RR type queried but the name does exists, then the answer section will be empty.
-                LOGGER.warning("Response from " + dns + " asked for " + q
-                        + " did not contain an answer to the query.\n" + responseMessage);
             } catch (IOException ioe) {
                 ioExceptions.add(ioe);
             }
