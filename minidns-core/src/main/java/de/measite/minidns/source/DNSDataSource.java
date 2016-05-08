@@ -18,12 +18,7 @@ import java.net.InetAddress;
 public abstract class DNSDataSource {
     public abstract DNSMessage query(DNSMessage message, InetAddress address, int port) throws IOException;
 
-    private int udpPayloadSize = 512;
-
-    /**
-     * The buffer size for dns replies.
-     */
-    protected int bufferSize = 1500;
+    protected int udpPayloadSize = 512;
 
     /**
      * DNS timeout.
@@ -50,7 +45,7 @@ public abstract class DNSDataSource {
     }
 
     public int getUdpPayloadSize() {
-        return Math.min(udpPayloadSize, bufferSize);
+        return udpPayloadSize;
     }
 
     public void setUdpPayloadSize(int udpPayloadSize) {

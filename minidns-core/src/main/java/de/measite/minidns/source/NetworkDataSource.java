@@ -61,11 +61,12 @@ public class NetworkDataSource extends DNSDataSource {
         // required Android API level is >= 19
         DatagramSocket socket = null;
         DatagramPacket packet = message.asDatagram(address, port);
+        byte[] buffer = new byte[udpPayloadSize];
         try {
             socket = new DatagramSocket();
             socket.setSoTimeout(timeout);
             socket.send(packet);
-            packet = new DatagramPacket(new byte[bufferSize], bufferSize);
+            packet = new DatagramPacket(buffer, buffer.length);
             socket.receive(packet);
             DNSMessage dnsMessage = new DNSMessage(packet.getData());
             if (dnsMessage.id != message.id) {
