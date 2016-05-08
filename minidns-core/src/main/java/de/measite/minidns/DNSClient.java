@@ -72,7 +72,6 @@ public class DNSClient extends AbstractDNSClient {
             return responseMessage;
         }
 
-        final Question question = q.getQuestion();
         String dnsServer[] = findDNS();
         List<IOException> ioExceptions = new ArrayList<>(dnsServer.length);
         for (String dns : dnsServer) {
@@ -101,11 +100,7 @@ public class DNSClient extends AbstractDNSClient {
                     continue;
                 }
 
-                for (Record record : responseMessage.answers) {
-                    if (record.isAnswer(question)) {
-                        return responseMessage;
-                    }
-                }
+                return responseMessage;
             } catch (IOException ioe) {
                 ioExceptions.add(ioe);
             }
