@@ -97,6 +97,7 @@ public class DNSClient extends AbstractDNSClient {
                         warning += "\n" + responseMessage;
                     }
                     LOGGER.warning(warning);
+                    // TODO Create new IOException and add to ioExceptions.
                     continue;
                 }
 
@@ -106,6 +107,7 @@ public class DNSClient extends AbstractDNSClient {
             }
         }
         MultipleIoException.throwIfRequired(ioExceptions);
+        // TODO assert that we never return null here.
         return null;
     }
 
