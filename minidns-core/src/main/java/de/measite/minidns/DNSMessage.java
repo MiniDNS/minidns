@@ -450,22 +450,27 @@ public class DNSMessage {
         }
     }
 
-    public DNSMessage(DNSMessage copy) {
-        id = copy.id;
-        qr = copy.qr;
-        opcode = copy.opcode;
-        authoritativeAnswer = copy.authoritativeAnswer;
-        truncated = copy.truncated;
-        recursionDesired = copy.recursionDesired;
-        recursionAvailable = copy.recursionAvailable;
-        authenticData = copy.authenticData;
-        checkingDisabled = copy.checkingDisabled;
-        responseCode = copy.responseCode;
-        receiveTimestamp = copy.receiveTimestamp;
-        questions = copy.questions;
-        answers = copy.answers;
-        nameserverRecords = copy.nameserverRecords;
-        additionalResourceRecords = copy.additionalResourceRecords;
+    /**
+     * Constructs an normalized version of the given DNSMessage by setting the id to '0'.
+     *
+     * @param message the message of which normalized version should be constructed.
+     */
+    private DNSMessage(DNSMessage message) {
+        id = 0;
+        qr = message.qr;
+        opcode = message.opcode;
+        authoritativeAnswer = message.authoritativeAnswer;
+        truncated = message.truncated;
+        recursionDesired = message.recursionDesired;
+        recursionAvailable = message.recursionAvailable;
+        authenticData = message.authenticData;
+        checkingDisabled = message.checkingDisabled;
+        responseCode = message.responseCode;
+        receiveTimestamp = message.receiveTimestamp;
+        questions = message.questions;
+        answers = message.answers;
+        nameserverRecords = message.nameserverRecords;
+        additionalResourceRecords = message.additionalResourceRecords;
     }
 
 
@@ -832,6 +837,15 @@ public class DNSMessage {
 
     public Builder asBuilder() {
         return new Builder(this);
+    }
+
+    private DNSMessage normalizedVersionCache;
+
+    public DNSMessage asNormalizedVersion() {
+        if (normalizedVersionCache == null) {
+            normalizedVersionCache = new DNSMessage(this);
+        }
+        return normalizedVersionCache;
     }
 
     private transient Integer hashCodeCache;
