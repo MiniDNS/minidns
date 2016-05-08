@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.logging.Level;
 
 /**
  * A minimal DNS client for SRV/A/AAAA/NS and CNAME lookups, with IDN support.
@@ -83,12 +84,23 @@ public class DNSClient extends AbstractDNSClient {
                 if (disableResultFilter) {
                     return responseMessage;
                 }
-                if (responseMessage.responseCode !=
-                        DNSMessage.RESPONSE_CODE.NO_ERROR) {
-                    LOGGER.warning("Response from " + dns + " asked for " + q.getQuestion() + " with error code: "
-                            + responseMessage.responseCode + ".\n" + responseMessage);
+
+                switch (responseMessage.responseCode) {
+                case NO_ERROR:
+                case NX_DOMAIN:
+                    break;
+                default:
+                    String warning = "Response from " + dns + " asked for " + q.getQuestion() + " with error code: "
+                            + responseMessage.responseCode + '.';
+                    if (!LOGGER.isLoggable(Level.FINE)) {
+                        // Only append the responseMessage is log level is not fine. If it is fine or higher, the
+                        // response has already been logged.
+                        warning += "\n" + responseMessage;
+                    }
+                    LOGGER.warning(warning);
                     continue;
                 }
+
                 for (Record record : responseMessage.answers) {
                     if (record.isAnswer(question)) {
                         return responseMessage;
