@@ -32,7 +32,8 @@ public class LRUCacheTest {
     @Test
     public void testOutdatedCacheEntry() {
         DNSMessage message = createSampleMessage(1);
-        Question question = new Question("", Record.TYPE.A);
+        Question q = new Question("", Record.TYPE.A);
+        DNSMessage question = q.asQueryMessage();
         lruCache.put(question, message);
 
         assertNull(lruCache.get(question));
@@ -43,14 +44,15 @@ public class LRUCacheTest {
 
     @Test
     public void testOverfilledCache() {
-        Question question = new Question("", Record.TYPE.A);
+        Question q = new Question("", Record.TYPE.A);
+        DNSMessage question = q.asQueryMessage();
         lruCache.put(question, createSampleMessage());
         assertNotNull(lruCache.get(question));
-        lruCache.put(new Question("1", Record.TYPE.A), createSampleMessage());
-        lruCache.put(new Question("2", Record.TYPE.A), createSampleMessage());
-        lruCache.put(new Question("3", Record.TYPE.A), createSampleMessage());
-        lruCache.put(new Question("4", Record.TYPE.A), createSampleMessage());
-        lruCache.put(new Question("5", Record.TYPE.A), createSampleMessage());
+        lruCache.put(new Question("1", Record.TYPE.A).asQueryMessage(), createSampleMessage());
+        lruCache.put(new Question("2", Record.TYPE.A).asQueryMessage(), createSampleMessage());
+        lruCache.put(new Question("3", Record.TYPE.A).asQueryMessage(), createSampleMessage());
+        lruCache.put(new Question("4", Record.TYPE.A).asQueryMessage(), createSampleMessage());
+        lruCache.put(new Question("5", Record.TYPE.A).asQueryMessage(), createSampleMessage());
 
         assertNull(lruCache.get(question));
         assertEquals(0, lruCache.getExpireCount());

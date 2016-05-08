@@ -66,7 +66,7 @@ public class ReliableDNSClient extends AbstractDNSClient {
     }
 
     @Override
-    public DNSMessage query(Question q) throws IOException {
+    public DNSMessage query(DNSMessage q) throws IOException {
         DNSMessage dnsMessage = null;
         String unacceptableReason = null;
         List<IOException> ioExceptions = new LinkedList<>();

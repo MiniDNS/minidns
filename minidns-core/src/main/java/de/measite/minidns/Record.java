@@ -524,4 +524,12 @@ public class Record {
         }
         return new Question(name, type, clazz);
     }
+
+    public DNSMessage.Builder getQuestionMessage() {
+        Question question = getQuestion();
+        if (question == null) {
+            return null;
+        }
+        return question.asMessageBuilder();
+    }
 }

@@ -18,16 +18,16 @@ public interface DNSCache {
     /**
      * Add an an dns answer/response for a given dns question. Implementations
      * should honor the ttl / receive timestamp.
-     * @param q The question.
+     * @param query The query message containing a question.
      * @param message The dns message.
      */
-    void put(Question q, DNSMessage message);
+    void put(DNSMessage query, DNSMessage message);
 
     /**
      * Request a cached dns response.
-     * @param q The dns question.
+     * @param query The query message containing a question.
      * @return The dns message.
      */
-    DNSMessage get(Question q);
+    DNSMessage get(DNSMessage query);
 
 }

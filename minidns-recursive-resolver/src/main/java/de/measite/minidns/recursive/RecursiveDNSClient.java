@@ -86,12 +86,12 @@ public class RecursiveDNSClient extends AbstractDNSClient {
     /**
      * Recursively query the DNS system for one entry.
      *
-     * @param q The question section of the DNS query.
+     * @param q The query DNS message.
      * @return The response (or null on timeout/error).
      * @throws IOException if an IO error occurs.
      */
     @Override
-    public DNSMessage query(Question q) throws IOException {
+    public DNSMessage query(DNSMessage q) throws IOException {
         RecursionState recursionState = new RecursionState(this);
         DNSMessage message = queryRecursive(recursionState, q);
         if (message == null) return null;
@@ -107,7 +107,7 @@ public class RecursiveDNSClient extends AbstractDNSClient {
         return IPV6_ROOT_SERVERS[insecureRandom.nextInt(IPV6_ROOT_SERVERS.length)];
     }
 
-    private DNSMessage queryRecursive(RecursionState recursionState, Question q) throws IOException {
+    private DNSMessage queryRecursive(RecursionState recursionState, DNSMessage q) throws IOException {
         InetAddress primaryTarget = null, secondaryTarget = null;
         switch (ipVersionSetting) {
         case v4only:
@@ -147,7 +147,7 @@ public class RecursiveDNSClient extends AbstractDNSClient {
         return null;
     }
 
-    private DNSMessage queryRecursive(RecursionState recursionState, Question q, InetAddress address) throws IOException {
+    private DNSMessage queryRecursive(RecursionState recursionState, DNSMessage q, InetAddress address) throws IOException {
         recursionState.recurse(address, q);
 
         DNSMessage resMessage = query(q, address);
@@ -185,8 +185,9 @@ public class RecursiveDNSClient extends AbstractDNSClient {
 
         // Try non-glued NS
         for (Record record : authorities) {
+            final Question question = q.getQuestion();
             DNSName name = ((NS) record.payloadData).name;
-            if (!q.name.equals(name) || q.type != TYPE.A) {
+            if (!question.name.equals(name) || question.type != TYPE.A) {
                 IpResultSet res = null;
                 try {
                     res = resolveIpRecursive(recursionState, name);
@@ -239,7 +240,8 @@ public class RecursiveDNSClient extends AbstractDNSClient {
 
         if (ipVersionSetting != IpVersionSetting.v6only) {
             Question question = new Question(name, TYPE.A);
-            DNSMessage aMessage = queryRecursive(recursionState, question);
+            final DNSMessage query = getQueryFor(question);
+            DNSMessage aMessage = queryRecursive(recursionState, query);
             if (aMessage != null) {
                 for (Record answer : aMessage.getAnswers()) {
                     if (answer.isAnswer(question)) {
@@ -254,7 +256,8 @@ public class RecursiveDNSClient extends AbstractDNSClient {
 
         if (ipVersionSetting != IpVersionSetting.v4only) {
             Question question = new Question(name, TYPE.AAAA);
-            DNSMessage aMessage = queryRecursive(recursionState, question);
+            final DNSMessage query = getQueryFor(question);
+            DNSMessage aMessage = queryRecursive(recursionState, query);
             if (aMessage != null) {
                 for (Record answer : aMessage.getAnswers()) {
                     if (answer.isAnswer(question)) {

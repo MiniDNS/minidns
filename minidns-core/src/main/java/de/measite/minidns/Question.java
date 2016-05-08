@@ -163,4 +163,14 @@ public class Question {
     public String toString() {
         return name + ".\t" + clazz + '\t' + type;
     }
+
+    public DNSMessage.Builder asMessageBuilder() {
+        DNSMessage.Builder builder = DNSMessage.builder();
+        builder.setQuestion(this);
+        return builder;
+    }
+
+    public DNSMessage asQueryMessage() {
+        return asMessageBuilder().build();
+    }
 }

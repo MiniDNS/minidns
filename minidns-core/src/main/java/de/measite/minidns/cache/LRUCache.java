@@ -15,7 +15,6 @@ import java.util.Map.Entry;
 
 import de.measite.minidns.DNSCache;
 import de.measite.minidns.DNSMessage;
-import de.measite.minidns.Question;
 import de.measite.minidns.Record;
 
 /**
@@ -51,7 +50,7 @@ public class LRUCache implements DNSCache {
     /**
      * The backend cache.
      */
-    protected LinkedHashMap<Question, DNSMessage> backend;
+    protected LinkedHashMap<DNSMessage, DNSMessage> backend;
 
     /**
      * Create a new LRUCache with given capacity and upper bound ttl.
@@ -62,12 +61,12 @@ public class LRUCache implements DNSCache {
     public LRUCache(final int capacity, final long maxTTL) {
         this.capacity = capacity;
         this.maxTTL = maxTTL;
-        backend = new LinkedHashMap<Question,DNSMessage>(
+        backend = new LinkedHashMap<DNSMessage, DNSMessage>(
                 Math.min(capacity + (capacity + 3) / 4 + 2, 11), 0.75f, true)
             {
                 @Override
                 protected boolean removeEldestEntry(
-                        Entry<Question, DNSMessage> eldest) {
+                        Entry<DNSMessage, DNSMessage> eldest) {
                     return size() > capacity;
                 }
             };
@@ -82,7 +81,7 @@ public class LRUCache implements DNSCache {
     }
 
     @Override
-    public synchronized void put(Question q, DNSMessage message) {
+    public synchronized void put(DNSMessage q, DNSMessage message) {
         if (message.receiveTimestamp <= 0L) {
             return;
         }
@@ -90,7 +89,7 @@ public class LRUCache implements DNSCache {
     }
 
     @Override
-    public synchronized DNSMessage get(Question q) {
+    public synchronized DNSMessage get(DNSMessage q) {
         DNSMessage message = backend.get(q);
         if (message == null) {
             missCount++;

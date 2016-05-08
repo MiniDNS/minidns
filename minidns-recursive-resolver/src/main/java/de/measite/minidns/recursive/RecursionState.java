@@ -15,6 +15,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
 
+import de.measite.minidns.DNSMessage;
 import de.measite.minidns.Question;
 import de.measite.minidns.recursive.RecursiveClientException.LoopDetected;
 import de.measite.minidns.recursive.RecursiveClientException.MaxRecursionStepsReached;
@@ -29,7 +30,8 @@ public class RecursionState {
         this.recursiveDnsClient = recursiveDnsClient;
     }
 
-    void recurse(InetAddress address, Question question) throws LoopDetected, MaxRecursionStepsReached {
+    void recurse(InetAddress address, DNSMessage query) throws LoopDetected, MaxRecursionStepsReached {
+        Question question = query.getQuestion();
         if (!map.containsKey(address)) {
             map.put(address, new HashSet<Question>());
         } else if (map.get(address).contains(question)) {

@@ -34,30 +34,31 @@ public class ExtendedLRUCache extends LRUCache {
     }
 
     @Override
-    public void put(Question q, DNSMessage message) {
+    public void put(DNSMessage q, DNSMessage message) {
         super.put(q, message);
-        Map<Question, List<Record>> extraCaches = new HashMap<>(message.additionalResourceRecords.size());
+        Map<DNSMessage, List<Record>> extraCaches = new HashMap<>(message.additionalResourceRecords.size());
 
         gather(extraCaches, q, message.answers);
         gather(extraCaches, q, message.nameserverRecords);
         gather(extraCaches, q, message.additionalResourceRecords);
 
-        for (Entry<Question, List<Record>> entry : extraCaches.entrySet()) {
+        for (Entry<DNSMessage, List<Record>> entry : extraCaches.entrySet()) {
             DNSMessage answer = message.asBuilder().addAnswers(entry.getValue()).build();
-            Question question = entry.getKey();
+            DNSMessage question = entry.getKey();
             super.put(question, answer);
         }
     }
 
-    private final void gather(Map<Question, List<Record>> extraCaches, Question q, List<Record> records) {
+    private final void gather(Map<DNSMessage, List<Record>> extraCaches, DNSMessage q, List<Record> records) {
         for (Record extraRecord : records) {
-            if (!shouldGather(extraRecord, q))
+            if (!shouldGather(extraRecord, q.getQuestion()))
                 continue;
 
-            Question additionalRecordQuestion = extraRecord.getQuestion();
-            if (additionalRecordQuestion == null)
+            DNSMessage.Builder additionalRecordQuestionBuilder = extraRecord.getQuestionMessage();
+            if (additionalRecordQuestionBuilder == null)
                 continue;
 
+            DNSMessage additionalRecordQuestion = additionalRecordQuestionBuilder.build();
             if (additionalRecordQuestion.equals(q)) {
                 // No need to cache the additional question if it is the same as the original question.
                 continue;

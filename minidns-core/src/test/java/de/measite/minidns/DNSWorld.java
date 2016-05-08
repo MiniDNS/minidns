@@ -60,6 +60,8 @@ public class DNSWorld extends DNSDataSource {
                 return response.build();
             }
         }
+        // TODO We should return an error or throw an IOException here. Otherwise the (DNSSEC) unit tests will log a
+        // bunch of server "NULL response from..." messages.
         return null;
     }
 

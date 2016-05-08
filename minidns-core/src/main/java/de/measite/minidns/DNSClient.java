@@ -59,15 +59,8 @@ public class DNSClient extends AbstractDNSClient {
         return message;
     }
 
-    /**
-     * Query the system DNS server for one entry.
-     *
-     * @param q The question section of the DNS query.
-     * @return The response (or null on timeout/error).
-     * @throws IOException if an error occurs.
-     */
     @Override
-    public DNSMessage query(Question q) throws IOException {
+    public DNSMessage query(DNSMessage q) throws IOException {
         // While this query method does in fact re-use query(Question, String)
         // we still do a cache lookup here in order to avoid unnecessary
         // findDNS()calls, which are expensive on Android. Note that we do not
@@ -78,6 +71,7 @@ public class DNSClient extends AbstractDNSClient {
             return responseMessage;
         }
 
+        final Question question = q.getQuestion();
         String dnsServer[] = findDNS();
         List<IOException> ioExceptions = new ArrayList<>(dnsServer.length);
         for (String dns : dnsServer) {
@@ -91,15 +85,17 @@ public class DNSClient extends AbstractDNSClient {
                 }
                 if (responseMessage.responseCode !=
                         DNSMessage.RESPONSE_CODE.NO_ERROR) {
-                    LOGGER.warning("Response from " + dns + " asked for " + q + " with error code: "
+                    LOGGER.warning("Response from " + dns + " asked for " + q.getQuestion() + " with error code: "
                             + responseMessage.responseCode + ".\n" + responseMessage);
                     continue;
                 }
                 for (Record record : responseMessage.answers) {
-                    if (record.isAnswer(q)) {
+                    if (record.isAnswer(question)) {
                         return responseMessage;
                     }
                 }
+                // TODO Remove the following warning. This is a perfectly valid situation: If there is no RRset of the
+                // RR type queried but the name does exists, then the answer section will be empty.
                 LOGGER.warning("Response from " + dns + " asked for " + q
                         + " did not contain an answer to the query.\n" + responseMessage);
             } catch (IOException ioe) {

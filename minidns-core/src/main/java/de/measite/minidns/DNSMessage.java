@@ -609,6 +609,10 @@ public class DNSMessage {
         return responseCode;
     }
 
+    public Question getQuestion() {
+        return questions.get(0);
+    }
+
     /**
      * Retrieve the question section of this message.
      *

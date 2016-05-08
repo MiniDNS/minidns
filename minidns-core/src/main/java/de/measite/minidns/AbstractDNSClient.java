@@ -116,24 +116,33 @@ public abstract class AbstractDNSClient {
         return query(q);
     }
 
+    public DNSMessage query(Question q) throws IOException {
+        DNSMessage query = getQueryFor(q);
+        return query(query);
+    }
+
     /**
-     * Query the system DNS server for one entry.
+     * Send a query request to the DNS system.
      *
-     * @param q The question section of the DNS query.
+     * @param query The query to send to the server.
      * @return The response (or null).
      * @throws IOException if an IO error occurs.
      */
-    public abstract DNSMessage query(Question q) throws IOException;
+    public abstract DNSMessage query(DNSMessage query) throws IOException;
 
-    public DNSMessage query(Question q, InetAddress address, int port) throws IOException {
+    public final DNSMessage query(Question q, InetAddress server, int port) throws IOException {
+        DNSMessage query = getQueryFor(q);
+        return query(query, server, port);
+    }
+
+    public final DNSMessage query(DNSMessage requestMessage, InetAddress address, int port) throws IOException {
         // See if we have the answer to this question already cached
-        DNSMessage responseMessage = (cache == null) ? null : cache.get(q);
+        DNSMessage responseMessage = (cache == null) ? null : cache.get(requestMessage);
         if (responseMessage != null) {
             return responseMessage;
         }
 
-        DNSMessage.Builder messageBuilder = buildMessage(q);
-        DNSMessage requestMessage = messageBuilder.build();
+        final Question q = requestMessage.getQuestion();
 
         final Level TRACE_LOG_LEVEL = Level.FINE;
         LOGGER.log(TRACE_LOG_LEVEL, "Asking {0} on {1} for {2} with:\n{3}", new Object[] { address, port, q, requestMessage });
@@ -154,7 +163,7 @@ public abstract class AbstractDNSClient {
         if (responseMessage == null) return null;
 
         if (cache != null && isResponseCacheable(q, responseMessage)) {
-            cache.put(q, responseMessage);
+            cache.put(requestMessage.asNormalizedVersion(), responseMessage);
         }
         return responseMessage;
     }
@@ -227,14 +236,31 @@ public abstract class AbstractDNSClient {
     /**
      * Query a specific server for one entry.
      *
+     * @param query The query message.
+     * @param host The dns server host.
+     * @return The response (or null on timeout/error).
+     * @throws IOException On IOErrors.
+     */
+    public DNSMessage query(DNSMessage query, String host) throws IOException {
+        InetAddress hostAddress = InetAddress.getByName(host);
+        return query(query, hostAddress);
+    }
+
+    public final DNSMessage query(DNSMessage query, InetAddress host) throws IOException {
+        return query(query, host, 53);
+    }
+
+    /**
+     * Query a specific server for one entry.
+     *
      * @param q    The question section of the DNS query.
      * @param host The dns server host.
      * @return The response (or null on timeout/error).
      * @throws IOException On IOErrors.
      */
     public DNSMessage query(Question q, String host) throws IOException {
-        InetAddress hostAddress = InetAddress.getByName(host);
-        return query(q, hostAddress, 53);
+        DNSMessage query = getQueryFor(q);
+        return query(query, host);
     }
 
     /**
@@ -281,5 +307,11 @@ public abstract class AbstractDNSClient {
      */
     public DNSCache getCache() {
         return cache;
+    }
+
+    protected DNSMessage getQueryFor(Question q) {
+        DNSMessage.Builder messageBuilder = buildMessage(q);
+        DNSMessage query = messageBuilder.build();
+        return query;
     }
 }
