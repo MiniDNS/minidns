@@ -30,14 +30,14 @@ public class CoreTest {
         DNSClient client = new DNSClient(new LRUCache(1024));
         String exampleIp4 = "93.184.216.34"; // stable?
         String exampleIp6 = "2606:2800:220:1:248:1893:25c8:1946"; // stable?
-        assertEquals(client.query("example.com", Record.TYPE.A).getAnswers()[0].payloadData.toString(), exampleIp4);
-        assertEquals(client.query("www.example.com", Record.TYPE.A).getAnswers()[0].payloadData.toString(), exampleIp4);
-        assertEquals(client.query("example.com", Record.TYPE.AAAA).getAnswers()[0].payloadData.toString(), exampleIp6);
-        assertEquals(client.query("www.example.com", Record.TYPE.AAAA).getAnswers()[0].payloadData.toString(), exampleIp6);
+        assertEquals(client.query("example.com", Record.TYPE.A).answers.get(0).payloadData.toString(), exampleIp4);
+        assertEquals(client.query("www.example.com", Record.TYPE.A).answers.get(0).payloadData.toString(), exampleIp4);
+        assertEquals(client.query("example.com", Record.TYPE.AAAA).answers.get(0).payloadData.toString(), exampleIp6);
+        assertEquals(client.query("www.example.com", Record.TYPE.AAAA).answers.get(0).payloadData.toString(), exampleIp6);
 
         DNSMessage nsRecords = client.query("example.com", Record.TYPE.NS);
         List<String> values = new ArrayList<>();
-        for (Record record : nsRecords.getAnswers()) {
+        for (Record record : nsRecords.answers) {
             values.add(record.payloadData.toString());
         }
         Collections.sort(values);

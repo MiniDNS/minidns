@@ -28,7 +28,6 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -152,10 +151,10 @@ public class RecursiveDNSClient extends AbstractDNSClient {
 
         DNSMessage resMessage = query(q, address);
 
-        if (resMessage == null || resMessage.isAuthoritativeAnswer()) {
+        if (resMessage == null || resMessage.authoritativeAnswer) {
             return resMessage;
         }
-        List<Record> authorities = new ArrayList<>(Arrays.asList(resMessage.getNameserverRecords()));
+        List<Record> authorities = resMessage.copyNameserverRecords();
 
         List<IOException> ioExceptions = new LinkedList<>();
 
@@ -243,7 +242,7 @@ public class RecursiveDNSClient extends AbstractDNSClient {
             final DNSMessage query = getQueryFor(question);
             DNSMessage aMessage = queryRecursive(recursionState, query);
             if (aMessage != null) {
-                for (Record answer : aMessage.getAnswers()) {
+                for (Record answer : aMessage.answers) {
                     if (answer.isAnswer(question)) {
                         InetAddress inetAddress = inetAddressFromRecord(name.ace, (A) answer.payloadData);
                         res.ipv4Addresses.add(inetAddress);
@@ -259,7 +258,7 @@ public class RecursiveDNSClient extends AbstractDNSClient {
             final DNSMessage query = getQueryFor(question);
             DNSMessage aMessage = queryRecursive(recursionState, query);
             if (aMessage != null) {
-                for (Record answer : aMessage.getAnswers()) {
+                for (Record answer : aMessage.answers) {
                     if (answer.isAnswer(question)) {
                         InetAddress inetAddress = inetAddressFromRecord(name.ace, (AAAA) answer.payloadData);
                         res.ipv6Addresses.add(inetAddress);
@@ -276,7 +275,7 @@ public class RecursiveDNSClient extends AbstractDNSClient {
     @SuppressWarnings("incomplete-switch")
     private static IpResultSet searchAdditional(DNSMessage message, DNSName name) {
         IpResultSet res = new IpResultSet();
-        for (Record record : message.getAdditionalResourceRecords()) {
+        for (Record record : message.additionalResourceRecords) {
             if (!record.name.equals(name)) {
                 continue;
             }
@@ -341,7 +340,7 @@ public class RecursiveDNSClient extends AbstractDNSClient {
 
     @Override
     protected boolean isResponseCacheable(Question q, DNSMessage dnsMessage) {
-        return dnsMessage.isAuthoritativeAnswer();
+        return dnsMessage.authoritativeAnswer;
     }
 
     @Override

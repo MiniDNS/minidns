@@ -30,6 +30,7 @@ import de.measite.minidns.record.SOA;
 import de.measite.minidns.record.SRV;
 import de.measite.minidns.record.TXT;
 import de.measite.minidns.util.Base32;
+
 import org.junit.Test;
 
 import java.io.ByteArrayOutputStream;
@@ -81,44 +82,45 @@ public class DNSMessageTest {
     @Test
     public void testALookup() throws Exception {
         DNSMessage m = getMessageFromResource("sun-a");
-        assertFalse(m.isAuthoritativeAnswer());
-        Record[] answers = m.getAnswers();
-        assertEquals(2, answers.length);
+        assertFalse(m.authoritativeAnswer);
+        List<Record> answers = m.answers;
+        assertEquals(2, answers.size());
 
-        int cname = 0;
-        if(answers[1].name.ace.equalsIgnoreCase("www.sun.com"))
-            cname = 1;
-        assertTrue(answers[cname].getPayload() instanceof CNAME);
-        assertEquals(TYPE.CNAME, answers[cname].getPayload().getType());
+        Record cname = answers.get(0);
+        Record a = answers.get(1);
+
+        assertTrue(cname.getPayload() instanceof CNAME);
+        assertEquals(TYPE.CNAME, cname.getPayload().getType());
         assertCsEquals("legacy-sun.oraclegha.com",
-                     ((CNAME)(answers[cname].getPayload())).name);
+                     ((CNAME)(cname.getPayload())).name);
 
-        assertCsEquals("legacy-sun.oraclegha.com", answers[1-cname].name);
-        assertTrue(answers[1 - cname].getPayload() instanceof A);
-        assertEquals(TYPE.A, answers[1 - cname].getPayload().getType());
-        assertCsEquals("156.151.59.35", answers[1 - cname].getPayload().toString());
+        assertCsEquals("legacy-sun.oraclegha.com", a.name);
+        assertTrue(a.getPayload() instanceof A);
+        assertEquals(TYPE.A, a.getPayload().getType());
+        assertCsEquals("156.151.59.35", a.getPayload().toString());
     }
 
 
     @Test
     public void testAAAALookup() throws Exception {
         DNSMessage m = getMessageFromResource("google-aaaa");
-        assertFalse(m.isAuthoritativeAnswer());
-        Record[] answers = m.getAnswers();
-        assertEquals(1, answers.length);
-        assertCsEquals("google.com", answers[0].name);
-        assertTrue(answers[0].getPayload() instanceof AAAA);
-        assertEquals(TYPE.AAAA, answers[0].getPayload().getType());
-        assertCsEquals("2a00:1450:400c:c02:0:0:0:8a", answers[0].getPayload().toString());
+        assertFalse(m.authoritativeAnswer);
+        List<Record> answers = m.answers;
+        assertEquals(1, answers.size());
+        Record answer = answers.get(0);
+        assertCsEquals("google.com", answer.name);
+        assertTrue(answer.getPayload() instanceof AAAA);
+        assertEquals(TYPE.AAAA, answer.getPayload().getType());
+        assertCsEquals("2a00:1450:400c:c02:0:0:0:8a", answer.getPayload().toString());
     }
 
 
     @Test
     public void testMXLookup() throws Exception {
         DNSMessage m = getMessageFromResource("gmail-mx");
-        assertFalse(m.isAuthoritativeAnswer());
-        Record[] answers = m.getAnswers();
-        assertEquals(5, answers.length);
+        assertFalse(m.authoritativeAnswer);
+        List<Record> answers = m.answers;
+        assertEquals(5, answers.size());
         Map<Integer, DNSName> mxes = new TreeMap<>();
         for(Record r : answers) {
             assertCsEquals("gmail.com", r.name);
@@ -138,12 +140,13 @@ public class DNSMessageTest {
     @Test
     public void testSRVLookup() throws Exception {
         DNSMessage m = getMessageFromResource("gpn-srv");
-        assertFalse(m.isAuthoritativeAnswer());
-        Record[] answers = m.getAnswers();
-        assertEquals(1, answers.length);
-        assertTrue(answers[0].getPayload() instanceof SRV);
-        assertEquals(TYPE.SRV, answers[0].getPayload().getType());
-        SRV r = (SRV)(answers[0].getPayload());
+        assertFalse(m.authoritativeAnswer);
+        List<Record> answers = m.answers;
+        assertEquals(1, answers.size());
+        Record answer = answers.get(0);
+        assertTrue(answer.getPayload() instanceof SRV);
+        assertEquals(TYPE.SRV, answer.getPayload().getType());
+        SRV r = (SRV)(answer.getPayload());
         assertCsEquals("raven.toroid.org", r.name);
         assertEquals(5222, r.port);
         assertEquals(0, r.priority);
@@ -156,7 +159,7 @@ public class DNSMessageTest {
         txtToBeFound.add("google-site-verification=2oV3cW79A6icpGf-JbLGY4rP4_omL4FOKTqRxb-Dyl4");
         txtToBeFound.add("keybase-site-verification=dKxf6T30x5EbNIUpeJcbWxUABJEnVWzQ3Z3hCumnk10");
         txtToBeFound.add("v=spf1 include:spf.mandrillapp.com ~all");
-        Record[] answers = m.getAnswers();
+        List<Record> answers = m.answers;
         for(Record r : answers) {
             assertCsEquals("codinghorror.com", r.name);
             Data d = r.getPayload();
@@ -173,12 +176,13 @@ public class DNSMessageTest {
     @Test
     public void testSoaLookup() throws Exception {
         DNSMessage m = getMessageFromResource("oracle-soa");
-        assertFalse(m.isAuthoritativeAnswer());
-        Record[] answers = m.getAnswers();
-        assertEquals(1, answers.length);
-        assertTrue(answers[0].getPayload() instanceof SOA);
-        assertEquals(TYPE.SOA, answers[0].getPayload().getType());
-        SOA soa = (SOA) answers[0].getPayload();
+        assertFalse(m.authoritativeAnswer);
+        List<Record> answers = m.answers;
+        assertEquals(1, answers.size());
+        Record answer = answers.get(0);
+        assertTrue(answer.getPayload() instanceof SOA);
+        assertEquals(TYPE.SOA, answer.getPayload().getType());
+        SOA soa = (SOA) answer.getPayload();
         assertCsEquals("orcldns1.ultradns.com", soa.mname);
         assertCsEquals("hostmaster\\@oracle.com", soa.rname);
         assertEquals(2015032404L, soa.serial);
@@ -191,13 +195,13 @@ public class DNSMessageTest {
     @Test
     public void testComNsLookup() throws Exception {
         DNSMessage m = getMessageFromResource("com-ns");
-        assertFalse(m.isAuthoritativeAnswer());
-        assertFalse(m.isAuthenticData());
-        assertTrue(m.isRecursionDesired());
-        assertTrue(m.isRecursionAvailable());
+        assertFalse(m.authoritativeAnswer);
+        assertFalse(m.authenticData);
+        assertTrue(m.recursionDesired);
+        assertTrue(m.recursionAvailable);
         assertTrue(m.qr);
-        Record[] answers = m.getAnswers();
-        assertEquals(13, answers.length);
+        List<Record> answers = m.answers;
+        assertEquals(13, answers.size());
         for (Record answer : answers) {
             assertCsEquals("com", answer.name);
             assertEquals(Record.CLASS.IN, answer.clazz);
@@ -215,13 +219,13 @@ public class DNSMessageTest {
     @Test
     public void testRootDnskeyLookup() throws Exception {
         DNSMessage m = getMessageFromResource("root-dnskey");
-        assertFalse(m.isAuthoritativeAnswer());
-        assertTrue(m.isRecursionDesired());
-        assertTrue(m.isRecursionAvailable());
-        Record[] answers = m.getAnswers();
-        assertEquals(3, answers.length);
-        for (int i = 0; i < answers.length; i++) {
-            Record answer = answers[i];
+        assertFalse(m.authoritativeAnswer);
+        assertTrue(m.recursionDesired);
+        assertTrue(m.recursionAvailable);
+        List<Record> answers = m.answers;
+        assertEquals(3, answers.size());
+        for (int i = 0; i < answers.size(); i++) {
+            Record answer = answers.get(i);
             assertCsEquals("", answer.name);
             assertEquals(19593, answer.getTtl());
             assertEquals(TYPE.DNSKEY, answer.type);
@@ -259,9 +263,9 @@ public class DNSMessageTest {
     @Test
     public void testComDsAndRrsigLookup() throws Exception {
         DNSMessage m = getMessageFromResource("com-ds-rrsig");
-        assertFalse(m.isAuthoritativeAnswer());
-        assertTrue(m.isRecursionDesired());
-        assertTrue(m.isRecursionAvailable());
+        assertFalse(m.authoritativeAnswer);
+        assertTrue(m.recursionDesired);
+        assertTrue(m.recursionAvailable);
         List<Record> answers = m.answers;
         assertEquals(2, answers.size());
 
@@ -321,9 +325,9 @@ public class DNSMessageTest {
     @Test
     public void testComNsec3Lookup() throws Exception {
         DNSMessage m = getMessageFromResource("com-nsec3");
-        assertEquals(0, m.getAnswers().length);
-        Record[] records = m.getNameserverRecords();
-        assertEquals(8, records.length);
+        assertEquals(0, m.answers.size());
+        List<Record> records = m.nameserverRecords;
+        assertEquals(8, records.size());
         for (Record record : records) {
             if (record.type == TYPE.NSEC3) {
                 assertEquals(TYPE.NSEC3, record.getPayload().getType());
@@ -369,12 +373,12 @@ public class DNSMessageTest {
         DNSMessage message = new DNSMessage(dmb.build().toArray());
 
         assertEquals(1, message.questions.size());
-        assertEquals(0, message.getAnswers().length);
-        assertEquals(0, message.getAdditionalResourceRecords().length);
-        assertEquals(0, message.getNameserverRecords().length);
-        assertTrue(message.isRecursionDesired());
+        assertEquals(0, message.answers.size());
+        assertEquals(0, message.additionalResourceRecords.size());
+        assertEquals(0, message.nameserverRecords.size());
+        assertTrue(message.recursionDesired);
         assertTrue(message.qr);
-        assertEquals(42, message.getId());
+        assertEquals(42, message.id);
         assertCsEquals("www.example.com", message.questions.get(0).name);
         assertEquals(TYPE.A, message.questions.get(0).type);
     }
@@ -391,15 +395,15 @@ public class DNSMessageTest {
         dmb.setId(43);
         DNSMessage message = new DNSMessage(dmb.build().toArray());
 
-        assertEquals(0, message.getQuestions().length);
-        assertEquals(2, message.getAnswers().length);
-        assertEquals(0, message.getAdditionalResourceRecords().length);
-        assertEquals(0, message.getNameserverRecords().length);
-        assertTrue(message.isRecursionAvailable());
-        assertFalse(message.isAuthenticData());
-        assertTrue(message.isCheckDisabled());
+        assertEquals(0, message.questions.size());
+        assertEquals(2, message.answers.size());
+        assertEquals(0, message.additionalResourceRecords.size());
+        assertEquals(0, message.nameserverRecords.size());
+        assertTrue(message.recursionAvailable);
+        assertFalse(message.authenticData);
+        assertTrue(message.checkingDisabled);
         assertFalse(message.qr);
-        assertEquals(43, message.getId());
+        assertEquals(43, message.id);
         assertCsEquals("www.example.com", message.answers.get(0).name);
         assertEquals(TYPE.A, message.answers.get(0).type);
         assertCsEquals("127.0.0.1", message.answers.get(0).payloadData.toString());
@@ -424,19 +428,19 @@ public class DNSMessageTest {
         dmb.setId(43);
         DNSMessage message = new DNSMessage(dmb.build().toArray());
 
-        assertEquals(1, message.getQuestions().length);
-        assertEquals(1, message.getAnswers().length);
-        assertEquals(1, message.getAdditionalResourceRecords().length);
-        assertEquals(1, message.getNameserverRecords().length);
+        assertEquals(1, message.questions.size());
+        assertEquals(1, message.answers.size());
+        assertEquals(1, message.additionalResourceRecords.size());
+        assertEquals(1, message.nameserverRecords.size());
 
-        assertFalse(message.isRecursionAvailable());
-        assertTrue(message.isAuthenticData());
-        assertFalse(message.isCheckDisabled());
+        assertFalse(message.recursionAvailable);
+        assertTrue(message.authenticData);
+        assertFalse(message.checkingDisabled);
         assertFalse(message.qr);
-        assertTrue(message.isAuthoritativeAnswer());
-        assertEquals(43, message.getId());
-        assertEquals(DNSMessage.OPCODE.QUERY, message.getOpcode());
-        assertEquals(DNSMessage.RESPONSE_CODE.NO_ERROR, message.getResponseCode());
+        assertTrue(message.authoritativeAnswer);
+        assertEquals(43, message.id);
+        assertEquals(DNSMessage.OPCODE.QUERY, message.opcode);
+        assertEquals(DNSMessage.RESPONSE_CODE.NO_ERROR, message.responseCode);
 
         assertCsEquals("www.example.com", message.questions.get(0).name);
         assertEquals(TYPE.NS, message.questions.get(0).type);
@@ -461,9 +465,9 @@ public class DNSMessageTest {
         dmb.setQrFlag(false);
         dmb.setId(44);
         DNSMessage message = new DNSMessage(dmb.build().toArray());
-        assertEquals(44, message.getId());
+        assertEquals(44, message.id);
         assertFalse(message.qr);
-        assertTrue(message.isTruncated());
+        assertTrue(message.truncated);
     }
 
     @Test

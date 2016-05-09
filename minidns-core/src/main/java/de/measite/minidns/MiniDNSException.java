@@ -48,7 +48,7 @@ public abstract class MiniDNSException extends IOException {
         }
 
         private static String getString(DNSMessage request, DNSMessage response) {
-            return "The response's ID doesn't matches the request ID. Request: " + request.getId() + ". Response: " + response.getId();
+            return "The response's ID doesn't matches the request ID. Request: " + request.id + ". Response: " + response.id;
         }
     }
 }

@@ -27,7 +27,7 @@ public class DNSSECTest {
     @IntegrationTest
     public static void testVerisignDaneBadSig() throws Exception {
         DNSSECClient client = new DNSSECClient(new LRUCache(1024));
-        assertFalse(client.query("_443._tcp.bad-sig.dane.verisignlabs.com", Record.TYPE.TLSA).isAuthenticData());
+        assertFalse(client.query("_443._tcp.bad-sig.dane.verisignlabs.com", Record.TYPE.TLSA).authenticData);
     }
 
     @IntegrationTest
@@ -49,7 +49,7 @@ public class DNSSECTest {
     }
 
     private static void assertAuthentic(DNSSECMessage dnssecMessage) {
-        if (dnssecMessage.isAuthenticData()) return;
+        if (dnssecMessage.authenticData) return;
 
         StringBuilder sb = new StringBuilder();
         sb.append("Answer should contain authentic data while it does not. Reasons:\n");

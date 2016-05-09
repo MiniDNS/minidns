@@ -350,11 +350,11 @@ public class DNSSECWorld extends DNSWorld {
         @Override
         public boolean isResponse(DNSMessage request, InetAddress address) {
             Record nsecRecord = null;
-            for (Record record : nsecMessage.getNameserverRecords()) {
+            for (Record record : nsecMessage.nameserverRecords) {
                 if (record.type == Record.TYPE.NSEC)
                     nsecRecord = record;
             }
-            return address.equals(this.address) && Verifier.nsecMatches(request.getQuestions()[0].name.ace, nsecRecord.name.ace, ((NSEC) nsecRecord.payloadData).next.ace);
+            return address.equals(this.address) && Verifier.nsecMatches(request.getQuestion().name.ace, nsecRecord.name.ace, ((NSEC) nsecRecord.payloadData).next.ace);
         }
 
         @Override

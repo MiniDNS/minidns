@@ -11,6 +11,7 @@
 package de.measite.minidns.recursive;
 
 import java.io.IOException;
+import java.util.List;
 
 import de.measite.minidns.DNSMessage;
 import de.measite.minidns.Record;
@@ -48,10 +49,10 @@ public class RecursiveDNSClientTest {
         );
         DNSMessage message = client.query("www.example.com", TYPE.A);
         assertNotNull(message);
-        Record[] answers = message.getAnswers();
-        assertEquals(1, answers.length);
-        assertEquals(TYPE.A, answers[0].type);
-        assertArrayEquals(new byte[]{1, 1, 1, 3}, ((A) answers[0].payloadData).getIp());
+        List<Record> answers = message.answers;
+        assertEquals(1, answers.size());
+        assertEquals(TYPE.A, answers.get(0).type);
+        assertArrayEquals(new byte[]{1, 1, 1, 3}, ((A) answers.get(0).payloadData).getIp());
     }
 
     @Test(expected = RecursiveClientException.LoopDetected.class)
@@ -91,9 +92,9 @@ public class RecursiveDNSClientTest {
         );
         DNSMessage message = client.query("www.example.com", TYPE.A);
         assertNotNull(message);
-        Record[] answers = message.getAnswers();
-        assertEquals(1, answers.length);
-        assertEquals(TYPE.A, answers[0].type);
-        assertArrayEquals(new byte[]{1, 1, 1, 3}, ((A) answers[0].payloadData).getIp());
+        List<Record> answers = message.answers;
+        assertEquals(1, answers.size());
+        assertEquals(TYPE.A, answers.get(0).type);
+        assertArrayEquals(new byte[]{1, 1, 1, 3}, ((A) answers.get(0).payloadData).getIp());
     }
 }

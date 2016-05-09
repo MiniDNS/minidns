@@ -149,7 +149,7 @@ public class DNSSECClient extends ReliableDNSClient {
     }
 
     private Set<UnverifiedReason> verify(DNSMessage dnsMessage) throws IOException {
-        if (dnsMessage.getAnswers().length > 0) {
+        if (!dnsMessage.answers.isEmpty()) {
             return verifyAnswer(dnsMessage);
         } else {
             return verifyNsec(dnsMessage);
@@ -361,7 +361,7 @@ public class DNSSECClient extends ReliableDNSClient {
                 throw new DNSSECValidationFailedException(q, "There is no DNSKEY " + rrsig.signerName + ", but it is used");
             }
             result.addAll(dnskeyRes.getUnverifiedReasons());
-            for (Record record : dnskeyRes.getAnswers()) {
+            for (Record record : dnskeyRes.answers) {
                 if (record.type == TYPE.DNSKEY && ((DNSKEY) record.payloadData).getKeyTag() == rrsig.keyTag) {
                     dnskey = (DNSKEY) record.payloadData;
                 }
@@ -404,7 +404,7 @@ public class DNSSECClient extends ReliableDNSClient {
             LOGGER.fine("There is no DS record for " + sepRecord.name + ", server gives no result");
         } else {
             unverifiedReasons.addAll(dsResp.getUnverifiedReasons());
-            for (Record record : dsResp.getAnswers()) {
+            for (Record record : dsResp.answers) {
                if (record.type != TYPE.DS) {
                    continue;
                }
@@ -424,7 +424,7 @@ public class DNSSECClient extends ReliableDNSClient {
             DNSSECMessage dlvResp = queryDnssec(DNSName.from(sepRecord.name, dlv), TYPE.DLV);
             if (dlvResp != null) {
                 unverifiedReasons.addAll(dlvResp.getUnverifiedReasons());
-                for (Record record : dlvResp.getAnswers()) {
+                for (Record record : dlvResp.answers) {
                     if (record.type == TYPE.DLV && ((DNSKEY) sepRecord.payloadData).getKeyTag() == ((DLV) record.payloadData).keyTag) {
                         LOGGER.fine("Found DLV for " + sepRecord.name + ", awesome.");
                         delegation = (DLV) record.payloadData;
@@ -460,7 +460,7 @@ public class DNSSECClient extends ReliableDNSClient {
         if (!dnssecOk) {
             return "DNSSEC OK (DO) flag not set in response";
         }
-        boolean checkingDisabled = response.isCheckDisabled();
+        boolean checkingDisabled = response.checkingDisabled;
         if (!checkingDisabled) {
             return "CHECKING DISABLED (CD) flag not set in response";
         }

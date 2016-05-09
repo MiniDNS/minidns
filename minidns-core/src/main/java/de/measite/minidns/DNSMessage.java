@@ -228,7 +228,7 @@ public class DNSMessage {
     public final boolean authoritativeAnswer;
 
     /**
-     * True on truncate, tcp should be used.
+     * True if message is truncated. Then TCP should be used.
      */
     public final boolean truncated;
 
@@ -273,7 +273,8 @@ public class DNSMessage {
     public final List<Record> additionalResourceRecords;
 
     /**
-     * The receive timestamp of this message.
+     * The receive timestamp. Set only if this message was created via parse.
+     * This should be used to evaluate TTLs.
      */
     public final long receiveTimestamp;
 
@@ -323,88 +324,6 @@ public class DNSMessage {
         }
 
         // TODO Add verification of dns message state here
-    }
-
-    /**
-     * Retrieve the current DNS message id.
-     *
-     * @return The current DNS message id.
-     */
-//  TODO  @Deprecated
-    public int getId() {
-        return id;
-    }
-
-    /**
-     * Get the receive timestamp if this message was created via parse.
-     * This should be used to evaluate TTLs.
-     *
-     * @return The receive timestamp in milliseconds.
-     */
-//  TODO  @Deprecated
-    public long getReceiveTimestamp() {
-        return receiveTimestamp;
-    }
-
-    /**
-     * True if the DNS message is an authoritative answer.
-     *
-     * @return True if this an authoritative DNS message.
-     */
-//  TODO  @Deprecated
-    public boolean isAuthoritativeAnswer() {
-        return authoritativeAnswer;
-    }
-
-    /**
-     * Retrieve the truncation status of this message. True means that the
-     * client should try a tcp lookup.
-     *
-     * @return True if this message was truncated.
-     */
-//  TODO  @Deprecated
-    public boolean isTruncated() {
-        return truncated;
-    }
-
-    /**
-     * Check if this message preferes recursion.
-     *
-     * @return True if recursion is desired.
-     */
-//  TODO  @Deprecated
-    public boolean isRecursionDesired() {
-        return recursionDesired;
-    }
-
-    /**
-     * Retrieve the recursion available flag of this DNS message.
-     *
-     * @return The recursion available flag of this message.
-     */
-//  TODO  @Deprecated
-    public boolean isRecursionAvailable() {
-        return recursionAvailable;
-    }
-
-    /**
-     * Retrieve the authentic data flag of this message.
-     *
-     * @return The authentic data flag.
-     */
-//  TODO  @Deprecated
-    public boolean isAuthenticData() {
-        return authenticData;
-    }
-
-    /**
-     * Check if checks are disabled.
-     *
-     * @return The status of the CheckDisabled flag.
-     */
-//  TODO  @Deprecated
-    public boolean isCheckDisabled() {
-        return checkingDisabled;
     }
 
     /**
@@ -589,38 +508,8 @@ public class DNSMessage {
         return header;
     }
 
-    /**
-     * Retrieve the opcode of this message.
-     *
-     * @return The opcode of this message.
-     */
-//  TODO  @Deprecated
-    public OPCODE getOpcode() {
-        return opcode;
-    }
-
-    /**
-     * Retrieve the response code of this message.
-     *
-     * @return The response code.
-     */
-//  TODO  @Deprecated
-    public RESPONSE_CODE getResponseCode() {
-        return responseCode;
-    }
-
     public Question getQuestion() {
         return questions.get(0);
-    }
-
-    /**
-     * Retrieve the question section of this message.
-     *
-     * @return The DNS question section.
-     */
-//  TODO  @Deprecated
-    public Question[] getQuestions() {
-        return questions.toArray(new Question[questions.size()]);
     }
 
     public List<Question> copyQuestions() {
@@ -629,46 +518,16 @@ public class DNSMessage {
         return copy;
     }
 
-    /**
-     * Retrieve the answer records of this DNS message.
-     *
-     * @return The answer section of this DNS message.
-     */
-//  TODO  @Deprecated
-    public Record[] getAnswers() {
-        return answers.toArray(new Record[answers.size()]);
-    }
-
     public List<Record> copyAnswers() {
         List<Record> res = new ArrayList<>(answers.size());
         res.addAll(answers);
         return res;
     }
 
-    /**
-     * Retrieve the nameserver records of this DNS message.
-     *
-     * @return The nameserver section of this DNS message.
-     */
-//  TODO  @Deprecated
-    public Record[] getNameserverRecords() {
-        return nameserverRecords.toArray(new Record[nameserverRecords.size()]);
-    }
-
     public List<Record> copyNameserverRecords() {
         List<Record> res = new ArrayList<>(nameserverRecords.size());
         res.addAll(nameserverRecords);
         return res;
-    }
-
-    /**
-     * Retrieve the additional resource records attached to this DNS message.
-     *
-     * @return The additional resource record section of this DNS message.
-     */
-//  TODO  @Deprecated
-    public Record[] getAdditionalResourceRecords() {
-        return additionalResourceRecords.toArray(new Record[additionalResourceRecords.size()]);
     }
 
     /**

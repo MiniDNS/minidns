@@ -29,7 +29,7 @@ public class ResolverResult<D extends Data> {
 
     ResolverResult(Question question , DNSMessage answer, Set<UnverifiedReason> unverifiedResons) {
         this.question = question;
-        this.responseCode = answer.getResponseCode();
+        this.responseCode = answer.responseCode;
         Set<D> r = answer.getAnswersFor(question);
         if (r == null) {
             this.data = Collections.emptySet();

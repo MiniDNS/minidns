@@ -109,7 +109,7 @@ public class DaneVerifier {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-        if (!res.isAuthenticData()) {
+        if (!res.authenticData) {
             String msg = "Got TLSA response from DNS server, but was not signed properly.";
             if (res instanceof DNSSECMessage) {
                 msg += " Reasons:";
@@ -123,7 +123,7 @@ public class DaneVerifier {
 
         List<DaneCertificateException.CertificateMismatch> certificateMismatchExceptions = new LinkedList<>();
         boolean verified = false;
-        for (Record record : res.getAnswers()) {
+        for (Record record : res.answers) {
             if (record.type == Record.TYPE.TLSA && record.name.equals(req)) {
                 TLSA tlsa = (TLSA) record.payloadData;
                 try {
