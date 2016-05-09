@@ -559,9 +559,9 @@ public class DNSMessage {
                 .append(opcode).append(' ')
                 .append(responseCode).append(' ');
         if (qr) {
-            sb.append("RESP");
+            sb.append("resp[qr=1]");
         } else {
-            sb.append("QUERY");
+            sb.append("query[qr=0]");
         }
         if (authoritativeAnswer) sb.append(" aa");
         if (truncated) sb.append(" tr");
