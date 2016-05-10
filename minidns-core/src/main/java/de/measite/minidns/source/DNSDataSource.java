@@ -41,6 +41,9 @@ public abstract class DNSDataSource {
      * @param timeout new dns query timeout in milliseconds.
      */
     public void setTimeout(int timeout) {
+        if (timeout <= 0) {
+            throw new IllegalArgumentException("Timeout must be greater than zero");
+        }
         this.timeout = timeout;
     }
 
