@@ -49,6 +49,9 @@ public abstract class DNSDataSource {
     }
 
     public void setUdpPayloadSize(int udpPayloadSize) {
+        if (udpPayloadSize <= 0) {
+            throw new IllegalArgumentException("UDP payload size must be greater than zero");
+        }
         this.udpPayloadSize = udpPayloadSize;
     }
 }
