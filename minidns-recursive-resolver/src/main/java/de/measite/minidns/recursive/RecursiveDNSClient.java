@@ -239,6 +239,7 @@ public class RecursiveDNSClient extends AbstractDNSClient {
         IpResultSet res = new IpResultSet();
 
         if (ipVersionSetting != IpVersionSetting.v6only) {
+            // TODO Try to retrieve A records for name out from cache.
             Question question = new Question(name, TYPE.A);
             final DNSMessage query = getQueryFor(question);
             DNSMessage aMessage = queryRecursive(recursionState, query);
@@ -255,6 +256,7 @@ public class RecursiveDNSClient extends AbstractDNSClient {
         }
 
         if (ipVersionSetting != IpVersionSetting.v4only) {
+            // TODO Try to retrieve AAAA records for name out from cache.
             Question question = new Question(name, TYPE.AAAA);
             final DNSMessage query = getQueryFor(question);
             DNSMessage aMessage = queryRecursive(recursionState, query);
