@@ -117,7 +117,7 @@ public abstract class AbstractDNSClient {
     }
 
     public DNSMessage query(Question q) throws IOException {
-        DNSMessage query = getQueryFor(q);
+        DNSMessage.Builder query = buildMessage(q);
         return query(query);
     }
 
@@ -128,7 +128,7 @@ public abstract class AbstractDNSClient {
      * @return The response (or null).
      * @throws IOException if an IO error occurs.
      */
-    public abstract DNSMessage query(DNSMessage query) throws IOException;
+    protected abstract DNSMessage query(DNSMessage.Builder query) throws IOException;
 
     public final DNSMessage query(Question q, InetAddress server, int port) throws IOException {
         DNSMessage query = getQueryFor(q);

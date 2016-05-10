@@ -61,7 +61,8 @@ public class DNSClient extends AbstractDNSClient {
     }
 
     @Override
-    public DNSMessage query(DNSMessage q) throws IOException {
+    public DNSMessage query(DNSMessage.Builder queryBuilder) throws IOException {
+        DNSMessage q = newQuestion(queryBuilder).build();
         // While this query method does in fact re-use query(Question, String)
         // we still do a cache lookup here in order to avoid unnecessary
         // findDNS()calls, which are expensive on Android. Note that we do not

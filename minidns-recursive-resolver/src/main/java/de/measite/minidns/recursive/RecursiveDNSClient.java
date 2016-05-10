@@ -85,12 +85,13 @@ public class RecursiveDNSClient extends AbstractDNSClient {
     /**
      * Recursively query the DNS system for one entry.
      *
-     * @param q The query DNS message.
+     * @param queryBuilder The query DNS message builder.
      * @return The response (or null on timeout/error).
      * @throws IOException if an IO error occurs.
      */
     @Override
-    public DNSMessage query(DNSMessage q) throws IOException {
+    protected DNSMessage query(DNSMessage.Builder queryBuilder) throws IOException {
+        DNSMessage q = queryBuilder.build();
         RecursionState recursionState = new RecursionState(this);
         DNSMessage message = queryRecursive(recursionState, q);
         if (message == null) return null;
