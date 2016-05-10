@@ -94,8 +94,6 @@ public class RecursiveDNSClient extends AbstractDNSClient {
         DNSMessage q = queryBuilder.build();
         RecursionState recursionState = new RecursionState(this);
         DNSMessage message = queryRecursive(recursionState, q);
-        if (message == null) return null;
-        // TODO: restrict to real answer or accept non-answers?
         return message;
     }
 
