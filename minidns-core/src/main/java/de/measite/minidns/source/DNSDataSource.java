@@ -18,7 +18,7 @@ import java.net.InetAddress;
 public abstract class DNSDataSource {
     public abstract DNSMessage query(DNSMessage message, InetAddress address, int port) throws IOException;
 
-    protected int udpPayloadSize = 512;
+    protected int udpPayloadSize = 1024;
 
     /**
      * DNS timeout.
