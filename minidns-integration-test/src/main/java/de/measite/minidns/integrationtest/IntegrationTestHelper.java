@@ -20,6 +20,8 @@ import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.junit.Ignore;
+
 import de.measite.minidns.jul.MiniDnsJul;
 
 public class IntegrationTestHelper {
@@ -53,24 +55,33 @@ public class IntegrationTestHelper {
         int testsRun = 0;
         List<Method> successfulTests = new ArrayList<>();
         List<Method> failedTests = new ArrayList<>();
+        List<Method> ignoredTests = new ArrayList<>();
         for (final Class<?> aClass : testClasses) {
             for (final Method method : aClass.getDeclaredMethods()) {
-                if (method.isAnnotationPresent(IntegrationTest.class)) {
-                    TestResult result = invokeTest(method, aClass);
-                    testsRun++;
-                    switch (result) {
-                    case Success:
-                        successfulTests.add(method);
-                        break;
-                    case Failure:
-                        failedTests.add(method);
-                        break;
-                    }
+                if (!method.isAnnotationPresent(IntegrationTest.class)) {
+                    continue;
+                }
+                if (method.isAnnotationPresent(Ignore.class)) {
+                    ignoredTests.add(method);
+                    continue;
+                }
+                TestResult result = invokeTest(method, aClass);
+                testsRun++;
+                switch (result) {
+                case Success:
+                    successfulTests.add(method);
+                    break;
+                case Failure:
+                    failedTests.add(method);
+                    break;
                 }
             }
         }
         StringBuilder resultMessage = new StringBuilder();
         resultMessage.append("MiniDNS Integration Test Result: [").append(successfulTests.size()).append('/').append(testsRun).append("] ");
+        if (!ignoredTests.isEmpty()) {
+            resultMessage.append("(Ignored: ").append(ignoredTests.size()).append(") ");
+        }
         int exitStatus = 0;
         if (failedTests.isEmpty()) {
             resultMessage.append("SUCCESS \\o/");
