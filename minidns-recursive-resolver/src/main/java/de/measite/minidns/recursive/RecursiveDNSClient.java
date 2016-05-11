@@ -28,9 +28,11 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Random;
 import java.util.logging.Level;
 
 public class RecursiveDNSClient extends AbstractDNSClient {
@@ -166,7 +168,7 @@ public class RecursiveDNSClient extends AbstractDNSClient {
             }
             DNSName name = ((NS) record.payloadData).name;
             IpResultSet gluedNs = searchAdditional(resMessage, name);
-            for (InetAddress target : gluedNs.getAddresses()) {
+            for (InetAddress target : gluedNs.addresses) {
                 DNSMessage recursive = null;
                 try {
                     recursive = queryRecursive(recursionState, q, target);
@@ -197,7 +199,7 @@ public class RecursiveDNSClient extends AbstractDNSClient {
                     continue;
                 }
 
-                for (InetAddress target : res.getAddresses()) {
+                for (InetAddress target : res.addresses) {
                     DNSMessage recursive = null;
                     try {
                         recursive = queryRecursive(recursionState, q, target);
@@ -234,7 +236,7 @@ public class RecursiveDNSClient extends AbstractDNSClient {
     }
 
     private IpResultSet resolveIpRecursive(RecursionState recursionState, DNSName name) throws IOException {
-        IpResultSet res = new IpResultSet();
+        IpResultSet.Builder res = newIpResultSetBuilder();
 
         if (ipVersionSetting != IpVersionSetting.v6only) {
             // TODO Try to retrieve A records for name out from cache.
@@ -270,12 +272,12 @@ public class RecursiveDNSClient extends AbstractDNSClient {
             }
         }
 
-        return res;
+        return res.build();
     }
 
     @SuppressWarnings("incomplete-switch")
-    private static IpResultSet searchAdditional(DNSMessage message, DNSName name) {
-        IpResultSet res = new IpResultSet();
+    private IpResultSet searchAdditional(DNSMessage message, DNSName name) {
+        IpResultSet.Builder res = newIpResultSetBuilder();
         for (Record record : message.additionalResourceRecords) {
             if (!record.name.equals(name)) {
                 continue;
@@ -289,7 +291,7 @@ public class RecursiveDNSClient extends AbstractDNSClient {
                 break;
             }
         }
-        return res;
+        return res.build();
     }
 
     private static InetAddress inetAddressFromRecord(String name, A recordPayload) {
@@ -351,11 +353,15 @@ public class RecursiveDNSClient extends AbstractDNSClient {
         return message;
     }
 
-    private static class IpResultSet {
-        final List<InetAddress> ipv4Addresses = new LinkedList<>();
-        final List<InetAddress> ipv6Addresses = new LinkedList<>();
+    private IpResultSet.Builder newIpResultSetBuilder() {
+        return new IpResultSet.Builder(this.insecureRandom);
+    }
 
-        List<InetAddress> getAddresses() {
+    private static class IpResultSet {
+
+        final List<InetAddress> addresses;
+
+        private IpResultSet(List<InetAddress> ipv4Addresses, List<InetAddress> ipv6Addresses, Random random) {
             int size;
             switch (ipVersionSetting) {
             case v4only:
@@ -371,25 +377,67 @@ public class RecursiveDNSClient extends AbstractDNSClient {
                 break;
             }
 
-            List<InetAddress> addresses = new ArrayList<>(size);
+            if (size == 0) {
+                // Fast-path in case there were no addresses, which could happen e.g., if the NS records where not
+                // glued.
+                addresses = Collections.emptyList();
+            } else {
+                // Shuffle the addresses first, so that the load is better balanced.
+                switch (ipVersionSetting) {
+                case v4only:
+                case v4v6:
+                case v6v4:
+                    Collections.shuffle(ipv4Addresses, random);
+                    break;
+                default:
+                    break;
+                }
+                switch (ipVersionSetting) {
+                case v4v6:
+                case v6v4:
+                case v6only:
+                    Collections.shuffle(ipv6Addresses, random);
+                    break;
+                default:
+                    break;
+                }
 
-            switch (ipVersionSetting) {
-            case v4only:
-                addresses.addAll(ipv4Addresses);
-                break;
-            case v6only:
-                addresses.addAll(ipv6Addresses);
-                break;
-            case v4v6:
-                addresses.addAll(ipv4Addresses);
-                addresses.addAll(ipv6Addresses);
-                break;
-            case v6v4:
-                addresses.addAll(ipv6Addresses);
-                addresses.addAll(ipv4Addresses);
-                break;
+                List<InetAddress> addresses = new ArrayList<>(size);
+
+                // Now add the shuffled addresses to the result list.
+                switch (ipVersionSetting) {
+                case v4only:
+                    addresses.addAll(ipv4Addresses);
+                    break;
+                case v6only:
+                    addresses.addAll(ipv6Addresses);
+                    break;
+                case v4v6:
+                    addresses.addAll(ipv4Addresses);
+                    addresses.addAll(ipv6Addresses);
+                    break;
+                case v6v4:
+                    addresses.addAll(ipv6Addresses);
+                    addresses.addAll(ipv4Addresses);
+                    break;
+                }
+
+                this.addresses = Collections.unmodifiableList(addresses);
             }
-            return addresses;
+        }
+
+        private static class Builder {
+            private final Random random;
+            private final List<InetAddress> ipv4Addresses = new ArrayList<>(8);
+            private final List<InetAddress> ipv6Addresses = new ArrayList<>(8);
+
+            private Builder(Random random) {
+                this.random = random;
+            }
+
+            public IpResultSet build() {
+                return new IpResultSet(ipv4Addresses, ipv6Addresses, random);
+            }
         }
     }
 
