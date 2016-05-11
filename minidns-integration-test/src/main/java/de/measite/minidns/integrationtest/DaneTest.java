@@ -13,12 +13,18 @@ package de.measite.minidns.integrationtest;
 import de.measite.minidns.dane.DaneVerifier;
 
 import javax.net.ssl.HttpsURLConnection;
+
+import org.junit.Ignore;
+
 import java.io.IOException;
 import java.net.URL;
 import java.security.cert.CertificateException;
 
 public class DaneTest {
 
+    @Ignore
+    // 2016-05-11: Unlike the name suggests good.dane.verisign.com does not actually have a good DANE TLSA certificate
+    // for HTTPS. We ignore this integration test until it is fixed.
     @IntegrationTest
     public static void testVerisignDaneGood() throws IOException, CertificateException {
         DaneVerifier daneVerifier = new DaneVerifier();
