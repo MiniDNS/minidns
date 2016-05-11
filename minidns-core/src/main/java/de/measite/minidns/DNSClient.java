@@ -22,6 +22,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 
 /**
@@ -38,6 +40,8 @@ public class DNSClient extends AbstractDNSClient {
         addDnsServerLookupMechanism(HardcodedDNSServerAddresses.INSTANCE);
         addDnsServerLookupMechanism(UnixUsingEtcResolvConf.INSTANCE);
     }
+
+    private final Set<String> nonRaServers = Collections.newSetFromMap(new ConcurrentHashMap<String, Boolean>(4));
 
     private boolean askForDnssec = false;
     private boolean disableResultFilter = false;
@@ -76,11 +80,27 @@ public class DNSClient extends AbstractDNSClient {
         String dnsServer[] = findDNS();
         List<IOException> ioExceptions = new ArrayList<>(dnsServer.length);
         for (String dns : dnsServer) {
+            if (nonRaServers.contains(dns)) {
+                LOGGER.finer("Skipping " + dns + " because it was marked as \"recursion not available\"");
+                continue;
+            }
+
             try {
                 responseMessage = query(q, dns);
                 if (responseMessage == null) {
                     continue;
                 }
+
+                if (!responseMessage.recursionAvailable) {
+                    boolean newRaServer = nonRaServers.add(dns);
+                    if (newRaServer) {
+                        LOGGER.warning("The DNS server "
+                                + dns
+                                + " returned a response without the \"recursion available\" (RA) flag set. This likely indicates a misconfiguration because the server is not suitable for DNS resolution");
+                    }
+                    continue;
+                }
+
                 if (disableResultFilter) {
                     return responseMessage;
                 }
