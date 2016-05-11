@@ -458,6 +458,9 @@ public class DNSSECClient extends ReliableDNSClient {
     protected String isResponseAcceptable(DNSMessage response) {
         boolean dnssecOk = response.isDnssecOk();
         if (!dnssecOk) {
+            // This is a deliberate violation of RFC 6840 § 5.6. I doubt that
+            // "resolvers MUST ignore the DO bit in responses" does any good. Also we basically ignore the DO bit after
+            // the fall back to iterative mode.
             return "DNSSEC OK (DO) flag not set in response";
         }
         boolean checkingDisabled = response.checkingDisabled;
