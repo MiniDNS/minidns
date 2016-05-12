@@ -716,8 +716,8 @@ public class DNSMessage {
     @Override
     public int hashCode() {
         if (hashCodeCache == null) {
-        byte[] bytes = serialize();
-        hashCodeCache = Arrays.hashCode(bytes);
+            byte[] bytes = serialize();
+            hashCodeCache = Arrays.hashCode(bytes);
         }
         return hashCodeCache;
     }
