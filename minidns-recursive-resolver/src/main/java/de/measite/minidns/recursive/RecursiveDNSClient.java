@@ -187,29 +187,33 @@ public class RecursiveDNSClient extends AbstractDNSClient {
         for (Record record : authorities) {
             final Question question = q.getQuestion();
             DNSName name = ((NS) record.payloadData).name;
-            if (!question.name.equals(name) || question.type != TYPE.A) {
-                IpResultSet res = null;
+
+            // Loop prevention: If this non-glued NS equals the name we question for and if the question is about a A or
+            // AAAA RR, then we should not continue here as it would result in an endless loop.
+            if (question.name.equals(name) && (question.type == TYPE.A || question.type == TYPE.AAAA))
+                continue;
+
+            IpResultSet res = null;
+            try {
+                res = resolveIpRecursive(recursionState, name);
+            } catch (IOException e) {
+                recursionState.decrementSteps();
+                ioExceptions.add(e);
+            }
+            if (res == null) {
+                continue;
+            }
+
+            for (InetAddress target : res.addresses) {
+                DNSMessage recursive = null;
                 try {
-                    res = resolveIpRecursive(recursionState, name);
+                    recursive = queryRecursive(recursionState, q, target);
                 } catch (IOException e) {
                     recursionState.decrementSteps();
                     ioExceptions.add(e);
-                }
-                if (res == null) {
                     continue;
                 }
-
-                for (InetAddress target : res.addresses) {
-                    DNSMessage recursive = null;
-                    try {
-                        recursive = queryRecursive(recursionState, q, target);
-                    } catch (IOException e) {
-                        recursionState.decrementSteps();
-                        ioExceptions.add(e);
-                        continue;
-                    }
-                    return recursive;
-                }
+                return recursive;
             }
         }
 
