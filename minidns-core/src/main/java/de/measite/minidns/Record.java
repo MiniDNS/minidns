@@ -30,6 +30,7 @@ import de.measite.minidns.record.SOA;
 import de.measite.minidns.record.SRV;
 import de.measite.minidns.record.TLSA;
 import de.measite.minidns.record.TXT;
+import de.measite.minidns.record.UNKNOWN;
 
 import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
@@ -396,10 +397,7 @@ public class Record {
                 break;
             case UNKNOWN:
             default:
-                this.payloadData = null;
-                for (int i = 0; i < payloadLength; i++) {
-                    dis.readByte();
-                }
+                this.payloadData = UNKNOWN.parse(dis, payloadLength, type);
                 break;
         }
     }
@@ -531,5 +529,39 @@ public class Record {
             return null;
         }
         return question.asMessageBuilder();
+    }
+
+    private transient Integer hashCodeCache;
+
+    @Override
+    public int hashCode() {
+        if (hashCodeCache == null) {
+            int hashCode = 1;
+            hashCode = 37 * hashCode + name.hashCode();
+            hashCode = 37 * hashCode + type.hashCode();
+            hashCode = 37 * hashCode + clazz.hashCode();
+            hashCode = 37 * hashCode + payloadData.hashCode();
+            hashCodeCache = hashCode;
+        }
+        return hashCodeCache;
+    }
+
+    @Override
+    public boolean equals(Object other) {
+        if (!(other instanceof Record)) {
+            return false;
+        }
+        if (other == this) {
+            return true;
+        }
+        Record otherRecord = (Record) other;
+        if (!name.equals(otherRecord.name)) return false;
+        if (type != otherRecord.type) return false;
+        if (clazz != otherRecord.clazz) return false;
+        // Note that we do not compare the TTL here, since we consider two Records with everything but the TTL equal to
+        // be equal too.
+        if (!payloadData.equals(otherRecord.payloadData)) return false;
+
+        return true;
     }
 }

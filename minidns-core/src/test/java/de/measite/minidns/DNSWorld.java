@@ -35,10 +35,9 @@ import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
-import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
-import java.util.Set;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -231,37 +230,24 @@ public class DNSWorld extends DNSDataSource {
         }
 
         public List<RRSet> getRRSets() {
-            List<RRSet> rrSets = new ArrayList<>();
-            for (Record record : records) {
-                boolean add = true;
-                for (RRSet rrSet : rrSets) {
-                    if (rrSet.name.equals(record.name) && rrSet.type == record.type) {
-                        rrSet.records.add(record);
-                        add = false;
+            List<RRSet.Builder> rrSetBuilders = new LinkedList<>();
+            outerloop: for (Record record : records) {
+                for (RRSet.Builder builder : rrSetBuilders) {
+                    if (builder.addIfPossible(record)) {
+                        continue outerloop;
                     }
                 }
-                if (add) rrSets.add(new RRSet(record));
+                rrSetBuilders.add(RRSet.builder().addRecord(record));
+            }
+            List<RRSet> rrSets = new ArrayList<>(rrSetBuilders.size());
+            for (RRSet.Builder builder : rrSetBuilders) {
+                rrSets.add(builder.build());
             }
             return rrSets;
         }
 
         boolean isRootZone() {
             return (zoneName == null || zoneName.isEmpty()) && address == null;
-        }
-    }
-
-    private static class RRSet {
-        DNSName name;
-        TYPE type;
-        CLASS clazz;
-        Set<Record> records = new HashSet<>();
-
-        public RRSet(Record record) {
-            name = record.name;
-            type = record.type;
-            clazz = record.clazz;
-
-            records.add(record);
         }
     }
 

@@ -13,6 +13,7 @@ package de.measite.minidns.record;
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.util.Arrays;
 
 import de.measite.minidns.Record.TYPE;
 
@@ -73,5 +74,31 @@ public abstract class Data {
     public final byte[] toByteArray() {
         setBytes();
         return bytes.clone();
+    }
+
+    private transient Integer hashCodeCache;
+
+    @Override
+    public final int hashCode() {
+        if (hashCodeCache == null) {
+            setBytes();
+            hashCodeCache = bytes.hashCode();
+        }
+        return hashCodeCache;
+    }
+
+    @Override
+    public final boolean equals(Object other) {
+        if (!(other instanceof Data)) {
+            return false;
+        }
+        if (other == this) {
+            return true;
+        }
+        Data otherData = (Data) other;
+        otherData.setBytes();
+        setBytes();
+
+        return Arrays.equals(bytes, otherData.bytes);
     }
 }

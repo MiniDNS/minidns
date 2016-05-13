@@ -61,6 +61,9 @@ public class Question {
     }
 
     public Question(DNSName name, TYPE type, CLASS clazz, boolean unicastQuery) {
+        assert (name != null);
+        assert (type != null);
+        assert (clazz != null);
         this.name = name;
         this.type = type;
         this.clazz = clazz;
