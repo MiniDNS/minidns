@@ -272,7 +272,7 @@ public class DNSWorld extends DNSDataSource {
                 if (rrSet.type == TYPE.NS) {
                     DNSMessage.Builder hintsResp = DNSMessage.builder();
                     hintsResp.setNameserverRecords(rrSet.records);
-                    hintsResp.setAdditionalResourceRecords(response.additionalResourceRecords);
+                    hintsResp.setAdditionalResourceRecords(response.additionalSection);
                     DNSMessage hintsResponse = hintsResp.build();
                     if (zone.isRootZone()) {
                         world.addPreparedResponse(new RootHintsResponse(rrSet.name, hintsResponse));

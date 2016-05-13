@@ -155,7 +155,7 @@ public class RecursiveDNSClient extends AbstractDNSClient {
         if (resMessage == null || resMessage.authoritativeAnswer) {
             return resMessage;
         }
-        List<Record> authorities = resMessage.copyNameserverRecords();
+        List<Record> authorities = resMessage.copyAuthority();
 
         List<IOException> ioExceptions = new LinkedList<>();
 
@@ -244,7 +244,7 @@ public class RecursiveDNSClient extends AbstractDNSClient {
             final DNSMessage query = getQueryFor(question);
             DNSMessage aMessage = queryRecursive(recursionState, query);
             if (aMessage != null) {
-                for (Record answer : aMessage.answers) {
+                for (Record answer : aMessage.answerSection) {
                     if (answer.isAnswer(question)) {
                         InetAddress inetAddress = inetAddressFromRecord(name.ace, (A) answer.payloadData);
                         res.ipv4Addresses.add(inetAddress);
@@ -261,7 +261,7 @@ public class RecursiveDNSClient extends AbstractDNSClient {
             final DNSMessage query = getQueryFor(question);
             DNSMessage aMessage = queryRecursive(recursionState, query);
             if (aMessage != null) {
-                for (Record answer : aMessage.answers) {
+                for (Record answer : aMessage.answerSection) {
                     if (answer.isAnswer(question)) {
                         InetAddress inetAddress = inetAddressFromRecord(name.ace, (AAAA) answer.payloadData);
                         res.ipv6Addresses.add(inetAddress);
@@ -278,7 +278,7 @@ public class RecursiveDNSClient extends AbstractDNSClient {
     @SuppressWarnings("incomplete-switch")
     private IpResultSet searchAdditional(DNSMessage message, DNSName name) {
         IpResultSet.Builder res = newIpResultSetBuilder();
-        for (Record record : message.additionalResourceRecords) {
+        for (Record record : message.additionalSection) {
             if (!record.name.equals(name)) {
                 continue;
             }

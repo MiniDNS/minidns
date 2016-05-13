@@ -123,7 +123,7 @@ public class DaneVerifier {
 
         List<DaneCertificateException.CertificateMismatch> certificateMismatchExceptions = new LinkedList<>();
         boolean verified = false;
-        for (Record record : res.answers) {
+        for (Record record : res.answerSection) {
             if (record.type == Record.TYPE.TLSA && record.name.equals(req)) {
                 TLSA tlsa = (TLSA) record.payloadData;
                 try {

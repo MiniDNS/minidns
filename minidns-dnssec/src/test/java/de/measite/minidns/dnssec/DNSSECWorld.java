@@ -350,7 +350,7 @@ public class DNSSECWorld extends DNSWorld {
         @Override
         public boolean isResponse(DNSMessage request, InetAddress address) {
             Record nsecRecord = null;
-            for (Record record : nsecMessage.nameserverRecords) {
+            for (Record record : nsecMessage.authoritySection) {
                 if (record.type == Record.TYPE.NSEC)
                     nsecRecord = record;
             }

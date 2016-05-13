@@ -253,24 +253,37 @@ public class DNSMessage {
     public final boolean checkingDisabled;
 
     /**
-     * The question section content.
+     * The question section content. Usually there will be only one question.
+     * <p>
+     * This list is unmodifiable.
+     * </p>
      */
     public final List<Question> questions;
 
     /**
-     * The answers section content.
+     * The answers section records. Note that it is not guaranteed that all records found in this section will be direct
+     * answers to the question in the query. If DNSSEC is used, then this section also contains the RRSIG record.
+     * <p>
+     * This list is unmodifiable.
+     * </p>
      */
-    public final List<Record> answers;
+    public final List<Record> answerSection;
 
     /**
-     * The nameserver records.
+     * The Authority Section. Note that it is not guaranteed that this section only contains nameserver records. If DNSSEC is used, then this section could also contain a NSEC(3) record.
+     * <p>
+     * This list is unmodifiable.
+     * </p>
      */
-    public final List<Record> nameserverRecords;
+    public final List<Record> authoritySection;
 
     /**
-     * Additional resource records.
+     * The additional section. It eventually contains RRs which relate to the query.
+     * <p>
+     * This list is unmodifiable.
+     * </p> 
      */
-    public final List<Record> additionalResourceRecords;
+    public final List<Record> additionalSection;
 
     /**
      * The receive timestamp. Set only if this message was created via parse.
@@ -300,27 +313,27 @@ public class DNSMessage {
         }
 
         if (builder.answers == null) {
-            this.answers = Collections.emptyList();
+            this.answerSection = Collections.emptyList();
         } else {
             List<Record> a = new ArrayList<>(builder.answers.size());
             a.addAll(builder.answers);
-            this.answers = Collections.unmodifiableList(a);
+            this.answerSection = Collections.unmodifiableList(a);
         }
 
         if (builder.nameserverRecords == null) {
-            this.nameserverRecords = Collections.emptyList();
+            this.authoritySection = Collections.emptyList();
         } else {
             List<Record> n = new ArrayList<>(builder.nameserverRecords.size());
             n.addAll(builder.nameserverRecords);
-            this.nameserverRecords = Collections.unmodifiableList(n);
+            this.authoritySection = Collections.unmodifiableList(n);
         }
 
         if (builder.additionalResourceRecords == null) {
-            this.additionalResourceRecords = Collections.emptyList();
+            this.additionalSection = Collections.emptyList();
         } else {
             List<Record> a = new ArrayList<>(builder.additionalResourceRecords.size());
             a.addAll(builder.additionalResourceRecords);
-            this.additionalResourceRecords = Collections.unmodifiableList(a);
+            this.additionalSection = Collections.unmodifiableList(a);
         }
 
         // TODO Add verification of dns message state here
@@ -355,17 +368,17 @@ public class DNSMessage {
         for (int i = 0; i < questionCount; i++) {
             questions.add(new Question(dis, data));
         }
-        answers = new ArrayList<>(answerCount);
+        answerSection = new ArrayList<>(answerCount);
         for (int i = 0; i < answerCount; i++) {
-            answers.add(new Record(dis, data));
+            answerSection.add(new Record(dis, data));
         }
-        nameserverRecords = new ArrayList<>(nameserverCount);
+        authoritySection = new ArrayList<>(nameserverCount);
         for (int i = 0; i < nameserverCount; i++) {
-            nameserverRecords.add(new Record(dis, data));
+            authoritySection.add(new Record(dis, data));
         }
-        additionalResourceRecords = new ArrayList<>(additionalResourceRecordCount);
+        additionalSection = new ArrayList<>(additionalResourceRecordCount);
         for (int i = 0; i < additionalResourceRecordCount; i++) {
-            additionalResourceRecords.add(new Record(dis, data));
+            additionalSection.add(new Record(dis, data));
         }
     }
 
@@ -387,9 +400,9 @@ public class DNSMessage {
         responseCode = message.responseCode;
         receiveTimestamp = message.receiveTimestamp;
         questions = message.questions;
-        answers = message.answers;
-        nameserverRecords = message.nameserverRecords;
-        additionalResourceRecords = message.additionalResourceRecords;
+        answerSection = message.answerSection;
+        authoritySection = message.authoritySection;
+        additionalSection = message.additionalSection;
     }
 
 
@@ -432,38 +445,38 @@ public class DNSMessage {
             } else {
                 dos.writeShort((short) questions.size());
             }
-            if (answers == null) {
+            if (answerSection == null) {
                 dos.writeShort(0);
             } else {
-                dos.writeShort((short) answers.size());
+                dos.writeShort((short) answerSection.size());
             }
-            if (nameserverRecords == null) {
+            if (authoritySection == null) {
                 dos.writeShort(0);
             } else {
-                dos.writeShort((short) nameserverRecords.size());
+                dos.writeShort((short) authoritySection.size());
             }
-            if (additionalResourceRecords == null) {
+            if (additionalSection == null) {
                 dos.writeShort(0);
             } else {
-                dos.writeShort((short) additionalResourceRecords.size());
+                dos.writeShort((short) additionalSection.size());
             }
             if (questions != null) {
                 for (Question question : questions) {
                     dos.write(question.toByteArray());
                 }
             }
-            if (answers != null) {
-                for (Record answer : answers) {
+            if (answerSection != null) {
+                for (Record answer : answerSection) {
                     dos.write(answer.toByteArray());
                 }
             }
-            if (nameserverRecords != null) {
-                for (Record nameserverRecord : nameserverRecords) {
+            if (authoritySection != null) {
+                for (Record nameserverRecord : authoritySection) {
                     dos.write(nameserverRecord.toByteArray());
                 }
             }
-            if (additionalResourceRecords != null) {
-                for (Record additionalResourceRecord : additionalResourceRecords) {
+            if (additionalSection != null) {
+                for (Record additionalResourceRecord : additionalSection) {
                     dos.write(additionalResourceRecord.toByteArray());
                 }
             }
@@ -512,21 +525,39 @@ public class DNSMessage {
         return questions.get(0);
     }
 
+    /**
+     * Copy the questions found in the question section.
+     *
+     * @return a copy of the question section questions.
+     * @see #questions
+     */
     public List<Question> copyQuestions() {
         List<Question> copy = new ArrayList<>(questions.size());
         copy.addAll(questions);
         return copy;
     }
 
+    /**
+     * Copy the records found in the answer section into a new list.
+     *
+     * @return a copy of the answer section records.
+     * @see #answerSection
+     */
     public List<Record> copyAnswers() {
-        List<Record> res = new ArrayList<>(answers.size());
-        res.addAll(answers);
+        List<Record> res = new ArrayList<>(answerSection.size());
+        res.addAll(answerSection);
         return res;
     }
 
-    public List<Record> copyNameserverRecords() {
-        List<Record> res = new ArrayList<>(nameserverRecords.size());
-        res.addAll(nameserverRecords);
+    /**
+     * Copy the records found in the authority section into a new list.
+     *
+     * @return a copy of the authority section records.
+     * @see #authoritySection
+     */
+    public List<Record> copyAuthority() {
+        List<Record> res = new ArrayList<>(authoritySection.size());
+        res.addAll(authoritySection);
         return res;
     }
 
@@ -536,10 +567,10 @@ public class DNSMessage {
      * @return true if the DO flag is set.
      */
     public boolean isDnssecOk() {
-        if (additionalResourceRecords == null)
+        if (additionalSection == null)
             return false;
 
-        for (Record record : additionalResourceRecords) {
+        for (Record record : additionalSection) {
             if (record.type != Record.TYPE.OPT) continue;
             int ednsFlags = OPT.readEdnsFlags(record);
             return (ednsFlags & OPT.FLAG_DNSSEC_OK) > 0;
@@ -575,18 +606,18 @@ public class DNSMessage {
                 sb.append("[Q: ").append(question).append("]\n");
             }
         }
-        if (answers != null) {
-            for (Record record : answers) {
+        if (answerSection != null) {
+            for (Record record : answerSection) {
                 sb.append("[A: ").append(record).append("]\n");
             }
         }
-        if (nameserverRecords != null) {
-            for (Record record : nameserverRecords) {
+        if (authoritySection != null) {
+            for (Record record : authoritySection) {
                 sb.append("[N: ").append(record).append("]\n");
             }
         }
-        if (additionalResourceRecords != null) {
-            for (Record record : additionalResourceRecords) {
+        if (additionalSection != null) {
+            for (Record record : additionalSection) {
                 sb.append("[X: ");
                 if (record.type == Record.TYPE.OPT) {
                     sb.append(OPT.optRecordToString(record));
@@ -630,11 +661,11 @@ public class DNSMessage {
         if (authenticData) sb.append(" ad");
         if (checkingDisabled) sb.append(" cd");
         sb.append("; QUERY: ").append(questions.size())
-                .append(", ANSWER: ").append(answers.size())
-                .append(", AUTHORITY: ").append(nameserverRecords.size())
-                .append(", ADDITIONAL: ").append(additionalResourceRecords.size())
+                .append(", ANSWER: ").append(answerSection.size())
+                .append(", AUTHORITY: ").append(authoritySection.size())
+                .append(", ADDITIONAL: ").append(additionalSection.size())
                 .append("\n\n");
-        for (Record record : additionalResourceRecords) {
+        for (Record record : additionalSection) {
             if (record.type == Record.TYPE.OPT) {
                 sb.append(";; OPT PSEUDOSECTION:\n; ").append(OPT.optRecordToString(record)).append("\n");
                 break;
@@ -646,21 +677,21 @@ public class DNSMessage {
                 sb.append(';').append(question.toString()).append('\n');
             }
         }
-        if (nameserverRecords.size() != 0) {
+        if (authoritySection.size() != 0) {
             sb.append("\n;; AUTHORITY SECTION:\n");
-            for (Record record : nameserverRecords) {
+            for (Record record : authoritySection) {
                 sb.append(record.toString()).append('\n');
             }
         }
-        if (answers.size() != 0) {
+        if (answerSection.size() != 0) {
             sb.append("\n;; ANSWER SECTION:\n");
-            for (Record record : answers) {
+            for (Record record : answerSection) {
                 sb.append(record.toString()).append('\n');
             }
         }
-        if (additionalResourceRecords.size() != 0) {
+        if (additionalSection.size() != 0) {
             boolean hasNonOptArr = false;
-            for (Record record : additionalResourceRecords) {
+            for (Record record : additionalSection) {
                 if (record.type != Record.TYPE.OPT) {
                     if (!hasNonOptArr) {
                         hasNonOptArr = true;
@@ -683,8 +714,8 @@ public class DNSMessage {
         // It would be great if we could verify that D matches q.type at this
         // point. But on the other hand, if it does not, then the cast to D
         // below will fail.
-        Set<D> res = new HashSet<>(answers.size());
-        for (Record record : answers) {
+        Set<D> res = new HashSet<>(answerSection.size());
+        for (Record record : answerSection) {
             if (!record.isAnswer(q)) continue;
 
             Data data = record.getPayload();
@@ -761,12 +792,12 @@ public class DNSMessage {
             // Copy the unmodifiable lists over into this new builder.
             questions = new ArrayList<>(message.questions.size());
             questions.addAll(message.questions);
-            answers = new ArrayList<>(message.answers.size());
-            answers.addAll(message.answers);
-            nameserverRecords = new ArrayList<>(message.nameserverRecords.size());
-            nameserverRecords.addAll(message.nameserverRecords);
-            additionalResourceRecords = new ArrayList<>(message.additionalResourceRecords.size());
-            additionalResourceRecords.addAll(message.additionalResourceRecords);
+            answers = new ArrayList<>(message.answerSection.size());
+            answers.addAll(message.answerSection);
+            nameserverRecords = new ArrayList<>(message.authoritySection.size());
+            nameserverRecords.addAll(message.authoritySection);
+            additionalResourceRecords = new ArrayList<>(message.additionalSection.size());
+            additionalResourceRecords.addAll(message.additionalSection);
         }
 
         private int id;

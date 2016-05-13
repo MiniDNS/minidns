@@ -49,7 +49,7 @@ public class RecursiveDNSClientTest {
         );
         DNSMessage message = client.query("www.example.com", TYPE.A);
         assertNotNull(message);
-        List<Record> answers = message.answers;
+        List<Record> answers = message.answerSection;
         assertEquals(1, answers.size());
         assertEquals(TYPE.A, answers.get(0).type);
         assertArrayEquals(new byte[]{1, 1, 1, 3}, ((A) answers.get(0).payloadData).getIp());
@@ -92,7 +92,7 @@ public class RecursiveDNSClientTest {
         );
         DNSMessage message = client.query("www.example.com", TYPE.A);
         assertNotNull(message);
-        List<Record> answers = message.answers;
+        List<Record> answers = message.answerSection;
         assertEquals(1, answers.size());
         assertEquals(TYPE.A, answers.get(0).type);
         assertArrayEquals(new byte[]{1, 1, 1, 3}, ((A) answers.get(0).payloadData).getIp());

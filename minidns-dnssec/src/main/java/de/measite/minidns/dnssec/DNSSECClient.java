@@ -109,9 +109,9 @@ public class DNSSECClient extends ReliableDNSClient {
     }
 
     private DNSSECMessage createDnssecMessage(DNSMessage dnsMessage, Set<UnverifiedReason> result) {
-        List<Record> answers = dnsMessage.answers;
-        List<Record> nameserverRecords = dnsMessage.nameserverRecords;
-        List<Record> additionalResourceRecords = dnsMessage.additionalResourceRecords;
+        List<Record> answers = dnsMessage.answerSection;
+        List<Record> nameserverRecords = dnsMessage.authoritySection;
+        List<Record> additionalResourceRecords = dnsMessage.additionalSection;
         Set<Record> signatures = new HashSet<>();
         extractSignatureRecords(signatures, answers);
         extractSignatureRecords(signatures, nameserverRecords);
@@ -149,7 +149,7 @@ public class DNSSECClient extends ReliableDNSClient {
     }
 
     private Set<UnverifiedReason> verify(DNSMessage dnsMessage) throws IOException {
-        if (!dnsMessage.answers.isEmpty()) {
+        if (!dnsMessage.answerSection.isEmpty()) {
             return verifyAnswer(dnsMessage);
         } else {
             return verifyNsec(dnsMessage);
@@ -158,7 +158,7 @@ public class DNSSECClient extends ReliableDNSClient {
 
     private Set<UnverifiedReason> verifyAnswer(DNSMessage dnsMessage) throws IOException {
         Question q = dnsMessage.questions.get(0);
-        List<Record> answers = dnsMessage.answers;
+        List<Record> answers = dnsMessage.answerSection;
         List<Record> toBeVerified = dnsMessage.copyAnswers();
         VerifySignaturesResult verifiedSignatures = verifySignatures(q, answers, toBeVerified);
         Set<UnverifiedReason> result = verifiedSignatures.reasons;
@@ -212,7 +212,7 @@ public class DNSSECClient extends ReliableDNSClient {
         boolean validNsec = false;
         boolean nsecPresent = false;
         DNSName zone = null;
-        List<Record> nameserverRecords = dnsMessage.nameserverRecords;
+        List<Record> nameserverRecords = dnsMessage.authoritySection;
         for (Record nameserverRecord : nameserverRecords) {
             if (nameserverRecord.type == TYPE.SOA)
                 zone = nameserverRecord.name;
@@ -244,7 +244,7 @@ public class DNSSECClient extends ReliableDNSClient {
         if (nsecPresent && !validNsec) {
             throw new DNSSECValidationFailedException(q, "Invalid NSEC!");
         }
-        List<Record> toBeVerified = dnsMessage.copyNameserverRecords();
+        List<Record> toBeVerified = dnsMessage.copyAuthority();
         VerifySignaturesResult verifiedSignatures = verifySignatures(q, nameserverRecords, toBeVerified);
         if (validNsec && verifiedSignatures.reasons.isEmpty()) {
             result.clear();
@@ -361,7 +361,7 @@ public class DNSSECClient extends ReliableDNSClient {
                 throw new DNSSECValidationFailedException(q, "There is no DNSKEY " + rrsig.signerName + ", but it is used");
             }
             result.addAll(dnskeyRes.getUnverifiedReasons());
-            for (Record record : dnskeyRes.answers) {
+            for (Record record : dnskeyRes.answerSection) {
                 if (record.type == TYPE.DNSKEY && ((DNSKEY) record.payloadData).getKeyTag() == rrsig.keyTag) {
                     dnskey = (DNSKEY) record.payloadData;
                 }
@@ -404,7 +404,7 @@ public class DNSSECClient extends ReliableDNSClient {
             LOGGER.fine("There is no DS record for " + sepRecord.name + ", server gives no result");
         } else {
             unverifiedReasons.addAll(dsResp.getUnverifiedReasons());
-            for (Record record : dsResp.answers) {
+            for (Record record : dsResp.answerSection) {
                if (record.type != TYPE.DS) {
                    continue;
                }
@@ -424,7 +424,7 @@ public class DNSSECClient extends ReliableDNSClient {
             DNSSECMessage dlvResp = queryDnssec(DNSName.from(sepRecord.name, dlv), TYPE.DLV);
             if (dlvResp != null) {
                 unverifiedReasons.addAll(dlvResp.getUnverifiedReasons());
-                for (Record record : dlvResp.answers) {
+                for (Record record : dlvResp.answerSection) {
                     if (record.type == TYPE.DLV && ((DNSKEY) sepRecord.payloadData).getKeyTag() == ((DLV) record.payloadData).keyTag) {
                         LOGGER.fine("Found DLV for " + sepRecord.name + ", awesome.");
                         delegation = (DLV) record.payloadData;

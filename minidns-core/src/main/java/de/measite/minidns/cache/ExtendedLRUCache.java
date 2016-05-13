@@ -36,11 +36,11 @@ public class ExtendedLRUCache extends LRUCache {
     @Override
     public void put(DNSMessage q, DNSMessage message) {
         super.put(q, message);
-        Map<DNSMessage, List<Record>> extraCaches = new HashMap<>(message.additionalResourceRecords.size());
+        Map<DNSMessage, List<Record>> extraCaches = new HashMap<>(message.additionalSection.size());
 
-        gather(extraCaches, q, message.answers);
-        gather(extraCaches, q, message.nameserverRecords);
-        gather(extraCaches, q, message.additionalResourceRecords);
+        gather(extraCaches, q, message.answerSection);
+        gather(extraCaches, q, message.authoritySection);
+        gather(extraCaches, q, message.additionalSection);
 
         for (Entry<DNSMessage, List<Record>> entry : extraCaches.entrySet()) {
             DNSMessage answer = message.asBuilder().addAnswers(entry.getValue()).build();

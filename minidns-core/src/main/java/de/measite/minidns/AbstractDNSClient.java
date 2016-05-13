@@ -176,7 +176,7 @@ public abstract class AbstractDNSClient {
      * @return True, if the response should be cached, false otherwise.
      */
     protected boolean isResponseCacheable(Question q, DNSMessage dnsMessage) {
-        for (Record record : dnsMessage.answers) {
+        for (Record record : dnsMessage.answerSection) {
             if (record.isAnswer(q)) {
                 return true;
             }

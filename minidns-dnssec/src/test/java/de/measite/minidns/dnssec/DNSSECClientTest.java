@@ -87,7 +87,7 @@ public class DNSSECClientTest {
     }
 
     void checkCorrectExampleMessage(DNSMessage message) {
-        List<Record> answers = message.answers;
+        List<Record> answers = message.answerSection;
         assertEquals(1, answers.size());
         assertEquals(Record.TYPE.A, answers.get(0).type);
         assertArrayEquals(new byte[]{1, 1, 1, 2}, ((A) answers.get(0).payloadData).getIp());
@@ -462,7 +462,7 @@ public class DNSSECClientTest {
         DNSMessage message = client.query("nsec.example.com", Record.TYPE.A);
         client.setStripSignatureRecords(false);
         assertNotNull(message);
-        assertEquals(0, message.answers.size());
+        assertEquals(0, message.answerSection.size());
         assertTrue(message.authenticData);
     }
 
