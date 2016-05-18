@@ -10,6 +10,7 @@
  */
 package de.measite.minidns;
 
+import de.measite.minidns.Record.TYPE;
 import de.measite.minidns.record.Data;
 import de.measite.minidns.record.OPT;
 
@@ -285,6 +286,8 @@ public class DNSMessage {
      */
     public final List<Record> additionalSection;
 
+    public final int optRrPosition;
+
     /**
      * The receive timestamp. Set only if this message was created via parse.
      * This should be used to evaluate TTLs.
@@ -336,6 +339,17 @@ public class DNSMessage {
             this.additionalSection = Collections.unmodifiableList(a);
         }
 
+        optRrPosition = getOptRrPosition(this.additionalSection);
+
+        if (optRrPosition != -1) {
+            // Verify that there are no further OPT records but the one we already found.
+            for (int i = optRrPosition + 1; i < this.additionalSection.size(); i++) {
+                if (this.additionalSection.get(i).type == TYPE.OPT) {
+                    throw new IllegalArgumentException("There must be only one OPT pseudo RR in the additional section");
+                }
+            }
+        }
+
         // TODO Add verification of dns message state here
     }
 
@@ -380,6 +394,7 @@ public class DNSMessage {
         for (int i = 0; i < additionalResourceRecordCount; i++) {
             additionalSection.add(new Record(dis, data));
         }
+        optRrPosition = getOptRrPosition(additionalSection);
     }
 
     /**
@@ -403,8 +418,20 @@ public class DNSMessage {
         answerSection = message.answerSection;
         authoritySection = message.authoritySection;
         additionalSection = message.additionalSection;
+        optRrPosition = message.optRrPosition;
     }
 
+    private static int getOptRrPosition(List<Record> additionalSection) {
+        int optRrPosition = -1;
+        for (int i = 0; i < additionalSection.size(); i++) {
+            Record record = additionalSection.get(i);
+            if (record.type == Record.TYPE.OPT) {
+                optRrPosition = i;
+                break;
+            }
+        }
+        return optRrPosition;
+    }
 
     /**
      * Generate a binary dns packet out of this message.
@@ -561,22 +588,21 @@ public class DNSMessage {
         return res;
     }
 
+    public Record getOptPseudoRecord() {
+        if (optRrPosition == -1) return null;
+        return additionalSection.get(optRrPosition);
+    }
+
     /**
      * Check if the EDNS DO (DNSSEC OK) flag is set.
      *
      * @return true if the DO flag is set.
      */
     public boolean isDnssecOk() {
-        if (additionalSection == null)
-            return false;
-
-        for (Record record : additionalSection) {
-            if (record.type != Record.TYPE.OPT) continue;
-            int ednsFlags = OPT.readEdnsFlags(record);
-            return (ednsFlags & OPT.FLAG_DNSSEC_OK) > 0;
-        }
-
-        return false;
+        Record optRr = getOptPseudoRecord();
+        if (optRr == null) return false;
+        int ednsFlags = OPT.readEdnsFlags(optRr);
+        return (ednsFlags & OPT.FLAG_DNSSEC_OK) > 0;
     }
 
     private String toStringCache;
