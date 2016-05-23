@@ -29,13 +29,19 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 import java.util.logging.Level;
 
 public class RecursiveDNSClient extends AbstractDNSClient {
+
+    private static final Map<Character, InetAddress> IPV4_ROOT_SERVER_MAP = new HashMap<>();
+
+    private static final Map<Character, InetAddress> IPV6_ROOT_SERVER_MAP = new HashMap<>();
 
     protected static final InetAddress[] IPV4_ROOT_SERVERS = new InetAddress[] {
         rootServerInetAddress('a', new int[]{198,  41,   0,   4}),
@@ -316,19 +322,60 @@ public class RecursiveDNSClient extends AbstractDNSClient {
         }
     }
 
+    public static List<InetAddress> getRootServer(char rootServerId) {
+        return getRootServer(rootServerId, ipVersionSetting);
+    }
+
+    public static List<InetAddress> getRootServer(char rootServerId, IpVersionSetting setting) {
+        InetAddress ipv4Root = IPV4_ROOT_SERVER_MAP.get(rootServerId);
+        InetAddress ipv6Root = IPV6_ROOT_SERVER_MAP.get(rootServerId);
+        List<InetAddress> res = new ArrayList<>(2);
+        switch (setting) {
+        case v4only:
+            if (ipv4Root != null) {
+                res.add(ipv4Root);
+            }
+            break;
+        case v6only:
+            if (ipv6Root != null) {
+                res.add(ipv6Root);
+            }
+            break;
+        case v4v6:
+            if (ipv4Root != null) {
+                res.add(ipv4Root);
+            }
+            if (ipv6Root != null) {
+                res.add(ipv6Root);
+            }
+            break;
+        case v6v4:
+            if (ipv6Root != null) {
+                res.add(ipv6Root);
+            }
+            if (ipv4Root != null) {
+                res.add(ipv4Root);
+            }
+            break;
+        }
+        return res;
+    }
+
     private static InetAddress rootServerInetAddress(char rootServerId, int[] addr) {
+        InetAddress inetAddress;
         String name = rootServerId + ".root-servers.net";
         if (addr.length == 4) {
             try {
-                return InetAddress.getByAddress(name, new byte[] { (byte) addr[0], (byte) addr[1], (byte) addr[2],
+                inetAddress = InetAddress.getByAddress(name, new byte[] { (byte) addr[0], (byte) addr[1], (byte) addr[2],
                         (byte) addr[3] });
+                IPV4_ROOT_SERVER_MAP.put(rootServerId, inetAddress);
             } catch (UnknownHostException e) {
                 // This should never happen, if it does it's our fault!
                 throw new RuntimeException(e);
             }
         } else if (addr.length == 8) {
             try {
-                return InetAddress.getByAddress(name, new byte[]{
+                inetAddress = InetAddress.getByAddress(name, new byte[]{
                         // @formatter:off
                         (byte) (addr[0] >> 8), (byte) addr[0], (byte) (addr[1] >> 8), (byte) addr[1],
                         (byte) (addr[2] >> 8), (byte) addr[2], (byte) (addr[3] >> 8), (byte) addr[3],
@@ -336,6 +383,7 @@ public class RecursiveDNSClient extends AbstractDNSClient {
                         (byte) (addr[6] >> 8), (byte) addr[6], (byte) (addr[7] >> 8), (byte) addr[7]
                         // @formatter:on
                 });
+                IPV6_ROOT_SERVER_MAP.put(rootServerId, inetAddress);
             } catch (UnknownHostException e) {
                 // This should never happen, if it does it's our fault!
                 throw new RuntimeException(e);
@@ -343,6 +391,7 @@ public class RecursiveDNSClient extends AbstractDNSClient {
         } else {
             throw new IllegalArgumentException();
         }
+        return inetAddress;
     }
 
     @Override
@@ -353,7 +402,7 @@ public class RecursiveDNSClient extends AbstractDNSClient {
     @Override
     protected DNSMessage.Builder newQuestion(DNSMessage.Builder message) {
         message.setRecursionDesired(false);
-        message.setOptPseudoRecord(dataSource.getUdpPayloadSize(), 0);
+        message.getEdnsBuilder().setUdpPayloadSize(dataSource.getUdpPayloadSize());
         return message;
     }
 

@@ -10,40 +10,51 @@
  */
 package de.measite.minidns.record;
 
-import de.measite.minidns.Record;
 import de.measite.minidns.Record.TYPE;
+import de.measite.minidns.edns.EDNSOption;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 /**
  * OPT payload (see RFC 2671 for details).
  */
 public class OPT extends Data {
 
-    /**
-     * Inform the dns server that the client supports DNSSEC.
-     */
-    public static final int FLAG_DNSSEC_OK = 0x8000;
-
-    /**
-     * Raw encoded RDATA of an OPT RR.
-     */
-    private final byte[] encodedOptData;
+    public final List<EDNSOption> variablePart;
 
     public OPT() {
-        this(new byte[0]);
+        this(Collections.<EDNSOption>emptyList());
     }
 
-    public OPT(byte[] encodedOptData) {
-        this.encodedOptData = encodedOptData;
+    public OPT(List<EDNSOption> variablePart) {
+        this.variablePart = Collections.unmodifiableList(variablePart);
     }
 
     public static OPT parse(DataInputStream dis, int payloadLength) throws IOException {
-        byte[] encodedOptData = new byte[payloadLength];
-        if (dis.read(encodedOptData) != encodedOptData.length && encodedOptData.length != 0) throw new IOException();
-        return new OPT(encodedOptData);
+        List<EDNSOption> variablePart;
+        if (payloadLength == 0) {
+            variablePart = Collections.emptyList();
+        } else {
+            int payloadLeft = payloadLength;
+            variablePart = new ArrayList<>(4);
+            while (payloadLeft > 0) {
+                int optionCode = dis.readUnsignedShort();
+                int optionLength = dis.readUnsignedShort();
+                byte[] optionData = new byte[optionLength];
+                dis.read(optionData);
+                EDNSOption ednsOption = EDNSOption.parse(optionCode, optionData);
+                variablePart.add(ednsOption);
+                payloadLeft -= (2 + 2 + optionLength);
+                // Assert that payloadLeft never becomes negative
+                assert(payloadLeft >= 0);
+            }
+        }
+        return new OPT(variablePart);
     }
 
     @Override
@@ -52,31 +63,10 @@ public class OPT extends Data {
     }
 
     @Override
-    public void serialize(DataOutputStream dos) throws IOException {
-        dos.write(encodedOptData);
+    protected void serialize(DataOutputStream dos) throws IOException {
+        for (EDNSOption endsOption : variablePart) {
+            endsOption.writeToDos(dos);
+        }
     }
 
-    public static Record createEdnsOptRecord(int udpPayloadSize, int optFlags) {
-        return new Record("", Record.TYPE.OPT, udpPayloadSize, optFlags, new OPT());
-    }
-
-    public static int readEdnsVersion(Record record) {
-        return (int) ((record.ttl >> 16) & 0xff);
-    }
-
-    public static int readEdnsUdpPayloadSize(Record record) {
-        return record.clazzValue;
-    }
-
-    public static int readEdnsFlags(Record record) {
-        return (int) (record.ttl & 0xffff);
-    }
-
-    public static String optRecordToString(Record record) {
-        StringBuilder sb = new StringBuilder("EDNS: version: ")
-                .append(readEdnsVersion(record))
-                .append(", flags:");
-        if ((record.ttl & FLAG_DNSSEC_OK) > 0) sb.append(" do");
-        return sb.append("; udp: ").append(readEdnsUdpPayloadSize(record)).toString();
-    }
 }

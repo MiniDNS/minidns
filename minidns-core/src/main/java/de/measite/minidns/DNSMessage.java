@@ -12,7 +12,6 @@ package de.measite.minidns;
 
 import de.measite.minidns.Record.TYPE;
 import de.measite.minidns.record.Data;
-import de.measite.minidns.record.OPT;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -28,7 +27,6 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -289,6 +287,12 @@ public class DNSMessage {
     public final int optRrPosition;
 
     /**
+     * The optional but very common EDNS information. Note that this field is lazily populated.
+     *
+     */
+    private EDNS edns;
+
+    /**
      * The receive timestamp. Set only if this message was created via parse.
      * This should be used to evaluate TTLs.
      */
@@ -331,11 +335,25 @@ public class DNSMessage {
             this.authoritySection = Collections.unmodifiableList(n);
         }
 
-        if (builder.additionalResourceRecords == null) {
+        if (builder.additionalResourceRecords == null && builder.ednsBuilder == null) {
             this.additionalSection = Collections.emptyList();
         } else {
-            List<Record> a = new ArrayList<>(builder.additionalResourceRecords.size());
-            a.addAll(builder.additionalResourceRecords);
+            int size = 0;
+            if (builder.additionalResourceRecords != null) {
+                size += builder.additionalResourceRecords.size();
+            }
+            if (builder.ednsBuilder != null) {
+                size++;
+            }
+            List<Record> a = new ArrayList<>(size);
+            if (builder.additionalResourceRecords != null) {
+                a.addAll(builder.additionalResourceRecords);
+            }
+            if (builder.ednsBuilder != null) {
+                EDNS edns = builder.ednsBuilder.build();
+                this.edns = edns;
+                a.add(edns.asRecord());
+            }
             this.additionalSection = Collections.unmodifiableList(a);
         }
 
@@ -588,6 +606,15 @@ public class DNSMessage {
         return res;
     }
 
+    public EDNS getEdns() {
+        if (edns != null) return edns;
+
+        Record optRecord = getOptPseudoRecord();
+        if (optRecord == null) return null;
+        edns = new EDNS(optRecord);
+        return edns;
+    }
+
     public Record getOptPseudoRecord() {
         if (optRrPosition == -1) return null;
         return additionalSection.get(optRrPosition);
@@ -599,10 +626,11 @@ public class DNSMessage {
      * @return true if the DO flag is set.
      */
     public boolean isDnssecOk() {
-        Record optRr = getOptPseudoRecord();
-        if (optRr == null) return false;
-        int ednsFlags = OPT.readEdnsFlags(optRr);
-        return (ednsFlags & OPT.FLAG_DNSSEC_OK) > 0;
+        EDNS edns = getEdns();
+        if (edns == null)
+            return false;
+
+        return edns.dnssecOk;
     }
 
     private String toStringCache;
@@ -646,7 +674,7 @@ public class DNSMessage {
             for (Record record : additionalSection) {
                 sb.append("[X: ");
                 if (record.type == Record.TYPE.OPT) {
-                    sb.append(OPT.optRecordToString(record));
+                    sb.append(new EDNS(record).toString());
                 } else {
                     sb.append(record);
                 }
@@ -693,7 +721,7 @@ public class DNSMessage {
                 .append("\n\n");
         for (Record record : additionalSection) {
             if (record.type == Record.TYPE.OPT) {
-                sb.append(";; OPT PSEUDOSECTION:\n; ").append(OPT.optRecordToString(record)).append("\n");
+                sb.append(";; OPT PSEUDOSECTION:\n; ").append(new EDNS(record).asTerminalOutput());
                 break;
             }
         }
@@ -843,6 +871,7 @@ public class DNSMessage {
         private List<Record> answers;
         private List<Record> nameserverRecords;
         private List<Record> additionalResourceRecords;
+        private EDNS.Builder ednsBuilder;
 
         /**
          * Set the current DNS message id.
@@ -1089,33 +1118,22 @@ public class DNSMessage {
         }
 
         /**
-         * Send the OPT pseudo record with this request for EDNS support. The OPT record can be used
-         * to announce the supported size of UDP payload as well as additional flags.
-         *
-         * Note that some networks and firewalls are known to block big UDP payloads. 1280 should be
-         * a reasonable value, everything below 512 is treated as 512 and should work on all
-         * networks.
-         *
-         * @param udpPayloadSize Supported size of payload. Must be between 512 and 65563.
-         * @param optFlags A bitmap of flags to be attached to the
-         * @return a reference to this builder.
+         * Get the @{link EDNS} builder. If no builder has been set so far, then a new one will be created.
+         * <p>
+         * The EDNS record can be used to announce the supported size of UDP payload as well as additional flags.
+         * </p>
+         * <p>
+         * Note that some networks and firewalls are known to block big UDP payloads. 1280 should be a reasonable value,
+         * everything below 512 is treated as 512 and should work on all networks.
+         * </p>
+         * 
+         * @return a EDNS builder.
          */
-        public Builder setOptPseudoRecord(int udpPayloadSize, int optFlags) {
-            Record opt = OPT.createEdnsOptRecord(udpPayloadSize, optFlags);
-            if (additionalResourceRecords == null) {
-                additionalResourceRecords = new ArrayList<>(4);
-                additionalResourceRecords.add(opt);
-            } else {
-                for (Iterator<Record> iterator = additionalResourceRecords.iterator(); iterator
-                        .hasNext();) {
-                    Record record = iterator.next();
-                    if (record.type == Record.TYPE.OPT) {
-                        iterator.remove();
-                    }
-                }
-                additionalResourceRecords.add(opt);
+        public EDNS.Builder getEdnsBuilder() {
+            if (ednsBuilder == null) {
+                ednsBuilder = EDNS.builder();
             }
-            return this;
+            return ednsBuilder;
         }
 
         public DNSMessage build() {

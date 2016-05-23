@@ -15,7 +15,6 @@ import de.measite.minidns.dnsserverlookup.AndroidUsingReflection;
 import de.measite.minidns.dnsserverlookup.DNSServerLookupMechanism;
 import de.measite.minidns.dnsserverlookup.HardcodedDNSServerAddresses;
 import de.measite.minidns.dnsserverlookup.UnixUsingEtcResolvConf;
-import de.measite.minidns.record.OPT;
 import de.measite.minidns.util.MultipleIoException;
 
 import java.io.IOException;
@@ -60,7 +59,7 @@ public class DNSClient extends AbstractDNSClient {
     @Override
     protected DNSMessage.Builder newQuestion(DNSMessage.Builder message) {
         message.setRecursionDesired(true);
-        message.setOptPseudoRecord(dataSource.getUdpPayloadSize(), askForDnssec ? OPT.FLAG_DNSSEC_OK : 0);
+        message.getEdnsBuilder().setUdpPayloadSize(dataSource.getUdpPayloadSize()).setDnssecOk(askForDnssec);
         return message;
     }
 

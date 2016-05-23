@@ -24,7 +24,6 @@ import de.measite.minidns.record.NS;
 import de.measite.minidns.record.NSEC;
 import de.measite.minidns.record.NSEC3;
 import de.measite.minidns.record.NSEC3.HashAlgorithm;
-import de.measite.minidns.record.OPT;
 import de.measite.minidns.record.RRSIG;
 import de.measite.minidns.record.SOA;
 import de.measite.minidns.record.SRV;
@@ -212,8 +211,9 @@ public class DNSMessageTest {
         List<Record> arr = m.additionalSection;
         assertEquals(1, arr.size());
         Record opt = arr.get(0);
-        assertEquals(4096, OPT.readEdnsUdpPayloadSize(opt));
-        assertEquals(0, OPT.readEdnsVersion(opt));
+        EDNS edns = new EDNS(opt);
+        assertEquals(4096, edns.udpPayloadSize);
+        assertEquals(0, edns.version);
     }
 
     @Test
@@ -256,8 +256,9 @@ public class DNSMessageTest {
         List<Record> arr = m.additionalSection;
         assertEquals(1, arr.size());
         Record opt = arr.get(0);
-        assertEquals(512, OPT.readEdnsUdpPayloadSize(opt));
-        assertEquals(0, OPT.readEdnsVersion(opt));
+        EDNS edns = new EDNS(opt);
+        assertEquals(512, edns.udpPayloadSize);
+        assertEquals(0, edns.version);
     }
 
     @Test
@@ -297,9 +298,10 @@ public class DNSMessageTest {
         assertEquals(1, arr.size());
         assertEquals(TYPE.OPT, arr.get(0).getPayload().getType());
         Record opt = arr.get(0);
-        assertEquals(512, OPT.readEdnsUdpPayloadSize(opt));
-        assertEquals(0, OPT.readEdnsVersion(opt));
-        assertTrue((OPT.readEdnsFlags(opt) & OPT.FLAG_DNSSEC_OK) > 0);
+        EDNS edns = new EDNS(opt);
+        assertEquals(512, edns.udpPayloadSize);
+        assertEquals(0, edns.version);
+        assertTrue(edns.dnssecOk);
     }
 
     @Test
@@ -474,14 +476,14 @@ public class DNSMessageTest {
     public void testMessageSelfOptRecordReconstructione() throws Exception {
         DNSMessage.Builder m = DNSMessage.builder();
         m.addAdditionalResourceRecords(record("www.example.com", a("127.0.0.1")));
-        m.setOptPseudoRecord(512, OPT.FLAG_DNSSEC_OK);
+        m.getEdnsBuilder().setUdpPayloadSize(512).setDnssecOk();
         DNSMessage message = new DNSMessage(m.build().toArray());
 
         assertEquals(2, message.additionalSection.size());
         assertCsEquals("www.example.com", message.additionalSection.get(0).name);
         assertEquals(TYPE.A, message.additionalSection.get(0).type);
         assertCsEquals("127.0.0.1", message.additionalSection.get(0).payloadData.toString());
-        assertCsEquals("EDNS: version: 0, flags: do; udp: 512", OPT.optRecordToString(message.additionalSection.get(1)));
+        assertCsEquals("EDNS: version: 0, flags: do; udp: 512", new EDNS(message.additionalSection.get(1)).toString());
     }
 
     @Test
@@ -503,7 +505,7 @@ public class DNSMessageTest {
         message.addAnswer(record("www.example.com", a("127.0.0.1")));
         message.addNameserverRecords(record("example.com", ns("ns.example.com")));
         message.addAdditionalResourceRecords(record("ns.example.com", a("127.0.0.1")));
-        message.setOptPseudoRecord(512, 0);
+        message.getEdnsBuilder().setUdpPayloadSize(512);
         assertNotNull(message.build().toString());
     }
 
@@ -531,7 +533,7 @@ public class DNSMessageTest {
         message.addAnswer(record("www.example.com", a("127.0.0.1")));
         message.addNameserverRecords(record("example.com", ns("ns.example.com")));
         message.addAdditionalResourceRecords(record("ns.example.com", a("127.0.0.1")));
-        message.setOptPseudoRecord(512, 0);
+        message.getEdnsBuilder().setUdpPayloadSize(512);
         assertNotNull(message.build().asTerminalOutput());
     }
 }

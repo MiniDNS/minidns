@@ -20,6 +20,8 @@ import de.measite.minidns.Record.TYPE;
 import de.measite.minidns.cache.LRUCache;
 import de.measite.minidns.dnssec.DNSSECClient;
 import de.measite.minidns.dnssec.DNSSECMessage;
+import de.measite.minidns.edns.NSID;
+import de.measite.minidns.integrationtest.NSIDTest;
 import de.measite.minidns.recursive.RecursiveDNSClient;
 
 public class MiniDnsRepl {
@@ -54,9 +56,11 @@ public class MiniDnsRepl {
     }
 
     public static void main(String[] args) throws IOException {
+        NSID nsid = NSIDTest.testNsidLRoot();
         DNSSECMessage secRes = DNSSECCLIENT.queryDnssec("verteiltesysteme.net", TYPE.A);
         DNSMessage res = RECURSIVEDNSCLIENT.query("mate.geekplace.eu", TYPE.A);
         // CHECKSTYLE:OFF
+        System.out.println(nsid);
         System.out.println(secRes);
         System.out.println(res);
         // CHCECKSTYLE:ON

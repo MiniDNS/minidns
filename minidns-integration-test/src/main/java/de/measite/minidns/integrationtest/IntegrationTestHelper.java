@@ -39,6 +39,7 @@ public class IntegrationTestHelper {
         testClasses.add(DNSSECTest.class);
         testClasses.add(DaneTest.class);
         testClasses.add(HlaTest.class);
+        testClasses.add(NSIDTest.class);
     }
 
     private static final String MINTTEST = "minttest.";

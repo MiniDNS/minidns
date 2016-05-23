@@ -24,7 +24,6 @@ import de.measite.minidns.dnssec.UnverifiedReason.NoTrustAnchorReason;
 import de.measite.minidns.record.DLV;
 import de.measite.minidns.record.DNSKEY;
 import de.measite.minidns.record.DS;
-import de.measite.minidns.record.OPT;
 import de.measite.minidns.record.RRSIG;
 import de.measite.minidns.recursive.ReliableDNSClient;
 
@@ -449,7 +448,7 @@ public class DNSSECClient extends ReliableDNSClient {
 
     @Override
     protected DNSMessage.Builder newQuestion(DNSMessage.Builder message) {
-        message.setOptPseudoRecord(getDataSource().getUdpPayloadSize(), OPT.FLAG_DNSSEC_OK);
+        message.getEdnsBuilder().setUdpPayloadSize(dataSource.getUdpPayloadSize()).setDnssecOk();
         message.setCheckingDisabled(true);
         return super.newQuestion(message);
     }
