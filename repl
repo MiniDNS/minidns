@@ -11,8 +11,14 @@ while getopts d OPTION "$@"; do
     esac
 done
 
+PROJECT_ROOT=$(dirname "${BASH_SOURCE[0]}")
+cd "${PROJECT_ROOT}"
+
 echo "Compiling and computing classpath (May take a while)"
-declare -r GRADLE_CLASSPATH="$(gradle :minidns-repl:printClasspath --quiet |\
+# Sadly even with the --quiet option Gradle (or some component of)
+# will print the number of warnings/errors to stdout if there are
+# any.
+GRADLE_CLASSPATH="$(gradle :minidns-repl:printClasspath --quiet |\
 	tail -n1)"
 echo "Classpath computed, starting REPL"
 
