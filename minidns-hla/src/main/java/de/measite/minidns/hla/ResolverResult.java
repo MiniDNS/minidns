@@ -48,7 +48,7 @@ public class ResolverResult<D extends Data> {
     }
 
     public Set<D> getAnswers() {
-        throwIfErrorResponse();
+        throwIseIfErrorResponse();
         return data;
     }
 
@@ -57,12 +57,12 @@ public class ResolverResult<D extends Data> {
     }
 
     public boolean isAuthenticData() {
-        throwIfErrorResponse();
+        throwIseIfErrorResponse();
         return isAuthenticData;
     }
 
     public Set<UnverifiedReason> getUnverifiedReasons() {
-        throwIfErrorResponse();
+        throwIseIfErrorResponse();
         return unverifiedReasons;
     }
 
@@ -70,9 +70,16 @@ public class ResolverResult<D extends Data> {
         return question;
     }
 
-    private void throwIfErrorResponse() {
+    public void throwIfErrorResponse() throws ResolutionUnsuccessfulException {
         if (!wasSuccessful()) {
             throw new ResolutionUnsuccessfulException(question, responseCode);
+        }
+    }
+
+    private void throwIseIfErrorResponse() {
+        if (!wasSuccessful()) {
+            throw new IllegalStateException("Can not perform operation because the DNS resolution was unsuccessful",
+                    new ResolutionUnsuccessfulException(question, responseCode));
         }
     }
 }

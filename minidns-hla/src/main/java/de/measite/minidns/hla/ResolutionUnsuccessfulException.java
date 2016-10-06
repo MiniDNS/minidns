@@ -11,9 +11,10 @@
 package de.measite.minidns.hla;
 
 import de.measite.minidns.DNSMessage.RESPONSE_CODE;
+import de.measite.minidns.MiniDNSException;
 import de.measite.minidns.Question;
 
-public class ResolutionUnsuccessfulException extends IllegalStateException {
+public class ResolutionUnsuccessfulException extends MiniDNSException {
 
     /**
      * 
