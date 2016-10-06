@@ -13,6 +13,7 @@ package de.measite.minidns.dnssec.algorithms;
 import de.measite.minidns.dnssec.DNSSECValidationFailedException;
 
 import java.io.ByteArrayInputStream;
+import java.io.DataInput;
 import java.io.DataInputStream;
 import java.io.IOException;
 import java.math.BigInteger;
@@ -28,7 +29,7 @@ class RSASignatureVerifier extends JavaSecSignatureVerifier {
 
     protected PublicKey getPublicKey(byte[] key) {
         try {
-            DataInputStream dis = new DataInputStream(new ByteArrayInputStream(key));
+            DataInput dis = new DataInputStream(new ByteArrayInputStream(key));
             int exponentLength = dis.readUnsignedByte();
             int bytesRead = 1;
             if (exponentLength == 0) {
@@ -37,12 +38,12 @@ class RSASignatureVerifier extends JavaSecSignatureVerifier {
             }
 
             byte[] exponentBytes = new byte[exponentLength];
-            if (dis.read(exponentBytes) != exponentBytes.length) throw new IOException();
+            dis.readFully(exponentBytes);
             bytesRead += exponentLength;
             BigInteger exponent = new BigInteger(1, exponentBytes);
 
             byte[] modulusBytes = new byte[key.length - bytesRead];
-            if (dis.read(modulusBytes) != modulusBytes.length) throw new IOException();
+            dis.readFully(modulusBytes);
             BigInteger modulus = new BigInteger(1, modulusBytes);
 
             return getKeyFactory().generatePublic(new RSAPublicKeySpec(modulus, exponent));

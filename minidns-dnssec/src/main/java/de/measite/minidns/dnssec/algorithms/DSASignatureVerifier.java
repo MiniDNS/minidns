@@ -14,6 +14,7 @@ import de.measite.minidns.dnssec.DNSSECValidationFailedException;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.DataInput;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -34,7 +35,7 @@ class DSASignatureVerifier extends JavaSecSignatureVerifier {
     protected byte[] getSignature(byte[] rrsigData) {
         // Convert RFC 2536 to ASN.1
         try {
-            DataInputStream dis = new DataInputStream(new ByteArrayInputStream(rrsigData));
+            DataInput dis = new DataInputStream(new ByteArrayInputStream(rrsigData));
             ByteArrayOutputStream bos = new ByteArrayOutputStream();
             DataOutputStream dos = new DataOutputStream(bos);
 
@@ -42,11 +43,11 @@ class DSASignatureVerifier extends JavaSecSignatureVerifier {
             byte t = dis.readByte();
 
             byte[] r = new byte[LENGTH];
-            if (dis.read(r) != r.length) throw new IOException();
+            dis.readFully(r);
             int rlen = (r[0] < 0) ? LENGTH + 1 : LENGTH;
 
             byte[] s = new byte[LENGTH];
-            if (dis.read(s) != s.length) throw new IOException();
+            dis.readFully(s);
             int slen = (s[0] < 0) ? LENGTH + 1 : LENGTH;
 
             dos.writeByte(0x30);
@@ -70,24 +71,24 @@ class DSASignatureVerifier extends JavaSecSignatureVerifier {
 
     protected PublicKey getPublicKey(byte[] key) {
         try {
-            DataInputStream dis = new DataInputStream(new ByteArrayInputStream(key));
+            DataInput dis = new DataInputStream(new ByteArrayInputStream(key));
 
             int t = dis.readUnsignedByte();
 
             byte[] subPrimeBytes = new byte[LENGTH];
-            if (dis.read(subPrimeBytes) != subPrimeBytes.length) throw new IOException();
+            dis.readFully(subPrimeBytes);
             BigInteger subPrime = new BigInteger(1, subPrimeBytes);
 
             byte[] primeBytes = new byte[64 + t * 8];
-            if (dis.read(primeBytes) != primeBytes.length) throw new IOException();
+            dis.readFully(primeBytes);
             BigInteger prime = new BigInteger(1, primeBytes);
 
             byte[] baseBytes = new byte[64 + t * 8];
-            if (dis.read(baseBytes) != baseBytes.length) throw new IOException();
+            dis.readFully(baseBytes);
             BigInteger base = new BigInteger(1, baseBytes);
 
             byte[] pubKeyBytes = new byte[64 + t * 8];
-            if (dis.read(pubKeyBytes) != pubKeyBytes.length) throw new IOException();
+            dis.readFully(pubKeyBytes);
             BigInteger pubKey = new BigInteger(1, pubKeyBytes);
 
             return getKeyFactory().generatePublic(new DSAPublicKeySpec(pubKey, prime, subPrime, base));

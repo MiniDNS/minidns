@@ -13,6 +13,7 @@ package de.measite.minidns.dnssec.algorithms;
 import de.measite.minidns.dnssec.DNSSECValidationFailedException;
 
 import java.io.ByteArrayInputStream;
+import java.io.DataInput;
 import java.io.DataInputStream;
 import java.io.IOException;
 import java.math.BigInteger;
@@ -50,15 +51,15 @@ class ECGOSTSignatureVerifier extends JavaSecSignatureVerifier {
     @Override
     protected PublicKey getPublicKey(byte[] key) {
         try {
-            DataInputStream dis = new DataInputStream(new ByteArrayInputStream(key));
+            DataInput dis = new DataInputStream(new ByteArrayInputStream(key));
 
             byte[] xBytes = new byte[LENGTH];
-            if (dis.read(xBytes) != xBytes.length) throw new IOException();
+            dis.readFully(xBytes);
             reverse(xBytes);
             BigInteger x = new BigInteger(1, xBytes);
 
             byte[] yBytes = new byte[LENGTH];
-            if (dis.read(yBytes) != yBytes.length) throw new IOException();
+            dis.readFully(yBytes);
             reverse(yBytes);
             BigInteger y = new BigInteger(1, yBytes);
 

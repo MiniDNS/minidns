@@ -14,6 +14,7 @@ import de.measite.minidns.dnssec.DNSSECValidationFailedException;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.DataInput;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -44,16 +45,16 @@ abstract class ECDSASignatureVerifier extends JavaSecSignatureVerifier {
     @Override
     protected byte[] getSignature(byte[] rrsigData) {
         try {
-            DataInputStream dis = new DataInputStream(new ByteArrayInputStream(rrsigData));
+            DataInput dis = new DataInputStream(new ByteArrayInputStream(rrsigData));
             ByteArrayOutputStream bos = new ByteArrayOutputStream();
             DataOutputStream dos = new DataOutputStream(bos);
 
             byte[] r = new byte[length];
-            if (dis.read(r) != r.length) throw new IOException();
+            dis.readFully(r);
             int rlen = (r[0] < 0) ? length + 1 : length;
 
             byte[] s = new byte[length];
-            if (dis.read(s) != s.length) throw new IOException();
+            dis.readFully(s);
             int slen = (s[0] < 0) ? length + 1 : length;
 
             dos.writeByte(0x30);
@@ -78,14 +79,14 @@ abstract class ECDSASignatureVerifier extends JavaSecSignatureVerifier {
     @Override
     protected PublicKey getPublicKey(byte[] key) {
         try {
-            DataInputStream dis = new DataInputStream(new ByteArrayInputStream(key));
+            DataInput dis = new DataInputStream(new ByteArrayInputStream(key));
 
             byte[] xBytes = new byte[length];
-            if (dis.read(xBytes) != xBytes.length) throw new IOException();
+            dis.readFully(xBytes);
             BigInteger x = new BigInteger(1, xBytes);
 
             byte[] yBytes = new byte[length];
-            if (dis.read(yBytes) != yBytes.length) throw new IOException();
+            dis.readFully(yBytes);
             BigInteger y = new BigInteger(1, yBytes);
 
             return getKeyFactory().generatePublic(new ECPublicKeySpec(new ECPoint(x, y), spec));
