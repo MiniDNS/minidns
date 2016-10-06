@@ -44,11 +44,11 @@ abstract class ECDSASignatureVerifier extends JavaSecSignatureVerifier {
 
     @Override
     protected byte[] getSignature(byte[] rrsigData) {
-        try {
-            DataInput dis = new DataInputStream(new ByteArrayInputStream(rrsigData));
-            ByteArrayOutputStream bos = new ByteArrayOutputStream();
-            DataOutputStream dos = new DataOutputStream(bos);
+        DataInput dis = new DataInputStream(new ByteArrayInputStream(rrsigData));
+        ByteArrayOutputStream bos = new ByteArrayOutputStream();
+        DataOutputStream dos = new DataOutputStream(bos);
 
+        try {
             byte[] r = new byte[length];
             dis.readFully(r);
             int rlen = (r[0] < 0) ? length + 1 : length;
@@ -69,18 +69,18 @@ abstract class ECDSASignatureVerifier extends JavaSecSignatureVerifier {
             dos.writeByte(slen);
             if (slen > length) dos.writeByte(0);
             dos.write(s);
-
-            return bos.toByteArray();
         } catch (IOException e) {
             throw new DNSSECValidationFailedException("Invalid signature!", e);
         }
+
+        return bos.toByteArray();
     }
 
     @Override
     protected PublicKey getPublicKey(byte[] key) {
-        try {
-            DataInput dis = new DataInputStream(new ByteArrayInputStream(key));
+        DataInput dis = new DataInputStream(new ByteArrayInputStream(key));
 
+        try {
             byte[] xBytes = new byte[length];
             dis.readFully(xBytes);
             BigInteger x = new BigInteger(1, xBytes);

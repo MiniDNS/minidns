@@ -50,9 +50,9 @@ class ECGOSTSignatureVerifier extends JavaSecSignatureVerifier {
 
     @Override
     protected PublicKey getPublicKey(byte[] key) {
-        try {
-            DataInput dis = new DataInputStream(new ByteArrayInputStream(key));
+        DataInput dis = new DataInputStream(new ByteArrayInputStream(key));
 
+        try {
             byte[] xBytes = new byte[LENGTH];
             dis.readFully(xBytes);
             reverse(xBytes);

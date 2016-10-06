@@ -28,8 +28,9 @@ class RSASignatureVerifier extends JavaSecSignatureVerifier {
     }
 
     protected PublicKey getPublicKey(byte[] key) {
+        DataInput dis = new DataInputStream(new ByteArrayInputStream(key));
+
         try {
-            DataInput dis = new DataInputStream(new ByteArrayInputStream(key));
             int exponentLength = dis.readUnsignedByte();
             int bytesRead = 1;
             if (exponentLength == 0) {

@@ -33,12 +33,12 @@ class DSASignatureVerifier extends JavaSecSignatureVerifier {
 
     @Override
     protected byte[] getSignature(byte[] rrsigData) {
+        DataInput dis = new DataInputStream(new ByteArrayInputStream(rrsigData));
+        ByteArrayOutputStream bos = new ByteArrayOutputStream();
+        DataOutputStream dos = new DataOutputStream(bos);
+
         // Convert RFC 2536 to ASN.1
         try {
-            DataInput dis = new DataInputStream(new ByteArrayInputStream(rrsigData));
-            ByteArrayOutputStream bos = new ByteArrayOutputStream();
-            DataOutputStream dos = new DataOutputStream(bos);
-
             @SuppressWarnings("unused")
             byte t = dis.readByte();
 
@@ -62,17 +62,17 @@ class DSASignatureVerifier extends JavaSecSignatureVerifier {
             dos.writeByte(slen);
             if (slen > LENGTH) dos.writeByte(0);
             dos.write(s);
-
-            return bos.toByteArray();
         } catch (IOException e) {
             throw new DNSSECValidationFailedException("Invalid signature!", e);
         }
+
+        return bos.toByteArray();
     }
 
     protected PublicKey getPublicKey(byte[] key) {
-        try {
-            DataInput dis = new DataInputStream(new ByteArrayInputStream(key));
+        DataInput dis = new DataInputStream(new ByteArrayInputStream(key));
 
+        try {
             int t = dis.readUnsignedByte();
 
             byte[] subPrimeBytes = new byte[LENGTH];
