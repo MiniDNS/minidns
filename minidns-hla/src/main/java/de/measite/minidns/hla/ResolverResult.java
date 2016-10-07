@@ -71,15 +71,26 @@ public class ResolverResult<D extends Data> {
     }
 
     public void throwIfErrorResponse() throws ResolutionUnsuccessfulException {
-        if (!wasSuccessful()) {
-            throw new ResolutionUnsuccessfulException(question, responseCode);
+        ResolutionUnsuccessfulException resolutionUnsuccessfulException = getResolutionUnsuccessfulException();
+        if (resolutionUnsuccessfulException != null) throw resolutionUnsuccessfulException;
+    }
+
+    private ResolutionUnsuccessfulException resolutionUnsuccessfulException;
+
+    public ResolutionUnsuccessfulException getResolutionUnsuccessfulException() {
+        if (wasSuccessful()) return null;
+
+        if (resolutionUnsuccessfulException == null) {
+            resolutionUnsuccessfulException = new ResolutionUnsuccessfulException(question, responseCode);
         }
+
+        return resolutionUnsuccessfulException;
     }
 
     private void throwIseIfErrorResponse() {
-        if (!wasSuccessful()) {
+        ResolutionUnsuccessfulException resolutionUnsuccessfulException = getResolutionUnsuccessfulException();
+        if (resolutionUnsuccessfulException != null)
             throw new IllegalStateException("Can not perform operation because the DNS resolution was unsuccessful",
-                    new ResolutionUnsuccessfulException(question, responseCode));
-        }
+                    resolutionUnsuccessfulException);
     }
 }
