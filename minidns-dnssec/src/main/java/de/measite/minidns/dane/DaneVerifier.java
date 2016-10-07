@@ -14,7 +14,6 @@ import de.measite.minidns.AbstractDNSClient;
 import de.measite.minidns.DNSMessage;
 import de.measite.minidns.DNSName;
 import de.measite.minidns.Record;
-import de.measite.minidns.cache.LRUCache;
 import de.measite.minidns.dnssec.DNSSECClient;
 import de.measite.minidns.dnssec.DNSSECMessage;
 import de.measite.minidns.dnssec.UnverifiedReason;
@@ -53,7 +52,7 @@ public class DaneVerifier {
     private final AbstractDNSClient client;
 
     public DaneVerifier() {
-        this(new DNSSECClient(new LRUCache(1024)));
+        this(new DNSSECClient());
     }
 
     public DaneVerifier(AbstractDNSClient client) {
