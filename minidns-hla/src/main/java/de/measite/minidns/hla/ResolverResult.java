@@ -28,20 +28,24 @@ public class ResolverResult<D extends Data> {
     private final boolean isAuthenticData;
     private final Set<UnverifiedReason> unverifiedReasons;
 
-    ResolverResult(Question question , DNSMessage answer, Set<UnverifiedReason> unverifiedResons) {
+    ResolverResult(Question question , DNSMessage answer, Set<UnverifiedReason> unverifiedReasons) {
         this.question = question;
         this.responseCode = answer.responseCode;
+
         Set<D> r = answer.getAnswersFor(question);
         if (r == null) {
             this.data = Collections.emptySet();
         } else {
             this.data = Collections.unmodifiableSet(r);
         }
-        if (unverifiedResons == null) {
-            unverifiedResons = Collections.emptySet();
+
+        if (unverifiedReasons == null) {
+            this.unverifiedReasons = null;
+            isAuthenticData = false;
+        } else {
+            this.unverifiedReasons = Collections.unmodifiableSet(unverifiedReasons);
+            isAuthenticData = this.unverifiedReasons.isEmpty();
         }
-        isAuthenticData = unverifiedResons.isEmpty();
-        this.unverifiedReasons = Collections.unmodifiableSet(unverifiedResons);
     }
 
     public boolean wasSuccessful() {
