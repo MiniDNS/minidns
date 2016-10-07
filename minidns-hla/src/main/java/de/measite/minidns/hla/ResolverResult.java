@@ -16,6 +16,7 @@ import java.util.Set;
 import de.measite.minidns.DNSMessage;
 import de.measite.minidns.DNSMessage.RESPONSE_CODE;
 import de.measite.minidns.Question;
+import de.measite.minidns.dnssec.DNSSECResultNotAuthenticException;
 import de.measite.minidns.dnssec.UnverifiedReason;
 import de.measite.minidns.record.Data;
 
@@ -85,6 +86,21 @@ public class ResolverResult<D extends Data> {
         }
 
         return resolutionUnsuccessfulException;
+    }
+
+    private DNSSECResultNotAuthenticException dnssecResultNotAuthenticException;
+
+    public DNSSECResultNotAuthenticException getDnssecResultNotAuthenticException() {
+        if (!wasSuccessful())
+            return null;
+        if (isAuthenticData)
+            return null;
+
+        if (dnssecResultNotAuthenticException == null) {
+            dnssecResultNotAuthenticException = DNSSECResultNotAuthenticException.from(getUnverifiedReasons());
+        }
+
+        return dnssecResultNotAuthenticException;
     }
 
     private void throwIseIfErrorResponse() {
