@@ -25,13 +25,32 @@ import de.measite.minidns.util.MultipleIoException;
 
 /**
  * A DNS client using a reliable strategy. First the configured resolver of the
- * system are used, then, in case there is no answer, a fall back to recursively
+ * system are used, then, in case there is no answer, a fall back to iterative
  * resolving is performed.
  */
 public class ReliableDNSClient extends AbstractDNSClient {
 
+    public enum Mode {
+        /**
+         * Try the recursive servers first and fallback to iterative resolving if it fails. This is the default mode.
+         */
+        recursiveWithIterativeFallback,
+
+        /**
+         * Only try the recursive servers. This makes {@code ReliableDNSClient} behave like a {@link DNSClient}.
+         */
+        recursiveOnly,
+
+        /**
+         * Only use iterative resolving.  This makes {@code ReliableDNSClient} behave like a {@link RecursiveDNSClient}.
+         */
+        iterativeOnly,
+    }
+
     private final RecursiveDNSClient recursiveDnsClient;
     private final DNSClient dnsClient;
+
+    private Mode mode = Mode.recursiveWithIterativeFallback;
 
     public ReliableDNSClient(DNSCache dnsCache) {
         super(dnsCache);
@@ -70,21 +89,28 @@ public class ReliableDNSClient extends AbstractDNSClient {
         DNSMessage dnsMessage = null;
         String unacceptableReason = null;
         List<IOException> ioExceptions = new LinkedList<>();
-        try {
-            dnsMessage = dnsClient.query(q);
-            if (dnsMessage != null) {
-                unacceptableReason = isResponseAcceptable(dnsMessage);
-                if (unacceptableReason == null) {
-                    return dnsMessage;
+
+        if (mode != Mode.iterativeOnly) {
+            // Try a recursive query.
+            try {
+                dnsMessage = dnsClient.query(q);
+                if (dnsMessage != null) {
+                    unacceptableReason = isResponseAcceptable(dnsMessage);
+                    if (unacceptableReason == null) {
+                        return dnsMessage;
+                    }
                 }
+            } catch (IOException ioException) {
+                ioExceptions.add(ioException);
             }
-        } catch (IOException ioException) {
-            ioExceptions.add(ioException);
         }
+
+        // Abort if we the are in "recursive only" mode.
+        if (mode == Mode.recursiveOnly) return dnsMessage;
 
         // Eventually log that we fall back to iterative mode.
         final Level FALLBACK_LOG_LEVEL = Level.FINE;
-        if (LOGGER.isLoggable(FALLBACK_LOG_LEVEL)) {
+        if (LOGGER.isLoggable(FALLBACK_LOG_LEVEL) && mode != Mode.iterativeOnly) {
             String logString = "Resolution fall back to iterative mode because: ";
             if (!ioExceptions.isEmpty()) {
                 logString += ioExceptions.get(0);
@@ -138,5 +164,17 @@ public class ReliableDNSClient extends AbstractDNSClient {
         super.setDataSource(dataSource);
         recursiveDnsClient.setDataSource(dataSource);
         dnsClient.setDataSource(dataSource);
+    }
+
+    /**
+     * Set the mode used when resolving queries.
+     *
+     * @param mode the mode to use.
+     */
+    public void setMode(Mode mode) {
+        if (mode == null) {
+            throw new IllegalArgumentException("Mode must not be null.");
+        }
+        this.mode = mode;
     }
 }
