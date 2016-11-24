@@ -25,6 +25,10 @@ import de.measite.minidns.Record;
  */
 public class ExtendedLRUCache extends LRUCache {
 
+    public ExtendedLRUCache() {
+        this(1024);
+    }
+
     public ExtendedLRUCache(int capacity) {
         super(capacity);
     }
