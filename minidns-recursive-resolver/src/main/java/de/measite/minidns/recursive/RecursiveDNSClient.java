@@ -51,7 +51,7 @@ public class RecursiveDNSClient extends AbstractDNSClient {
         rootServerInetAddress('e', new int[]{192, 203, 230,  10}),
         rootServerInetAddress('f', new int[]{192,   5,   5, 241}),
         rootServerInetAddress('g', new int[]{192, 112,  36,   4}),
-        rootServerInetAddress('h', new int[]{128,  63,   2,  53}),
+        rootServerInetAddress('h', new int[]{198,  97, 190,  53}),
         rootServerInetAddress('i', new int[]{192,  36, 148,  17}),
         rootServerInetAddress('j', new int[]{192,  58, 128,  30}),
         rootServerInetAddress('k', new int[]{193,   0,  14, 129}),
