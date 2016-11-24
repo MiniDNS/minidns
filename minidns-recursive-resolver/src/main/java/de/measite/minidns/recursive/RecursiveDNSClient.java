@@ -20,6 +20,7 @@ import de.measite.minidns.Record.TYPE;
 import de.measite.minidns.record.A;
 import de.measite.minidns.record.AAAA;
 import de.measite.minidns.record.CNAME;
+import de.measite.minidns.record.InternetAddressRR;
 import de.measite.minidns.record.NS;
 import de.measite.minidns.recursive.RecursiveClientException.LoopDetected;
 import de.measite.minidns.util.MultipleIoException;
@@ -28,6 +29,7 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -113,23 +115,101 @@ public class RecursiveDNSClient extends AbstractDNSClient {
         return IPV6_ROOT_SERVERS[insecureRandom.nextInt(IPV6_ROOT_SERVERS.length)];
     }
 
+    private static InetAddress[] getTargets(Collection<? extends InternetAddressRR> primaryTargets,
+            Collection<? extends InternetAddressRR> secondaryTargets) {
+        InetAddress[] res = new InetAddress[2];
+
+        for (InternetAddressRR arr : primaryTargets) {
+            if (res[0] == null) {
+                res[0] = arr.getInetAddress();
+                // If secondaryTargets is empty, then try to get the second target out of the set of primaryTargets.
+                if (secondaryTargets.isEmpty()) {
+                    continue;
+                }
+            }
+            if (res[1] == null) {
+                res[1] = arr.getInetAddress();
+            }
+            break;
+        }
+
+        for (InternetAddressRR arr : secondaryTargets) {
+            if (res[0] == null) {
+                res[0] = arr.getInetAddress();
+                continue;
+            }
+            if (res[1] == null) {
+                res[1] = arr.getInetAddress();
+            }
+            break;
+        }
+
+        return res;
+    }
+
     private DNSMessage queryRecursive(RecursionState recursionState, DNSMessage q) throws IOException {
         InetAddress primaryTarget = null, secondaryTarget = null;
+
+        Question question = q.getQuestion();
+        DNSName parent = question.name.getParent();
+
+
         switch (ipVersionSetting) {
         case v4only:
-            primaryTarget = getRandomIpv4RootServer();
+            for (A a : getCachedIPv4NameserverAddressesFor(parent)) {
+                if (primaryTarget == null) {
+                    primaryTarget = a.getInetAddress();
+                    continue;
+                }
+                if (secondaryTarget == null) {
+                    secondaryTarget = a.getInetAddress();
+                }
+                break;
+            }
             break;
         case v6only:
-            primaryTarget = getRandomIpv6RootServer();
+            for (AAAA aaaa : getCachedIPv6NameserverAddressesFor(parent)) {
+                if (primaryTarget == null) {
+                    primaryTarget = aaaa.getInetAddress();
+                    continue;
+                }
+                if (secondaryTarget == null) {
+                    secondaryTarget = aaaa.getInetAddress();
+                }
+                break;
+            }
             break;
         case v4v6:
-            primaryTarget = getRandomIpv4RootServer();
-            secondaryTarget = getRandomIpv6RootServer();
+            InetAddress[] v4v6targets = getTargets(getCachedIPv4NameserverAddressesFor(parent), getCachedIPv6NameserverAddressesFor(parent));
+            primaryTarget = v4v6targets[0];
+            secondaryTarget = v4v6targets[1];
             break;
         case v6v4:
-            primaryTarget = getRandomIpv6RootServer();
-            secondaryTarget = getRandomIpv4RootServer();
+            InetAddress[] v6v4targets = getTargets(getCachedIPv6NameserverAddressesFor(parent), getCachedIPv4NameserverAddressesFor(parent));
+            primaryTarget = v6v4targets[0];
+            secondaryTarget = v6v4targets[1];
             break;
+        default:
+            throw new AssertionError();
+        }
+
+        if (primaryTarget == null) {
+            switch (ipVersionSetting) {
+            case v4only:
+                primaryTarget = getRandomIpv4RootServer();
+                break;
+            case v6only:
+                primaryTarget = getRandomIpv6RootServer();
+                break;
+            case v4v6:
+                primaryTarget = getRandomIpv4RootServer();
+                secondaryTarget = getRandomIpv6RootServer();
+                break;
+            case v6v4:
+                primaryTarget = getRandomIpv6RootServer();
+                secondaryTarget = getRandomIpv4RootServer();
+                break;
+            }
         }
 
         List<IOException> ioExceptions = new LinkedList<>();
