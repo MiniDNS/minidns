@@ -13,6 +13,10 @@ package de.measite.minidns;
 import de.measite.minidns.Record.CLASS;
 import de.measite.minidns.Record.TYPE;
 import de.measite.minidns.cache.LRUCache;
+import de.measite.minidns.record.A;
+import de.measite.minidns.record.AAAA;
+import de.measite.minidns.record.Data;
+import de.measite.minidns.record.NS;
 import de.measite.minidns.source.DNSDataSource;
 import de.measite.minidns.source.NetworkDataSource;
 
@@ -20,7 +24,10 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.Random;
+import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -313,5 +320,61 @@ public abstract class AbstractDNSClient {
         DNSMessage.Builder messageBuilder = buildMessage(q);
         DNSMessage query = messageBuilder.build();
         return query;
+    }
+
+    private <D extends Data> Set<D> getCachedRecordsFor(DNSName dnsName, TYPE type) {
+        Question dnsNameNs = new Question(dnsName, type);
+        DNSMessage queryDnsNameNs = getQueryFor(dnsNameNs);
+        DNSMessage cachedResult = cache.get(queryDnsNameNs);
+
+        if (cachedResult == null)
+            return Collections.emptySet();
+
+        return cachedResult.getAnswersFor(dnsNameNs);
+    }
+
+    public Set<NS> getCachedNameserverRecordsFor(DNSName dnsName) {
+        return getCachedRecordsFor(dnsName, TYPE.NS);
+    }
+
+    public Set<A> getCachedIPv4AddressesFor(DNSName dnsName) {
+        return getCachedRecordsFor(dnsName, TYPE.A);
+    }
+
+    public Set<AAAA> getCachedIPv6AddressesFor(DNSName dnsName) {
+        return getCachedRecordsFor(dnsName, TYPE.AAAA);
+    }
+
+    @SuppressWarnings("unchecked")
+    private <D extends Data> Set<D> getCachedIPNameserverAddressesFor(DNSName dnsName, TYPE type) {
+        Set<NS> nsSet = getCachedNameserverRecordsFor(dnsName);
+        if (nsSet.isEmpty())
+            return Collections.emptySet();
+
+        Set<D> res = new HashSet<>(3 * nsSet.size());
+        for (NS ns : nsSet) {
+            Set<D> addresses;
+            switch (type) {
+            case A:
+                addresses = (Set<D>) getCachedIPv4AddressesFor(ns.name);
+                break;
+            case AAAA:
+                addresses = (Set<D>) getCachedIPv6AddressesFor(ns.name);
+                break;
+            default:
+                throw new AssertionError();
+            }
+            res.addAll(addresses);
+        }
+
+        return res;
+    }
+
+    public Set<A> getCachedIPv4NameserverAddressesFor(DNSName dnsName) {
+        return getCachedIPNameserverAddressesFor(dnsName, TYPE.A);
+    }
+
+    public Set<AAAA> getCachedIPv6NameserverAddressesFor(DNSName dnsName) {
+        return getCachedIPNameserverAddressesFor(dnsName, TYPE.AAAA);
     }
 }
