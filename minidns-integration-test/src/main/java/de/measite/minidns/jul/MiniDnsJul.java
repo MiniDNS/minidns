@@ -57,12 +57,6 @@ public class MiniDnsJul {
             public String format(LogRecord logRecord) {
                 StringBuilder sb = new StringBuilder(256);
 
-                String level = logRecord.getLevel().toString();
-                if (shortLog) {
-                    level = level.substring(0, 1);
-                }
-                sb.append(level).append(' ');
-
                 Date date = new Date(logRecord.getMillis());
                 String dateString;
                 if (shortLog) {
@@ -75,6 +69,12 @@ public class MiniDnsJul {
                     }
                 }
                 sb.append(dateString).append(' ');
+
+                String level = logRecord.getLevel().toString();
+                if (shortLog) {
+                    level = level.substring(0, 1);
+                }
+                sb.append(level).append(' ');
 
                 String loggerName = logRecord.getLoggerName();
                 if (shortLog) {
