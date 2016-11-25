@@ -259,6 +259,7 @@ public class RecursiveDNSClient extends AbstractDNSClient {
                 try {
                     recursive = queryRecursive(recursionState, q, target);
                 } catch (IOException e) {
+                   abortIfFatal(e);
                    LOGGER.log(Level.FINER, "Exception while recursing", e);
                    recursionState.decrementSteps();
                    ioExceptions.add(e);
