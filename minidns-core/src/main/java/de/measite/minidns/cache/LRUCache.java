@@ -15,12 +15,13 @@ import java.util.Map.Entry;
 
 import de.measite.minidns.DNSCache;
 import de.measite.minidns.DNSMessage;
+import de.measite.minidns.DNSName;
 import de.measite.minidns.Record;
 
 /**
  * LRU based DNSCache backed by a LinkedHashMap.
  */
-public class LRUCache implements DNSCache {
+public class LRUCache extends DNSCache {
 
     /**
      * Internal miss count.
@@ -81,7 +82,7 @@ public class LRUCache implements DNSCache {
     }
 
     @Override
-    public synchronized void put(DNSMessage q, DNSMessage message) {
+    protected synchronized void putNormalized(DNSMessage q, DNSMessage message) {
         if (message.receiveTimestamp <= 0L) {
             return;
         }
@@ -89,7 +90,7 @@ public class LRUCache implements DNSCache {
     }
 
     @Override
-    public synchronized DNSMessage get(DNSMessage q) {
+    protected synchronized DNSMessage getNormalized(DNSMessage q) {
         DNSMessage message = backend.get(q);
         if (message == null) {
             missCount++;
@@ -152,5 +153,9 @@ public class LRUCache implements DNSCache {
     @Override
     public String toString() {
         return "LRUCache{usage=" + backend.size() + "/" + capacity + ", hits=" + hitCount + ", misses=" + missCount + ", expires=" + expireCount + "}";
+    }
+
+    @Override
+    public void offer(DNSMessage query, DNSMessage reply, DNSName knownAuthoritativeZone) {
     }
 }

@@ -22,9 +22,15 @@ import java.util.logging.Logger;
 
 import org.junit.Ignore;
 
+import de.measite.minidns.DNSName;
+import de.measite.minidns.Record.TYPE;
 import de.measite.minidns.jul.MiniDnsJul;
 
 public class IntegrationTestHelper {
+
+    public static final DNSName DNSSEC_DOMAIN = DNSName.from("verteiltesysteme.net");
+    public static final TYPE RR_TYPE = TYPE.A;
+
     private static Set<Class<?>> testClasses = new HashSet<>();
     private static Logger LOGGER = Logger.getLogger(IntegrationTestHelper.class.getName());
 
@@ -40,6 +46,7 @@ public class IntegrationTestHelper {
         testClasses.add(DaneTest.class);
         testClasses.add(HlaTest.class);
         testClasses.add(NSIDTest.class);
+        testClasses.add(IterativeDNSSECTest.class);
     }
 
     private static final String MINTTEST = "minttest.";

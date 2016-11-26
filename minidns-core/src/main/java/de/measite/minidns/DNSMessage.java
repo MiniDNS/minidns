@@ -983,6 +983,16 @@ public class DNSMessage {
             return this;
         }
 
+        public void copyFlagsFrom(DNSMessage dnsMessage) {
+            this.query = dnsMessage.qr;
+            this.authoritativeAnswer = dnsMessage.authenticData;
+            this.truncated = dnsMessage.truncated;
+            this.recursionDesired = dnsMessage.recursionDesired;
+            this.recursionAvailable = dnsMessage.recursionAvailable;
+            this.authenticData = dnsMessage.authenticData;
+            this.checkingDisabled = dnsMessage.checkingDisabled;
+        }
+
         public Builder setReceiveTimestamp(long receiveTimestamp) {
             this.receiveTimestamp = receiveTimestamp;
             return this;

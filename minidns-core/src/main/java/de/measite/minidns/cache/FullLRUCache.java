@@ -10,6 +10,7 @@
  */
 package de.measite.minidns.cache;
 
+import de.measite.minidns.DNSName;
 import de.measite.minidns.Question;
 import de.measite.minidns.Record;
 
@@ -27,7 +28,7 @@ public class FullLRUCache extends ExtendedLRUCache {
     }
 
     @Override
-    protected boolean shouldGather(Record extraRecord, Question question) {
+    protected boolean shouldGather(Record extraRecord, Question question, DNSName authoritativeZone) {
         return true;
     }
 }

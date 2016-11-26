@@ -15,17 +15,10 @@ import java.lang.reflect.Field;
 
 import de.measite.minidns.AbstractDNSClient;
 import de.measite.minidns.DNSClient;
-import de.measite.minidns.DNSMessage;
-import de.measite.minidns.Record.TYPE;
-import de.measite.minidns.cache.ExtendedLRUCache;
 import de.measite.minidns.cache.LRUCache;
 import de.measite.minidns.dnssec.DNSSECClient;
-import de.measite.minidns.dnssec.DNSSECMessage;
-import de.measite.minidns.edns.NSID;
-import de.measite.minidns.integrationtest.NSIDTest;
 import de.measite.minidns.jul.MiniDnsJul;
 import de.measite.minidns.recursive.RecursiveDNSClient;
-import de.measite.minidns.recursive.ReliableDNSClient.Mode;
 
 public class MiniDnsRepl {
 
@@ -53,33 +46,28 @@ public class MiniDnsRepl {
         // CHECKSTYLE:ON
     }
 
-    public static void clearCache() throws NoSuchFieldException, SecurityException, IllegalArgumentException,
-            IllegalAccessException {
+    public static void clearCache() throws SecurityException, IllegalArgumentException {
         DEFAULT_CACHE.clear();
     }
 
-    public static void main(String[] args) throws IOException, NoSuchFieldException, SecurityException, IllegalArgumentException, IllegalAccessException {
-        iterativeDnsssecTest();
+    public static void main(String[] args) throws IOException, SecurityException, IllegalArgumentException {
+        MiniDnsJul.enableMiniDnsTrace();
+        DNSSECStats.iterativeDnssecLookupNormalVsExtendedCache();
+        /*
+        DNSSECClient client = new DNSSECClient(new LRUCache(1024));
+        DNSSECMessage secRes = client.queryDnssec("verteiltesysteme.net", TYPE.A);
+        */
+
+        /*
+        DNSSECStats.iterativeDnssecLookupNormalVsExtendedCache();
         NSID nsid = NSIDTest.testNsidLRoot();
-        DNSSECMessage secRes = DNSSECCLIENT.queryDnssec("verteiltesysteme.net", TYPE.A);
         DNSMessage res = RECURSIVEDNSCLIENT.query("mate.geekplace.eu", TYPE.A);
+        */
         // CHECKSTYLE:OFF
-        System.out.println(nsid);
-        System.out.println(secRes);
-        System.out.println(res);
+//        System.out.println(nsid);
+//      System.out.println(secRes);
+//        System.out.println(res);
         // CHCECKSTYLE:ON
     }
 
-    public static void iterativeDnsssecTest() throws NoSuchFieldException, SecurityException, IllegalArgumentException,
-            IllegalAccessException, IOException {
-        MiniDnsJul.enableMiniDnsTrace();
-        DNSSECClient client = new DNSSECClient(new ExtendedLRUCache());
-        client.setMode(Mode.iterativeOnly);
-
-        DNSSECMessage secRes = client.queryDnssec("verteiltesysteme.net", TYPE.A);
-
-        // CHECKSTYLE:OFF
-        System.out.println(secRes);
-        // CHECKSTYLE:ON
-    }
 }

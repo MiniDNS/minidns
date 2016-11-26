@@ -15,6 +15,7 @@ import java.net.InetAddress;
 import java.util.Locale;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import de.measite.minidns.AbstractDNSClient;
 import de.measite.minidns.DNSMessage;
 
 public class NetworkDataSourceWithAccounting extends NetworkDataSource {
@@ -80,21 +81,29 @@ public class NetworkDataSourceWithAccounting extends NetworkDataSource {
         return new Stats(this);
     }
 
+    public static NetworkDataSourceWithAccounting from(AbstractDNSClient client) {
+        DNSDataSource ds = client.getDataSource();
+        if (ds instanceof NetworkDataSourceWithAccounting) {
+            return (NetworkDataSourceWithAccounting) ds;
+        }
+        return null;
+    }
+
     public static class Stats {
-        private final int successfulQueries;
-        private final int responseSize;
-        private final int averageResponseSize;
-        private final int failedQueries;
+        public final int successfulQueries;
+        public final int responseSize;
+        public final int averageResponseSize;
+        public final int failedQueries;
 
-        private final int successfulUdpQueries;
-        private final int udpResponseSize;
-        private final int averageUdpResponseSize;
-        private final int failedUdpQueries;
+        public final int successfulUdpQueries;
+        public final int udpResponseSize;
+        public final int averageUdpResponseSize;
+        public final int failedUdpQueries;
 
-        private final int successfulTcpQueries;
-        private final int tcpResponseSize;
-        private final int averageTcpResponseSize;
-        private final int failedTcpQueries;
+        public final int successfulTcpQueries;
+        public final int tcpResponseSize;
+        public final int averageTcpResponseSize;
+        public final int failedTcpQueries;
 
         private String stringCache;
 

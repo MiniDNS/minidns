@@ -19,11 +19,9 @@ import de.measite.minidns.AbstractDNSClient;
 import de.measite.minidns.DNSCache;
 import de.measite.minidns.DNSMessage;
 import de.measite.minidns.Record.TYPE;
-import de.measite.minidns.cache.ExtendedLRUCache;
-import de.measite.minidns.cache.FullLRUCache;
-import de.measite.minidns.cache.LRUCache;
 import de.measite.minidns.dnssec.DNSSECClient;
-import de.measite.minidns.source.DNSDataSource;
+import de.measite.minidns.integrationtest.IntegrationTestTools;
+import de.measite.minidns.integrationtest.IntegrationTestTools.CacheConfig;
 import de.measite.minidns.source.NetworkDataSourceWithAccounting;
 
 public class MiniDNSStats {
@@ -81,44 +79,15 @@ public class MiniDNSStats {
         return sb;
     }
 
-    public enum CacheConfig {
-        without,
-        normal,
-        extended,
-        full,
-        ;
-    }
-
     public static DNSSECClient getClient(CacheConfig cacheConfig) {
-        DNSCache cache;
-        switch (cacheConfig) {
-        case without:
-            cache = null;
-            break;
-        case normal:
-            cache = new LRUCache(1024);
-            break;
-        case extended:
-            cache = new ExtendedLRUCache(1024);
-            break;
-        case full:
-            cache = new FullLRUCache(1024);
-            break;
-        default:
-            throw new IllegalStateException();
-        }
-
-        DNSSECClient client = new DNSSECClient(cache);
-        client.setDataSource(new NetworkDataSourceWithAccounting());
-        return client;
+        return IntegrationTestTools.getClient(cacheConfig);
     }
 
     public static StringBuilder getStats(AbstractDNSClient client) {
         StringBuilder sb = new StringBuilder();
 
-        DNSDataSource ds = client.getDataSource();
-        if (ds instanceof NetworkDataSourceWithAccounting) {
-            NetworkDataSourceWithAccounting ndswa = (NetworkDataSourceWithAccounting) ds;
+        NetworkDataSourceWithAccounting ndswa = NetworkDataSourceWithAccounting.from(client);
+        if (ndswa != null) {
             sb.append(ndswa.getStats().toString());
         } else {
             sb.append("Client is not using " + NetworkDataSourceWithAccounting.class.getSimpleName());

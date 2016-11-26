@@ -13,7 +13,7 @@ package de.measite.minidns;
 /**
  * Cache for DNS Entries. Implementations must be thread safe.
  */
-public interface DNSCache {
+public abstract class DNSCache {
 
     /**
      * Add an an dns answer/response for a given dns question. Implementations
@@ -21,13 +21,23 @@ public interface DNSCache {
      * @param query The query message containing a question.
      * @param message The dns message.
      */
-    void put(DNSMessage query, DNSMessage message);
+    public final void put(DNSMessage query, DNSMessage message) {
+        putNormalized(query.asNormalizedVersion(), message);
+    }
+
+    protected abstract void putNormalized(DNSMessage normalizedQuery, DNSMessage reply);
+
+    public abstract void offer(DNSMessage query, DNSMessage reply, DNSName authoritativeZone);
 
     /**
      * Request a cached dns response.
      * @param query The query message containing a question.
      * @return The dns message.
      */
-    DNSMessage get(DNSMessage query);
+    public final DNSMessage get(DNSMessage query) {
+        return getNormalized(query.asNormalizedVersion());
+    }
+
+    protected abstract DNSMessage getNormalized(DNSMessage normalizedQuery);
 
 }

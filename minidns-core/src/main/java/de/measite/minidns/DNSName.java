@@ -36,6 +36,8 @@ public class DNSName implements CharSequence, Serializable, Comparable<DNSName> 
 
     public static final DNSName EMPTY = new DNSName("", false);
 
+    public static final DNSName ROOT = new DNSName(".", false);
+
     /**
      * The DNS name in ASCII Compatible Encoding (ACE).
      */

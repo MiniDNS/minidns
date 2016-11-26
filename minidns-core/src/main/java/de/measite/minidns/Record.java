@@ -516,11 +516,16 @@ public class Record {
      * @return the question for this resource record or <code>null</code>.
      */
     public Question getQuestion() {
-        if (type == TYPE.OPT) {
+        switch (type) {
+        case OPT:
             // OPT records are not retrievable.
             return null;
+        case RRSIG:
+            RRSIG rrsig = (RRSIG) payloadData;
+            return new Question(name, rrsig.typeCovered, clazz);
+        default:
+            return new Question(name, type, clazz);
         }
-        return new Question(name, type, clazz);
     }
 
     public DNSMessage.Builder getQuestionMessage() {

@@ -17,6 +17,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 import de.measite.minidns.DNSMessage;
+import de.measite.minidns.DNSName;
 import de.measite.minidns.Question;
 import de.measite.minidns.Record;
 
@@ -38,29 +39,43 @@ public class ExtendedLRUCache extends LRUCache {
     }
 
     @Override
-    public void put(DNSMessage q, DNSMessage message) {
-        super.put(q, message);
+    protected void putNormalized(DNSMessage q, DNSMessage message) {
+        super.putNormalized(q, message);
         Map<DNSMessage, List<Record>> extraCaches = new HashMap<>(message.additionalSection.size());
 
-        gather(extraCaches, q, message.answerSection);
-        gather(extraCaches, q, message.authoritySection);
-        gather(extraCaches, q, message.additionalSection);
+        gather(extraCaches, q, message.answerSection, null);
+        gather(extraCaches, q, message.authoritySection, null);
+        gather(extraCaches, q, message.additionalSection, null);
 
-        for (Entry<DNSMessage, List<Record>> entry : extraCaches.entrySet()) {
-            DNSMessage answer = message.asBuilder().addAnswers(entry.getValue()).build();
-            DNSMessage question = entry.getKey();
-            super.put(question, answer);
-        }
+        putExtraCaches(message, extraCaches);
     }
 
-    private final void gather(Map<DNSMessage, List<Record>> extraCaches, DNSMessage q, List<Record> records) {
+    @Override
+    public void offer(DNSMessage query, DNSMessage reply, DNSName authoritativeZone) {
+        // The reply shouldn't be an authoritative answers when offer() is used. That would be a case for put().
+        assert(!reply.authoritativeAnswer);
+
+        Map<DNSMessage, List<Record>> extraCaches = new HashMap<>(reply.additionalSection.size());
+
+        // N.B. not gathering from reply.answerSection here. Since it is a non authoritativeAnswer it shouldn't contain anything.
+        gather(extraCaches, query, reply.authoritySection, authoritativeZone);
+        gather(extraCaches, query, reply.additionalSection, authoritativeZone);
+
+        putExtraCaches(reply, extraCaches);
+    }
+
+    private final void gather(Map<DNSMessage, List<Record>> extraCaches, DNSMessage q, List<Record> records, DNSName authoritativeZone) {
         for (Record extraRecord : records) {
-            if (!shouldGather(extraRecord, q.getQuestion()))
+            if (!shouldGather(extraRecord, q.getQuestion(), authoritativeZone))
                 continue;
 
             DNSMessage.Builder additionalRecordQuestionBuilder = extraRecord.getQuestionMessage();
             if (additionalRecordQuestionBuilder == null)
                 continue;
+
+            additionalRecordQuestionBuilder.copyFlagsFrom(q);
+
+            additionalRecordQuestionBuilder.setAdditionalResourceRecords(q.additionalSection);
 
             DNSMessage additionalRecordQuestion = additionalRecordQuestionBuilder.build();
             if (additionalRecordQuestion.equals(q)) {
@@ -77,7 +92,27 @@ public class ExtendedLRUCache extends LRUCache {
         }
     }
 
-    protected boolean shouldGather(Record extraRecord, Question question) {
-        return extraRecord.name.isChildOf(question.name);
+    private final void putExtraCaches(DNSMessage reply, Map<DNSMessage, List<Record>> extraCaches) {
+        for (Entry<DNSMessage, List<Record>> entry : extraCaches.entrySet()) {
+            DNSMessage question = entry.getKey();
+            DNSMessage answer = reply.asBuilder()
+                    .setQuestion(question.getQuestion())
+                    .setAuthoritativeAnswer(true)
+                    .addAnswers(entry.getValue())
+                    .build();
+            super.putNormalized(question, answer);
+        }
     }
+
+    protected boolean shouldGather(Record extraRecord, Question question, DNSName authoritativeZone) {
+        boolean extraRecordIsChildOfQuestion = extraRecord.name.isChildOf(question.name);
+
+        boolean extraRecordIsChildOfAuthoritativeZone = false;
+        if (authoritativeZone != null) {
+            extraRecordIsChildOfAuthoritativeZone = extraRecord.name.isChildOf(authoritativeZone);
+        }
+
+        return extraRecordIsChildOfQuestion || extraRecordIsChildOfAuthoritativeZone;
+    }
+
 }
