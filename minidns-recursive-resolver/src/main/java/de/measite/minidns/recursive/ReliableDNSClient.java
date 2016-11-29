@@ -144,7 +144,7 @@ public class ReliableDNSClient extends AbstractDNSClient {
 
     @Override
     protected boolean isResponseCacheable(Question q, DNSMessage dnsMessage) {
-        return true;
+        return isResponseAcceptable(dnsMessage) == null;
     }
 
     /**
