@@ -306,6 +306,8 @@ public class RecursiveDNSClient extends AbstractDNSClient {
 
         MultipleIoException.throwIfRequired(ioExceptions);
 
+        // TODO throw exception here? Reaching this point would mean we did not receive an authoritative answer, nor
+        // where we able to find glue records or the IPs of the next nameservers.
         return null;
     }
 
