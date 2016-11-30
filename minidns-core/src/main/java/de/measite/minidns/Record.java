@@ -36,7 +36,10 @@ import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -100,7 +103,7 @@ public final class Record<D extends Data> {
         IPSECKEY(45),
         RRSIG(46, RRSIG.class),
         NSEC(47, NSEC.class),
-        DNSKEY(48),
+        DNSKEY(48, DNSKEY.class),
         DHCID(49),
         NSEC3(50, NSEC3.class),
         NSEC3PARAM(51, NSEC3PARAM.class),
@@ -566,5 +569,39 @@ public final class Record<D extends Data> {
         if (!payloadData.equals(otherRecord.payloadData)) return false;
 
         return true;
+    }
+
+    /**
+     * Return the record if possible as record with the given {@link Data} class. If the record does not hold payload of
+     * the given data class type, then {@code null} will be returned.
+     *
+     * @param dataClass a class of the {@link Data} type.
+     * @param <E> a subtype of {@link Data}.
+     * @return the record with a specialized payload type or {@code null}.
+     */
+    @SuppressWarnings("unchecked")
+    public <E extends Data> Record<E> ifPossibleAs(Class<E> dataClass) {
+        if (type.dataClass == dataClass) {
+            return (Record<E>) this;
+        }
+        return null;
+    }
+
+    public static <E extends Data> void filter(Collection<Record<E>> result, Class<E> dataClass,
+            Collection<Record<? extends Data>> input) {
+        for (Record<? extends Data> record : input) {
+            Record<E> filteredRecord = record.ifPossibleAs(dataClass);
+            if (filteredRecord == null)
+                continue;
+
+            result.add(filteredRecord);
+        }
+    }
+
+    public static <E extends Data> List<Record<E>> filter(Class<E> dataClass,
+            Collection<Record<? extends Data>> input) {
+        List<Record<E>> result = new ArrayList<>(input.size());
+        filter(result, dataClass, input);
+        return result;
     }
 }

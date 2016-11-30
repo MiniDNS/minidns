@@ -38,9 +38,8 @@ import java.util.List;
 class Verifier {
     private AlgorithmMap algorithmMap = AlgorithmMap.INSTANCE;
 
-    // TODO: Change type of dnskeyRecord to Record<DNSKEY>
-    public UnverifiedReason verify(Record<? extends Data> dnskeyRecord, DS ds) {
-        DNSKEY dnskey = (DNSKEY) dnskeyRecord.getPayload();
+    public UnverifiedReason verify(Record<DNSKEY> dnskeyRecord, DS ds) {
+        DNSKEY dnskey = dnskeyRecord.payloadData;
         DigestCalculator digestCalculator = algorithmMap.getDsDigestCalculator(ds.digestType);
         if (digestCalculator == null) {
             return new AlgorithmNotSupportedReason(ds.digestTypeByte, "DS", dnskeyRecord);
