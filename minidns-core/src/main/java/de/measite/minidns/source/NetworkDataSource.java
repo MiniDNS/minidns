@@ -20,7 +20,9 @@ import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
+import java.net.InetSocketAddress;
 import java.net.Socket;
+import java.net.SocketAddress;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
@@ -85,7 +87,9 @@ public class NetworkDataSource extends DNSDataSource {
         // required Android API level is >= 19
         Socket socket = null;
         try {
-            socket = new Socket(address, port);
+            socket = new Socket();
+            SocketAddress socketAddress = new InetSocketAddress(address, port);
+            socket.connect(socketAddress, timeout);
             socket.setSoTimeout(timeout);
             DataOutputStream dos = new DataOutputStream(socket.getOutputStream());
             message.writeTo(dos);
