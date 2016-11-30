@@ -14,6 +14,7 @@ import de.measite.minidns.DNSClient;
 import de.measite.minidns.DNSMessage;
 import de.measite.minidns.Record;
 import de.measite.minidns.cache.LRUCache;
+import de.measite.minidns.record.Data;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -37,7 +38,7 @@ public class CoreTest {
 
         DNSMessage nsRecords = client.query("example.com", Record.TYPE.NS);
         List<String> values = new ArrayList<>();
-        for (Record record : nsRecords.answerSection) {
+        for (Record<? extends Data> record : nsRecords.answerSection) {
             values.add(record.payloadData.toString());
         }
         Collections.sort(values);

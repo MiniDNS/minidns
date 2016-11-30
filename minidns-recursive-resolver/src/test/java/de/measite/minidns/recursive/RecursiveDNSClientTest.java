@@ -18,6 +18,7 @@ import de.measite.minidns.Record;
 import de.measite.minidns.Record.TYPE;
 import de.measite.minidns.cache.LRUCache;
 import de.measite.minidns.record.A;
+import de.measite.minidns.record.Data;
 
 import org.junit.Test;
 
@@ -33,6 +34,8 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 
 public class RecursiveDNSClientTest {
+
+    @SuppressWarnings("unchecked")
     @Test
     public void basicRecursionTest() throws IOException {
         RecursiveDNSClient client = new RecursiveDNSClient(new LRUCache(0));
@@ -49,12 +52,13 @@ public class RecursiveDNSClientTest {
         );
         DNSMessage message = client.query("www.example.com", TYPE.A);
         assertNotNull(message);
-        List<Record> answers = message.answerSection;
+        List<Record<? extends Data>> answers = message.answerSection;
         assertEquals(1, answers.size());
         assertEquals(TYPE.A, answers.get(0).type);
         assertArrayEquals(new byte[]{1, 1, 1, 3}, ((A) answers.get(0).payloadData).getIp());
     }
 
+    @SuppressWarnings("unchecked")
     @Test(expected = RecursiveClientException.LoopDetected.class)
     public void loopRecursionTest() throws IOException {
         RecursiveDNSClient client = new RecursiveDNSClient(new LRUCache(0));
@@ -73,6 +77,7 @@ public class RecursiveDNSClientTest {
         assertNull(client.query("www.test.a", TYPE.A));
     }
 
+    @SuppressWarnings("unchecked")
     @Test
     public void notGluedNsTest() throws IOException {
         RecursiveDNSClient client = new RecursiveDNSClient(new LRUCache(0));
@@ -92,7 +97,7 @@ public class RecursiveDNSClientTest {
         );
         DNSMessage message = client.query("www.example.com", TYPE.A);
         assertNotNull(message);
-        List<Record> answers = message.answerSection;
+        List<Record<? extends Data>> answers = message.answerSection;
         assertEquals(1, answers.size());
         assertEquals(TYPE.A, answers.get(0).type);
         assertArrayEquals(new byte[]{1, 1, 1, 3}, ((A) answers.get(0).payloadData).getIp());

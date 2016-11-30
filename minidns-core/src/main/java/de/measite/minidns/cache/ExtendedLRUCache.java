@@ -20,6 +20,7 @@ import de.measite.minidns.DNSMessage;
 import de.measite.minidns.DNSName;
 import de.measite.minidns.Question;
 import de.measite.minidns.Record;
+import de.measite.minidns.record.Data;
 
 /**
  * A variant of {@link LRUCache} also using the data found in the sections for caching.
@@ -41,7 +42,7 @@ public class ExtendedLRUCache extends LRUCache {
     @Override
     protected void putNormalized(DNSMessage q, DNSMessage message) {
         super.putNormalized(q, message);
-        Map<DNSMessage, List<Record>> extraCaches = new HashMap<>(message.additionalSection.size());
+        Map<DNSMessage, List<Record<? extends Data>>> extraCaches = new HashMap<>(message.additionalSection.size());
 
         gather(extraCaches, q, message.answerSection, null);
         gather(extraCaches, q, message.authoritySection, null);
@@ -55,7 +56,7 @@ public class ExtendedLRUCache extends LRUCache {
         // The reply shouldn't be an authoritative answers when offer() is used. That would be a case for put().
         assert(!reply.authoritativeAnswer);
 
-        Map<DNSMessage, List<Record>> extraCaches = new HashMap<>(reply.additionalSection.size());
+        Map<DNSMessage, List<Record<? extends Data>>> extraCaches = new HashMap<>(reply.additionalSection.size());
 
         // N.B. not gathering from reply.answerSection here. Since it is a non authoritativeAnswer it shouldn't contain anything.
         gather(extraCaches, query, reply.authoritySection, authoritativeZone);
@@ -64,8 +65,8 @@ public class ExtendedLRUCache extends LRUCache {
         putExtraCaches(reply, extraCaches);
     }
 
-    private final void gather(Map<DNSMessage, List<Record>> extraCaches, DNSMessage q, List<Record> records, DNSName authoritativeZone) {
-        for (Record extraRecord : records) {
+    private final void gather(Map<DNSMessage, List<Record<?extends Data>>> extraCaches, DNSMessage q, List<Record<? extends Data>> records, DNSName authoritativeZone) {
+        for (Record<? extends Data> extraRecord : records) {
             if (!shouldGather(extraRecord, q.getQuestion(), authoritativeZone))
                 continue;
 
@@ -83,7 +84,7 @@ public class ExtendedLRUCache extends LRUCache {
                 continue;
             }
 
-            List<Record> additionalRecords = extraCaches.get(additionalRecordQuestion);
+            List<Record<? extends Data>> additionalRecords = extraCaches.get(additionalRecordQuestion);
             if (additionalRecords == null) {
                  additionalRecords = new LinkedList<>();
                  extraCaches.put(additionalRecordQuestion, additionalRecords);
@@ -92,8 +93,8 @@ public class ExtendedLRUCache extends LRUCache {
         }
     }
 
-    private final void putExtraCaches(DNSMessage reply, Map<DNSMessage, List<Record>> extraCaches) {
-        for (Entry<DNSMessage, List<Record>> entry : extraCaches.entrySet()) {
+    private final void putExtraCaches(DNSMessage reply, Map<DNSMessage, List<Record<? extends Data>>> extraCaches) {
+        for (Entry<DNSMessage, List<Record<? extends Data>>> entry : extraCaches.entrySet()) {
             DNSMessage question = entry.getKey();
             DNSMessage answer = reply.asBuilder()
                     .setQuestion(question.getQuestion())
@@ -104,7 +105,7 @@ public class ExtendedLRUCache extends LRUCache {
         }
     }
 
-    protected boolean shouldGather(Record extraRecord, Question question, DNSName authoritativeZone) {
+    protected boolean shouldGather(Record<? extends Data> extraRecord, Question question, DNSName authoritativeZone) {
         boolean extraRecordIsChildOfQuestion = extraRecord.name.isChildOf(question.name);
 
         boolean extraRecordIsChildOfAuthoritativeZone = false;

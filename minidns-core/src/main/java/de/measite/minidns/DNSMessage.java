@@ -12,6 +12,7 @@ package de.measite.minidns;
 
 import de.measite.minidns.Record.TYPE;
 import de.measite.minidns.record.Data;
+import de.measite.minidns.record.OPT;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -266,7 +267,7 @@ public class DNSMessage {
      * This list is unmodifiable.
      * </p>
      */
-    public final List<Record> answerSection;
+    public final List<Record<? extends Data>> answerSection;
 
     /**
      * The Authority Section. Note that it is not guaranteed that this section only contains nameserver records. If DNSSEC is used, then this section could also contain a NSEC(3) record.
@@ -274,7 +275,7 @@ public class DNSMessage {
      * This list is unmodifiable.
      * </p>
      */
-    public final List<Record> authoritySection;
+    public final List<Record<? extends Data>> authoritySection;
 
     /**
      * The additional section. It eventually contains RRs which relate to the query.
@@ -282,7 +283,7 @@ public class DNSMessage {
      * This list is unmodifiable.
      * </p> 
      */
-    public final List<Record> additionalSection;
+    public final List<Record<? extends Data>> additionalSection;
 
     public final int optRrPosition;
 
@@ -322,7 +323,7 @@ public class DNSMessage {
         if (builder.answers == null) {
             this.answerSection = Collections.emptyList();
         } else {
-            List<Record> a = new ArrayList<>(builder.answers.size());
+            List<Record<? extends Data>> a = new ArrayList<>(builder.answers.size());
             a.addAll(builder.answers);
             this.answerSection = Collections.unmodifiableList(a);
         }
@@ -330,7 +331,7 @@ public class DNSMessage {
         if (builder.nameserverRecords == null) {
             this.authoritySection = Collections.emptyList();
         } else {
-            List<Record> n = new ArrayList<>(builder.nameserverRecords.size());
+            List<Record<? extends Data>> n = new ArrayList<>(builder.nameserverRecords.size());
             n.addAll(builder.nameserverRecords);
             this.authoritySection = Collections.unmodifiableList(n);
         }
@@ -345,7 +346,7 @@ public class DNSMessage {
             if (builder.ednsBuilder != null) {
                 size++;
             }
-            List<Record> a = new ArrayList<>(size);
+            List<Record<? extends Data>> a = new ArrayList<>(size);
             if (builder.additionalResourceRecords != null) {
                 a.addAll(builder.additionalResourceRecords);
             }
@@ -402,15 +403,15 @@ public class DNSMessage {
         }
         answerSection = new ArrayList<>(answerCount);
         for (int i = 0; i < answerCount; i++) {
-            answerSection.add(new Record(dis, data));
+            answerSection.add(Record.parse(dis, data));
         }
         authoritySection = new ArrayList<>(nameserverCount);
         for (int i = 0; i < nameserverCount; i++) {
-            authoritySection.add(new Record(dis, data));
+            authoritySection.add(Record.parse(dis, data));
         }
         additionalSection = new ArrayList<>(additionalResourceRecordCount);
         for (int i = 0; i < additionalResourceRecordCount; i++) {
-            additionalSection.add(new Record(dis, data));
+            additionalSection.add(Record.parse(dis, data));
         }
         optRrPosition = getOptRrPosition(additionalSection);
     }
@@ -439,10 +440,10 @@ public class DNSMessage {
         optRrPosition = message.optRrPosition;
     }
 
-    private static int getOptRrPosition(List<Record> additionalSection) {
+    private static int getOptRrPosition(List<Record<? extends Data>> additionalSection) {
         int optRrPosition = -1;
         for (int i = 0; i < additionalSection.size(); i++) {
-            Record record = additionalSection.get(i);
+            Record<? extends Data> record = additionalSection.get(i);
             if (record.type == Record.TYPE.OPT) {
                 optRrPosition = i;
                 break;
@@ -511,17 +512,17 @@ public class DNSMessage {
                 }
             }
             if (answerSection != null) {
-                for (Record answer : answerSection) {
+                for (Record<? extends Data> answer : answerSection) {
                     dos.write(answer.toByteArray());
                 }
             }
             if (authoritySection != null) {
-                for (Record nameserverRecord : authoritySection) {
+                for (Record<? extends Data> nameserverRecord : authoritySection) {
                     dos.write(nameserverRecord.toByteArray());
                 }
             }
             if (additionalSection != null) {
-                for (Record additionalResourceRecord : additionalSection) {
+                for (Record<? extends Data> additionalResourceRecord : additionalSection) {
                     dos.write(additionalResourceRecord.toByteArray());
                 }
             }
@@ -588,8 +589,8 @@ public class DNSMessage {
      * @return a copy of the answer section records.
      * @see #answerSection
      */
-    public List<Record> copyAnswers() {
-        List<Record> res = new ArrayList<>(answerSection.size());
+    public List<Record<? extends Data>> copyAnswers() {
+        List<Record<? extends Data>> res = new ArrayList<>(answerSection.size());
         res.addAll(answerSection);
         return res;
     }
@@ -600,8 +601,8 @@ public class DNSMessage {
      * @return a copy of the authority section records.
      * @see #authoritySection
      */
-    public List<Record> copyAuthority() {
-        List<Record> res = new ArrayList<>(authoritySection.size());
+    public List<Record<? extends Data>> copyAuthority() {
+        List<Record<? extends Data>> res = new ArrayList<>(authoritySection.size());
         res.addAll(authoritySection);
         return res;
     }
@@ -609,15 +610,16 @@ public class DNSMessage {
     public EDNS getEdns() {
         if (edns != null) return edns;
 
-        Record optRecord = getOptPseudoRecord();
+        Record<OPT> optRecord = getOptPseudoRecord();
         if (optRecord == null) return null;
         edns = new EDNS(optRecord);
         return edns;
     }
 
-    public Record getOptPseudoRecord() {
+    @SuppressWarnings("unchecked")
+    public Record<OPT> getOptPseudoRecord() {
         if (optRrPosition == -1) return null;
-        return additionalSection.get(optRrPosition);
+        return (Record<OPT>) additionalSection.get(optRrPosition);
     }
 
     /**
@@ -661,20 +663,21 @@ public class DNSMessage {
             }
         }
         if (answerSection != null) {
-            for (Record record : answerSection) {
+            for (Record<? extends Data> record : answerSection) {
                 sb.append("[A: ").append(record).append("]\n");
             }
         }
         if (authoritySection != null) {
-            for (Record record : authoritySection) {
+            for (Record<? extends Data> record : authoritySection) {
                 sb.append("[N: ").append(record).append("]\n");
             }
         }
         if (additionalSection != null) {
-            for (Record record : additionalSection) {
+            for (Record<? extends Data> record : additionalSection) {
                 sb.append("[X: ");
-                if (record.type == Record.TYPE.OPT) {
-                    sb.append(new EDNS(record).toString());
+                EDNS edns = EDNS.fromRecord(record);
+                if (edns != null) {
+                    sb.append(edns.toString());
                 } else {
                     sb.append(record);
                 }
@@ -719,9 +722,10 @@ public class DNSMessage {
                 .append(", AUTHORITY: ").append(authoritySection.size())
                 .append(", ADDITIONAL: ").append(additionalSection.size())
                 .append("\n\n");
-        for (Record record : additionalSection) {
-            if (record.type == Record.TYPE.OPT) {
-                sb.append(";; OPT PSEUDOSECTION:\n; ").append(new EDNS(record).asTerminalOutput());
+        for (Record<? extends Data> record : additionalSection) {
+            EDNS edns = EDNS.fromRecord(record);
+            if (edns != null) {
+                sb.append(";; OPT PSEUDOSECTION:\n; ").append(edns.asTerminalOutput());
                 break;
             }
         }
@@ -733,19 +737,19 @@ public class DNSMessage {
         }
         if (authoritySection.size() != 0) {
             sb.append("\n;; AUTHORITY SECTION:\n");
-            for (Record record : authoritySection) {
+            for (Record<? extends Data> record : authoritySection) {
                 sb.append(record.toString()).append('\n');
             }
         }
         if (answerSection.size() != 0) {
             sb.append("\n;; ANSWER SECTION:\n");
-            for (Record record : answerSection) {
+            for (Record<? extends Data> record : answerSection) {
                 sb.append(record.toString()).append('\n');
             }
         }
         if (additionalSection.size() != 0) {
             boolean hasNonOptArr = false;
-            for (Record record : additionalSection) {
+            for (Record<? extends Data> record : additionalSection) {
                 if (record.type != Record.TYPE.OPT) {
                     if (!hasNonOptArr) {
                         hasNonOptArr = true;
@@ -769,7 +773,7 @@ public class DNSMessage {
         // point. But on the other hand, if it does not, then the cast to D
         // below will fail.
         Set<D> res = new HashSet<>(answerSection.size());
-        for (Record record : answerSection) {
+        for (Record<? extends Data> record : answerSection) {
             if (!record.isAnswer(q)) continue;
 
             Data data = record.getPayload();
@@ -868,9 +872,9 @@ public class DNSMessage {
         private long receiveTimestamp = -1;
 
         private List<Question> questions;
-        private List<Record> answers;
-        private List<Record> nameserverRecords;
-        private List<Record> additionalResourceRecords;
+        private List<Record<? extends Data>> answers;
+        private List<Record<? extends Data>> nameserverRecords;
+        private List<Record<? extends Data>> additionalResourceRecords;
         private EDNS.Builder ednsBuilder;
 
         /**
@@ -1037,7 +1041,7 @@ public class DNSMessage {
             return this;
         }
 
-        public Builder addAnswer(Record answer) {
+        public Builder addAnswer(Record<? extends Data> answer) {
             if (answers == null) {
                 answers = new ArrayList<>(1);
             }
@@ -1045,7 +1049,7 @@ public class DNSMessage {
             return this;
         }
 
-        public Builder addAnswers(Collection<Record> records) {
+        public Builder addAnswers(Collection<Record<? extends Data>> records) {
             if (answers == null) {
                 answers = new ArrayList<>(records.size());
             }
@@ -1053,28 +1057,29 @@ public class DNSMessage {
             return this;
         }
 
-        public Builder setAnswers(Record... records) {
+        @SuppressWarnings("unchecked")
+        public Builder setAnswers(Record<? extends Data>... records) {
             answers = new ArrayList<>(records.length);
-            for (Record record : records) {
+            for (Record<? extends Data> record : records) {
                 answers.add(record);
             }
             return this;
         }
 
-        public Builder setAnswers(Collection<Record> records) {
+        public Builder setAnswers(Collection<Record<? extends Data>> records) {
             answers = new ArrayList<>(records.size());
             answers.addAll(records);
             return this;
         }
 
-        public List<Record> getAnswers() {
+        public List<Record<? extends Data>> getAnswers() {
             if (answers == null) {
                 return Collections.emptyList();
             }
             return answers;
         }
 
-        public Builder addNameserverRecords(Record record) {
+        public Builder addNameserverRecords(Record<? extends Data> record) {
             if (nameserverRecords == null) {
                 nameserverRecords = new ArrayList<>(8);
             }
@@ -1082,27 +1087,28 @@ public class DNSMessage {
             return this;
         }
 
-        public Builder setNameserverRecords(Collection<Record> records) {
+        public Builder setNameserverRecords(Collection<Record<? extends Data>> records) {
             nameserverRecords = new ArrayList<>(records.size());
             nameserverRecords.addAll(records);
             return this;
         }
 
-        public Builder setNameserverRecords(Record... records) {
+        @SuppressWarnings("unchecked")
+        public Builder setNameserverRecords(Record<? extends Data>... records) {
             nameserverRecords = new ArrayList<>(records.length);
-            for (Record record : records) {
+            for (Record<? extends Data> record : records) {
                 nameserverRecords.add(record);
             }
             return this;
         }
 
-        public Builder setAdditionalResourceRecords(Collection<Record> records) {
+        public Builder setAdditionalResourceRecords(Collection<Record<? extends Data>> records) {
             additionalResourceRecords = new ArrayList<>(records.size());
             additionalResourceRecords.addAll(records);
             return this;
         }
 
-        public Builder addAdditionalResourceRecords(List<Record> records) {
+        public Builder addAdditionalResourceRecords(List<Record<? extends Data>> records) {
             if (additionalResourceRecords == null) {
                 additionalResourceRecords = new ArrayList<>(records.size());
             }
@@ -1110,17 +1116,18 @@ public class DNSMessage {
             return this;
         }
 
-        public Builder addAdditionalResourceRecords(Record... records) {
+        @SuppressWarnings("unchecked")
+        public Builder addAdditionalResourceRecords(Record<? super Data>... records) {
             if (additionalResourceRecords == null) {
                 additionalResourceRecords = new ArrayList<>(records.length);
             }
-            for (Record record : records) {
+            for (Record<? extends Data> record : records) {
                 additionalResourceRecords.add(record);
             }
             return this;
         }
 
-        public List<Record> getAdditionalResourceRecords() {
+        public List<Record<? extends Data>> getAdditionalResourceRecords() {
             if (additionalResourceRecords == null) {
                 return Collections.emptyList();
             }

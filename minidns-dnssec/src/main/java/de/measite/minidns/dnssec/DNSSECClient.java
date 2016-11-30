@@ -24,6 +24,7 @@ import de.measite.minidns.dnssec.UnverifiedReason.NoTrustAnchorReason;
 import de.measite.minidns.record.DLV;
 import de.measite.minidns.record.DNSKEY;
 import de.measite.minidns.record.DS;
+import de.measite.minidns.record.Data;
 import de.measite.minidns.record.RRSIG;
 import de.measite.minidns.recursive.ReliableDNSClient;
 
@@ -108,10 +109,10 @@ public class DNSSECClient extends ReliableDNSClient {
     }
 
     private DNSSECMessage createDnssecMessage(DNSMessage dnsMessage, Set<UnverifiedReason> result) {
-        List<Record> answers = dnsMessage.answerSection;
-        List<Record> nameserverRecords = dnsMessage.authoritySection;
-        List<Record> additionalResourceRecords = dnsMessage.additionalSection;
-        Set<Record> signatures = new HashSet<>();
+        List<Record<? extends Data>> answers = dnsMessage.answerSection;
+        List<Record<? extends Data>> nameserverRecords = dnsMessage.authoritySection;
+        List<Record<? extends Data>> additionalResourceRecords = dnsMessage.additionalSection;
+        Set<Record<? extends Data>> signatures = new HashSet<>();
         extractSignatureRecords(signatures, answers);
         extractSignatureRecords(signatures, nameserverRecords);
         extractSignatureRecords(signatures, additionalResourceRecords);
@@ -124,17 +125,17 @@ public class DNSSECClient extends ReliableDNSClient {
         return new DNSSECMessage(messageBuilder, signatures, result);
     }
 
-    private static void extractSignatureRecords(Set<Record> signatures, Collection<Record> records) {
-        for (Record record : records) {
+    private static void extractSignatureRecords(Set<Record<? extends Data>> signatures, Collection<Record<? extends Data>> records) {
+        for (Record<? extends Data> record : records) {
             if (record.type == TYPE.RRSIG)
                 signatures.add(record);
         }
     }
 
-    private static List<Record> stripSignatureRecords(List<Record> records) {
+    private static List<Record<? extends Data>> stripSignatureRecords(List<Record<? extends Data>> records) {
         if (records.isEmpty()) return records;
-        List<Record> recordList = new ArrayList<>(records.size());
-        for (Record record : records) {
+        List<Record<? extends Data>> recordList = new ArrayList<>(records.size());
+        for (Record<? extends Data> record : records) {
             if (record.type != TYPE.RRSIG) {
                 recordList.add(record);
             }
@@ -157,8 +158,8 @@ public class DNSSECClient extends ReliableDNSClient {
 
     private Set<UnverifiedReason> verifyAnswer(DNSMessage dnsMessage) throws IOException {
         Question q = dnsMessage.questions.get(0);
-        List<Record> answers = dnsMessage.answerSection;
-        List<Record> toBeVerified = dnsMessage.copyAnswers();
+        List<Record<? extends Data>> answers = dnsMessage.answerSection;
+        List<Record<? extends Data>> toBeVerified = dnsMessage.copyAnswers();
         VerifySignaturesResult verifiedSignatures = verifySignatures(q, answers, toBeVerified);
         Set<UnverifiedReason> result = verifiedSignatures.reasons;
         if (!result.isEmpty()) {
@@ -168,8 +169,8 @@ public class DNSSECClient extends ReliableDNSClient {
         // Keep SEPs separated, we only need one valid SEP.
         boolean sepSignatureValid = false;
         Set<UnverifiedReason> sepReasons = new HashSet<>();
-        for (Iterator<Record> iterator = toBeVerified.iterator(); iterator.hasNext(); ) {
-            Record record = iterator.next();
+        for (Iterator<Record<? extends Data>> iterator = toBeVerified.iterator(); iterator.hasNext(); ) {
+            Record<? extends Data> record = iterator.next();
             if (record.type == TYPE.DNSKEY) {
                 DNSKEY dnskey = (DNSKEY) record.payloadData;
                 if (!dnskey.isSecureEntryPoint()) {
@@ -211,14 +212,14 @@ public class DNSSECClient extends ReliableDNSClient {
         boolean validNsec = false;
         boolean nsecPresent = false;
         DNSName zone = null;
-        List<Record> nameserverRecords = dnsMessage.authoritySection;
-        for (Record nameserverRecord : nameserverRecords) {
+        List<Record<? extends Data>> nameserverRecords = dnsMessage.authoritySection;
+        for (Record<? extends Data> nameserverRecord : nameserverRecords) {
             if (nameserverRecord.type == TYPE.SOA)
                 zone = nameserverRecord.name;
         }
         if (zone == null)
             throw new DNSSECValidationFailedException(q, "NSECs must always match to a SOA");
-        for (Record record : nameserverRecords) {
+        for (Record<? extends Data> record : nameserverRecords) {
             UnverifiedReason reason;
 
             switch (record.type) {
@@ -243,7 +244,7 @@ public class DNSSECClient extends ReliableDNSClient {
         if (nsecPresent && !validNsec) {
             throw new DNSSECValidationFailedException(q, "Invalid NSEC!");
         }
-        List<Record> toBeVerified = dnsMessage.copyAuthority();
+        List<Record<? extends Data>> toBeVerified = dnsMessage.copyAuthority();
         VerifySignaturesResult verifiedSignatures = verifySignatures(q, nameserverRecords, toBeVerified);
         if (validNsec && verifiedSignatures.reasons.isEmpty()) {
             result.clear();
@@ -262,13 +263,13 @@ public class DNSSECClient extends ReliableDNSClient {
         Set<UnverifiedReason> reasons = new HashSet<>();
     }
 
-    private VerifySignaturesResult verifySignatures(Question q, Collection<Record> reference, List<Record> toBeVerified) throws IOException {
+    private VerifySignaturesResult verifySignatures(Question q, Collection<Record<? extends Data>> reference, List<Record<? extends Data>> toBeVerified) throws IOException {
         final Date now = new Date();
         final List<RRSIG> outdatedRrSigs = new LinkedList<>();
         VerifySignaturesResult result = new VerifySignaturesResult();
-        final List<Record> rrsigs = new ArrayList<>(toBeVerified.size());
+        final List<Record<? extends Data>> rrsigs = new ArrayList<>(toBeVerified.size());
 
-        for (Record record : toBeVerified) {
+        for (Record<? extends Data> record : toBeVerified) {
             if (record.type != TYPE.RRSIG) continue;
             RRSIG rrsig = (RRSIG) record.payloadData;
 
@@ -289,11 +290,11 @@ public class DNSSECClient extends ReliableDNSClient {
             return result;
         }
 
-        for (Record sigRecord : rrsigs) {
+        for (Record<? extends Data> sigRecord : rrsigs) {
             RRSIG rrsig = (RRSIG) sigRecord.payloadData;
 
-            List<Record> records = new ArrayList<>(reference.size());
-            for (Record record : reference) {
+            List<Record<? extends Data>> records = new ArrayList<>(reference.size());
+            for (Record<? extends Data> record : reference) {
                 if (record.type == rrsig.typeCovered && record.name.equals(sigRecord.name)) {
                     records.add(record);
                 }
@@ -302,7 +303,7 @@ public class DNSSECClient extends ReliableDNSClient {
             result.reasons.addAll(verifySignedRecords(q, rrsig, records));
 
             if (q.name.equals(rrsig.signerName) && rrsig.typeCovered == TYPE.DNSKEY) {
-                for (Iterator<Record> iterator = records.iterator(); iterator.hasNext(); ) {
+                for (Iterator<Record<? extends Data>> iterator = records.iterator(); iterator.hasNext(); ) {
                     DNSKEY dnskey = (DNSKEY) iterator.next().payloadData;
                     if (dnskey.isSecureEntryPoint()) {
                         // SEPs are verified separately, so don't mark them verified now.
@@ -340,12 +341,12 @@ public class DNSSECClient extends ReliableDNSClient {
         return true;
     }
 
-    private Set<UnverifiedReason> verifySignedRecords(Question q, RRSIG rrsig, List<Record> records) throws IOException {
+    private Set<UnverifiedReason> verifySignedRecords(Question q, RRSIG rrsig, List<Record<? extends Data>> records) throws IOException {
         Set<UnverifiedReason> result = new HashSet<>();
         DNSKEY dnskey = null;
         if (rrsig.typeCovered == TYPE.DNSKEY) {
             // Key must be present
-            for (Record record : records) {
+            for (Record<? extends Data> record : records) {
                 if (record.type == TYPE.DNSKEY && ((DNSKEY) record.payloadData).getKeyTag() == rrsig.keyTag) {
                     dnskey = (DNSKEY) record.payloadData;
                 }
@@ -360,7 +361,7 @@ public class DNSSECClient extends ReliableDNSClient {
                 throw new DNSSECValidationFailedException(q, "There is no DNSKEY " + rrsig.signerName + ", but it is used");
             }
             result.addAll(dnskeyRes.getUnverifiedReasons());
-            for (Record record : dnskeyRes.answerSection) {
+            for (Record<? extends Data> record : dnskeyRes.answerSection) {
                 if (record.type == TYPE.DNSKEY && ((DNSKEY) record.payloadData).getKeyTag() == rrsig.keyTag) {
                     dnskey = (DNSKEY) record.payloadData;
                 }
@@ -376,7 +377,8 @@ public class DNSSECClient extends ReliableDNSClient {
         return result;
     }
 
-    private Set<UnverifiedReason> verifySecureEntryPoint(Question q, Record sepRecord) throws IOException {
+    // TODO: Change type of sepRecord to Record<DNSKEY>
+    private Set<UnverifiedReason> verifySecureEntryPoint(Question q, Record<? extends Data> sepRecord) throws IOException {
         // The given RR must be a DNSKEY.
         final DNSKEY dnskey = (DNSKEY) sepRecord.payloadData;
 
@@ -403,7 +405,7 @@ public class DNSSECClient extends ReliableDNSClient {
             LOGGER.fine("There is no DS record for " + sepRecord.name + ", server gives no result");
         } else {
             unverifiedReasons.addAll(dsResp.getUnverifiedReasons());
-            for (Record record : dsResp.answerSection) {
+            for (Record<? extends Data> record : dsResp.answerSection) {
                if (record.type != TYPE.DS) {
                    continue;
                }
@@ -423,7 +425,7 @@ public class DNSSECClient extends ReliableDNSClient {
             DNSSECMessage dlvResp = queryDnssec(DNSName.from(sepRecord.name, dlv), TYPE.DLV);
             if (dlvResp != null) {
                 unverifiedReasons.addAll(dlvResp.getUnverifiedReasons());
-                for (Record record : dlvResp.answerSection) {
+                for (Record<? extends Data> record : dlvResp.answerSection) {
                     if (record.type == TYPE.DLV && ((DNSKEY) sepRecord.payloadData).getKeyTag() == ((DLV) record.payloadData).keyTag) {
                         LOGGER.fine("Found DLV for " + sepRecord.name + ", awesome.");
                         delegation = (DLV) record.payloadData;

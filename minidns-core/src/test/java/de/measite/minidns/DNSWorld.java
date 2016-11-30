@@ -221,9 +221,9 @@ public class DNSWorld extends DNSDataSource {
     public static class Zone {
         String zoneName;
         InetAddress address;
-        Record[] records;
+        Record<? extends Data>[] records;
 
-        public Zone(String zoneName, InetAddress address, Record[] records) {
+        public Zone(String zoneName, InetAddress address, Record<? extends Data>[] records) {
             this.zoneName = zoneName;
             this.address = address;
             this.records = records;
@@ -231,7 +231,7 @@ public class DNSWorld extends DNSDataSource {
 
         public List<RRSet> getRRSets() {
             List<RRSet.Builder> rrSetBuilders = new LinkedList<>();
-            outerloop: for (Record record : records) {
+            outerloop: for (Record<? extends Data> record : records) {
                 for (RRSet.Builder builder : rrSetBuilders) {
                     if (builder.addIfPossible(record)) {
                         continue outerloop;
@@ -285,10 +285,10 @@ public class DNSWorld extends DNSDataSource {
         return world;
     }
 
-    static void attachSignatures(DNSMessage.Builder response, Record[] records) {
-        List<Record> recordList = new ArrayList<>(records.length);
-        for (Record record : response.getAnswers()) {
-            for (Record r : records) {
+    static void attachSignatures(DNSMessage.Builder response, Record<? extends Data>[] records) {
+        List<Record<? extends Data>> recordList = new ArrayList<>(records.length);
+        for (Record<? extends Data> record : response.getAnswers()) {
+            for (Record<? extends Data> r : records) {
                 if (r.name.equals(record.name) && r.type == TYPE.RRSIG && ((RRSIG) r.payloadData).typeCovered == record.type) {
                     recordList.add(r);
                 }
@@ -298,8 +298,8 @@ public class DNSWorld extends DNSDataSource {
 
         recordList.clear();
 
-        for (Record record : response.getAdditionalResourceRecords()) {
-            for (Record r : records) {
+        for (Record<? extends Data> record : response.getAdditionalResourceRecords()) {
+            for (Record<? extends Data> r : records) {
                 if (r.name.equals(record.name) && r.type == TYPE.RRSIG && ((RRSIG) r.payloadData).typeCovered == record.type) {
                     recordList.add(r);
                 }
@@ -308,9 +308,9 @@ public class DNSWorld extends DNSDataSource {
         response.addAdditionalResourceRecords(recordList);
     }
 
-    static void attachGlues(DNSMessage.Builder response, Collection<Record> answers, Record[] records) {
-        List<Record> glues = new ArrayList<>();
-        for (Record record : answers) {
+    static void attachGlues(DNSMessage.Builder response, Collection<Record<? extends Data>> answers, Record<? extends Data>[] records) {
+        List<Record<? extends Data>> glues = new ArrayList<>();
+        for (Record<? extends Data> record : answers) {
             if (record.type == TYPE.CNAME) {
                 glues.addAll(findGlues(((CNAME) record.payloadData).name, records));
             } else if (record.type == TYPE.NS) {
@@ -325,9 +325,9 @@ public class DNSWorld extends DNSDataSource {
         }
     }
 
-    private static List<Record> findGlues(DNSName name, Record[] records) {
-        List<Record> glues = new ArrayList<>();
-        for (Record record : records) {
+    private static List<Record<? extends Data>> findGlues(DNSName name, Record<? extends Data>[] records) {
+        List<Record<? extends Data>> glues = new ArrayList<>();
+        for (Record<? extends Data> record : records) {
             if (record.name.equals(name)) {
                 if (record.type == TYPE.CNAME) {
                     glues.addAll(findGlues(((CNAME) record.payloadData).name, records));
@@ -339,10 +339,11 @@ public class DNSWorld extends DNSDataSource {
         return glues;
     }
 
-    public static DNSWorld applyStubRecords(AbstractDNSClient client, Record... records) {
+    @SuppressWarnings("unchecked")
+    public static DNSWorld applyStubRecords(AbstractDNSClient client, Record<Data>... records) {
         DNSWorld world = new DNSWorld();
         client.setDataSource(world);
-        for (Record record : records) {
+        for (Record<? extends Data> record : records) {
             DNSMessage.Builder request = client.buildMessage(new Question(record.name, record.type, record.clazz, record.unicastQuery));
             request.setRecursionDesired(true);
             DNSMessage.Builder response = DNSMessage.builder();
@@ -353,11 +354,13 @@ public class DNSWorld extends DNSDataSource {
         return world;
     }
 
-    public static Zone rootZone(Record... records) {
+    @SuppressWarnings("unchecked")
+    public static Zone rootZone(Record<? extends Data>... records) {
         return new Zone("", null, records);
     }
 
-    public static Zone zone(String zoneName, String nsName, String nsIp, Record... records) {
+    @SuppressWarnings("unchecked")
+    public static Zone zone(String zoneName, String nsName, String nsIp, Record<? extends Data>... records) {
         try {
             return zone(zoneName, InetAddress.getByAddress(nsName, parseIpV4(nsIp)), records);
         } catch (UnknownHostException e) {
@@ -366,19 +369,20 @@ public class DNSWorld extends DNSDataSource {
         }
     }
 
-    public static Zone zone(String zoneName, InetAddress address, Record... records) {
+    @SuppressWarnings("unchecked")
+    public static Zone zone(String zoneName, InetAddress address, Record<? extends Data>... records) {
         return new Zone(zoneName, address, records);
     }
 
-    public static Record record(String name, long ttl, Data data) {
-        return new Record(name, data.getType(), CLASS.IN, ttl, data, false);
+    public static Record<Data> record(String name, long ttl, Data data) {
+        return new Record<>(name, data.getType(), CLASS.IN, ttl, data, false);
     }
 
-    public static Record record(DNSName name, long ttl, Data data) {
-        return new Record(name, data.getType(), CLASS.IN, ttl, data, false);
+    public static Record<Data> record(DNSName name, long ttl, Data data) {
+        return new Record<>(name, data.getType(), CLASS.IN, ttl, data, false);
     }
 
-    public static Record record(String name, Data data) {
+    public static Record<Data> record(String name, Data data) {
         return record(name, 3600, data);
     }
 

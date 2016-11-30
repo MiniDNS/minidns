@@ -12,6 +12,7 @@ package de.measite.minidns.dnssec;
 
 import de.measite.minidns.Question;
 import de.measite.minidns.Record;
+import de.measite.minidns.record.Data;
 
 import java.util.List;
 
@@ -30,11 +31,11 @@ public class DNSSECValidationFailedException extends RuntimeException {
         super(message, cause);
     }
 
-    public DNSSECValidationFailedException(Record record, String reason) {
+    public DNSSECValidationFailedException(Record<? extends Data> record, String reason) {
         super("Validation of record " + record + " failed: " + reason);
     }
 
-    public DNSSECValidationFailedException(List<Record> records, String reason) {
+    public DNSSECValidationFailedException(List<Record<? extends Data>> records, String reason) {
         super("Validation of " + records.size() + " " + records.get(0).type + " record" + (records.size() > 1 ? "s" : "") + " failed: " + reason);
     }
 }

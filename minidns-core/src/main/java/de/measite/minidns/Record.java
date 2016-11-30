@@ -42,7 +42,7 @@ import java.util.Map;
 /**
  * A generic DNS record.
  */
-public class Record {
+public final class Record<D extends Data> {
 
     /**
      * The resource record type.
@@ -313,125 +313,123 @@ public class Record {
     /**
      * The payload object of this record.
      */
-    public final Data payloadData;
+    public final D payloadData;
 
     /**
      * MDNS defines the highest bit of the class as the unicast query bit.
      */
-    protected boolean unicastQuery;
+    protected final boolean unicastQuery;
 
     /**
      * Parse a given record based on the full message data and the current
      * stream position.
+     *
      * @param dis The DataInputStream positioned at the first record byte.
      * @param data The full message data.
+     * @return the record which was parsed.
      * @throws IOException In case of malformed replies.
      */
-    public Record(DataInputStream dis, byte[] data) throws IOException {
-        this.name = DNSName.parse(dis, data);
+    public static Record<Data> parse(DataInputStream dis, byte[] data) throws IOException {
+        DNSName name = DNSName.parse(dis, data);
         int typeValue = dis.readUnsignedShort();
-        this.type = TYPE.getType(typeValue);
-        this.clazzValue = dis.readUnsignedShort();
-        this.clazz = CLASS.getClass(clazzValue & 0x7fff);
-        this.unicastQuery = (clazzValue & 0x8000) > 0;
-        this.ttl = (((long)dis.readUnsignedShort()) << 16) +
+        TYPE type = TYPE.getType(typeValue);
+        int clazzValue = dis.readUnsignedShort();
+        CLASS clazz = CLASS.getClass(clazzValue & 0x7fff);
+        boolean unicastQuery = (clazzValue & 0x8000) > 0;
+        long ttl = (((long)dis.readUnsignedShort()) << 16) +
                    dis.readUnsignedShort();
         int payloadLength = dis.readUnsignedShort();
-        switch (this.type) {
+        Data payloadData;
+        switch (type) {
             case SOA:
-                this.payloadData = SOA.parse(dis, data);
+                payloadData = SOA.parse(dis, data);
                 break;
             case SRV:
-                this.payloadData = SRV.parse(dis, data);
+                payloadData = SRV.parse(dis, data);
                 break;
             case MX:
-                this.payloadData = MX.parse(dis, data);
+                payloadData = MX.parse(dis, data);
                 break;
             case AAAA:
-                this.payloadData = AAAA.parse(dis);
+                payloadData = AAAA.parse(dis);
                 break;
             case A:
-                this.payloadData = A.parse(dis);
+                payloadData = A.parse(dis);
                 break;
             case NS:
-                this.payloadData = NS.parse(dis, data);
+                payloadData = NS.parse(dis, data);
                 break;
             case CNAME:
-                this.payloadData = CNAME.parse(dis, data);
+                payloadData = CNAME.parse(dis, data);
                 break;
             case PTR:
-                this.payloadData = PTR.parse(dis, data);
+                payloadData = PTR.parse(dis, data);
                 break;
             case TXT:
-                this.payloadData = TXT.parse(dis, payloadLength);
+                payloadData = TXT.parse(dis, payloadLength);
                 break;
             case OPT:
-                this.payloadData = OPT.parse(dis, payloadLength);
+                payloadData = OPT.parse(dis, payloadLength);
                 break;
             case DNSKEY:
-                this.payloadData = DNSKEY.parse(dis, payloadLength);
+                payloadData = DNSKEY.parse(dis, payloadLength);
                 break;
             case RRSIG:
-                this.payloadData = RRSIG.parse(dis, data, payloadLength);
+                payloadData = RRSIG.parse(dis, data, payloadLength);
                 break;
             case DS:
-                this.payloadData = DS.parse(dis, payloadLength);
+                payloadData = DS.parse(dis, payloadLength);
                 break;
             case NSEC:
-                this.payloadData = NSEC.parse(dis, data, payloadLength);
+                payloadData = NSEC.parse(dis, data, payloadLength);
                 break;
             case NSEC3:
-                this.payloadData = NSEC3.parse(dis, payloadLength);
+                payloadData = NSEC3.parse(dis, payloadLength);
                 break;
             case NSEC3PARAM:
-                this.payloadData = NSEC3PARAM.parse(dis);
+                payloadData = NSEC3PARAM.parse(dis);
                 break;
             case TLSA:
-                this.payloadData = TLSA.parse(dis, payloadLength);
+                payloadData = TLSA.parse(dis, payloadLength);
                 break;
             case OPENPGPKEY:
-                this.payloadData = OPENPGPKEY.parse(dis, payloadLength);
+                payloadData = OPENPGPKEY.parse(dis, payloadLength);
                 break;
             case DLV:
-                this.payloadData = DLV.parse(dis, payloadLength);
+                payloadData = DLV.parse(dis, payloadLength);
                 break;
             case UNKNOWN:
             default:
-                this.payloadData = UNKNOWN.parse(dis, payloadLength, type);
+                payloadData = UNKNOWN.parse(dis, payloadLength, type);
                 break;
         }
+        return new Record<>(name, type, clazz, clazzValue, ttl, payloadData, unicastQuery);
     }
 
-    public Record(DNSName name, TYPE type, CLASS clazz, long ttl, Data payloadData, boolean unicastQuery) {
-        this.name = name;
-        this.type = type;
-        this.clazz = clazz;
-        this.ttl = ttl;
-        this.payloadData = payloadData;
-        this.unicastQuery = unicastQuery;
-        this.clazzValue = clazz.getValue() + (unicastQuery ? 0x8000 : 0);
+    public Record(DNSName name, TYPE type, CLASS clazz, long ttl, D payloadData, boolean unicastQuery) {
+        this(name, type, clazz, clazz.getValue() + (unicastQuery ? 0x8000 : 0), ttl, payloadData, unicastQuery);
     }
 
-    public Record(String name, TYPE type, CLASS clazz, long ttl, Data payloadData, boolean unicastQuery) {
+    public Record(String name, TYPE type, CLASS clazz, long ttl, D payloadData, boolean unicastQuery) {
         this(DNSName.from(name), type, clazz, ttl, payloadData, unicastQuery);
     }
 
-    public Record(String name, TYPE type, int clazzValue, long ttl, Data payloadData) {
-        this.name = DNSName.from(name);
-        this.type = type;
-        this.clazz = CLASS.NONE;
-        this.clazzValue = clazzValue;
-        this.ttl = ttl;
-        this.payloadData = payloadData;
+    public Record(String name, TYPE type, int clazzValue, long ttl, D payloadData) {
+        this(DNSName.from(name), type, CLASS.NONE, clazzValue, ttl, payloadData, false);
     }
 
-    public Record(DNSName name, TYPE type, int clazzValue, long ttl, Data payloadData) {
+    public Record(DNSName name, TYPE type, int clazzValue, long ttl, D payloadData) {
+        this(name, type, CLASS.NONE, clazzValue, ttl, payloadData, false);
+    }
+
+    private Record(DNSName name, TYPE type, CLASS clazz, int clazzValue, long ttl, D payloadData, boolean unicastQuery) {
         this.name = name;
         this.type = type;
-        this.clazz = CLASS.NONE;
+        this.clazz = clazz;
         this.clazzValue = clazzValue;
         this.ttl = ttl;
         this.payloadData = payloadData;
+        this.unicastQuery = unicastQuery;
     }
 
     public void toOutputStream(DataOutputStream dos) throws IOException {
@@ -497,7 +495,7 @@ public class Record {
      * The payload data, usually a subclass of data (A, AAAA, CNAME, ...).
      * @return The payload data.
      */
-    public Data getPayload() {
+    public D getPayload() {
         return payloadData;
     }
 
@@ -559,7 +557,7 @@ public class Record {
         if (other == this) {
             return true;
         }
-        Record otherRecord = (Record) other;
+        Record<?> otherRecord = (Record<?>) other;
         if (!name.equals(otherRecord.name)) return false;
         if (type != otherRecord.type) return false;
         if (clazz != otherRecord.clazz) return false;

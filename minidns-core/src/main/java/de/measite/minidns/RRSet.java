@@ -16,15 +16,16 @@ import java.util.Set;
 
 import de.measite.minidns.Record.CLASS;
 import de.measite.minidns.Record.TYPE;
+import de.measite.minidns.record.Data;
 
 public class RRSet {
 
     public final DNSName name;
     public final TYPE type;
     public final CLASS clazz;
-    public final Set<Record> records;
+    public final Set<Record<? extends Data>> records;
 
-    private RRSet(DNSName name, TYPE type, CLASS clazz, Set<Record> records) {
+    private RRSet(DNSName name, TYPE type, CLASS clazz, Set<Record<? extends Data>> records) {
         this.name = name;
         this.type = type;
         this.clazz = clazz;
@@ -39,12 +40,12 @@ public class RRSet {
         private DNSName name;
         private TYPE type;
         private CLASS clazz;
-        Set<Record> records = new LinkedHashSet<>(8);
+        Set<Record<? extends Data>> records = new LinkedHashSet<>(8);
 
         private Builder() {
         }
 
-        public Builder addRecord(Record record) {
+        public Builder addRecord(Record<? extends Data> record) {
             if (name == null) {
                 name = record.name;
                 type = record.type;
@@ -62,14 +63,14 @@ public class RRSet {
             return this;
         }
 
-        public boolean couldContain(Record record) {
+        public boolean couldContain(Record<? extends Data> record) {
             if (name == null) {
                 return true;
             }
             return name.equals(record.name) && type == record.type && clazz == record.clazz;
         }
 
-        public boolean addIfPossible(Record record) {
+        public boolean addIfPossible(Record<? extends Data> record) {
             if (!couldContain(record)) {
                 return false;
             }

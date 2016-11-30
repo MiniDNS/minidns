@@ -20,6 +20,7 @@ import de.measite.minidns.dnssec.UnverifiedReason.NSECDoesNotMatchReason;
 import de.measite.minidns.dnssec.algorithms.AlgorithmMap;
 import de.measite.minidns.record.DNSKEY;
 import de.measite.minidns.record.DS;
+import de.measite.minidns.record.Data;
 import de.measite.minidns.record.NSEC;
 import de.measite.minidns.record.NSEC3;
 import de.measite.minidns.record.RRSIG;
@@ -37,7 +38,8 @@ import java.util.List;
 class Verifier {
     private AlgorithmMap algorithmMap = AlgorithmMap.INSTANCE;
 
-    public UnverifiedReason verify(Record dnskeyRecord, DS ds) {
+    // TODO: Change type of dnskeyRecord to Record<DNSKEY>
+    public UnverifiedReason verify(Record<? extends Data> dnskeyRecord, DS ds) {
         DNSKEY dnskey = (DNSKEY) dnskeyRecord.getPayload();
         DigestCalculator digestCalculator = algorithmMap.getDsDigestCalculator(ds.digestType);
         if (digestCalculator == null) {
@@ -62,7 +64,7 @@ class Verifier {
         return null;
     }
 
-    public UnverifiedReason verify(List<Record> records, RRSIG rrsig, DNSKEY key) {
+    public UnverifiedReason verify(List<Record<? extends Data>> records, RRSIG rrsig, DNSKEY key) {
         SignatureVerifier signatureVerifier = algorithmMap.getSignatureVerifier(rrsig.algorithm);
         if (signatureVerifier == null) {
             return new AlgorithmNotSupportedReason(rrsig.algorithmByte, "RRSIG", records.get(0));
@@ -76,7 +78,7 @@ class Verifier {
         }
     }
 
-    public UnverifiedReason verifyNsec(Record nsecRecord, Question q) {
+    public UnverifiedReason verifyNsec(Record<? extends Data> nsecRecord, Question q) {
         NSEC nsec = (NSEC) nsecRecord.payloadData;
         if (nsecRecord.name.equals(q.name) && !Arrays.asList(nsec.types).contains(q.type)) {
             // records with same name but different types exist
@@ -87,11 +89,11 @@ class Verifier {
         return new NSECDoesNotMatchReason(q, nsecRecord);
     }
 
-    public UnverifiedReason verifyNsec3(CharSequence zone, Record nsec3Record, Question q) {
+    public UnverifiedReason verifyNsec3(CharSequence zone, Record<? extends Data> nsec3Record, Question q) {
         return verifyNsec3(DNSName.from(zone), nsec3Record, q);
     }
 
-    public UnverifiedReason verifyNsec3(DNSName zone, Record nsec3record, Question q) {
+    public UnverifiedReason verifyNsec3(DNSName zone, Record<? extends Data> nsec3record, Question q) {
         NSEC3 nsec3 = (NSEC3) nsec3record.payloadData;
         DigestCalculator digestCalculator = algorithmMap.getNsecDigestCalculator(nsec3.hashAlgorithm);
         if (digestCalculator == null) {
@@ -115,7 +117,7 @@ class Verifier {
         return new NSECDoesNotMatchReason(q, nsec3record);
     }
 
-    static byte[] combine(RRSIG rrsig, List<Record> records) {
+    static byte[] combine(RRSIG rrsig, List<Record<? extends Data>> records) {
         ByteArrayOutputStream bos = new ByteArrayOutputStream();
         DataOutputStream dos = new DataOutputStream(bos);
 
@@ -136,8 +138,8 @@ class Verifier {
             }
 
             List<byte[]> recordBytes = new ArrayList<>();
-            for (Record record : records) {
-                Record ref = new Record(sigName, record.type, record.clazzValue, rrsig.originalTtl, record.payloadData);
+            for (Record<? extends Data> record : records) {
+                Record<Data> ref = new Record<>(sigName, record.type, record.clazzValue, rrsig.originalTtl, (Data) record.payloadData);
                 recordBytes.add(ref.toByteArray());
             }
 

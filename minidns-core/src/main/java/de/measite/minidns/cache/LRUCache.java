@@ -17,6 +17,7 @@ import de.measite.minidns.DNSCache;
 import de.measite.minidns.DNSMessage;
 import de.measite.minidns.DNSName;
 import de.measite.minidns.Record;
+import de.measite.minidns.record.Data;
 
 /**
  * LRU based DNSCache backed by a LinkedHashMap.
@@ -100,7 +101,7 @@ public class LRUCache extends DNSCache {
         long ttl = maxTTL;
         // RFC 2181 § 5.2 says that all TTLs in a RRSet should be equal, if this isn't the case, then we assume the
         // shortest TTL to be the effective one.
-        for (Record r : message.answerSection) {
+        for (Record<? extends Data> r : message.answerSection) {
             ttl = Math.min(ttl, r.ttl);
         }
         if (message.receiveTimestamp + ttl < System.currentTimeMillis()) {

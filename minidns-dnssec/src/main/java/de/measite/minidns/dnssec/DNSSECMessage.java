@@ -12,21 +12,22 @@ package de.measite.minidns.dnssec;
 
 import de.measite.minidns.DNSMessage;
 import de.measite.minidns.Record;
+import de.measite.minidns.record.Data;
 
 import java.util.Collections;
 import java.util.Set;
 
 public class DNSSECMessage extends DNSMessage {
-    private final Set<Record> signatures;
+    private final Set<Record<? extends Data>> signatures;
     private final Set<UnverifiedReason> result;
 
-    DNSSECMessage(DNSMessage.Builder copy, Set<Record> signatures, Set<UnverifiedReason> unverifiedReasons) {
+    DNSSECMessage(DNSMessage.Builder copy, Set<Record<? extends Data>> signatures, Set<UnverifiedReason> unverifiedReasons) {
         super(copy.setAuthenticData(unverifiedReasons == null || unverifiedReasons.isEmpty()));
         this.signatures = Collections.unmodifiableSet(signatures);
         this.result = unverifiedReasons == null ? Collections.<UnverifiedReason>emptySet() : Collections.unmodifiableSet(unverifiedReasons);
     }
 
-    public Set<Record> getSignatures() {
+    public Set<Record<? extends Data>> getSignatures() {
         return signatures;
     }
 

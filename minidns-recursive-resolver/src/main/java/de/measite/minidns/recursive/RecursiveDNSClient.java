@@ -20,6 +20,7 @@ import de.measite.minidns.Record.TYPE;
 import de.measite.minidns.record.A;
 import de.measite.minidns.record.AAAA;
 import de.measite.minidns.record.CNAME;
+import de.measite.minidns.record.Data;
 import de.measite.minidns.record.InternetAddressRR;
 import de.measite.minidns.record.NS;
 import de.measite.minidns.recursive.RecursiveClientException.LoopDetected;
@@ -248,13 +249,13 @@ public class RecursiveDNSClient extends AbstractDNSClient {
             cache.offer(q, resMessage, authoritativeZone);
         }
 
-        List<Record> authorities = resMessage.copyAuthority();
+        List<Record<? extends Data>> authorities = resMessage.copyAuthority();
 
         List<IOException> ioExceptions = new LinkedList<>();
 
         // Glued NS first
-        for (Iterator<Record> iterator = authorities.iterator(); iterator.hasNext(); ) {
-            Record record = iterator.next();
+        for (Iterator<Record<? extends Data>> iterator = authorities.iterator(); iterator.hasNext(); ) {
+            Record<? extends Data> record = iterator.next();
             if (record.type != TYPE.NS) {
                 iterator.remove();
                 continue;
@@ -281,7 +282,7 @@ public class RecursiveDNSClient extends AbstractDNSClient {
         }
 
         // Try non-glued NS
-        for (Record record : authorities) {
+        for (Record<? extends Data> record : authorities) {
             final Question question = q.getQuestion();
             DNSName name = ((NS) record.payloadData).name;
 
@@ -347,7 +348,7 @@ public class RecursiveDNSClient extends AbstractDNSClient {
             final DNSMessage query = getQueryFor(question);
             DNSMessage aMessage = queryRecursive(recursionState, query);
             if (aMessage != null) {
-                for (Record answer : aMessage.answerSection) {
+                for (Record<? extends Data> answer : aMessage.answerSection) {
                     if (answer.isAnswer(question)) {
                         InetAddress inetAddress = inetAddressFromRecord(name.ace, (A) answer.payloadData);
                         res.ipv4Addresses.add(inetAddress);
@@ -364,7 +365,7 @@ public class RecursiveDNSClient extends AbstractDNSClient {
             final DNSMessage query = getQueryFor(question);
             DNSMessage aMessage = queryRecursive(recursionState, query);
             if (aMessage != null) {
-                for (Record answer : aMessage.answerSection) {
+                for (Record<? extends Data> answer : aMessage.answerSection) {
                     if (answer.isAnswer(question)) {
                         InetAddress inetAddress = inetAddressFromRecord(name.ace, (AAAA) answer.payloadData);
                         res.ipv6Addresses.add(inetAddress);
@@ -381,7 +382,7 @@ public class RecursiveDNSClient extends AbstractDNSClient {
     @SuppressWarnings("incomplete-switch")
     private IpResultSet searchAdditional(DNSMessage message, DNSName name) {
         IpResultSet.Builder res = newIpResultSetBuilder();
-        for (Record record : message.additionalSection) {
+        for (Record<? extends Data> record : message.additionalSection) {
             if (!record.name.equals(name)) {
                 continue;
             }

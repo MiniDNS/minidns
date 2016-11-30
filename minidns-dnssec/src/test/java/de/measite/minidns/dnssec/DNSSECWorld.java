@@ -20,6 +20,7 @@ import de.measite.minidns.dnssec.algorithms.AlgorithmMap;
 import de.measite.minidns.record.DLV;
 import de.measite.minidns.record.DNSKEY;
 import de.measite.minidns.record.DS;
+import de.measite.minidns.record.Data;
 import de.measite.minidns.record.NSEC;
 import de.measite.minidns.record.RRSIG;
 
@@ -65,34 +66,37 @@ public class DNSSECWorld extends DNSWorld {
         return new Zone(zoneName, address, merge(rrSets));
     }
 
-    public static Record[] merge(SignedRRSet... rrSets) {
-        List<Record> recordList = new ArrayList<>();
+    public static Record<? extends Data>[] merge(SignedRRSet... rrSets) {
+        List<Record<? extends Data>> recordList = new ArrayList<>();
         for (SignedRRSet rrSet : rrSets) {
             recordList.add(rrSet.signature);
             recordList.addAll(Arrays.asList(rrSet.records));
         }
-        return recordList.toArray(new Record[recordList.size()]);
+        return recordList.toArray(new Record<?>[recordList.size()]);
     }
 
-    public static SignedRRSet sign(DNSKEY key, String signerName, PrivateKey privateKey, SignatureAlgorithm algorithm, Record... records) {
+    @SuppressWarnings("unchecked")
+    public static SignedRRSet sign(DNSKEY key, String signerName, PrivateKey privateKey, SignatureAlgorithm algorithm, Record<? extends Data>... records) {
         return new SignedRRSet(records, rrsigRecord(key, signerName, privateKey, algorithm, records));
     }
 
-    public static SignedRRSet sign(PrivateKey privateKey, RRSIG rrsig, Record... records) {
+    @SuppressWarnings("unchecked")
+    public static SignedRRSet sign(PrivateKey privateKey, RRSIG rrsig, Record<? extends Data>... records) {
         return new SignedRRSet(records, rrsigRecord(privateKey, rrsig, records));
     }
 
     public static class SignedRRSet {
-        Record[] records;
-        Record signature;
+        Record<? extends Data>[] records;
+        Record<? extends Data> signature;
 
-        public SignedRRSet(Record[] records, Record signature) {
+        public SignedRRSet(Record<? extends Data>[] records, Record<? extends Data> signature) {
             this.records = records;
             this.signature = signature;
         }
     }
 
-    public static Record rrsigRecord(DNSKEY key, String signerName, PrivateKey privateKey, SignatureAlgorithm algorithm, Record... records) {
+    @SuppressWarnings("unchecked")
+    public static Record<? extends Data> rrsigRecord(DNSKEY key, String signerName, PrivateKey privateKey, SignatureAlgorithm algorithm, Record<? extends Data>... records) {
         Record.TYPE typeCovered = records[0].type;
         String name = records[0].name.ace;
         int labels = name.isEmpty() ? 0 : name.split("\\.").length;
@@ -104,7 +108,8 @@ public class DNSSECWorld extends DNSWorld {
         return rrsigRecord(privateKey, rrsig, records);
     }
 
-    public static Record rrsigRecord(PrivateKey privateKey, RRSIG rrsig, Record... records) {
+    @SuppressWarnings("unchecked")
+    public static Record<? extends Data> rrsigRecord(PrivateKey privateKey, RRSIG rrsig, Record<? extends Data>... records) {
         byte[] bytes = Verifier.combine(rrsig, Arrays.asList(records));
         return record(records[0].name, rrsig.originalTtl, rrsig(rrsig.typeCovered, rrsig.algorithm, rrsig.labels, rrsig.originalTtl,
                 rrsig.signatureExpiration, rrsig.signatureInception, rrsig.keyTag, rrsig.signerName,
@@ -349,8 +354,8 @@ public class DNSSECWorld extends DNSWorld {
 
         @Override
         public boolean isResponse(DNSMessage request, InetAddress address) {
-            Record nsecRecord = null;
-            for (Record record : nsecMessage.authoritySection) {
+            Record<? extends Data> nsecRecord = null;
+            for (Record<? extends Data> record : nsecMessage.authoritySection) {
                 if (record.type == Record.TYPE.NSEC)
                     nsecRecord = record;
             }

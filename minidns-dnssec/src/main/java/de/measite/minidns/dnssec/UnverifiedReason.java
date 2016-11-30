@@ -16,6 +16,7 @@ import java.util.List;
 import de.measite.minidns.Question;
 import de.measite.minidns.Record;
 import de.measite.minidns.DNSSECConstants.DigestAlgorithm;
+import de.measite.minidns.record.Data;
 import de.measite.minidns.record.RRSIG;
 
 public abstract class UnverifiedReason {
@@ -39,9 +40,9 @@ public abstract class UnverifiedReason {
     public static class AlgorithmNotSupportedReason extends UnverifiedReason {
         private final String algorithm;
         private final String kind;
-        private final Record record;
+        private final Record<? extends Data> record;
 
-        public AlgorithmNotSupportedReason(byte algorithm, String kind, Record record) {
+        public AlgorithmNotSupportedReason(byte algorithm, String kind, Record<? extends Data> record) {
             this.algorithm = Integer.toString(algorithm & 0xff);
             this.kind = kind;
             this.record = record;
@@ -57,9 +58,9 @@ public abstract class UnverifiedReason {
         private final int algorithmNumber;
         private final String kind;
         private final Exception reason;
-        private final Record record;
+        private final Record<? extends Data> record;
 
-        public AlgorithmExceptionThrownReason(DigestAlgorithm algorithm, String kind, Record record, Exception reason) {
+        public AlgorithmExceptionThrownReason(DigestAlgorithm algorithm, String kind, Record<? extends Data> record, Exception reason) {
             this.algorithmNumber = algorithm.value;
             this.kind = kind;
             this.record = record;
@@ -143,9 +144,9 @@ public abstract class UnverifiedReason {
 
     public static class NSECDoesNotMatchReason extends UnverifiedReason {
         private final Question question;
-        private final Record record;
+        private final Record<? extends Data> record;
 
-        public NSECDoesNotMatchReason(Question question, Record record) {
+        public NSECDoesNotMatchReason(Question question, Record<? extends Data> record) {
             this.question = question;
             this.record = record;
         }

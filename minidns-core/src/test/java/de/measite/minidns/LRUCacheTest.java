@@ -64,6 +64,7 @@ public class LRUCacheTest {
         return createSampleMessage(System.currentTimeMillis());
     }
 
+    @SuppressWarnings("unchecked")
     private static DNSMessage createSampleMessage(long receiveTimestamp) {
         DNSMessage.Builder message = DNSMessage.builder();
         message.setReceiveTimestamp(receiveTimestamp);

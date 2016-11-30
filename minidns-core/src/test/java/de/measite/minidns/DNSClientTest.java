@@ -73,6 +73,7 @@ public class DNSClientTest {
         }
     }
 
+    @SuppressWarnings("unchecked")
     @Test
     public void testSingleRecordQuery() throws IOException {
         DNSClient client = new DNSClient(new LRUCache(0));

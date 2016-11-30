@@ -14,6 +14,8 @@ import de.measite.minidns.Question;
 import de.measite.minidns.Record;
 import de.measite.minidns.Record.TYPE;
 import de.measite.minidns.dnssec.algorithms.JavaSecDigestCalculator;
+import de.measite.minidns.record.Data;
+
 import org.junit.Before;
 import org.junit.Test;
 
@@ -56,7 +58,7 @@ public class VerifierTest {
 
     @Test
     public void testVerifyNsec() {
-        Record nsecRecord = record("example.com", nsec("www.example.com", TYPE.A, TYPE.NS, TYPE.SOA, TYPE.TXT, TYPE.AAAA, TYPE.RRSIG, TYPE.NSEC, TYPE.DNSKEY));
+        Record<? extends Data> nsecRecord = record("example.com", nsec("www.example.com", TYPE.A, TYPE.NS, TYPE.SOA, TYPE.TXT, TYPE.AAAA, TYPE.RRSIG, TYPE.NSEC, TYPE.DNSKEY));
         assertNull(verifier.verifyNsec(nsecRecord, new Question("nsec.example.com", TYPE.A)));
         assertNull(verifier.verifyNsec(nsecRecord, new Question("example.com", TYPE.PTR)));
         assertNotNull(verifier.verifyNsec(nsecRecord, new Question("www.example.com", TYPE.A)));
@@ -66,7 +68,7 @@ public class VerifierTest {
     @Test
     public void testVerifyNsec3() {
         byte[] bytes = new byte[]{0x3f, (byte) 0xb1, (byte) 0xd0, (byte) 0xaa, 0x27, (byte) 0xe2, 0x5f, (byte) 0xda, 0x40, 0x75, (byte) 0x92, (byte) 0x95, 0x5a, 0x1c, 0x7f, (byte) 0x98, (byte) 0xdb, 0x5b, 0x79, (byte) 0x91};
-        Record nsec3Record = record("7UO4LIHALHHLNGLJAFT7TBIQ6H1SL1CN.net", nsec3((byte) 1, (byte) 1, 0, new byte[0], bytes, TYPE.NS, TYPE.SOA, TYPE.RRSIG, TYPE.DNSKEY, TYPE.NSEC3PARAM));
+        Record<? extends Data> nsec3Record = record("7UO4LIHALHHLNGLJAFT7TBIQ6H1SL1CN.net", nsec3((byte) 1, (byte) 1, 0, new byte[0], bytes, TYPE.NS, TYPE.SOA, TYPE.RRSIG, TYPE.DNSKEY, TYPE.NSEC3PARAM));
         assertNull(verifier.verifyNsec3("net", nsec3Record, new Question("x.net", TYPE.A)));
         assertNotNull(verifier.verifyNsec3("net", nsec3Record, new Question("example.net", TYPE.A)));
     }

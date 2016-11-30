@@ -17,6 +17,7 @@ import de.measite.minidns.Record;
 import de.measite.minidns.dnssec.DNSSECClient;
 import de.measite.minidns.dnssec.DNSSECMessage;
 import de.measite.minidns.dnssec.UnverifiedReason;
+import de.measite.minidns.record.Data;
 import de.measite.minidns.record.TLSA;
 
 import javax.net.ssl.HttpsURLConnection;
@@ -122,7 +123,7 @@ public class DaneVerifier {
 
         List<DaneCertificateException.CertificateMismatch> certificateMismatchExceptions = new LinkedList<>();
         boolean verified = false;
-        for (Record record : res.answerSection) {
+        for (Record<? extends Data> record : res.answerSection) {
             if (record.type == Record.TYPE.TLSA && record.name.equals(req)) {
                 TLSA tlsa = (TLSA) record.payloadData;
                 try {

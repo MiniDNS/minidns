@@ -13,6 +13,7 @@ package de.measite.minidns.cache;
 import de.measite.minidns.DNSName;
 import de.measite.minidns.Question;
 import de.measite.minidns.Record;
+import de.measite.minidns.record.Data;
 
 /**
  * An <b>insecure</b> variant of {@link LRUCache} also using all the data found in the sections of an answer.
@@ -28,7 +29,7 @@ public class FullLRUCache extends ExtendedLRUCache {
     }
 
     @Override
-    protected boolean shouldGather(Record extraRecord, Question question, DNSName authoritativeZone) {
+    protected boolean shouldGather(Record<? extends Data> extraRecord, Question question, DNSName authoritativeZone) {
         return true;
     }
 }

@@ -21,6 +21,7 @@ import de.measite.minidns.Record.TYPE;
 import de.measite.minidns.edns.EDNSOption;
 import de.measite.minidns.edns.NSID;
 import de.measite.minidns.edns.UnknownEDNSOption;
+import de.measite.minidns.record.Data;
 import de.measite.minidns.record.OPT;
 
 /**
@@ -96,9 +97,9 @@ public class EDNS {
 
     public final boolean dnssecOk;
 
-    private Record optRecord;
+    private Record<OPT> optRecord;
 
-    public EDNS(Record optRecord) {
+    public EDNS(Record<OPT> optRecord) {
         assert (optRecord.type == TYPE.OPT);
         udpPayloadSize = optRecord.clazzValue;
         extendedRcode = (int) ((optRecord.ttl >> 8) & 0xff);
@@ -107,7 +108,7 @@ public class EDNS {
 
         dnssecOk = (optRecord.ttl & FLAG_DNSSEC_OK) > 0;
 
-        OPT opt = (OPT) optRecord.payloadData;
+        OPT opt = optRecord.payloadData;
         variablePart = opt.variablePart;
         this.optRecord = optRecord;
     }
@@ -139,12 +140,12 @@ public class EDNS {
         return null;
     }
 
-    public Record asRecord() {
+    public Record<OPT> asRecord() {
         if (optRecord == null) {
             long optFlags = flags;
             optFlags |= (extendedRcode << 8);
             optFlags |= (version << 16);
-            optRecord = new Record(DNSName.EMPTY, Record.TYPE.OPT, udpPayloadSize, optFlags, new OPT(variablePart));
+            optRecord = new Record<OPT>(DNSName.EMPTY, Record.TYPE.OPT, udpPayloadSize, optFlags, new OPT(variablePart));
         }
         return optRecord;
     }
@@ -178,6 +179,14 @@ public class EDNS {
     @Override
     public String toString() {
         return asTerminalOutput();
+    }
+
+    public static EDNS fromRecord(Record<? extends Data> record) {
+        if (record.type != TYPE.OPT) return null;
+
+        @SuppressWarnings("unchecked")
+        Record<OPT> optRecord = (Record<OPT>) record;
+        return new EDNS(optRecord);
     }
 
     public static Builder builder() {
