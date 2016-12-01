@@ -16,6 +16,7 @@ import java.util.List;
 import de.measite.minidns.Question;
 import de.measite.minidns.Record;
 import de.measite.minidns.DNSSECConstants.DigestAlgorithm;
+import de.measite.minidns.record.DNSKEY;
 import de.measite.minidns.record.Data;
 import de.measite.minidns.record.RRSIG;
 
@@ -70,6 +71,19 @@ public abstract class UnverifiedReason {
         @Override
         public String getReasonString() {
             return kind + " algorithm " + algorithmNumber + " threw exception while verifying " + record.name + ": " + reason;
+        }
+    }
+
+    public static class ConflictsWithSep extends UnverifiedReason {
+        private final Record<DNSKEY> record;
+
+        public ConflictsWithSep(Record<DNSKEY> record) {
+            this.record = record;
+        }
+
+        @Override
+        public String getReasonString() {
+            return "Zone " + record.name.ace + " is in list of known SEPs, but DNSKEY from response mismatches!";
         }
     }
 

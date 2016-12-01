@@ -168,11 +168,7 @@ public class DNSSECClient extends ReliableDNSClient {
                 continue;
             }
 
-            DNSKEY dnskey = record.payloadData;
-            if (!dnskey.isSecureEntryPoint()) {
-                continue;
-            }
-
+            // Verify all DNSKEYs as if it was a SEP. If we find a single SEP we are safe.
             Set<UnverifiedReason> reasons = verifySecureEntryPoint(q, record);
             if (reasons.isEmpty()) {
                 sepSignatureValid = true;
@@ -304,12 +300,10 @@ public class DNSSECClient extends ReliableDNSClient {
                     Record<DNSKEY> dnsKeyRecord = iterator.next().ifPossibleAs(DNSKEY.class);
                     // dnsKeyRecord should never be null here.
                     DNSKEY dnskey = dnsKeyRecord.payloadData;
-                    if (dnskey.isSecureEntryPoint()) {
-                        // SEPs are verified separately, so don't mark them verified now.
-                        iterator.remove();
-                        if (dnskey.getKeyTag() == rrsig.keyTag) {
-                            result.sepSignaturePresent = true;
-                        }
+                    // DNSKEYs are verified separately, so don't mark them verified now.
+                    iterator.remove();
+                    if (dnskey.getKeyTag() == rrsig.keyTag) {
+                        result.sepSignaturePresent = true;
                     }
                 }
                 // DNSKEY's should be signed by a SEP
@@ -392,7 +386,8 @@ public class DNSSECClient extends ReliableDNSClient {
             if (dnskey.keyEquals(knownSeps.get(sepRecord.name))) {
                 return unverifiedReasons;
             } else {
-                throw new DNSSECValidationFailedException(q, "Secure entry point " + sepRecord.name + " is in list of known SEPs, but mismatches response!");
+                unverifiedReasons.add(new UnverifiedReason.ConflictsWithSep(sepRecord));
+                return unverifiedReasons;
             }
         }
 
@@ -449,7 +444,7 @@ public class DNSSECClient extends ReliableDNSClient {
             } else {
                 unverifiedReasons = activeReasons;
             }
-        } else {
+        } else if (unverifiedReasons.isEmpty()) {
             unverifiedReasons.add(new NoTrustAnchorReason(sepRecord.name.ace));
         }
         return unverifiedReasons;

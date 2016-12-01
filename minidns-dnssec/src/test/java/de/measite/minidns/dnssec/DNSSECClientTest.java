@@ -124,6 +124,62 @@ public class DNSSECClientTest {
 
     @SuppressWarnings("unchecked")
     @Test
+    public void testNoSEPAtKSK() throws IOException {
+        DNSKEY comKSK = dnskey(DNSKEY.FLAG_ZONE, algorithm, publicKey(algorithm, comPrivateKSK));
+        applyZones(client,
+                signedRootZone(
+                        sign(rootKSK, "", rootPrivateKSK, algorithm,
+                                record("", rootKSK),
+                                record("", rootZSK)),
+                        sign(rootZSK, "", rootPrivateZSK, algorithm,
+                                record("com", ds("com", digestType, comKSK))),
+                        sign(rootZSK, "", rootPrivateZSK, algorithm,
+                                record("com", ns("ns.com"))),
+                        sign(rootZSK, "", rootPrivateZSK, algorithm,
+                                record("ns.com", a("1.1.1.1")))
+                ), signedZone("com", "ns.com", "1.1.1.1",
+                        sign(comKSK, "com", comPrivateKSK, algorithm,
+                                record("com", comKSK),
+                                record("com", comZSK)),
+                        sign(comZSK, "com", comPrivateZSK, algorithm,
+                                record("example.com", a("1.1.1.2")))
+                )
+        );
+        DNSMessage message = client.query("example.com", Record.TYPE.A);
+        assertNotNull(message);
+        assertTrue(message.authenticData);
+        checkCorrectExampleMessage(message);
+    }
+
+    @SuppressWarnings("unchecked")
+    @Test
+    public void testSingleZSK() throws IOException {
+        applyZones(client,
+                signedRootZone(
+                        sign(rootKSK, "", rootPrivateKSK, algorithm,
+                                record("", rootKSK),
+                                record("", rootZSK)),
+                        sign(rootZSK, "", rootPrivateZSK, algorithm,
+                                record("com", ds("com", digestType, comKSK))),
+                        sign(rootZSK, "", rootPrivateZSK, algorithm,
+                                record("com", ns("ns.com"))),
+                        sign(rootZSK, "", rootPrivateZSK, algorithm,
+                                record("ns.com", a("1.1.1.1")))
+                ), signedZone("com", "ns.com", "1.1.1.1",
+                        sign(comKSK, "com", comPrivateKSK, algorithm,
+                                record("com", comKSK)),
+                        sign(comKSK, "com", comPrivateKSK, algorithm,
+                                record("example.com", a("1.1.1.2")))
+                )
+        );
+        DNSMessage message = client.query("example.com", Record.TYPE.A);
+        assertNotNull(message);
+        assertTrue(message.authenticData);
+        checkCorrectExampleMessage(message);
+    }
+
+    @SuppressWarnings("unchecked")
+    @Test
     public void testMissingDelegation() throws IOException {
         applyZones(client,
                 signedRootZone(
