@@ -66,13 +66,13 @@ public class DNSSECWorld extends DNSWorld {
         return new Zone(zoneName, address, merge(rrSets));
     }
 
-    public static Record<? extends Data>[] merge(SignedRRSet... rrSets) {
+    public static List<Record<? extends Data>> merge(SignedRRSet... rrSets) {
         List<Record<? extends Data>> recordList = new ArrayList<>();
         for (SignedRRSet rrSet : rrSets) {
             recordList.add(rrSet.signature);
             recordList.addAll(Arrays.asList(rrSet.records));
         }
-        return recordList.toArray(new Record<?>[recordList.size()]);
+        return recordList;
     }
 
     @SuppressWarnings("unchecked")

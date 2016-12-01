@@ -199,7 +199,7 @@ public abstract class AbstractDNSClient {
      */
     final DNSMessage.Builder buildMessage(Question question) {
         DNSMessage.Builder message = DNSMessage.builder();
-        message.setQuestions(question);
+        message.setQuestion(question);
         message.setId(random.nextInt());
         message = newQuestion(message);
         return message;

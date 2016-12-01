@@ -368,7 +368,7 @@ public class DNSMessageTest {
     @Test
     public void testMessageSelfQuestionReconstruction() throws Exception {
         DNSMessage.Builder dmb = DNSMessage.builder();
-        dmb.setQuestions(new Question("www.example.com", TYPE.A));
+        dmb.setQuestion(new Question("www.example.com", TYPE.A));
         dmb.setRecursionDesired(true);
         dmb.setId(42);
         dmb.setQrFlag(true);
@@ -388,9 +388,8 @@ public class DNSMessageTest {
     @Test
     public void testMessageSelfEasyAnswersReconstruction() throws Exception {
         DNSMessage.Builder dmb = DNSMessage.builder();
-        dmb.setAnswers(new Record<?>[]{
-                record("www.example.com", a("127.0.0.1")), 
-                record("www.example.com", ns("example.com"))});
+        dmb.addAnswer(record("www.example.com", a("127.0.0.1")))
+           .addAnswer(record("www.example.com", ns("example.com")));
         dmb.setRecursionAvailable(true);
         dmb.setCheckingDisabled(true);
         dmb.setQrFlag(false);
@@ -414,13 +413,12 @@ public class DNSMessageTest {
         assertCsEquals("example.com.", message.answerSection.get(1).payloadData.toString());
     }
 
-    @SuppressWarnings("unchecked")
     @Test
     public void testMessageSelfComplexReconstruction() throws Exception {
         DNSMessage.Builder dmb = DNSMessage.builder();
         dmb.addQuestion(new Question("www.example.com", TYPE.NS));
         dmb.addAnswer(record("www.example.com", ns("ns.example.com")));
-        dmb.addAdditionalResourceRecords(record("ns.example.com", a("127.0.0.1")));
+        dmb.addAdditionalResourceRecord(record("ns.example.com", a("127.0.0.1")));
         dmb.addNameserverRecords(record("ns.example.com", aaaa("2001::1")));
         dmb.setOpcode(DNSMessage.OPCODE.QUERY);
         dmb.setResponseCode(DNSMessage.RESPONSE_CODE.NO_ERROR);
@@ -477,7 +475,7 @@ public class DNSMessageTest {
     @Test
     public void testMessageSelfOptRecordReconstructione() throws Exception {
         DNSMessage.Builder m = DNSMessage.builder();
-        m.addAdditionalResourceRecords(record("www.example.com", a("127.0.0.1")));
+        m.addAdditionalResourceRecord(record("www.example.com", a("127.0.0.1")));
         m.getEdnsBuilder().setUdpPayloadSize(512).setDnssecOk();
         DNSMessage message = new DNSMessage(m.build().toArray());
 
@@ -495,7 +493,6 @@ public class DNSMessageTest {
         assertNotNull(message.toString());
     }
 
-    @SuppressWarnings("unchecked")
     @Test
     public void testFilledMessageToString() throws Exception {
         // toString() should never throw an exception or be null
@@ -507,7 +504,7 @@ public class DNSMessageTest {
         message.addQuestion(new Question("www.example.com", TYPE.A));
         message.addAnswer(record("www.example.com", a("127.0.0.1")));
         message.addNameserverRecords(record("example.com", ns("ns.example.com")));
-        message.addAdditionalResourceRecords(record("ns.example.com", a("127.0.0.1")));
+        message.addAdditionalResourceRecord(record("ns.example.com", a("127.0.0.1")));
         message.getEdnsBuilder().setUdpPayloadSize(512);
         assertNotNull(message.build().toString());
     }
@@ -523,7 +520,6 @@ public class DNSMessageTest {
         assertNotNull(message.build().asTerminalOutput());
     }
 
-    @SuppressWarnings("unchecked")
     @Test
     public void testFilledMessageTerminalOutput() throws Exception {
         // asTerminalOutput() follows a certain design, however it might change in the future.
@@ -536,7 +532,7 @@ public class DNSMessageTest {
         message.addQuestion(new Question("www.example.com", TYPE.A));
         message.addAnswer(record("www.example.com", a("127.0.0.1")));
         message.addNameserverRecords(record("example.com", ns("ns.example.com")));
-        message.addAdditionalResourceRecords(record("ns.example.com", a("127.0.0.1")));
+        message.addAdditionalResourceRecord(record("ns.example.com", a("127.0.0.1")));
         message.getEdnsBuilder().setUdpPayloadSize(512);
         assertNotNull(message.build().asTerminalOutput());
     }

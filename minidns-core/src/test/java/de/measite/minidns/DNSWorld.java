@@ -221,9 +221,9 @@ public class DNSWorld extends DNSDataSource {
     public static class Zone {
         String zoneName;
         InetAddress address;
-        Record<? extends Data>[] records;
+        List<Record<? extends Data>> records;
 
-        public Zone(String zoneName, InetAddress address, Record<? extends Data>[] records) {
+        public Zone(String zoneName, InetAddress address, List<Record<? extends Data>> records) {
             this.zoneName = zoneName;
             this.address = address;
             this.records = records;
@@ -285,8 +285,8 @@ public class DNSWorld extends DNSDataSource {
         return world;
     }
 
-    static void attachSignatures(DNSMessage.Builder response, Record<? extends Data>[] records) {
-        List<Record<? extends Data>> recordList = new ArrayList<>(records.length);
+    static void attachSignatures(DNSMessage.Builder response, List<Record<? extends Data>> records) {
+        List<Record<? extends Data>> recordList = new ArrayList<>(records.size());
         for (Record<? extends Data> record : response.getAnswers()) {
             for (Record<? extends Data> r : records) {
                 if (r.name.equals(record.name) && r.type == TYPE.RRSIG && ((RRSIG) r.payloadData).typeCovered == record.type) {
@@ -308,7 +308,7 @@ public class DNSWorld extends DNSDataSource {
         response.addAdditionalResourceRecords(recordList);
     }
 
-    static void attachGlues(DNSMessage.Builder response, Collection<Record<? extends Data>> answers, Record<? extends Data>[] records) {
+    static void attachGlues(DNSMessage.Builder response, Collection<Record<? extends Data>> answers, List<Record<? extends Data>> records) {
         List<Record<? extends Data>> glues = new ArrayList<>();
         for (Record<? extends Data> record : answers) {
             if (record.type == TYPE.CNAME) {
@@ -325,7 +325,7 @@ public class DNSWorld extends DNSDataSource {
         }
     }
 
-    private static List<Record<? extends Data>> findGlues(DNSName name, Record<? extends Data>[] records) {
+    private static List<Record<? extends Data>> findGlues(DNSName name, List<Record<? extends Data>> records) {
         List<Record<? extends Data>> glues = new ArrayList<>();
         for (Record<? extends Data> record : records) {
             if (record.name.equals(name)) {
@@ -347,7 +347,7 @@ public class DNSWorld extends DNSDataSource {
             DNSMessage.Builder request = client.buildMessage(new Question(record.name, record.type, record.clazz, record.unicastQuery));
             request.setRecursionDesired(true);
             DNSMessage.Builder response = DNSMessage.builder();
-            response.setAnswers(record);
+            response.addAnswer(record);
             response.setRecursionAvailable(true);
             world.addPreparedResponse(new AnswerResponse(request.build(), response.build()));
         }
@@ -356,11 +356,27 @@ public class DNSWorld extends DNSDataSource {
 
     @SuppressWarnings("unchecked")
     public static Zone rootZone(Record<? extends Data>... records) {
+        List<Record<? extends Data>> listOfRecords = new ArrayList<>(records.length);
+        for (Record<? extends Data> record : records) {
+            listOfRecords.add(record);
+        }
+        return rootZone(listOfRecords);
+    }
+
+    public static Zone rootZone(List<Record<? extends Data>> records) {
         return new Zone("", null, records);
     }
 
     @SuppressWarnings("unchecked")
     public static Zone zone(String zoneName, String nsName, String nsIp, Record<? extends Data>... records) {
+        List<Record<? extends Data>> listOfRecords = new ArrayList<>(records.length);
+        for (Record<? extends Data> record : records) {
+            listOfRecords.add(record);
+        }
+        return zone(zoneName, nsName, nsIp, listOfRecords);
+    }
+
+    public static Zone zone(String zoneName, String nsName, String nsIp, List<Record<? extends Data>> records) {
         try {
             return zone(zoneName, InetAddress.getByAddress(nsName, parseIpV4(nsIp)), records);
         } catch (UnknownHostException e) {
@@ -369,8 +385,7 @@ public class DNSWorld extends DNSDataSource {
         }
     }
 
-    @SuppressWarnings("unchecked")
-    public static Zone zone(String zoneName, InetAddress address, Record<? extends Data>... records) {
+    public static Zone zone(String zoneName, InetAddress address, List<Record<? extends Data>> records) {
         return new Zone(zoneName, address, records);
     }
 

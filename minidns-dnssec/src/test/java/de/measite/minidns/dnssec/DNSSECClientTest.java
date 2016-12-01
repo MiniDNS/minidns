@@ -466,7 +466,7 @@ public class DNSSECClientTest {
                 )
         );
         DNSMessage.Builder nsecMessage = DNSMessage.builder();
-        Record<? extends Data>[] records = DNSSECWorld.merge(
+        List<Record<? extends Data>> records = DNSSECWorld.merge(
                                 sign(comZSK, "com", comPrivateZSK, algorithm,
                                         record("example.com", nsec("www.example.com", Record.TYPE.A))),
                                 sign(comZSK, "com", comPrivateZSK, algorithm,

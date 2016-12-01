@@ -1024,17 +1024,9 @@ public class DNSMessage {
         /**
          * Set the question part of this message.
          *
-         * @param questions The questions.
+         * @param question The question.
          * @return a reference to this builder.
          */
-        public Builder setQuestions(Question... questions) {
-            this.questions = new ArrayList<>(questions.length);
-            for (Question q : questions) {
-                this.questions.add(q);
-            }
-            return this;
-        }
-
         public Builder setQuestion(Question question) {
             this.questions = new ArrayList<>(1);
             this.questions.add(question);
@@ -1054,15 +1046,6 @@ public class DNSMessage {
                 answers = new ArrayList<>(records.size());
             }
             answers.addAll(records);
-            return this;
-        }
-
-        @SuppressWarnings("unchecked")
-        public Builder setAnswers(Record<? extends Data>... records) {
-            answers = new ArrayList<>(records.length);
-            for (Record<? extends Data> record : records) {
-                answers.add(record);
-            }
             return this;
         }
 
@@ -1093,18 +1076,17 @@ public class DNSMessage {
             return this;
         }
 
-        @SuppressWarnings("unchecked")
-        public Builder setNameserverRecords(Record<? extends Data>... records) {
-            nameserverRecords = new ArrayList<>(records.length);
-            for (Record<? extends Data> record : records) {
-                nameserverRecords.add(record);
-            }
-            return this;
-        }
-
         public Builder setAdditionalResourceRecords(Collection<Record<? extends Data>> records) {
             additionalResourceRecords = new ArrayList<>(records.size());
             additionalResourceRecords.addAll(records);
+            return this;
+        }
+
+        public Builder addAdditionalResourceRecord(Record<? extends Data> record) {
+            if (additionalResourceRecords == null) {
+                additionalResourceRecords = new ArrayList<>();
+            }
+            additionalResourceRecords.add(record);
             return this;
         }
 
@@ -1113,17 +1095,6 @@ public class DNSMessage {
                 additionalResourceRecords = new ArrayList<>(records.size());
             }
             additionalResourceRecords.addAll(records);
-            return this;
-        }
-
-        @SuppressWarnings("unchecked")
-        public Builder addAdditionalResourceRecords(Record<? super Data>... records) {
-            if (additionalResourceRecords == null) {
-                additionalResourceRecords = new ArrayList<>(records.length);
-            }
-            for (Record<? extends Data> record : records) {
-                additionalResourceRecords.add(record);
-            }
             return this;
         }
 

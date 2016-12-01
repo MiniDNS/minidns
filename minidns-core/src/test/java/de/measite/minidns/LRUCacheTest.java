@@ -64,12 +64,11 @@ public class LRUCacheTest {
         return createSampleMessage(System.currentTimeMillis());
     }
 
-    @SuppressWarnings("unchecked")
     private static DNSMessage createSampleMessage(long receiveTimestamp) {
         DNSMessage.Builder message = DNSMessage.builder();
         message.setReceiveTimestamp(receiveTimestamp);
         message.addAnswer(record("", ns("a.root-servers.net")));
-        message.addAdditionalResourceRecords(record("a.root-servers.net", a("127.0.0.1")));
+        message.addAdditionalResourceRecord(record("a.root-servers.net", a("127.0.0.1")));
         return message.build();
     }
 }
