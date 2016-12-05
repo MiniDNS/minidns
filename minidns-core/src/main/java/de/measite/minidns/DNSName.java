@@ -15,10 +15,11 @@ import java.io.DataInputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.Serializable;
-import java.net.IDN;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Locale;
+
+import de.measite.minidns.idna.MiniDnsIdna;
 
 public class DNSName implements CharSequence, Serializable, Comparable<DNSName> {
 
@@ -66,7 +67,7 @@ public class DNSName implements CharSequence, Serializable, Comparable<DNSName> 
 
     private DNSName(String name, boolean inIdnForm) {
         if (inIdnForm) {
-            ace = IDN.toASCII(name);
+            ace = MiniDnsIdna.toASCII(name);
         } else {
             ace = name.toLowerCase(Locale.US);
         }
@@ -141,7 +142,7 @@ public class DNSName implements CharSequence, Serializable, Comparable<DNSName> 
         if (idn != null)
             return idn;
 
-        idn = IDN.toUnicode(ace);
+        idn = MiniDnsIdna.toUnicode(ace);
         return idn;
     }
 
@@ -249,7 +250,7 @@ public class DNSName implements CharSequence, Serializable, Comparable<DNSName> 
         }
         byte b[] = new byte[c];
         dis.readFully(b);
-        String s = IDN.toUnicode(new String(b));
+        String s = MiniDnsIdna.toUnicode(new String(b));
         DNSName t = parse(dis, data);
         if (t.length() > 0) {
             s = s + "." + t;
