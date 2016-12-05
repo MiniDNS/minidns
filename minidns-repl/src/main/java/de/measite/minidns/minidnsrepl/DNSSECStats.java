@@ -19,8 +19,8 @@ import de.measite.minidns.dnssec.DNSSECClient;
 import de.measite.minidns.dnssec.DNSSECMessage;
 import de.measite.minidns.dnssec.UnverifiedReason;
 import de.measite.minidns.integrationtest.IntegrationTestTools.CacheConfig;
+import de.measite.minidns.iterative.ReliableDNSClient.Mode;
 import de.measite.minidns.jul.MiniDnsJul;
-import de.measite.minidns.recursive.ReliableDNSClient.Mode;
 
 public class DNSSECStats {
 

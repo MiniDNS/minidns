@@ -17,8 +17,8 @@ import de.measite.minidns.AbstractDNSClient;
 import de.measite.minidns.DNSClient;
 import de.measite.minidns.cache.LRUCache;
 import de.measite.minidns.dnssec.DNSSECClient;
+import de.measite.minidns.iterative.RecursiveDNSClient;
 import de.measite.minidns.jul.MiniDnsJul;
-import de.measite.minidns.recursive.RecursiveDNSClient;
 
 public class MiniDnsRepl {
 

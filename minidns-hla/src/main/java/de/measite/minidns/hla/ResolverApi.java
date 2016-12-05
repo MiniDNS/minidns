@@ -22,9 +22,9 @@ import de.measite.minidns.cache.LRUCache;
 import de.measite.minidns.dnssec.DNSSECClient;
 import de.measite.minidns.dnssec.DNSSECMessage;
 import de.measite.minidns.dnssec.UnverifiedReason;
+import de.measite.minidns.iterative.ReliableDNSClient;
+import de.measite.minidns.iterative.ReliableDNSClient.Mode;
 import de.measite.minidns.record.Data;
-import de.measite.minidns.recursive.ReliableDNSClient;
-import de.measite.minidns.recursive.ReliableDNSClient.Mode;
 
 public class ResolverApi {
 

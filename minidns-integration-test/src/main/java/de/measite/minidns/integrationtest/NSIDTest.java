@@ -20,7 +20,7 @@ import de.measite.minidns.EDNS.OptionCode;
 import de.measite.minidns.Question;
 import de.measite.minidns.Record.TYPE;
 import de.measite.minidns.edns.NSID;
-import de.measite.minidns.recursive.RecursiveDNSClient;
+import de.measite.minidns.iterative.RecursiveDNSClient;
 
 import static org.junit.Assert.assertNotNull;
 

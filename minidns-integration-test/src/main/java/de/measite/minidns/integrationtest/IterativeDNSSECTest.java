@@ -19,7 +19,7 @@ import de.measite.minidns.Record.TYPE;
 import de.measite.minidns.dnssec.DNSSECClient;
 import de.measite.minidns.dnssec.DNSSECMessage;
 import de.measite.minidns.integrationtest.IntegrationTestTools.CacheConfig;
-import de.measite.minidns.recursive.ReliableDNSClient.Mode;
+import de.measite.minidns.iterative.ReliableDNSClient.Mode;
 import de.measite.minidns.source.NetworkDataSourceWithAccounting;
 
 public class IterativeDNSSECTest {

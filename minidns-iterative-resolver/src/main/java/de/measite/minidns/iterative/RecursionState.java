@@ -8,7 +8,7 @@
  * upon the condition that you accept all of the terms of either
  * the Apache License 2.0, the LGPL 2.1+ or the WTFPL.
  */
-package de.measite.minidns.recursive;
+package de.measite.minidns.iterative;
 
 import java.net.InetAddress;
 import java.util.HashMap;
@@ -17,8 +17,8 @@ import java.util.Set;
 
 import de.measite.minidns.DNSMessage;
 import de.measite.minidns.Question;
-import de.measite.minidns.recursive.RecursiveClientException.LoopDetected;
-import de.measite.minidns.recursive.RecursiveClientException.MaxRecursionStepsReached;
+import de.measite.minidns.iterative.RecursiveClientException.LoopDetected;
+import de.measite.minidns.iterative.RecursiveClientException.MaxRecursionStepsReached;
 
 public class RecursionState {
 

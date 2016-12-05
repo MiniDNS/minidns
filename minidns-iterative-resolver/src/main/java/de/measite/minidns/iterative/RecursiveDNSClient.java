@@ -8,7 +8,7 @@
  * upon the condition that you accept all of the terms of either
  * the Apache License 2.0, the LGPL 2.1+ or the WTFPL.
  */
-package de.measite.minidns.recursive;
+package de.measite.minidns.iterative;
 
 import de.measite.minidns.AbstractDNSClient;
 import de.measite.minidns.DNSCache;
@@ -17,13 +17,13 @@ import de.measite.minidns.DNSName;
 import de.measite.minidns.Question;
 import de.measite.minidns.Record;
 import de.measite.minidns.Record.TYPE;
+import de.measite.minidns.iterative.RecursiveClientException.LoopDetected;
 import de.measite.minidns.record.A;
 import de.measite.minidns.record.AAAA;
 import de.measite.minidns.record.CNAME;
 import de.measite.minidns.record.Data;
 import de.measite.minidns.record.InternetAddressRR;
 import de.measite.minidns.record.NS;
-import de.measite.minidns.recursive.RecursiveClientException.LoopDetected;
 import de.measite.minidns.util.MultipleIoException;
 
 import java.io.IOException;

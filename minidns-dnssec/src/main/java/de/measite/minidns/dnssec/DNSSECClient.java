@@ -21,12 +21,12 @@ import de.measite.minidns.dnssec.UnverifiedReason.NoSecureEntryPointReason;
 import de.measite.minidns.dnssec.UnverifiedReason.NoActiveSignaturesReason;
 import de.measite.minidns.dnssec.UnverifiedReason.NoSignaturesReason;
 import de.measite.minidns.dnssec.UnverifiedReason.NoTrustAnchorReason;
+import de.measite.minidns.iterative.ReliableDNSClient;
 import de.measite.minidns.record.DLV;
 import de.measite.minidns.record.DNSKEY;
 import de.measite.minidns.record.DS;
 import de.measite.minidns.record.Data;
 import de.measite.minidns.record.RRSIG;
-import de.measite.minidns.recursive.ReliableDNSClient;
 
 import java.io.IOException;
 import java.math.BigInteger;

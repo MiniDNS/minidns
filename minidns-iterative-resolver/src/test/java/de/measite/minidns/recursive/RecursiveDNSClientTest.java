@@ -17,6 +17,8 @@ import de.measite.minidns.DNSMessage;
 import de.measite.minidns.Record;
 import de.measite.minidns.Record.TYPE;
 import de.measite.minidns.cache.LRUCache;
+import de.measite.minidns.iterative.RecursiveClientException;
+import de.measite.minidns.iterative.RecursiveDNSClient;
 import de.measite.minidns.record.A;
 import de.measite.minidns.record.Data;
 
