@@ -1,6 +1,6 @@
 dependencies {
     compile project(':minidns-core')
-    compile project(':minidns-recursive-resolver')
+    compile project(':minidns-iterative-resolver')
     testCompile project(path: ":minidns-core", configuration: "testRuntime")
     testCompile project(path: ":minidns-core", configuration: "archives")
 }

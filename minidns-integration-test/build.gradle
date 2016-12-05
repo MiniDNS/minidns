@@ -15,7 +15,7 @@ applicationDefaultJvmArgs = ["-enableassertions"]
 
 dependencies {
     compile project(':minidns-core')
-    compile project(':minidns-recursive-resolver')
+    compile project(':minidns-iterative-resolver')
     compile project(':minidns-dnssec')
     compile project(':minidns-hla')
     compile "junit:junit:$junitVersion"

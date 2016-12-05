@@ -4,7 +4,7 @@ ext {
 
 dependencies {
     compile project(':minidns-core')
-    compile project(':minidns-recursive-resolver')
+    compile project(':minidns-iterative-resolver')
     compile project(':minidns-dnssec')
     compile project(':minidns-integration-test')
     compile project(':minidns-hla')
