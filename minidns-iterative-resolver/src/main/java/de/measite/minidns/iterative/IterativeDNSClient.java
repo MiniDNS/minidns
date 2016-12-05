@@ -17,7 +17,7 @@ import de.measite.minidns.DNSName;
 import de.measite.minidns.Question;
 import de.measite.minidns.Record;
 import de.measite.minidns.Record.TYPE;
-import de.measite.minidns.iterative.RecursiveClientException.LoopDetected;
+import de.measite.minidns.iterative.IterativeClientException.LoopDetected;
 import de.measite.minidns.record.A;
 import de.measite.minidns.record.AAAA;
 import de.measite.minidns.record.CNAME;
@@ -40,7 +40,7 @@ import java.util.Map;
 import java.util.Random;
 import java.util.logging.Level;
 
-public class RecursiveDNSClient extends AbstractDNSClient {
+public class IterativeDNSClient extends AbstractDNSClient {
 
     private static final Map<Character, InetAddress> IPV4_ROOT_SERVER_MAP = new HashMap<>();
 
@@ -80,7 +80,7 @@ public class RecursiveDNSClient extends AbstractDNSClient {
     /**
      * Create a new recursive DNS client using the global default cache.
      */
-    public RecursiveDNSClient() {
+    public IterativeDNSClient() {
         super();
     }
 
@@ -89,7 +89,7 @@ public class RecursiveDNSClient extends AbstractDNSClient {
      *
      * @param cache The backend DNS cache.
      */
-    public RecursiveDNSClient(DNSCache cache) {
+    public IterativeDNSClient(DNSCache cache) {
         super(cache);
     }
 
@@ -103,8 +103,8 @@ public class RecursiveDNSClient extends AbstractDNSClient {
     @Override
     protected DNSMessage query(DNSMessage.Builder queryBuilder) throws IOException {
         DNSMessage q = queryBuilder.build();
-        RecursionState recursionState = new RecursionState(this);
-        DNSMessage message = queryRecursive(recursionState, q);
+        ResolutionState resolutionState = new ResolutionState(this);
+        DNSMessage message = queryRecursive(resolutionState, q);
         return message;
     }
 
@@ -148,7 +148,7 @@ public class RecursiveDNSClient extends AbstractDNSClient {
         return res;
     }
 
-    private DNSMessage queryRecursive(RecursionState recursionState, DNSMessage q) throws IOException {
+    private DNSMessage queryRecursive(ResolutionState resolutionState, DNSMessage q) throws IOException {
         InetAddress primaryTarget = null, secondaryTarget = null;
 
         Question question = q.getQuestion();
@@ -213,7 +213,7 @@ public class RecursiveDNSClient extends AbstractDNSClient {
         List<IOException> ioExceptions = new LinkedList<>();
 
         try {
-            return queryRecursive(recursionState, q, primaryTarget, authoritativeZone);
+            return queryRecursive(resolutionState, q, primaryTarget, authoritativeZone);
         } catch (IOException ioException) {
             abortIfFatal(ioException);
             ioExceptions.add(ioException);
@@ -221,7 +221,7 @@ public class RecursiveDNSClient extends AbstractDNSClient {
 
         if (secondaryTarget != null) {
             try {
-                return queryRecursive(recursionState, q, secondaryTarget, authoritativeZone);
+                return queryRecursive(resolutionState, q, secondaryTarget, authoritativeZone);
             } catch (IOException ioException) {
                 ioExceptions.add(ioException);
             }
@@ -231,8 +231,8 @@ public class RecursiveDNSClient extends AbstractDNSClient {
         return null;
     }
 
-    private DNSMessage queryRecursive(RecursionState recursionState, DNSMessage q, InetAddress address, DNSName authoritativeZone) throws IOException {
-        recursionState.recurse(address, q);
+    private DNSMessage queryRecursive(ResolutionState resolutionState, DNSMessage q, InetAddress address, DNSName authoritativeZone) throws IOException {
+        resolutionState.recurse(address, q);
 
         DNSMessage resMessage = query(q, address);
 
@@ -266,11 +266,11 @@ public class RecursiveDNSClient extends AbstractDNSClient {
                 InetAddress target = addressIterator.next();
                 DNSMessage recursive = null;
                 try {
-                    recursive = queryRecursive(recursionState, q, target, record.name);
+                    recursive = queryRecursive(resolutionState, q, target, record.name);
                 } catch (IOException e) {
                    abortIfFatal(e);
                    LOGGER.log(Level.FINER, "Exception while recursing", e);
-                   recursionState.decrementSteps();
+                   resolutionState.decrementSteps();
                    ioExceptions.add(e);
                    if (!addressIterator.hasNext()) {
                        iterator.remove();
@@ -293,9 +293,9 @@ public class RecursiveDNSClient extends AbstractDNSClient {
 
             IpResultSet res = null;
             try {
-                res = resolveIpRecursive(recursionState, name);
+                res = resolveIpRecursive(resolutionState, name);
             } catch (IOException e) {
-                recursionState.decrementSteps();
+                resolutionState.decrementSteps();
                 ioExceptions.add(e);
             }
             if (res == null) {
@@ -305,9 +305,9 @@ public class RecursiveDNSClient extends AbstractDNSClient {
             for (InetAddress target : res.addresses) {
                 DNSMessage recursive = null;
                 try {
-                    recursive = queryRecursive(recursionState, q, target, record.name);
+                    recursive = queryRecursive(resolutionState, q, target, record.name);
                 } catch (IOException e) {
-                    recursionState.decrementSteps();
+                    resolutionState.decrementSteps();
                     ioExceptions.add(e);
                     continue;
                 }
@@ -336,24 +336,24 @@ public class RecursiveDNSClient extends AbstractDNSClient {
         if (preferedIpVersion == null) {
             throw new IllegalArgumentException();
         }
-        RecursiveDNSClient.ipVersionSetting = preferedIpVersion;
+        IterativeDNSClient.ipVersionSetting = preferedIpVersion;
     }
 
-    private IpResultSet resolveIpRecursive(RecursionState recursionState, DNSName name) throws IOException {
+    private IpResultSet resolveIpRecursive(ResolutionState resolutionState, DNSName name) throws IOException {
         IpResultSet.Builder res = newIpResultSetBuilder();
 
         if (ipVersionSetting != IpVersionSetting.v6only) {
             // TODO Try to retrieve A records for name out from cache.
             Question question = new Question(name, TYPE.A);
             final DNSMessage query = getQueryFor(question);
-            DNSMessage aMessage = queryRecursive(recursionState, query);
+            DNSMessage aMessage = queryRecursive(resolutionState, query);
             if (aMessage != null) {
                 for (Record<? extends Data> answer : aMessage.answerSection) {
                     if (answer.isAnswer(question)) {
                         InetAddress inetAddress = inetAddressFromRecord(name.ace, (A) answer.payloadData);
                         res.ipv4Addresses.add(inetAddress);
                     } else if (answer.type == TYPE.CNAME && answer.name.equals(name)) {
-                        return resolveIpRecursive(recursionState, ((CNAME) answer.payloadData).name);
+                        return resolveIpRecursive(resolutionState, ((CNAME) answer.payloadData).name);
                     }
                 }
             }
@@ -363,14 +363,14 @@ public class RecursiveDNSClient extends AbstractDNSClient {
             // TODO Try to retrieve AAAA records for name out from cache.
             Question question = new Question(name, TYPE.AAAA);
             final DNSMessage query = getQueryFor(question);
-            DNSMessage aMessage = queryRecursive(recursionState, query);
+            DNSMessage aMessage = queryRecursive(resolutionState, query);
             if (aMessage != null) {
                 for (Record<? extends Data> answer : aMessage.answerSection) {
                     if (answer.isAnswer(question)) {
                         InetAddress inetAddress = inetAddressFromRecord(name.ace, (AAAA) answer.payloadData);
                         res.ipv6Addresses.add(inetAddress);
                     } else if (answer.type == TYPE.CNAME && answer.name.equals(name)) {
-                        return resolveIpRecursive(recursionState, ((CNAME) answer.payloadData).name);
+                        return resolveIpRecursive(resolutionState, ((CNAME) answer.payloadData).name);
                     }
                 }
             }

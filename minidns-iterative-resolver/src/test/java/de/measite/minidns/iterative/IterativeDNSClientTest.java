@@ -8,7 +8,7 @@
  * upon the condition that you accept all of the terms of either
  * the Apache License 2.0, the LGPL 2.1+ or the WTFPL.
  */
-package de.measite.minidns.recursive;
+package de.measite.minidns.iterative;
 
 import java.io.IOException;
 import java.util.List;
@@ -17,8 +17,6 @@ import de.measite.minidns.DNSMessage;
 import de.measite.minidns.Record;
 import de.measite.minidns.Record.TYPE;
 import de.measite.minidns.cache.LRUCache;
-import de.measite.minidns.iterative.RecursiveClientException;
-import de.measite.minidns.iterative.RecursiveDNSClient;
 import de.measite.minidns.record.A;
 import de.measite.minidns.record.Data;
 
@@ -35,12 +33,12 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 
-public class RecursiveDNSClientTest {
+public class IterativeDNSClientTest {
 
     @SuppressWarnings("unchecked")
     @Test
-    public void basicRecursionTest() throws IOException {
-        RecursiveDNSClient client = new RecursiveDNSClient(new LRUCache(0));
+    public void basicIterativeTest() throws IOException {
+        IterativeDNSClient client = new IterativeDNSClient(new LRUCache(0));
         applyZones(client,
                 rootZone(
                         record("com", ns("ns.com")),
@@ -61,9 +59,9 @@ public class RecursiveDNSClientTest {
     }
 
     @SuppressWarnings("unchecked")
-    @Test(expected = RecursiveClientException.LoopDetected.class)
-    public void loopRecursionTest() throws IOException {
-        RecursiveDNSClient client = new RecursiveDNSClient(new LRUCache(0));
+    @Test(expected = IterativeClientException.LoopDetected.class)
+    public void loopIterativeTest() throws IOException {
+        IterativeDNSClient client = new IterativeDNSClient(new LRUCache(0));
         applyZones(client,
                 rootZone(
                         record("a", ns("a.ns")),
@@ -82,7 +80,7 @@ public class RecursiveDNSClientTest {
     @SuppressWarnings("unchecked")
     @Test
     public void notGluedNsTest() throws IOException {
-        RecursiveDNSClient client = new RecursiveDNSClient(new LRUCache(0));
+        IterativeDNSClient client = new IterativeDNSClient(new LRUCache(0));
         applyZones(client,
                 rootZone(
                         record("com", ns("ns.com")),

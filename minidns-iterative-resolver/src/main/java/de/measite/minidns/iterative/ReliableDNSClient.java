@@ -42,19 +42,19 @@ public class ReliableDNSClient extends AbstractDNSClient {
         recursiveOnly,
 
         /**
-         * Only use iterative resolving.  This makes {@code ReliableDNSClient} behave like a {@link RecursiveDNSClient}.
+         * Only use iterative resolving.  This makes {@code ReliableDNSClient} behave like a {@link IterativeDNSClient}.
          */
         iterativeOnly,
     }
 
-    private final RecursiveDNSClient recursiveDnsClient;
+    private final IterativeDNSClient recursiveDnsClient;
     private final DNSClient dnsClient;
 
     private Mode mode = Mode.recursiveWithIterativeFallback;
 
     public ReliableDNSClient(DNSCache dnsCache) {
         super(dnsCache);
-        recursiveDnsClient = new RecursiveDNSClient(dnsCache) {
+        recursiveDnsClient = new IterativeDNSClient(dnsCache) {
             @Override
             protected DNSMessage.Builder newQuestion(DNSMessage.Builder questionMessage) {
                 questionMessage = super.newQuestion(questionMessage);

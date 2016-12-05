@@ -17,13 +17,13 @@ import de.measite.minidns.AbstractDNSClient;
 import de.measite.minidns.DNSClient;
 import de.measite.minidns.cache.LRUCache;
 import de.measite.minidns.dnssec.DNSSECClient;
-import de.measite.minidns.iterative.RecursiveDNSClient;
+import de.measite.minidns.iterative.IterativeDNSClient;
 import de.measite.minidns.jul.MiniDnsJul;
 
 public class MiniDnsRepl {
 
     public static final DNSClient DNSCLIENT = new DNSClient();
-    public static final RecursiveDNSClient RECURSIVEDNSCLIENT = new RecursiveDNSClient();
+    public static final IterativeDNSClient RECURSIVEDNSCLIENT = new IterativeDNSClient();
     public static final DNSSECClient DNSSECCLIENT = new DNSSECClient();
 
     static {

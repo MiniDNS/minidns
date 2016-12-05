@@ -12,18 +12,18 @@ package de.measite.minidns.iterative;
 
 import de.measite.minidns.MiniDNSException;
 
-public abstract class RecursiveClientException extends MiniDNSException {
+public abstract class IterativeClientException extends MiniDNSException {
 
     /**
      * 
      */
     private static final long serialVersionUID = 1L;
 
-    protected RecursiveClientException(String message) {
+    protected IterativeClientException(String message) {
         super(message);
     }
 
-    public static class LoopDetected extends RecursiveClientException {
+    public static class LoopDetected extends IterativeClientException {
 
         /**
          * 
@@ -31,20 +31,20 @@ public abstract class RecursiveClientException extends MiniDNSException {
         private static final long serialVersionUID = 1L;
 
         public LoopDetected() {
-            super("Recursion loop detected");
+            super("Resolution loop detected");
         }
 
     }
 
-    public static class MaxRecursionStepsReached extends RecursiveClientException {
+    public static class MaxIterativeStepsReached extends IterativeClientException {
 
         /**
          * 
          */
         private static final long serialVersionUID = 1L;
 
-        public MaxRecursionStepsReached() {
-            super("Maxmimum recursion steps reached");
+        public MaxIterativeStepsReached() {
+            super("Maxmimum steps reached");
         }
 
     }

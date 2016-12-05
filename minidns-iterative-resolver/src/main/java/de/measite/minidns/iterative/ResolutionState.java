@@ -17,29 +17,29 @@ import java.util.Set;
 
 import de.measite.minidns.DNSMessage;
 import de.measite.minidns.Question;
-import de.measite.minidns.iterative.RecursiveClientException.LoopDetected;
-import de.measite.minidns.iterative.RecursiveClientException.MaxRecursionStepsReached;
+import de.measite.minidns.iterative.IterativeClientException.LoopDetected;
+import de.measite.minidns.iterative.IterativeClientException.MaxIterativeStepsReached;
 
-public class RecursionState {
+public class ResolutionState {
 
-    private final RecursiveDNSClient recursiveDnsClient;
+    private final IterativeDNSClient recursiveDnsClient;
     private final HashMap<InetAddress, Set<Question>> map = new HashMap<>();
     private int steps;
 
-    RecursionState(RecursiveDNSClient recursiveDnsClient) {
+    ResolutionState(IterativeDNSClient recursiveDnsClient) {
         this.recursiveDnsClient = recursiveDnsClient;
     }
 
-    void recurse(InetAddress address, DNSMessage query) throws LoopDetected, MaxRecursionStepsReached {
+    void recurse(InetAddress address, DNSMessage query) throws LoopDetected, MaxIterativeStepsReached {
         Question question = query.getQuestion();
         if (!map.containsKey(address)) {
             map.put(address, new HashSet<Question>());
         } else if (map.get(address).contains(question)) {
-            throw new RecursiveClientException.LoopDetected();
+            throw new IterativeClientException.LoopDetected();
         }
 
         if (++steps > recursiveDnsClient.maxSteps) {
-            throw new RecursiveClientException.MaxRecursionStepsReached(); 
+            throw new IterativeClientException.MaxIterativeStepsReached(); 
         }
 
         boolean isNew = map.get(address).add(question);

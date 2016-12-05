@@ -20,7 +20,7 @@ import de.measite.minidns.EDNS.OptionCode;
 import de.measite.minidns.Question;
 import de.measite.minidns.Record.TYPE;
 import de.measite.minidns.edns.NSID;
-import de.measite.minidns.iterative.RecursiveDNSClient;
+import de.measite.minidns.iterative.IterativeDNSClient;
 
 import static org.junit.Assert.assertNotNull;
 
@@ -37,7 +37,7 @@ public class NSIDTest {
         };
         DNSMessage response = null;
         Question q = new Question("de", TYPE.NS);
-        for (InetAddress lRoot : RecursiveDNSClient.getRootServer('l')) {
+        for (InetAddress lRoot : IterativeDNSClient.getRootServer('l')) {
             try {
                 response = client.query(q, lRoot);
             } catch (IOException e) {
