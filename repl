@@ -26,5 +26,5 @@ java \
 	-ea \
 	-Dscala.usejavacp=true \
 	-classpath "${GRADLE_CLASSPATH}" \
-	ammonite.repl.Main \
+	ammonite.Main \
 	-f minidns-repl/scala.repl
