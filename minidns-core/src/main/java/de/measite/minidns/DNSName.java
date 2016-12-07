@@ -149,6 +149,9 @@ public class DNSName implements CharSequence, Serializable, Comparable<DNSName> 
         }
 
         baos.write(0);
+
+        assert (baos.size() <= MAX_DNSNAME_LENGTH_IN_OCTETS);
+
         bytes = baos.toByteArray();
     }
 
