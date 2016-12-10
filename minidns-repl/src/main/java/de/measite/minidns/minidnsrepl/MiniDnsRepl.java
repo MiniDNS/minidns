@@ -17,8 +17,11 @@ import de.measite.minidns.AbstractDNSClient;
 import de.measite.minidns.DNSClient;
 import de.measite.minidns.cache.LRUCache;
 import de.measite.minidns.dnssec.DNSSECClient;
+import de.measite.minidns.hla.DnssecResolverApi;
+import de.measite.minidns.hla.ResolverResult;
 import de.measite.minidns.iterative.IterativeDNSClient;
 import de.measite.minidns.jul.MiniDnsJul;
+import de.measite.minidns.record.A;
 
 public class MiniDnsRepl {
 
@@ -52,8 +55,10 @@ public class MiniDnsRepl {
 
     public static void main(String[] args) throws IOException, SecurityException, IllegalArgumentException {
         MiniDnsJul.enableMiniDnsTrace();
-        DNSSECStats.iterativeDnssecLookupNormalVsExtendedCache();
+
+        ResolverResult<A> res = DnssecResolverApi.INSTANCE.resolveDnssecReliable("verteiltesysteme.net", A.class);
         /*
+        DNSSECStats.iterativeDnssecLookupNormalVsExtendedCache();
         DNSSECClient client = new DNSSECClient(new LRUCache(1024));
         DNSSECMessage secRes = client.queryDnssec("verteiltesysteme.net", TYPE.A);
         */
@@ -64,6 +69,7 @@ public class MiniDnsRepl {
         DNSMessage res = RECURSIVEDNSCLIENT.query("mate.geekplace.eu", TYPE.A);
         */
         // CHECKSTYLE:OFF
+        System.out.println(res);
 //        System.out.println(nsid);
 //      System.out.println(secRes);
 //        System.out.println(res);

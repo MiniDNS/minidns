@@ -24,7 +24,7 @@ public class HlaTest {
 
     @IntegrationTest
     public static void resolverTest() throws IOException {
-        ResolverResult<A> res = ResolverApi.NON_DNSSEC.resolve("geekplace.eu", A.class);
+        ResolverResult<A> res = ResolverApi.INSTANCE.resolve("geekplace.eu", A.class);
         assertEquals(true, res.wasSuccessful());
         Set<A> answers = res.getAnswers();
         assertEquals(1, answers.size());
