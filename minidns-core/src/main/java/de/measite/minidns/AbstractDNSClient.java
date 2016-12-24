@@ -55,6 +55,23 @@ public abstract class AbstractDNSClient {
 
     protected DNSDataSource dataSource = new NetworkDataSource();
 
+    public enum IpVersionSetting {
+        v4only,
+        v6only,
+        v4v6,
+        v6v4,
+        ;
+    }
+
+    protected static IpVersionSetting ipVersionSetting = IpVersionSetting.v4v6;
+
+    public static void setPreferedIpVersion(IpVersionSetting preferedIpVersion) {
+        if (preferedIpVersion == null) {
+            throw new IllegalArgumentException();
+        }
+        AbstractDNSClient.ipVersionSetting = preferedIpVersion;
+    }
+
     /**
      * Create a new DNS client with the given DNS cache.
      *
@@ -240,34 +257,8 @@ public abstract class AbstractDNSClient {
         return query(q, address);
     }
 
-    /**
-     * Query a specific server for one entry.
-     *
-     * @param query The query message.
-     * @param host The dns server host.
-     * @return The response (or null on timeout/error).
-     * @throws IOException On IOErrors.
-     */
-    public DNSMessage query(DNSMessage query, String host) throws IOException {
-        InetAddress hostAddress = InetAddress.getByName(host);
-        return query(query, hostAddress);
-    }
-
     public final DNSMessage query(DNSMessage query, InetAddress host) throws IOException {
         return query(query, host, 53);
-    }
-
-    /**
-     * Query a specific server for one entry.
-     *
-     * @param q    The question section of the DNS query.
-     * @param host The dns server host.
-     * @return The response (or null on timeout/error).
-     * @throws IOException On IOErrors.
-     */
-    public DNSMessage query(Question q, String host) throws IOException {
-        DNSMessage query = getQueryFor(q);
-        return query(query, host);
     }
 
     /**

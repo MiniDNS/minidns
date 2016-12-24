@@ -16,7 +16,6 @@ import de.measite.minidns.dnsserverlookup.AbstractDNSServerLookupMechanism;
 import de.measite.minidns.dnsserverlookup.AndroidUsingExec;
 import de.measite.minidns.dnsserverlookup.AndroidUsingReflection;
 import de.measite.minidns.dnsserverlookup.DNSServerLookupMechanism;
-import de.measite.minidns.dnsserverlookup.HardcodedDNSServerAddresses;
 import de.measite.minidns.record.A;
 import de.measite.minidns.source.DNSDataSource;
 
@@ -46,7 +45,6 @@ public class DNSClientTest {
         List<DNSServerLookupMechanism> expectedOrder = new ArrayList<>();
         expectedOrder.add(0, AndroidUsingExec.INSTANCE);
         expectedOrder.add(1, AndroidUsingReflection.INSTANCE);
-        expectedOrder.add(2, HardcodedDNSServerAddresses.INSTANCE);
         for (DNSServerLookupMechanism mechanism : DNSClient.LOOKUP_MECHANISMS) {
             if (expectedOrder.isEmpty()) {
                 break;

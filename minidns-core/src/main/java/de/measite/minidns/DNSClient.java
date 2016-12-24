@@ -13,16 +13,21 @@ package de.measite.minidns;
 import de.measite.minidns.dnsserverlookup.AndroidUsingExec;
 import de.measite.minidns.dnsserverlookup.AndroidUsingReflection;
 import de.measite.minidns.dnsserverlookup.DNSServerLookupMechanism;
-import de.measite.minidns.dnsserverlookup.HardcodedDNSServerAddresses;
 import de.measite.minidns.dnsserverlookup.UnixUsingEtcResolvConf;
+import de.measite.minidns.util.CollectionsUtil;
+import de.measite.minidns.util.InetAddressUtil;
 import de.measite.minidns.util.MultipleIoException;
 
 import java.io.IOException;
+import java.net.Inet4Address;
+import java.net.Inet6Address;
+import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.logging.Level;
 
 /**
@@ -33,14 +38,30 @@ public class DNSClient extends AbstractDNSClient {
 
     static final List<DNSServerLookupMechanism> LOOKUP_MECHANISMS = new ArrayList<>();
 
+    static final Set<Inet4Address> STATIC_IPV4_DNS_SERVERS = new CopyOnWriteArraySet<>();
+    static final Set<Inet6Address> STATIC_IPV6_DNS_SERVERS = new CopyOnWriteArraySet<>();
+
     static {
         addDnsServerLookupMechanism(AndroidUsingExec.INSTANCE);
         addDnsServerLookupMechanism(AndroidUsingReflection.INSTANCE);
-        addDnsServerLookupMechanism(HardcodedDNSServerAddresses.INSTANCE);
         addDnsServerLookupMechanism(UnixUsingEtcResolvConf.INSTANCE);
+
+        try {
+            Inet4Address googleV4Dns = InetAddressUtil.ipv4From("8.8.8.8");
+            STATIC_IPV4_DNS_SERVERS.add(googleV4Dns);
+        } catch (IllegalArgumentException e) {
+            LOGGER.log(Level.WARNING, "Could not add static IPv4 DNS Server", e);
+        }
+
+        try {
+            Inet6Address googleV6Dns = InetAddressUtil.ipv6From("[2001:4860:4860::8888]");
+            STATIC_IPV6_DNS_SERVERS.add(googleV6Dns);
+        } catch (IllegalArgumentException e) {
+            LOGGER.log(Level.WARNING, "Could not add static IPv6 DNS Server", e);
+        }
     }
 
-    private final Set<String> nonRaServers = Collections.newSetFromMap(new ConcurrentHashMap<String, Boolean>(4));
+    private final Set<InetAddress> nonRaServers = Collections.newSetFromMap(new ConcurrentHashMap<InetAddress, Boolean>(4));
 
     private boolean askForDnssec = false;
     private boolean disableResultFilter = false;
@@ -76,9 +97,47 @@ public class DNSClient extends AbstractDNSClient {
             return responseMessage;
         }
 
-        String dnsServer[] = findDNS();
-        List<IOException> ioExceptions = new ArrayList<>(dnsServer.length);
-        for (String dns : dnsServer) {
+        String dnsServerStrings[] = findDNS();
+
+        List<InetAddress> dnsServerAddresses = new ArrayList<>(dnsServerStrings.length + 2);
+        for (String dnsServerString : dnsServerStrings) {
+            if (dnsServerString == null || dnsServerString.isEmpty()) {
+                LOGGER.finest("findDns() returned null or empty string as dns server");
+                continue;
+            }
+            InetAddress dnsServerAddress = InetAddress.getByName(dnsServerString);
+            dnsServerAddresses.add(dnsServerAddress);
+        }
+
+        InetAddress[] selectedHardcodedDnsServerAddresses = new InetAddress[2];
+        {
+            InetAddress primaryHardcodedDnsServer = null, secondaryHardcodedDnsServer = null;
+            switch (ipVersionSetting) {
+            case v4v6:
+                primaryHardcodedDnsServer = getRandomHardcodedIpv4DnsServer();
+                secondaryHardcodedDnsServer = getRandomHarcodedIpv6DnsServer();
+                break;
+            case v6v4:
+                primaryHardcodedDnsServer = getRandomHarcodedIpv6DnsServer();
+                secondaryHardcodedDnsServer = getRandomHardcodedIpv4DnsServer();
+                break;
+            case v4only:
+                primaryHardcodedDnsServer = getRandomHardcodedIpv4DnsServer();
+                break;
+            case v6only:
+                primaryHardcodedDnsServer = getRandomHarcodedIpv6DnsServer();
+                break;
+            }
+            selectedHardcodedDnsServerAddresses[0] = primaryHardcodedDnsServer;
+            selectedHardcodedDnsServerAddresses[1] = secondaryHardcodedDnsServer;
+        }
+        for (InetAddress selectedHardcodedDnsServerAddress : selectedHardcodedDnsServerAddresses) {
+            if (selectedHardcodedDnsServerAddress == null) continue;
+            dnsServerAddresses.add(selectedHardcodedDnsServerAddress);
+        }
+
+        List<IOException> ioExceptions = new ArrayList<>(dnsServerAddresses.size());
+        for (InetAddress dns : dnsServerAddresses) {
             if (nonRaServers.contains(dns)) {
                 LOGGER.finer("Skipping " + dns + " because it was marked as \"recursion not available\"");
                 continue;
@@ -174,5 +233,13 @@ public class DNSClient extends AbstractDNSClient {
 
     public void setDisableResultFilter(boolean disableResultFilter) {
         this.disableResultFilter = disableResultFilter;
+    }
+
+    public InetAddress getRandomHardcodedIpv4DnsServer() {
+        return CollectionsUtil.getRandomFrom(STATIC_IPV4_DNS_SERVERS, insecureRandom);
+    }
+
+    public InetAddress getRandomHarcodedIpv6DnsServer() {
+        return CollectionsUtil.getRandomFrom(STATIC_IPV6_DNS_SERVERS, insecureRandom);
     }
 }

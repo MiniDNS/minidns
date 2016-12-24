@@ -322,23 +322,6 @@ public class IterativeDNSClient extends AbstractDNSClient {
         return null;
     }
 
-    public enum IpVersionSetting {
-        v4only,
-        v6only,
-        v4v6,
-        v6v4,
-        ;
-    }
-
-    private static IpVersionSetting ipVersionSetting = IpVersionSetting.v4v6;
-
-    public static void setPreferedIpVersion(IpVersionSetting preferedIpVersion) {
-        if (preferedIpVersion == null) {
-            throw new IllegalArgumentException();
-        }
-        IterativeDNSClient.ipVersionSetting = preferedIpVersion;
-    }
-
     private IpResultSet resolveIpRecursive(ResolutionState resolutionState, DNSName name) throws IOException {
         IpResultSet.Builder res = newIpResultSetBuilder();
 
