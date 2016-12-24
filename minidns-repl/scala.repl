@@ -13,6 +13,7 @@ import de.measite.minidns.minidnsrepl.MiniDNSStats._
 import de.measite.minidns.jul.MiniDnsJul._
 
 // Some standard values
+Predef.println("Set value 'c' to DNSCLIENT")
 val c = de.measite.minidns.minidnsrepl.MiniDnsRepl.DNSCLIENT
 val rc = de.measite.minidns.minidnsrepl.MiniDnsRepl.RECURSIVEDNSCLIENT
 val dc = de.measite.minidns.minidnsrepl.MiniDnsRepl.DNSSECCLIENT
@@ -20,3 +21,4 @@ val dc = de.measite.minidns.minidnsrepl.MiniDnsRepl.DNSSECCLIENT
 val r = de.measite.minidns.hla.ResolverApi.INSTANCE
 // A DNSSEC resolver
 val dr = de.measite.minidns.hla.DnssecResolverApi.INSTANCE
+
