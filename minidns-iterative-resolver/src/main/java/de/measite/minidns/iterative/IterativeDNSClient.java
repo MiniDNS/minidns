@@ -27,6 +27,8 @@ import de.measite.minidns.record.NS;
 import de.measite.minidns.util.MultipleIoException;
 
 import java.io.IOException;
+import java.net.Inet4Address;
+import java.net.Inet6Address;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
@@ -46,33 +48,33 @@ public class IterativeDNSClient extends AbstractDNSClient {
 
     private static final Map<Character, InetAddress> IPV6_ROOT_SERVER_MAP = new HashMap<>();
 
-    protected static final InetAddress[] IPV4_ROOT_SERVERS = new InetAddress[] {
-        rootServerInetAddress('a', new int[]{198,  41,   0,   4}),
-        rootServerInetAddress('b', new int[]{192, 228,  79, 201}),
-        rootServerInetAddress('c', new int[]{192,  33,   4,  12}),
-        rootServerInetAddress('d', new int[]{199,   7,  91 , 13}),
-        rootServerInetAddress('e', new int[]{192, 203, 230,  10}),
-        rootServerInetAddress('f', new int[]{192,   5,   5, 241}),
-        rootServerInetAddress('g', new int[]{192, 112,  36,   4}),
-        rootServerInetAddress('h', new int[]{198,  97, 190,  53}),
-        rootServerInetAddress('i', new int[]{192,  36, 148,  17}),
-        rootServerInetAddress('j', new int[]{192,  58, 128,  30}),
-        rootServerInetAddress('k', new int[]{193,   0,  14, 129}),
-        rootServerInetAddress('l', new int[]{199,   7,  83,  42}),
-        rootServerInetAddress('m', new int[]{202,  12,  27,  33}),
+    protected static final Inet4Address[] IPV4_ROOT_SERVERS = new Inet4Address[] {
+        rootServerInet4Address('a', 198,  41,   0,   4),
+        rootServerInet4Address('b', 192, 228,  79, 201),
+        rootServerInet4Address('c', 192,  33,   4,  12),
+        rootServerInet4Address('d', 199,   7,  91 , 13),
+        rootServerInet4Address('e', 192, 203, 230,  10),
+        rootServerInet4Address('f', 192,   5,   5, 241),
+        rootServerInet4Address('g', 192, 112,  36,   4),
+        rootServerInet4Address('h', 198,  97, 190,  53),
+        rootServerInet4Address('i', 192,  36, 148,  17),
+        rootServerInet4Address('j', 192,  58, 128,  30),
+        rootServerInet4Address('k', 193,   0,  14, 129),
+        rootServerInet4Address('l', 199,   7,  83,  42),
+        rootServerInet4Address('m', 202,  12,  27,  33),
     };
 
-    protected static final InetAddress[] IPV6_ROOT_SERVERS = new InetAddress[] {
-        rootServerInetAddress('a', new int[]{0x2001, 0x0503, 0xba3e, 0x0000, 0x0000, 0x000, 0x0002, 0x0030}),
-        rootServerInetAddress('b', new int[]{0x2001, 0x0500, 0x0084, 0x0000, 0x0000, 0x000, 0x0000, 0x000b}),
-        rootServerInetAddress('c', new int[]{0x2001, 0x0500, 0x0002, 0x0000, 0x0000, 0x000, 0x0000, 0x000c}),
-        rootServerInetAddress('d', new int[]{0x2001, 0x0500, 0x002d, 0x0000, 0x0000, 0x000, 0x0000, 0x000d}),
-        rootServerInetAddress('f', new int[]{0x2001, 0x0500, 0x002f, 0x0000, 0x0000, 0x000, 0x0000, 0x000f}),
-        rootServerInetAddress('h', new int[]{0x2001, 0x0500, 0x0001, 0x0000, 0x0000, 0x000, 0x0000, 0x0053}),
-        rootServerInetAddress('i', new int[]{0x2001, 0x07fe, 0x0000, 0x0000, 0x0000, 0x000, 0x0000, 0x0053}),
-        rootServerInetAddress('j', new int[]{0x2001, 0x0503, 0x0c27, 0x0000, 0x0000, 0x000, 0x0002, 0x0030}),
-        rootServerInetAddress('l', new int[]{0x2001, 0x0500, 0x0003, 0x0000, 0x0000, 0x000, 0x0000, 0x0042}),
-        rootServerInetAddress('m', new int[]{0x2001, 0x0dc3, 0x0000, 0x0000, 0x0000, 0x000, 0x0000, 0x0035}),
+    protected static final Inet6Address[] IPV6_ROOT_SERVERS = new Inet6Address[] {
+        rootServerInet6Address('a', 0x2001, 0x0503, 0xba3e, 0x0000, 0x0000, 0x000, 0x0002, 0x0030),
+        rootServerInet6Address('b', 0x2001, 0x0500, 0x0084, 0x0000, 0x0000, 0x000, 0x0000, 0x000b),
+        rootServerInet6Address('c', 0x2001, 0x0500, 0x0002, 0x0000, 0x0000, 0x000, 0x0000, 0x000c),
+        rootServerInet6Address('d', 0x2001, 0x0500, 0x002d, 0x0000, 0x0000, 0x000, 0x0000, 0x000d),
+        rootServerInet6Address('f', 0x2001, 0x0500, 0x002f, 0x0000, 0x0000, 0x000, 0x0000, 0x000f),
+        rootServerInet6Address('h', 0x2001, 0x0500, 0x0001, 0x0000, 0x0000, 0x000, 0x0000, 0x0053),
+        rootServerInet6Address('i', 0x2001, 0x07fe, 0x0000, 0x0000, 0x0000, 0x000, 0x0000, 0x0053),
+        rootServerInet6Address('j', 0x2001, 0x0503, 0x0c27, 0x0000, 0x0000, 0x000, 0x0002, 0x0030),
+        rootServerInet6Address('l', 0x2001, 0x0500, 0x0003, 0x0000, 0x0000, 0x000, 0x0000, 0x0042),
+        rootServerInet6Address('m', 0x2001, 0x0dc3, 0x0000, 0x0000, 0x0000, 0x000, 0x0000, 0x0035),
     };
 
     int maxSteps = 128;
@@ -108,11 +110,11 @@ public class IterativeDNSClient extends AbstractDNSClient {
         return message;
     }
 
-    private InetAddress getRandomIpv4RootServer() {
+    private Inet4Address getRandomIpv4RootServer() {
         return IPV4_ROOT_SERVERS[insecureRandom.nextInt(IPV4_ROOT_SERVERS.length)];
     }
 
-    private InetAddress getRandomIpv6RootServer() {
+    private Inet6Address getRandomIpv6RootServer() {
         return IPV6_ROOT_SERVERS[insecureRandom.nextInt(IPV6_ROOT_SERVERS.length)];
     }
 
@@ -438,26 +440,31 @@ public class IterativeDNSClient extends AbstractDNSClient {
         return res;
     }
 
-    private static InetAddress rootServerInetAddress(char rootServerId, int[] addr) {
-        InetAddress inetAddress;
+    private static Inet4Address rootServerInet4Address(char rootServerId, int addr0, int addr1, int addr2, int addr3) {
+        Inet4Address inetAddress;
         String name = rootServerId + ".root-servers.net";
-        if (addr.length == 4) {
             try {
-                inetAddress = InetAddress.getByAddress(name, new byte[] { (byte) addr[0], (byte) addr[1], (byte) addr[2],
-                        (byte) addr[3] });
+                inetAddress = (Inet4Address) InetAddress.getByAddress(name, new byte[] { (byte) addr0, (byte) addr1, (byte) addr2,
+                        (byte) addr3 });
                 IPV4_ROOT_SERVER_MAP.put(rootServerId, inetAddress);
             } catch (UnknownHostException e) {
                 // This should never happen, if it does it's our fault!
                 throw new RuntimeException(e);
             }
-        } else if (addr.length == 8) {
+
+        return inetAddress;
+    }
+
+    private static Inet6Address rootServerInet6Address(char rootServerId, int addr0, int addr1, int addr2, int addr3, int addr4, int addr5, int addr6, int addr7) {
+        Inet6Address inetAddress;
+        String name = rootServerId + ".root-servers.net";
             try {
-                inetAddress = InetAddress.getByAddress(name, new byte[]{
+                inetAddress = (Inet6Address) InetAddress.getByAddress(name, new byte[]{
                         // @formatter:off
-                        (byte) (addr[0] >> 8), (byte) addr[0], (byte) (addr[1] >> 8), (byte) addr[1],
-                        (byte) (addr[2] >> 8), (byte) addr[2], (byte) (addr[3] >> 8), (byte) addr[3],
-                        (byte) (addr[4] >> 8), (byte) addr[4], (byte) (addr[5] >> 8), (byte) addr[5],
-                        (byte) (addr[6] >> 8), (byte) addr[6], (byte) (addr[7] >> 8), (byte) addr[7]
+                        (byte) (addr0 >> 8), (byte) addr0, (byte) (addr1 >> 8), (byte) addr1,
+                        (byte) (addr2 >> 8), (byte) addr2, (byte) (addr3 >> 8), (byte) addr3,
+                        (byte) (addr4 >> 8), (byte) addr4, (byte) (addr5 >> 8), (byte) addr5,
+                        (byte) (addr6 >> 8), (byte) addr6, (byte) (addr7 >> 8), (byte) addr7
                         // @formatter:on
                 });
                 IPV6_ROOT_SERVER_MAP.put(rootServerId, inetAddress);
@@ -465,9 +472,6 @@ public class IterativeDNSClient extends AbstractDNSClient {
                 // This should never happen, if it does it's our fault!
                 throw new RuntimeException(e);
             }
-        } else {
-            throw new IllegalArgumentException();
-        }
         return inetAddress;
     }
 
