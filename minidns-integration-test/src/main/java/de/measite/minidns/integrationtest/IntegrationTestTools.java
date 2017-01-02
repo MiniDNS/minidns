@@ -33,13 +33,13 @@ public class IntegrationTestTools {
             cache = null;
             break;
         case normal:
-            cache = new LRUCache(1024);
+            cache = new LRUCache();
             break;
         case extended:
-            cache = new ExtendedLRUCache(1024);
+            cache = new ExtendedLRUCache();
             break;
         case full:
-            cache = new FullLRUCache(1024);
+            cache = new FullLRUCache();
             break;
         default:
             throw new IllegalStateException();

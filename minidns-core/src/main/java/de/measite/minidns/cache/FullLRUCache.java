@@ -20,6 +20,10 @@ import de.measite.minidns.record.Data;
  */
 public class FullLRUCache extends ExtendedLRUCache {
 
+    public FullLRUCache() {
+        this(DEFAULT_CACHE_SIZE);
+    }
+
     public FullLRUCache(int capacity) {
         super(capacity);
     }

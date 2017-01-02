@@ -28,7 +28,7 @@ import de.measite.minidns.record.Data;
 public class ExtendedLRUCache extends LRUCache {
 
     public ExtendedLRUCache() {
-        this(1024);
+        this(DEFAULT_CACHE_SIZE);
     }
 
     public ExtendedLRUCache(int capacity) {

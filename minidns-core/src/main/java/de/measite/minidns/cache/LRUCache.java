@@ -82,6 +82,10 @@ public class LRUCache extends DNSCache {
         this(capacity, Long.MAX_VALUE);
     }
 
+    public LRUCache() {
+        this(DEFAULT_CACHE_SIZE);
+    }
+
     @Override
     protected synchronized void putNormalized(DNSMessage q, DNSMessage message) {
         if (message.receiveTimestamp <= 0L) {

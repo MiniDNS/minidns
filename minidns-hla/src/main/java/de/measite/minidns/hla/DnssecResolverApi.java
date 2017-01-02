@@ -37,7 +37,7 @@ public class DnssecResolverApi extends ResolverApi {
         this(new MiniDnsCacheFactory() {
             @Override
             public DNSCache newCache() {
-                return new LRUCache(1024);
+                return new LRUCache();
             }
         });
     }

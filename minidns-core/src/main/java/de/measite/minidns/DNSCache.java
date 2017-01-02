@@ -15,6 +15,8 @@ package de.measite.minidns;
  */
 public abstract class DNSCache {
 
+    public static final int DEFAULT_CACHE_SIZE = 512;
+
     /**
      * Add an an dns answer/response for a given dns question. Implementations
      * should honor the ttl / receive timestamp.
