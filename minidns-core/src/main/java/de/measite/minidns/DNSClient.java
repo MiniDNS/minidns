@@ -22,8 +22,10 @@ import java.io.IOException;
 import java.net.Inet4Address;
 import java.net.Inet6Address;
 import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -97,17 +99,7 @@ public class DNSClient extends AbstractDNSClient {
             return responseMessage;
         }
 
-        String dnsServerStrings[] = findDNS();
-
-        List<InetAddress> dnsServerAddresses = new ArrayList<>(dnsServerStrings.length + 2);
-        for (String dnsServerString : dnsServerStrings) {
-            if (dnsServerString == null || dnsServerString.isEmpty()) {
-                LOGGER.finest("findDns() returned null or empty string as dns server");
-                continue;
-            }
-            InetAddress dnsServerAddress = InetAddress.getByName(dnsServerString);
-            dnsServerAddresses.add(dnsServerAddress);
-        }
+        List<InetAddress> dnsServerAddresses = findDnsAddresses();
 
         InetAddress[] selectedHardcodedDnsServerAddresses = new InetAddress[2];
         {
@@ -204,6 +196,85 @@ public class DNSClient extends AbstractDNSClient {
             }
         }
         return res;
+    }
+
+    /**
+     * Retrieve a list of currently configured DNS server addresses.
+     * <p>
+     * Note that unlike {@link #findDNS()}, the list returned by this method
+     * will take the IP version setting into account, and order the list by the
+     * preferred address types (IPv4/v6). The returned list is modifiable.
+     * </p>
+     *
+     * @return A list of DNS server addresses.
+     * @see #findDNS()
+     */
+    public static List<InetAddress> findDnsAddresses() {
+        String[] res = findDNS();
+
+        if (res == null) {
+            return new ArrayList<>();
+        }
+
+        final IpVersionSetting setting = ipVersionSetting;
+
+        List<Inet4Address> ipv4DnsServer = null;
+        List<Inet6Address> ipv6DnsServer = null;
+        if (setting != IpVersionSetting.v6only) {
+            ipv4DnsServer = new ArrayList<>(res.length);
+        }
+        if (setting != IpVersionSetting.v4only) {
+            ipv6DnsServer = new ArrayList<>(res.length);
+        }
+
+        for (String dnsServerString : res) {
+            if (dnsServerString == null || dnsServerString.isEmpty()) {
+                LOGGER.finest("findDns() returned null or empty string as dns server");
+                continue;
+            }
+            InetAddress dnsServerAddress;
+            try {
+                dnsServerAddress = InetAddress.getByName(dnsServerString);
+            } catch (UnknownHostException e) {
+                LOGGER.log(Level.SEVERE, "Could not transform '" + dnsServerString + "' to InetAddress", e);
+                continue;
+            }
+            if (dnsServerAddress instanceof Inet4Address) {
+                if (setting == IpVersionSetting.v6only) {
+                    continue;
+                }
+                Inet4Address ipv4DnsServerAddress = (Inet4Address) dnsServerAddress;
+                ipv4DnsServer.add(ipv4DnsServerAddress);
+            } else if (dnsServerAddress instanceof Inet6Address) {
+                if (setting == IpVersionSetting.v4only) {
+                    continue;
+                }
+                Inet6Address ipv6DnsServerAddress = (Inet6Address) dnsServerAddress;
+                ipv6DnsServer.add(ipv6DnsServerAddress);
+            } else {
+                throw new AssertionError("The address '" + dnsServerAddress + "' is neither of type Inet(4|6)Address");
+            }
+        }
+
+        List<InetAddress> dnsServers = new LinkedList<>();
+
+        switch (setting) {
+        case v4v6:
+            dnsServers.addAll(ipv4DnsServer);
+            dnsServers.addAll(ipv6DnsServer);
+            break;
+        case v6v4:
+            dnsServers.addAll(ipv6DnsServer);
+            dnsServers.addAll(ipv4DnsServer);
+            break;
+        case v4only:
+            dnsServers.addAll(ipv4DnsServer);
+            break;
+        case v6only:
+            dnsServers.addAll(ipv6DnsServer);
+            break;
+        }
+        return dnsServers;
     }
 
     public static synchronized void addDnsServerLookupMechanism(DNSServerLookupMechanism dnsServerLookup) {
