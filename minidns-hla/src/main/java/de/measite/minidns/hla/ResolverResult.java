@@ -57,6 +57,10 @@ public class ResolverResult<D extends Data> {
         return data;
     }
 
+    public Set<D> getAnswersOrEmptySet() {
+        return data;
+    }
+
     public RESPONSE_CODE getResponseCode() {
         return responseCode;
     }
