@@ -56,20 +56,43 @@ public abstract class AbstractDNSClient {
     protected DNSDataSource dataSource = new NetworkDataSource();
 
     public enum IpVersionSetting {
-        v4only,
-        v6only,
-        v4v6,
-        v6v4,
+
+        v4only(true, false),
+        v6only(false, true),
+        v4v6(true, true),
+        v6v4(true, true),
         ;
+
+        public final boolean v4;
+        public final boolean v6;
+
+        IpVersionSetting(boolean v4, boolean v6) {
+            this.v4 = v4;
+            this.v6 = v6;
+        }
+
     }
 
-    protected static IpVersionSetting ipVersionSetting = IpVersionSetting.v4v6;
+    protected static IpVersionSetting DEFAULT_IP_VERSION_SETTING = IpVersionSetting.v4v6;
 
-    public static void setPreferedIpVersion(IpVersionSetting preferedIpVersion) {
+    public static void setDefaultIpVersion(IpVersionSetting preferedIpVersion) {
         if (preferedIpVersion == null) {
             throw new IllegalArgumentException();
         }
-        AbstractDNSClient.ipVersionSetting = preferedIpVersion;
+        AbstractDNSClient.DEFAULT_IP_VERSION_SETTING = preferedIpVersion;
+    }
+
+    protected IpVersionSetting ipVersionSetting = DEFAULT_IP_VERSION_SETTING;
+
+    public void setPreferedIpVersion(IpVersionSetting preferedIpVersion) {
+        if (preferedIpVersion == null) {
+            throw new IllegalArgumentException();
+        }
+        ipVersionSetting = preferedIpVersion;
+    }
+
+    public IpVersionSetting getPreferedIpVersion() {
+        return ipVersionSetting;
     }
 
     /**

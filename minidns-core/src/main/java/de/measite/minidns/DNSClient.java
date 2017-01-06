@@ -216,7 +216,7 @@ public class DNSClient extends AbstractDNSClient {
             return new ArrayList<>();
         }
 
-        final IpVersionSetting setting = ipVersionSetting;
+        final IpVersionSetting setting = DEFAULT_IP_VERSION_SETTING;
 
         List<Inet4Address> ipv4DnsServer = null;
         List<Inet6Address> ipv6DnsServer = null;

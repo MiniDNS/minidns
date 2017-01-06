@@ -402,7 +402,7 @@ public class IterativeDNSClient extends AbstractDNSClient {
     }
 
     public static List<InetAddress> getRootServer(char rootServerId) {
-        return getRootServer(rootServerId, ipVersionSetting);
+        return getRootServer(rootServerId, DEFAULT_IP_VERSION_SETTING);
     }
 
     public static List<InetAddress> getRootServer(char rootServerId, IpVersionSetting setting) {
@@ -497,7 +497,7 @@ public class IterativeDNSClient extends AbstractDNSClient {
 
         private IpResultSet(List<InetAddress> ipv4Addresses, List<InetAddress> ipv6Addresses, Random random) {
             int size;
-            switch (ipVersionSetting) {
+            switch (DEFAULT_IP_VERSION_SETTING) {
             case v4only:
                 size = ipv4Addresses.size();
                 break;
@@ -517,29 +517,17 @@ public class IterativeDNSClient extends AbstractDNSClient {
                 addresses = Collections.emptyList();
             } else {
                 // Shuffle the addresses first, so that the load is better balanced.
-                switch (ipVersionSetting) {
-                case v4only:
-                case v4v6:
-                case v6v4:
+                if (DEFAULT_IP_VERSION_SETTING.v4) {
                     Collections.shuffle(ipv4Addresses, random);
-                    break;
-                default:
-                    break;
                 }
-                switch (ipVersionSetting) {
-                case v4v6:
-                case v6v4:
-                case v6only:
+                if (DEFAULT_IP_VERSION_SETTING.v6) {
                     Collections.shuffle(ipv6Addresses, random);
-                    break;
-                default:
-                    break;
                 }
 
                 List<InetAddress> addresses = new ArrayList<>(size);
 
                 // Now add the shuffled addresses to the result list.
-                switch (ipVersionSetting) {
+                switch (DEFAULT_IP_VERSION_SETTING) {
                 case v4only:
                     addresses.addAll(ipv4Addresses);
                     break;
