@@ -20,7 +20,7 @@ import de.measite.minidns.Record.TYPE;
 /**
  * SRV record payload (service pointer).
  */
-public class SRV extends Data {
+public class SRV extends Data implements Comparable<SRV> {
 
     /**
      * The priority of this service. Lower values mean higher priority.
@@ -82,4 +82,12 @@ public class SRV extends Data {
         return TYPE.SRV;
     }
 
+    @Override
+    public int compareTo(SRV other) {
+        int res = other.priority - this.priority;
+        if (res == 0) {
+            res = this.weight - other.weight;
+        }
+        return res;
+    }
 }
