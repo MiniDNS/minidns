@@ -220,10 +220,10 @@ public class DNSClient extends AbstractDNSClient {
 
         List<Inet4Address> ipv4DnsServer = null;
         List<Inet6Address> ipv6DnsServer = null;
-        if (setting != IpVersionSetting.v6only) {
+        if (setting.v4) {
             ipv4DnsServer = new ArrayList<>(res.length);
         }
-        if (setting != IpVersionSetting.v4only) {
+        if (setting.v6) {
             ipv6DnsServer = new ArrayList<>(res.length);
         }
 
@@ -240,13 +240,13 @@ public class DNSClient extends AbstractDNSClient {
                 continue;
             }
             if (dnsServerAddress instanceof Inet4Address) {
-                if (setting == IpVersionSetting.v6only) {
+                if (!setting.v4) {
                     continue;
                 }
                 Inet4Address ipv4DnsServerAddress = (Inet4Address) dnsServerAddress;
                 ipv4DnsServer.add(ipv4DnsServerAddress);
             } else if (dnsServerAddress instanceof Inet6Address) {
-                if (setting == IpVersionSetting.v4only) {
+                if (!setting.v6) {
                     continue;
                 }
                 Inet6Address ipv6DnsServerAddress = (Inet6Address) dnsServerAddress;
