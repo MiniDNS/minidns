@@ -92,10 +92,7 @@ public class DNSName implements CharSequence, Serializable, Comparable<DNSName> 
         }
 
         // Validate the DNS name.
-        setBytesIfRequired();
-        if (bytes.length > MAX_DNSNAME_LENGTH_IN_OCTETS) {
-            throw new InvalidDNSNameException.DNSNameTooLongException(name, bytes);
-        }
+        validateMaxDnsnameLengthInOctets(name);
 
         setLabelsIfRequired();
         for (String label : labels) {
@@ -106,7 +103,7 @@ public class DNSName implements CharSequence, Serializable, Comparable<DNSName> 
         }
     }
 
-    private DNSName(String[] labels) {
+    private DNSName(String[] labels, boolean shouldBeValidated) {
         this.labels = labels;
 
         int size = 0;
@@ -119,6 +116,19 @@ public class DNSName implements CharSequence, Serializable, Comparable<DNSName> 
         }
         sb.setLength(sb.length() - 1);
         ace = sb.toString();
+
+        if (!shouldBeValidated || !VALIDATE) {
+            return;
+        }
+
+        validateMaxDnsnameLengthInOctets(ace);
+    }
+
+    private void validateMaxDnsnameLengthInOctets(String name) {
+        setBytesIfRequired();
+        if (bytes.length > MAX_DNSNAME_LENGTH_IN_OCTETS) {
+            throw new InvalidDNSNameException.DNSNameTooLongException(name, bytes);
+        }
     }
 
     public void writeToStream(OutputStream os) throws IOException {
@@ -260,7 +270,8 @@ public class DNSName implements CharSequence, Serializable, Comparable<DNSName> 
         String[] labels = new String[left.labels.length + right.labels.length];
         System.arraycopy(right.labels, 0, labels, 0, right.labels.length);
         System.arraycopy(left.labels, 0, labels, right.labels.length, left.labels.length);
-        return new DNSName(labels);
+        return new DNSName(labels, true);
+    }
     }
 
     /**
@@ -409,7 +420,7 @@ public class DNSName implements CharSequence, Serializable, Comparable<DNSName> 
             stripedLabels[i] = labels[i];
         }
 
-        return new DNSName(stripedLabels);
+        return new DNSName(stripedLabels, false);
     }
 
     /**
