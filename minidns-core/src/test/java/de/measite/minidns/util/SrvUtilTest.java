@@ -25,7 +25,7 @@ public class SrvUtilTest {
     @Test
     public void sortSRVlowestPrioFirstTest() {
         List<SRV> sortedRecords = SrvUtil.sortSrvRecords(createSRVRecords());
-        assertTrue(sortedRecords.get(0).name.ace.equals("0.20.foo.bar"));
+        assertTrue(sortedRecords.get(0).target.ace.equals("0.20.foo.bar"));
     }
 
     @Test
@@ -33,7 +33,7 @@ public class SrvUtilTest {
         int weight50 = 0, weight20one = 0, weight20two = 0, weight10 = 0;
         for (int i = 0; i < 1000; i++) {
             List<SRV> sortedRecords = SrvUtil.sortSrvRecords(createSRVRecords());
-            String host = sortedRecords.get(1).name.ace;
+            String host = sortedRecords.get(1).target.ace;
             if (host.equals("5.20.one.foo.bar")) {
                 weight20one++;
             } else if (host.equals("5.20.two.foo.bar")) {
@@ -61,7 +61,7 @@ public class SrvUtilTest {
             for (int j = 0; j < 5; j++) {
                 sortedRecords.remove(0);
             }
-            String host = sortedRecords.remove(0).name.ace;
+            String host = sortedRecords.remove(0).target.ace;
             if (host.equals("10.0.one.foo.bar")) {
                 weightZeroOne++;
             } else if (host.endsWith("10.0.two.foo.bar")) {

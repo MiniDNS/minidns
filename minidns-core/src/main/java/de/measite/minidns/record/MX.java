@@ -30,6 +30,14 @@ public class MX extends Data {
     /**
      * The name of the target server.
      */
+    public final DNSName target;
+
+    /**
+     * The name of the target server.
+     *
+     * @deprecated use {@link #target} instead.
+     */
+    @Deprecated
     public final DNSName name;
 
     public static MX parse(DataInputStream dis, byte[] data)
@@ -46,18 +54,19 @@ public class MX extends Data {
 
     public MX(int priority, DNSName name) {
         this.priority = priority;
-        this.name = name;
+        this.target = name;
+        this.name = target;
     }
 
     @Override
     public void serialize(DataOutputStream dos) throws IOException {
         dos.writeShort(priority);
-        name.writeToStream(dos);
+        target.writeToStream(dos);
     }
 
     @Override
     public String toString() {
-        return priority + " " + name + '.';
+        return priority + " " + target + '.';
     }
 
     @Override

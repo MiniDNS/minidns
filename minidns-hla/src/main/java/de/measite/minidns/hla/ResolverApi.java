@@ -110,7 +110,7 @@ public class ResolverApi {
         for (SRV srvRecord : srvRecords) {
             Set<A> aRecords = Collections.emptySet();
             if (ipVersion.v4) {
-                ResolverResult<A> aRecordResult = resolve(srvRecord.name, A.class);
+                ResolverResult<A> aRecordResult = resolve(srvRecord.target, A.class);
                 if (aRecordResult.wasSuccessful() && !aRecordResult.hasUnverifiedReasons()) {
                     aRecords = aRecordResult.getAnswers();
                 }
@@ -118,7 +118,7 @@ public class ResolverApi {
 
             Set<AAAA> aaaaRecords = Collections.emptySet();
             if (ipVersion.v6) {
-                ResolverResult<AAAA> aaaaRecordResult = resolve(srvRecord.name, AAAA.class);
+                ResolverResult<AAAA> aaaaRecordResult = resolve(srvRecord.target, AAAA.class);
                 if (aaaaRecordResult.wasSuccessful() && !aaaaRecordResult.hasUnverifiedReasons()) {
                     aaaaRecords = aaaaRecordResult.getAnswers();
                 }

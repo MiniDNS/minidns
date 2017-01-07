@@ -37,7 +37,7 @@ public class SrvUtil {
     public static List<SRV> sortSrvRecords(Collection<SRV> srvRecords) {
         // RFC 2782, Usage rules: "If there is precisely one SRV RR, and its Target is "."
         // (the root domain), abort."
-        if (srvRecords.size() == 1 && srvRecords.iterator().next().name.equals(DNSName.ROOT)) {
+        if (srvRecords.size() == 1 && srvRecords.iterator().next().target.equals(DNSName.ROOT)) {
             return Collections.emptyList();
         }
 

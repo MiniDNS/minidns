@@ -125,7 +125,7 @@ public class RecordsTest {
         byte[] mxb = mx.toByteArray();
         mx = MX.parse(new DataInputStream(new ByteArrayInputStream(mxb)), mxb);
         assertEquals(10, mx.priority);
-        assertCsEquals("mx.example.com", mx.name);
+        assertCsEquals("mx.example.com", mx.target);
     }
 
     @Test
@@ -239,7 +239,7 @@ public class RecordsTest {
         assertEquals(30, srv.priority);
         assertEquals(31, srv.weight);
         assertEquals(5222, srv.port);
-        assertCsEquals("hermes.jabber.org", srv.name);
+        assertCsEquals("hermes.jabber.org", srv.target);
     }
 
     @Test

@@ -41,6 +41,14 @@ public class SRV extends Data implements Comparable<SRV> {
     /**
      * The target server.
      */
+    public final DNSName target;
+
+    /**
+     * The target server.
+     *
+     * @deprecated use {@link #target} instead.
+     */
+    @Deprecated
     public final DNSName name;
 
     public static SRV parse(DataInputStream dis, byte[] data)
@@ -61,7 +69,8 @@ public class SRV extends Data implements Comparable<SRV> {
         this.priority = priority;
         this.weight = weight;
         this.port = port;
-        this.name = name;
+        this.target = name;
+        this.name = target;
     }
 
     @Override
@@ -69,12 +78,12 @@ public class SRV extends Data implements Comparable<SRV> {
         dos.writeShort(priority);
         dos.writeShort(weight);
         dos.writeShort(port);
-        name.writeToStream(dos);
+        target.writeToStream(dos);
     }
 
     @Override
     public String toString() {
-        return priority + " " + weight + " " + port + " " + name + ".";
+        return priority + " " + weight + " " + port + " " + target + ".";
     }
 
     @Override

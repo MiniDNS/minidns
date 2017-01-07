@@ -127,7 +127,7 @@ public class DNSMessageTest {
             Data d = r.getPayload();
             assertTrue(d instanceof MX);
             assertEquals(TYPE.MX, d.getType());
-            mxes.put(((MX)d).priority, ((MX)d).name);
+            mxes.put(((MX)d).priority, ((MX)d).target);
         }
         assertCsEquals("gmail-smtp-in.l.google.com", mxes.get(5));
         assertCsEquals("alt1.gmail-smtp-in.l.google.com", mxes.get(10));
@@ -147,7 +147,7 @@ public class DNSMessageTest {
         assertTrue(answer.getPayload() instanceof SRV);
         assertEquals(TYPE.SRV, answer.getPayload().getType());
         SRV r = (SRV)(answer.getPayload());
-        assertCsEquals("raven.toroid.org", r.name);
+        assertCsEquals("raven.toroid.org", r.target);
         assertEquals(5222, r.port);
         assertEquals(0, r.priority);
     }

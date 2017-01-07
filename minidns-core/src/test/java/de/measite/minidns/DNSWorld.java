@@ -316,7 +316,7 @@ public class DNSWorld extends DNSDataSource {
             } else if (record.type == TYPE.NS) {
                 glues.addAll(findGlues(((NS) record.payloadData).name, records));
             } else if (record.type == TYPE.SRV) {
-                glues.addAll(findGlues(((SRV) record.payloadData).name, records));
+                glues.addAll(findGlues(((SRV) record.payloadData).target, records));
             }
         }
 
