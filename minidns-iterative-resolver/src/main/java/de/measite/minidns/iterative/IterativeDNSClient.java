@@ -20,7 +20,7 @@ import de.measite.minidns.Record.TYPE;
 import de.measite.minidns.iterative.IterativeClientException.LoopDetected;
 import de.measite.minidns.record.A;
 import de.measite.minidns.record.AAAA;
-import de.measite.minidns.record.CNAME;
+import de.measite.minidns.record.RRWithTarget;
 import de.measite.minidns.record.Data;
 import de.measite.minidns.record.InternetAddressRR;
 import de.measite.minidns.record.NS;
@@ -338,7 +338,7 @@ public class IterativeDNSClient extends AbstractDNSClient {
                         InetAddress inetAddress = inetAddressFromRecord(name.ace, (A) answer.payloadData);
                         res.ipv4Addresses.add(inetAddress);
                     } else if (answer.type == TYPE.CNAME && answer.name.equals(name)) {
-                        return resolveIpRecursive(resolutionState, ((CNAME) answer.payloadData).target);
+                        return resolveIpRecursive(resolutionState, ((RRWithTarget) answer.payloadData).target);
                     }
                 }
             }
@@ -355,7 +355,7 @@ public class IterativeDNSClient extends AbstractDNSClient {
                         InetAddress inetAddress = inetAddressFromRecord(name.ace, (AAAA) answer.payloadData);
                         res.ipv6Addresses.add(inetAddress);
                     } else if (answer.type == TYPE.CNAME && answer.name.equals(name)) {
-                        return resolveIpRecursive(resolutionState, ((CNAME) answer.payloadData).target);
+                        return resolveIpRecursive(resolutionState, ((RRWithTarget) answer.payloadData).target);
                     }
                 }
             }

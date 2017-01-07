@@ -15,7 +15,7 @@ import de.measite.minidns.DNSSECConstants.SignatureAlgorithm;
 import de.measite.minidns.Record.TYPE;
 import de.measite.minidns.record.A;
 import de.measite.minidns.record.AAAA;
-import de.measite.minidns.record.CNAME;
+import de.measite.minidns.record.RRWithTarget;
 import de.measite.minidns.record.DNSKEY;
 import de.measite.minidns.record.DS;
 import de.measite.minidns.record.Data;
@@ -89,10 +89,10 @@ public class DNSMessageTest {
         Record<? extends Data> cname = answers.get(0);
         Record<? extends Data> a = answers.get(1);
 
-        assertTrue(cname.getPayload() instanceof CNAME);
+        assertTrue(cname.getPayload() instanceof RRWithTarget);
         assertEquals(TYPE.CNAME, cname.getPayload().getType());
         assertCsEquals("legacy-sun.oraclegha.com",
-                     ((CNAME)(cname.getPayload())).target);
+                     ((RRWithTarget)(cname.getPayload())).target);
 
         assertCsEquals("legacy-sun.oraclegha.com", a.name);
         assertTrue(a.getPayload() instanceof A);

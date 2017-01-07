@@ -14,20 +14,12 @@ import de.measite.minidns.DNSName;
 import de.measite.minidns.Record.TYPE;
 
 import java.io.DataInputStream;
-import java.io.DataOutputStream;
 import java.io.IOException;
 
 /**
  * CNAME payload (pointer to another domain / address).
  */
-public class CNAME extends Data {
-
-    public final DNSName target;
-
-    @Override
-    public void serialize(DataOutputStream dos) throws IOException {
-        target.writeToStream(dos);
-    }
+public class CNAME extends RRWithTarget {
 
     public static CNAME parse(DataInputStream dis, byte[] data) throws IOException {
         DNSName target = DNSName.parse(dis, data);
@@ -39,17 +31,12 @@ public class CNAME extends Data {
     }
 
     public CNAME(DNSName target) {
-        this.target = target;
+        super(target);
     }
 
     @Override
     public TYPE getType() {
         return TYPE.CNAME;
-    }
-
-    @Override
-    public String toString() {
-        return target + ".";
     }
 
 }

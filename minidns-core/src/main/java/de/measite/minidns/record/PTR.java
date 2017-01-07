@@ -19,11 +19,11 @@ import de.measite.minidns.Record.TYPE;
 /**
  * A PTR record is handled like a CNAME.
  */
-public class PTR extends CNAME {
+public class PTR extends RRWithTarget {
 
     public static PTR parse(DataInputStream dis, byte[] data) throws IOException {
-        CNAME cname = CNAME.parse(dis, data);
-        return new PTR(cname.target);
+        DNSName target = DNSName.parse(dis, data);
+        return new PTR(target);
     }
 
     PTR(String name) {

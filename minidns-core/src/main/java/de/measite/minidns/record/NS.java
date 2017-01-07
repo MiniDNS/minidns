@@ -19,11 +19,11 @@ import de.measite.minidns.Record.TYPE;
 /**
  * Nameserver record.
  */
-public class NS extends CNAME {
+public class NS extends RRWithTarget {
 
     public static NS parse(DataInputStream dis, byte[] data) throws IOException {
-        CNAME cname = CNAME.parse(dis, data);
-        return new NS(cname.target);
+        DNSName target = DNSName.parse(dis, data);
+        return new NS(target);
     }
 
     public NS(DNSName name) {
