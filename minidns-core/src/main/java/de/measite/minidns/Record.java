@@ -13,6 +13,7 @@ package de.measite.minidns;
 import de.measite.minidns.record.A;
 import de.measite.minidns.record.AAAA;
 import de.measite.minidns.record.CNAME;
+import de.measite.minidns.record.DNAME;
 import de.measite.minidns.record.DLV;
 import de.measite.minidns.record.DNSKEY;
 import de.measite.minidns.record.DS;
@@ -94,7 +95,7 @@ public final class Record<D extends Data> {
         KX(36),
         CERT(37),
         A6(38),
-        DNAME(39),
+        DNAME(39, DNAME.class),
         SINK(40),
         OPT(41, OPT.class),
         APL(42),
@@ -364,6 +365,9 @@ public final class Record<D extends Data> {
                 break;
             case CNAME:
                 payloadData = CNAME.parse(dis, data);
+                break;
+            case DNAME:
+                payloadData = DNAME.parse(dis, data);
                 break;
             case PTR:
                 payloadData = PTR.parse(dis, data);
