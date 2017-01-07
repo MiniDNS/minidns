@@ -107,6 +107,10 @@ public class ResolverResult<D extends Data> {
         return dnssecResultNotAuthenticException;
     }
 
+    boolean hasUnverifiedReasons() {
+        return unverifiedReasons != null && !unverifiedReasons.isEmpty();
+    }
+
     private void throwIseIfErrorResponse() {
         ResolutionUnsuccessfulException resolutionUnsuccessfulException = getResolutionUnsuccessfulException();
         if (resolutionUnsuccessfulException != null)
