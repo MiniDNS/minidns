@@ -432,10 +432,7 @@ public class DNSName implements CharSequence, Serializable, Comparable<DNSName> 
             return EMPTY;
         }
 
-        String[] stripedLabels = new String[labelCount];
-        for (int i = 0; i < labelCount; i++) {
-            stripedLabels[i] = labels[i];
-        }
+        String[] stripedLabels = Arrays.copyOfRange(labels, 0, labelCount);
 
         return new DNSName(stripedLabels, false);
     }
