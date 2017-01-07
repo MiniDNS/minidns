@@ -312,9 +312,9 @@ public class DNSWorld extends DNSDataSource {
         List<Record<? extends Data>> glues = new ArrayList<>();
         for (Record<? extends Data> record : answers) {
             if (record.type == TYPE.CNAME) {
-                glues.addAll(findGlues(((CNAME) record.payloadData).name, records));
+                glues.addAll(findGlues(((CNAME) record.payloadData).target, records));
             } else if (record.type == TYPE.NS) {
-                glues.addAll(findGlues(((NS) record.payloadData).name, records));
+                glues.addAll(findGlues(((NS) record.payloadData).target, records));
             } else if (record.type == TYPE.SRV) {
                 glues.addAll(findGlues(((SRV) record.payloadData).target, records));
             }
@@ -330,7 +330,7 @@ public class DNSWorld extends DNSDataSource {
         for (Record<? extends Data> record : records) {
             if (record.name.equals(name)) {
                 if (record.type == TYPE.CNAME) {
-                    glues.addAll(findGlues(((CNAME) record.payloadData).name, records));
+                    glues.addAll(findGlues(((CNAME) record.payloadData).target, records));
                 } else if (record.type == TYPE.A || record.type == TYPE.AAAA) {
                     glues.add(record);
                 }

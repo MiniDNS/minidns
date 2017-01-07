@@ -370,10 +370,10 @@ public abstract class AbstractDNSClient {
             Set<D> addresses;
             switch (type) {
             case A:
-                addresses = (Set<D>) getCachedIPv4AddressesFor(ns.name);
+                addresses = (Set<D>) getCachedIPv4AddressesFor(ns.target);
                 break;
             case AAAA:
-                addresses = (Set<D>) getCachedIPv6AddressesFor(ns.name);
+                addresses = (Set<D>) getCachedIPv6AddressesFor(ns.target);
                 break;
             default:
                 throw new AssertionError();

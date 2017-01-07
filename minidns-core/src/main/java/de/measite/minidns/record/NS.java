@@ -23,7 +23,7 @@ public class NS extends CNAME {
 
     public static NS parse(DataInputStream dis, byte[] data) throws IOException {
         CNAME cname = CNAME.parse(dis, data);
-        return new NS(cname.name);
+        return new NS(cname.target);
     }
 
     public NS(DNSName name) {

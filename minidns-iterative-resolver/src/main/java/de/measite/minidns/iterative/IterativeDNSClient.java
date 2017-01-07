@@ -262,7 +262,7 @@ public class IterativeDNSClient extends AbstractDNSClient {
                 iterator.remove();
                 continue;
             }
-            DNSName name = ((NS) record.payloadData).name;
+            DNSName name = ((NS) record.payloadData).target;
             IpResultSet gluedNs = searchAdditional(resMessage, name);
             for (Iterator<InetAddress> addressIterator = gluedNs.addresses.iterator(); addressIterator.hasNext(); ) {
                 InetAddress target = addressIterator.next();
@@ -286,7 +286,7 @@ public class IterativeDNSClient extends AbstractDNSClient {
         // Try non-glued NS
         for (Record<? extends Data> record : authorities) {
             final Question question = q.getQuestion();
-            DNSName name = ((NS) record.payloadData).name;
+            DNSName name = ((NS) record.payloadData).target;
 
             // Loop prevention: If this non-glued NS equals the name we question for and if the question is about a A or
             // AAAA RR, then we should not continue here as it would result in an endless loop.
@@ -338,7 +338,7 @@ public class IterativeDNSClient extends AbstractDNSClient {
                         InetAddress inetAddress = inetAddressFromRecord(name.ace, (A) answer.payloadData);
                         res.ipv4Addresses.add(inetAddress);
                     } else if (answer.type == TYPE.CNAME && answer.name.equals(name)) {
-                        return resolveIpRecursive(resolutionState, ((CNAME) answer.payloadData).name);
+                        return resolveIpRecursive(resolutionState, ((CNAME) answer.payloadData).target);
                     }
                 }
             }
@@ -355,7 +355,7 @@ public class IterativeDNSClient extends AbstractDNSClient {
                         InetAddress inetAddress = inetAddressFromRecord(name.ace, (AAAA) answer.payloadData);
                         res.ipv6Addresses.add(inetAddress);
                     } else if (answer.type == TYPE.CNAME && answer.name.equals(name)) {
-                        return resolveIpRecursive(resolutionState, ((CNAME) answer.payloadData).name);
+                        return resolveIpRecursive(resolutionState, ((CNAME) answer.payloadData).target);
                     }
                 }
             }

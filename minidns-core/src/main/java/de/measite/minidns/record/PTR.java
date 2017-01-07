@@ -23,7 +23,7 @@ public class PTR extends CNAME {
 
     public static PTR parse(DataInputStream dis, byte[] data) throws IOException {
         CNAME cname = CNAME.parse(dis, data);
-        return new PTR(cname.name);
+        return new PTR(cname.target);
     }
 
     PTR(String name) {

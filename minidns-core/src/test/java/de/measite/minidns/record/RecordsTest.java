@@ -73,7 +73,7 @@ public class RecordsTest {
         assertEquals(TYPE.CNAME, cname.getType());
         byte[] cnameb = cname.toByteArray();
         cname = CNAME.parse(new DataInputStream(new ByteArrayInputStream(cnameb)), cnameb);
-        assertCsEquals("www.example.com", cname.name);
+        assertCsEquals("www.example.com", cname.target);
     }
 
     @Test
@@ -191,7 +191,7 @@ public class RecordsTest {
         assertEquals(TYPE.PTR, ptr.getType());
         byte[] ptrb = ptr.toByteArray();
         ptr = PTR.parse(new DataInputStream(new ByteArrayInputStream(ptrb)), ptrb);
-        assertCsEquals("ptr.example.com", ptr.name);
+        assertCsEquals("ptr.example.com", ptr.target);
     }
 
     @Test

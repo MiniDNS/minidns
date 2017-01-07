@@ -22,24 +22,24 @@ import java.io.IOException;
  */
 public class CNAME extends Data {
 
-    public final DNSName name;
+    public final DNSName target;
 
     @Override
     public void serialize(DataOutputStream dos) throws IOException {
-        name.writeToStream(dos);
+        target.writeToStream(dos);
     }
 
     public static CNAME parse(DataInputStream dis, byte[] data) throws IOException {
-        DNSName name = DNSName.parse(dis, data);
-        return new CNAME(name);
+        DNSName target = DNSName.parse(dis, data);
+        return new CNAME(target);
     }
 
-    public CNAME(String name) {
-        this(DNSName.from(name));
+    public CNAME(String target) {
+        this(DNSName.from(target));
     }
 
-    public CNAME(DNSName name) {
-        this.name = name;
+    public CNAME(DNSName target) {
+        this.target = target;
     }
 
     @Override
@@ -49,7 +49,7 @@ public class CNAME extends Data {
 
     @Override
     public String toString() {
-        return name + ".";
+        return target + ".";
     }
 
 }

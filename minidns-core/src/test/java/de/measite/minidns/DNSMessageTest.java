@@ -92,7 +92,7 @@ public class DNSMessageTest {
         assertTrue(cname.getPayload() instanceof CNAME);
         assertEquals(TYPE.CNAME, cname.getPayload().getType());
         assertCsEquals("legacy-sun.oraclegha.com",
-                     ((CNAME)(cname.getPayload())).name);
+                     ((CNAME)(cname.getPayload())).target);
 
         assertCsEquals("legacy-sun.oraclegha.com", a.name);
         assertTrue(a.getPayload() instanceof A);
@@ -207,7 +207,7 @@ public class DNSMessageTest {
             assertEquals(Record.CLASS.IN, answer.clazz);
             assertEquals(TYPE.NS, answer.type);
             assertEquals(112028, answer.ttl);
-            assertTrue(((NS) answer.payloadData).name.ace.endsWith(".gtld-servers.net"));
+            assertTrue(((NS) answer.payloadData).target.ace.endsWith(".gtld-servers.net"));
         }
         List<Record<? extends Data>> arr = m.additionalSection;
         assertEquals(1, arr.size());
