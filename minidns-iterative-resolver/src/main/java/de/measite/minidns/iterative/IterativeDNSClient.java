@@ -327,7 +327,7 @@ public class IterativeDNSClient extends AbstractDNSClient {
     private IpResultSet resolveIpRecursive(ResolutionState resolutionState, DNSName name) throws IOException {
         IpResultSet.Builder res = newIpResultSetBuilder();
 
-        if (ipVersionSetting != IpVersionSetting.v6only) {
+        if (ipVersionSetting.v4) {
             // TODO Try to retrieve A records for name out from cache.
             Question question = new Question(name, TYPE.A);
             final DNSMessage query = getQueryFor(question);
@@ -344,7 +344,7 @@ public class IterativeDNSClient extends AbstractDNSClient {
             }
         }
 
-        if (ipVersionSetting != IpVersionSetting.v4only) {
+        if (ipVersionSetting.v6) {
             // TODO Try to retrieve AAAA records for name out from cache.
             Question question = new Question(name, TYPE.AAAA);
             final DNSMessage query = getQueryFor(question);
