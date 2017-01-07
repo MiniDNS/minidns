@@ -80,4 +80,22 @@ public class DNSNameTest {
         DNSName expected = DNSName.from(leftString + '.' + rightString);
         assertEquals(expected, concated);
     }
+
+    @Test
+    public void testFromVarargs() {
+        String leftString = "leftmost.left";
+        String middleString = "leftMiddle.middle.rightMiddle";
+        String rightString = "right.rightMost";
+        DNSName left = DNSName.from(leftString);
+        DNSName middle = DNSName.from(middleString);
+        DNSName right = DNSName.from(rightString);
+
+        DNSName name = DNSName.from(left, middle, right);
+
+        String completeString = leftString + '.' + middleString + '.' + rightString;
+        assertEquals(name.ace, completeString);
+
+        DNSName expected = DNSName.from(completeString);
+        assertEquals(name, expected);
+    }
 }

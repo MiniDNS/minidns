@@ -272,6 +272,23 @@ public class DNSName implements CharSequence, Serializable, Comparable<DNSName> 
         System.arraycopy(left.labels, 0, labels, right.labels.length, left.labels.length);
         return new DNSName(labels, true);
     }
+
+    public static DNSName from(DNSName... nameComponents) {
+        int labelCount = 0;
+        for (DNSName component : nameComponents) {
+            component.setLabelsIfRequired();
+            labelCount += component.labels.length;
+        }
+
+        String[] labels = new String[labelCount];
+        int destLabelPos = 0;
+        for (int i = nameComponents.length - 1; i >= 0; i--) {
+            DNSName component = nameComponents[i];
+            System.arraycopy(component.labels, 0, labels, destLabelPos, component.labels.length);
+            destLabelPos += component.labels.length;
+        }
+
+        return new DNSName(labels, true);
     }
 
     /**
