@@ -13,12 +13,20 @@ import de.measite.minidns.minidnsrepl.MiniDNSStats._
 import de.measite.minidns.jul.MiniDnsJul._
 
 // Some standard values
-Predef.println("Set value 'c' to DNSCLIENT")
+Predef.println("Set value 'c' to DNSClient")
 val c = de.measite.minidns.minidnsrepl.MiniDnsRepl.DNSCLIENT
-val rc = de.measite.minidns.minidnsrepl.MiniDnsRepl.RECURSIVEDNSCLIENT
+Predef.println("Set value 'ic' to IterativeDNSClient")
+val ic = de.measite.minidns.minidnsrepl.MiniDnsRepl.ITERATIVEDNSCLIENT
+Predef.println("Set value 'dc' to DNSSECClient")
 val dc = de.measite.minidns.minidnsrepl.MiniDnsRepl.DNSSECCLIENT
 // A normal resolver
+Predef.println("Set value 'r' to ResolverApi")
 val r = de.measite.minidns.hla.ResolverApi.INSTANCE
 // A DNSSEC resolver
+Predef.println("Set value 'dr' to DnssecResolverApi")
 val dr = de.measite.minidns.hla.DnssecResolverApi.INSTANCE
+
+Predef.println("Enjoy MiniDNS. Go ahead and try a query. For example:")
+Predef.println("c query (\"geekplace.eu\", TYPE.A)")
+Predef.println("dr resolveDnssecReliable (\"verteiltesysteme.net\", classOf[A])")
 

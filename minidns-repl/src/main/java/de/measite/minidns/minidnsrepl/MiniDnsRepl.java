@@ -26,7 +26,7 @@ import de.measite.minidns.record.A;
 public class MiniDnsRepl {
 
     public static final DNSClient DNSCLIENT = new DNSClient();
-    public static final IterativeDNSClient RECURSIVEDNSCLIENT = new IterativeDNSClient();
+    public static final IterativeDNSClient ITERATIVEDNSCLIENT = new IterativeDNSClient();
     public static final DNSSECClient DNSSECCLIENT = new DNSSECClient();
 
     static {
