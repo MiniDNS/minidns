@@ -15,88 +15,29 @@ import de.measite.minidns.DNSSECConstants.SignatureAlgorithm;
 import de.measite.minidns.Record.TYPE;
 
 import java.io.DataInputStream;
-import java.io.DataOutputStream;
 import java.io.IOException;
-import java.math.BigInteger;
-import java.util.Arrays;
-
 /**
- * DS record payload.
+ * DS (Delegation Signer) record payload.
+ *
+ * @see <a href="https://tools.ietf.org/html/rfc4034#section-5">RFC 4034 § 5</a>
  */
-public class DS extends Data {
-
-    /**
-     * The key tag value of the DNSKEY RR that validates this signature.
-     */
-    public final int /* unsigned short */ keyTag;
-
-    /**
-     * The cryptographic algorithm used to create the signature. If MiniDNS
-     * isn't aware of the signature algorithm, then this field will be
-     * <code>null</code>.
-     * 
-     * @see #algorithmByte
-     */
-    public final SignatureAlgorithm algorithm;
-
-    /**
-     * The byte value of the cryptographic algorithm used to create the signature.
-     */
-    public final byte algorithmByte;
-
-    /**
-     * The algorithm used to construct the digest. If MiniDNS
-     * isn't aware of the digest algorithm, then this field will be
-     * <code>null</code>.
-     * 
-     * @see #digestTypeByte
-     */
-    public final DigestAlgorithm digestType;
-
-    /**
-     * The byte value of algorithm used to construct the digest.
-     */
-    public final byte digestTypeByte;
-
-    /**
-     * The digest build from a DNSKEY.
-     */
-    protected final byte[] digest;
+public class DS extends DelegatingDnssecRR {
 
     public static DS parse(DataInputStream dis, int length) throws IOException {
-        int keyTag = dis.readUnsignedShort();
-        byte algorithm = dis.readByte();
-        byte digestType = dis.readByte();
-        byte[] digest = new byte[length - 4];
-        if (dis.read(digest) != digest.length) throw new IOException();
-        return new DS(keyTag, algorithm, digestType, digest);
-    }
-
-    private DS(int keyTag, SignatureAlgorithm algorithm, byte algorithmByte, DigestAlgorithm digestType, byte digestTypeByte, byte[] digest) {
-        this.keyTag = keyTag;
-
-        assert algorithmByte == (algorithm != null ? algorithm.number : algorithmByte);
-        this.algorithmByte = algorithmByte;
-        this.algorithm = algorithm != null ? algorithm : SignatureAlgorithm.forByte(algorithmByte);
-
-        assert digestTypeByte == (digestType != null ? digestType.value : digestTypeByte);
-        this.digestTypeByte = digestTypeByte;
-        this.digestType = digestType != null ? digestType : DigestAlgorithm.forByte(digestTypeByte);
-
-        assert digest != null;
-        this.digest = digest;
+        SharedData parsedData = DelegatingDnssecRR.parseSharedData(dis, length);
+        return new DS(parsedData.keyTag, parsedData.algorithm, parsedData.digestType, parsedData.digest);
     }
 
     public DS(int keyTag, byte algorithm, byte digestType, byte[] digest) {
-        this(keyTag, null, algorithm, null, digestType, digest);
+        super(keyTag, algorithm, digestType, digest);
     }
 
     public DS(int keyTag, SignatureAlgorithm algorithm, byte digestType, byte[] digest) {
-        this(keyTag, algorithm, algorithm.number, null, digestType, digest);
+        super(keyTag, algorithm, digestType, digest);
     }
 
     public DS(int keyTag, SignatureAlgorithm algorithm, DigestAlgorithm digestType, byte[] digest) {
-        this(keyTag, algorithm, algorithm.number, digestType, digestType.value, digest);
+        super(keyTag, algorithm, digestType, digest);
     }
 
     @Override
@@ -104,43 +45,4 @@ public class DS extends Data {
         return TYPE.DS;
     }
 
-    @Override
-    public void serialize(DataOutputStream dos) throws IOException {
-        dos.writeShort(keyTag);
-        dos.writeByte(algorithmByte);
-        dos.writeByte(digestTypeByte);
-        dos.write(digest);
-    }
-
-    @Override
-    public String toString() {
-        StringBuilder sb = new StringBuilder()
-                .append(keyTag).append(' ')
-                .append(algorithm).append(' ')
-                .append(digestType).append(' ')
-                .append(new BigInteger(1, digest).toString(16).toUpperCase());
-        return sb.toString();
-    }
-
-    private BigInteger digestBigIntCache;
-
-    public BigInteger getDigestBigInteger() {
-        if (digestBigIntCache == null) {
-            digestBigIntCache = new BigInteger(1, digest);
-        }
-        return digestBigIntCache;
-    }
-
-    private String digestHexCache;
-
-    public String getDigestHex() {
-        if (digestHexCache == null) {
-            digestHexCache = getDigestBigInteger().toString(16).toUpperCase();
-        }
-        return digestHexCache;
-    }
-
-    public boolean digestEquals(byte[] otherDigest) {
-        return Arrays.equals(digest, otherDigest);
-    }
 }

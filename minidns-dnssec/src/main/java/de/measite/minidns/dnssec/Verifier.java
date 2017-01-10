@@ -19,8 +19,8 @@ import de.measite.minidns.dnssec.UnverifiedReason.AlgorithmNotSupportedReason;
 import de.measite.minidns.dnssec.UnverifiedReason.NSECDoesNotMatchReason;
 import de.measite.minidns.dnssec.algorithms.AlgorithmMap;
 import de.measite.minidns.record.DNSKEY;
-import de.measite.minidns.record.DS;
 import de.measite.minidns.record.Data;
+import de.measite.minidns.record.DelegatingDnssecRR;
 import de.measite.minidns.record.NSEC;
 import de.measite.minidns.record.NSEC3;
 import de.measite.minidns.record.RRSIG;
@@ -38,7 +38,7 @@ import java.util.List;
 class Verifier {
     private AlgorithmMap algorithmMap = AlgorithmMap.INSTANCE;
 
-    public UnverifiedReason verify(Record<DNSKEY> dnskeyRecord, DS ds) {
+    public UnverifiedReason verify(Record<DNSKEY> dnskeyRecord, DelegatingDnssecRR ds) {
         DNSKEY dnskey = dnskeyRecord.payloadData;
         DigestCalculator digestCalculator = algorithmMap.getDsDigestCalculator(ds.digestType);
         if (digestCalculator == null) {

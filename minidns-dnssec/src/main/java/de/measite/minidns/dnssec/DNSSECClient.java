@@ -26,6 +26,7 @@ import de.measite.minidns.record.DLV;
 import de.measite.minidns.record.DNSKEY;
 import de.measite.minidns.record.DS;
 import de.measite.minidns.record.Data;
+import de.measite.minidns.record.DelegatingDnssecRR;
 import de.measite.minidns.record.RRSIG;
 
 import java.io.IOException;
@@ -398,7 +399,7 @@ public class DNSSECClient extends ReliableDNSClient {
            return unverifiedReasons;
         }
 
-        DS delegation = null;
+        DelegatingDnssecRR delegation = null;
         DNSSECMessage dsResp = queryDnssec(sepRecord.name, TYPE.DS);
         if (dsResp == null) {
             LOGGER.fine("There is no DS record for " + sepRecord.name + ", server gives no result");

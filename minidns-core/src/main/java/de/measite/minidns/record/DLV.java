@@ -22,10 +22,11 @@ import java.io.IOException;
  *
  * According to RFC4431, DLV has exactly the same format as DS records.
  */
-public class DLV extends DS {
+public class DLV extends DelegatingDnssecRR {
+
     public static DLV parse (DataInputStream dis, int length) throws IOException {
-        DS ds = DS.parse(dis, length);
-        return new DLV(ds.keyTag, ds.algorithm, ds.digestType, ds.digest);
+        SharedData parsedData = DelegatingDnssecRR.parseSharedData(dis, length);
+        return new DLV(parsedData.keyTag, parsedData.algorithm, parsedData.digestType, parsedData.digest);
     }
 
     public DLV(int keyTag, byte algorithm, byte digestType, byte[] digest) {
