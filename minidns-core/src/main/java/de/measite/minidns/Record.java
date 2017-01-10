@@ -234,8 +234,20 @@ public final class Record<D extends Data> {
      * @see <a href="http://www.iana.org/assignments/dns-parameters/dns-parameters.xhtml#dns-parameters-2">IANA Domain Name System (DNS) Parameters - DNS CLASSes</a>
      */
     public static enum CLASS {
+
+        /**
+         * The Internet class. This is the most common class used by todays DNS systems.
+         */
         IN(1),
+
+        /**
+         * The Chaos class.
+         */
         CH(3),
+
+        /**
+         * The Hesiod class.
+         */
         HS(4),
         NONE(254),
         ANY(255);

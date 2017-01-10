@@ -35,7 +35,7 @@ public class Question {
     public final TYPE type;
 
     /**
-     * The question class (usually IN / internet).
+     * The question class (usually IN for Internet).
      */
     public final CLASS clazz;
 
