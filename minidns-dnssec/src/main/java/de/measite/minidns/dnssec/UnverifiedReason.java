@@ -15,6 +15,7 @@ import java.util.List;
 
 import de.measite.minidns.Question;
 import de.measite.minidns.Record;
+import de.measite.minidns.Record.TYPE;
 import de.measite.minidns.DNSSECConstants.DigestAlgorithm;
 import de.measite.minidns.record.DNSKEY;
 import de.measite.minidns.record.Data;
@@ -40,18 +41,18 @@ public abstract class UnverifiedReason {
 
     public static class AlgorithmNotSupportedReason extends UnverifiedReason {
         private final String algorithm;
-        private final String kind;
+        private final TYPE type;
         private final Record<? extends Data> record;
 
-        public AlgorithmNotSupportedReason(byte algorithm, String kind, Record<? extends Data> record) {
+        public AlgorithmNotSupportedReason(byte algorithm, TYPE type, Record<? extends Data> record) {
             this.algorithm = Integer.toString(algorithm & 0xff);
-            this.kind = kind;
+            this.type = type;
             this.record = record;
         }
 
         @Override
         public String getReasonString() {
-            return kind + " algorithm " + algorithm + " required to verify " + record.name + " is unknown or not supported by platform";
+            return type.name() + " algorithm " + algorithm + " required to verify " + record.name + " is unknown or not supported by platform";
         }
     }
 

@@ -42,7 +42,7 @@ class Verifier {
         DNSKEY dnskey = dnskeyRecord.payloadData;
         DigestCalculator digestCalculator = algorithmMap.getDsDigestCalculator(ds.digestType);
         if (digestCalculator == null) {
-            return new AlgorithmNotSupportedReason(ds.digestTypeByte, "DS", dnskeyRecord);
+            return new AlgorithmNotSupportedReason(ds.digestTypeByte, ds.getType(), dnskeyRecord);
         }
 
         byte[] dnskeyData = dnskey.toByteArray();
@@ -66,7 +66,7 @@ class Verifier {
     public UnverifiedReason verify(List<Record<? extends Data>> records, RRSIG rrsig, DNSKEY key) {
         SignatureVerifier signatureVerifier = algorithmMap.getSignatureVerifier(rrsig.algorithm);
         if (signatureVerifier == null) {
-            return new AlgorithmNotSupportedReason(rrsig.algorithmByte, "RRSIG", records.get(0));
+            return new AlgorithmNotSupportedReason(rrsig.algorithmByte, rrsig.getType(), records.get(0));
         }
 
         byte[] combine = combine(rrsig, records);
@@ -96,7 +96,7 @@ class Verifier {
         NSEC3 nsec3 = (NSEC3) nsec3record.payloadData;
         DigestCalculator digestCalculator = algorithmMap.getNsecDigestCalculator(nsec3.hashAlgorithm);
         if (digestCalculator == null) {
-            return new AlgorithmNotSupportedReason(nsec3.hashAlgorithmByte, "NSEC3", nsec3record);
+            return new AlgorithmNotSupportedReason(nsec3.hashAlgorithmByte, nsec3.getType(), nsec3record);
         }
 
         byte[] bytes = nsec3hash(digestCalculator, nsec3.salt, q.name.getBytes(), nsec3.iterations);
