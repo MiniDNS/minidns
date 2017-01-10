@@ -29,6 +29,7 @@ public class ResolverResult<D extends Data> {
     private final Set<D> data;
     private final boolean isAuthenticData;
     private final Set<UnverifiedReason> unverifiedReasons;
+    private final DNSMessage answer;
 
     ResolverResult(Question question , DNSMessage answer, Set<UnverifiedReason> unverifiedReasons) throws NullResultException {
         if (answer == null) {
@@ -37,6 +38,7 @@ public class ResolverResult<D extends Data> {
 
         this.question = question;
         this.responseCode = answer.responseCode;
+        this.answer = answer;
 
         Set<D> r = answer.getAnswersFor(question);
         if (r == null) {
@@ -115,6 +117,16 @@ public class ResolverResult<D extends Data> {
         }
 
         return dnssecResultNotAuthenticException;
+    }
+
+    /**
+     * Get the raw answer DNS message we received. <b>This is likely not what you want</b>, try {@link #getAnswers()} instead.
+     *
+     * @return the raw answer DNS Message.
+     * @see #getAnswers()
+     */
+    public DNSMessage getRawAnswer() {
+        return answer;
     }
 
     private void throwIseIfErrorResponse() {
