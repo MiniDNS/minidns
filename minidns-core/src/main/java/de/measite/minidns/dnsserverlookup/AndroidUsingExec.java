@@ -48,6 +48,11 @@ public class AndroidUsingExec extends AbstractDNSServerLookupMechanism {
                 }
                 String property = line.substring(1, split);
                 String value = line.substring(split + 4, line.length() - 1);
+
+                if (value.isEmpty()) {
+                    continue;
+                }
+
                 if (property.endsWith(".dns") || property.endsWith(".dns1") ||
                     property.endsWith(".dns2") || property.endsWith(".dns3") ||
                     property.endsWith(".dns4")) {
