@@ -187,8 +187,8 @@ public class DNSClient extends AbstractDNSClient {
      *
      * @return The server array.
      */
-    public static synchronized String[] findDNS() {
-        String[] res = null;
+    public static synchronized List<String> findDNS() {
+        List<String> res = null;
         for (DNSServerLookupMechanism mechanism : LOOKUP_MECHANISMS) {
             res = mechanism.getDnsServerAddresses();
             if (res != null) {
@@ -210,7 +210,7 @@ public class DNSClient extends AbstractDNSClient {
      * @see #findDNS()
      */
     public static List<InetAddress> findDnsAddresses() {
-        String[] res = findDNS();
+        List<String> res = findDNS();
 
         if (res == null) {
             return new ArrayList<>();
@@ -221,10 +221,10 @@ public class DNSClient extends AbstractDNSClient {
         List<Inet4Address> ipv4DnsServer = null;
         List<Inet6Address> ipv6DnsServer = null;
         if (setting.v4) {
-            ipv4DnsServer = new ArrayList<>(res.length);
+            ipv4DnsServer = new ArrayList<>(res.size());
         }
         if (setting.v6) {
-            ipv6DnsServer = new ArrayList<>(res.length);
+            ipv6DnsServer = new ArrayList<>(res.size());
         }
 
         for (String dnsServerString : res) {

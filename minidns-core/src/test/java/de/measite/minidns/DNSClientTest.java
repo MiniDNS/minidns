@@ -66,7 +66,7 @@ public class DNSClientTest {
             return true;
         }
         @Override
-        public String[] getDnsServerAddresses() {
+        public List<String> getDnsServerAddresses() {
             return null;
         }
     }

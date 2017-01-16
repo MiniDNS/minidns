@@ -15,6 +15,7 @@ import de.measite.minidns.util.PlatformDetection;
 import java.lang.reflect.Method;
 import java.net.InetAddress;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.logging.Level;
 
 /**
@@ -30,7 +31,7 @@ public class AndroidUsingReflection extends AbstractDNSServerLookupMechanism {
     }
 
     @Override
-    public String[] getDnsServerAddresses() {
+    public List<String> getDnsServerAddresses() {
         try {
             Class<?> SystemProperties =
                     Class.forName("android.os.SystemProperties");
@@ -62,7 +63,7 @@ public class AndroidUsingReflection extends AbstractDNSServerLookupMechanism {
             }
 
             if (servers.size() > 0) {
-                return servers.toArray(new String[servers.size()]);
+                return servers;
             }
         } catch (Exception e) {
             // we might trigger some problems this way

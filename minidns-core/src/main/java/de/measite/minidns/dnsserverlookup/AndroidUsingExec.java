@@ -17,7 +17,9 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.LineNumberReader;
 import java.net.InetAddress;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.logging.Level;
 
 /**
@@ -33,7 +35,7 @@ public class AndroidUsingExec extends AbstractDNSServerLookupMechanism {
     }
 
     @Override
-    public String[] getDnsServerAddresses() {
+    public List<String> getDnsServerAddresses() {
         try {
             Process process = Runtime.getRuntime().exec("getprop");
             InputStream inputStream = process.getInputStream();
@@ -67,7 +69,9 @@ public class AndroidUsingExec extends AbstractDNSServerLookupMechanism {
                 }
             }
             if (server.size() > 0) {
-                return server.toArray(new String[server.size()]);
+                List<String> res = new ArrayList<>(server.size());
+                res.addAll(server);
+                return res;
             }
         } catch (IOException e) {
             LOGGER.log(Level.WARNING, "Exception in findDNSByExec", e);

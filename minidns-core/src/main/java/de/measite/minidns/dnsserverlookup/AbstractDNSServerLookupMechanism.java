@@ -10,6 +10,7 @@
  */
  package de.measite.minidns.dnsserverlookup;
 
+import java.util.List;
 import java.util.logging.Logger;
 
 public abstract class AbstractDNSServerLookupMechanism implements DNSServerLookupMechanism {
@@ -40,5 +41,5 @@ public abstract class AbstractDNSServerLookupMechanism implements DNSServerLooku
     }
 
     @Override
-    public abstract String[] getDnsServerAddresses();
+    public abstract List<String> getDnsServerAddresses();
 }
