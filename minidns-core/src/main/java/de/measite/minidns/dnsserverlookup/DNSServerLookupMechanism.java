@@ -20,6 +20,15 @@ public interface DNSServerLookupMechanism extends Comparable<DNSServerLookupMech
 
     public boolean isAvailable();
 
+    /**
+     * Returns a List of String representing ideally IP addresses. The list must be modifiable.
+     * <p>
+     * Note that the lookup mechanisms are not required to assure that only IP addresses are returned. This verification is performed in
+     * when using {@link de.measite.minidns.DNSClient#findDNS()}.
+     * </p>
+     *
+     * @return a List of Strings presenting hopefully IP addresses.
+     */
     public List<String> getDnsServerAddresses();
 
 }

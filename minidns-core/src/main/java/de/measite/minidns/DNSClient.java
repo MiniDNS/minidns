@@ -25,6 +25,7 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
@@ -184,16 +185,46 @@ public class DNSClient extends AbstractDNSClient {
     }
 
     /**
-     * Retrieve a list of currently configured DNS servers.
+     * Retrieve a list of currently configured DNS servers IP addresses. This method does verify that only IP addresses are returned and
+     * nothing else (e.g. DNS names).
+     * <p>
+     * The addresses are discovered by using one (or more) of the configured {@link DNSServerLookupMechanism}s.
+     * </p>
      *
-     * @return The server array.
+     * @return A list of DNS server IP addresses configured for this system.
      */
     public static List<String> findDNS() {
         List<String> res = null;
         for (DNSServerLookupMechanism mechanism : LOOKUP_MECHANISMS) {
             res = mechanism.getDnsServerAddresses();
-            if (res != null) {
+            if (res == null) {
+                continue;
+            }
+
+            assert(!res.isEmpty());
+
+            // We could cache if res only contains IP addresses and avoid the verification in case. Not sure if its really that beneficial
+            // though, because the list returned by the server mechanism is rather short.
+
+            // Verify the returned DNS servers: Ensure that only valid IP addresses are returned. We want to avoid that something else,
+            // especially a valid DNS name is returned, as this would cause the following String to InetAddress conversation using
+            // getByName(String) to cause a DNS lookup, which would be performed outside of the realm of MiniDNS and therefore also outside
+            // of its DNSSEC guarantees.
+            Iterator<String> it = res.iterator();
+            while (it.hasNext()) {
+                String potentialDnsServer = it.next();
+                if (!InetAddressUtil.isIpAddress(potentialDnsServer)) {
+                    LOGGER.warning("The DNS server lookup mechanism '" + mechanism.getName()
+                            + "' returned an invalid non-IP address result: '" + potentialDnsServer + "'");
+                    it.remove();
+                }
+            }
+
+            if (!res.isEmpty()) {
                 break;
+            } else {
+                LOGGER.warning("The DNS server lookup mechanism '" + mechanism.getName()
+                        + "' returned not a single valid IP address after sanitazion");
             }
         }
         return res;
@@ -211,6 +242,7 @@ public class DNSClient extends AbstractDNSClient {
      * @see #findDNS()
      */
     public static List<InetAddress> findDnsAddresses() {
+        // The findDNS() method contract guarantees that only IP addresses will be returned.
         List<String> res = findDNS();
 
         if (res == null) {
@@ -229,10 +261,11 @@ public class DNSClient extends AbstractDNSClient {
         }
 
         for (String dnsServerString : res) {
-            if (dnsServerString == null || dnsServerString.isEmpty()) {
-                LOGGER.finest("findDns() returned null or empty string as dns server");
-                continue;
-            }
+            // The following invariant must hold: "dnsServerString is a IP address". Therefore findDNS() must only return a List of Strings
+            // representing IP addresses. Otherwise the following call of getByName(String) may perform a DNS lookup without MiniDNS being
+            // involved. Something we want to avoid.
+            assert (InetAddressUtil.isIpAddress(dnsServerString));
+
             InetAddress dnsServerAddress;
             try {
                 dnsServerAddress = InetAddress.getByName(dnsServerString);
