@@ -29,6 +29,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.logging.Level;
 
@@ -38,7 +39,7 @@ import java.util.logging.Level;
  */
 public class DNSClient extends AbstractDNSClient {
 
-    static final List<DNSServerLookupMechanism> LOOKUP_MECHANISMS = new ArrayList<>();
+    static final List<DNSServerLookupMechanism> LOOKUP_MECHANISMS = new CopyOnWriteArrayList<>();
 
     static final Set<Inet4Address> STATIC_IPV4_DNS_SERVERS = new CopyOnWriteArraySet<>();
     static final Set<Inet6Address> STATIC_IPV6_DNS_SERVERS = new CopyOnWriteArraySet<>();
@@ -187,7 +188,7 @@ public class DNSClient extends AbstractDNSClient {
      *
      * @return The server array.
      */
-    public static synchronized List<String> findDNS() {
+    public static List<String> findDNS() {
         List<String> res = null;
         for (DNSServerLookupMechanism mechanism : LOOKUP_MECHANISMS) {
             res = mechanism.getDnsServerAddresses();
@@ -277,17 +278,32 @@ public class DNSClient extends AbstractDNSClient {
         return dnsServers;
     }
 
-    public static synchronized void addDnsServerLookupMechanism(DNSServerLookupMechanism dnsServerLookup) {
+    public static void addDnsServerLookupMechanism(DNSServerLookupMechanism dnsServerLookup) {
         if (!dnsServerLookup.isAvailable()) {
             LOGGER.fine("Not adding " + dnsServerLookup.getName() + " as it is not available.");
             return;
         }
-        LOOKUP_MECHANISMS.add(dnsServerLookup);
-        Collections.sort(LOOKUP_MECHANISMS);
+        synchronized (LOOKUP_MECHANISMS) {
+            // We can't use Collections.sort(CopyOnWriteArrayList) with Java 7. So we first create a temp array, sort it, and replace
+            // LOOKUP_MECHANISMS with the result. For more information about the Java 7 Collections.sort(CopyOnWriteArarayList) issue see
+            // http://stackoverflow.com/a/34827492/194894
+            // TODO: Remove that workaround once MiniDNS is Java 8 only.
+            ArrayList<DNSServerLookupMechanism> tempList = new ArrayList<>(LOOKUP_MECHANISMS.size() + 1);
+            tempList.addAll(LOOKUP_MECHANISMS);
+            tempList.add(dnsServerLookup);
+
+            // Sadly, this Collections.sort() does not with the CopyOnWriteArrayList on Java 7.
+            Collections.sort(tempList);
+
+            LOOKUP_MECHANISMS.clear();
+            LOOKUP_MECHANISMS.addAll(tempList);
+        }
     }
 
-    public static synchronized boolean removeDNSServerLookupMechanism(DNSServerLookupMechanism dnsServerLookup) {
-        return LOOKUP_MECHANISMS.remove(dnsServerLookup);
+    public static boolean removeDNSServerLookupMechanism(DNSServerLookupMechanism dnsServerLookup) {
+        synchronized (LOOKUP_MECHANISMS) {
+            return LOOKUP_MECHANISMS.remove(dnsServerLookup);
+        }
     }
 
     public boolean isAskForDnssec() {
