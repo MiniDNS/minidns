@@ -21,6 +21,17 @@ import java.util.Locale;
 
 import de.measite.minidns.idna.MiniDnsIdna;
 
+/**
+ * A DNS name, also called "domain name". A DNS name consists of multiple 'labels' and is subject to certain restrictions (see
+ * for example <a href="https://tools.ietf.org/html/rfc3696#section-2">RFC 3696 § 2.</a>).
+ * <p>
+ * Instances of this class can be created by using {@link #from(String)}.
+ * </p>
+ *
+ * @see <a href="https://tools.ietf.org/html/rfc3696">RFC 3696</a>
+ * @author Florian Schmaus
+ *
+ */
 public class DNSName implements CharSequence, Serializable, Comparable<DNSName> {
 
     /**
