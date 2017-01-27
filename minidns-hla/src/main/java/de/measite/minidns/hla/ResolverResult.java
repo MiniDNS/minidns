@@ -22,12 +22,12 @@ import de.measite.minidns.record.Data;
 
 public class ResolverResult<D extends Data> {
 
-    private final Question question;
+    protected final Question question;
     private final RESPONSE_CODE responseCode;
     private final Set<D> data;
     private final boolean isAuthenticData;
-    private final Set<UnverifiedReason> unverifiedReasons;
-    private final DNSMessage answer;
+    protected final Set<UnverifiedReason> unverifiedReasons;
+    protected final DNSMessage answer;
 
     ResolverResult(Question question , DNSMessage answer, Set<UnverifiedReason> unverifiedReasons) {
         this.question = question;
@@ -123,7 +123,7 @@ public class ResolverResult<D extends Data> {
         return unverifiedReasons != null && !unverifiedReasons.isEmpty();
     }
 
-    private void throwIseIfErrorResponse() {
+    protected void throwIseIfErrorResponse() {
         ResolutionUnsuccessfulException resolutionUnsuccessfulException = getResolutionUnsuccessfulException();
         if (resolutionUnsuccessfulException != null)
             throw new IllegalStateException("Can not perform operation because the DNS resolution was unsuccessful",
