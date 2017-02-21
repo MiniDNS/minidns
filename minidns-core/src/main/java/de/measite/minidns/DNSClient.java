@@ -23,7 +23,9 @@ import java.net.Inet4Address;
 import java.net.Inet6Address;
 import java.net.InetAddress;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -60,6 +62,8 @@ public class DNSClient extends AbstractDNSClient {
             LOGGER.log(Level.WARNING, "Could not add static IPv6 DNS Server", e);
         }
     }
+
+    private static final Set<String> blacklistedDnsServers = Collections.newSetFromMap(new ConcurrentHashMap<String, Boolean>(4));
 
     private final Set<InetAddress> nonRaServers = Collections.newSetFromMap(new ConcurrentHashMap<InetAddress, Boolean>(4));
 
@@ -196,14 +200,32 @@ public class DNSClient extends AbstractDNSClient {
      * @return The server array.
      */
     public static synchronized String[] findDNS() {
-        String[] res = null;
+        String[] resArray = null;
         for (DNSServerLookupMechanism mechanism : LOOKUP_MECHANISMS) {
-            res = mechanism.getDnsServerAddresses();
-            if (res != null) {
+            resArray = mechanism.getDnsServerAddresses();
+            if (resArray == null) {
+                continue;
+            }
+
+            List<String> res = new ArrayList<>(Arrays.asList(resArray));
+
+            Iterator<String> it = res.iterator();
+            while (it.hasNext()) {
+                String potentialDnsServer = it.next();
+
+                if (blacklistedDnsServers.contains(potentialDnsServer)) {
+                    LOGGER.fine("The DNS server lookup mechanism '" + mechanism.getName()
+                    + "' returned a blacklisted result: '" + potentialDnsServer + "'");
+                    it.remove();
+                }
+            }
+
+            if (!res.isEmpty()) {
                 break;
             }
         }
-        return res;
+
+        return resArray;
     }
 
     public static synchronized void addDnsServerLookupMechanism(DNSServerLookupMechanism dnsServerLookup) {
@@ -217,6 +239,14 @@ public class DNSClient extends AbstractDNSClient {
 
     public static synchronized boolean removeDNSServerLookupMechanism(DNSServerLookupMechanism dnsServerLookup) {
         return LOOKUP_MECHANISMS.remove(dnsServerLookup);
+    }
+
+    public static boolean addBlacklistedDnsServer(String dnsServer) {
+        return blacklistedDnsServers.add(dnsServer);
+    }
+
+    public static boolean removeBlacklistedDnsServer(String dnsServer) {
+        return blacklistedDnsServers.remove(dnsServer);
     }
 
     public boolean isAskForDnssec() {
