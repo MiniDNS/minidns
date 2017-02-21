@@ -103,7 +103,14 @@ public class DNSClient extends AbstractDNSClient {
 
         String dnsServerStrings[] = findDNS();
 
-        List<InetAddress> dnsServerAddresses = new ArrayList<>(dnsServerStrings.length + 2);
+        int dnsServerCount;
+        if (dnsServerStrings == null) {
+            dnsServerCount = 0;
+        } else {
+            dnsServerCount = dnsServerStrings.length;
+        }
+
+        List<InetAddress> dnsServerAddresses = new ArrayList<>(dnsServerCount + 2);
         for (String dnsServerString : dnsServerStrings) {
             if (dnsServerString == null || dnsServerString.isEmpty()) {
                 LOGGER.finest("findDns() returned null or empty string as dns server");
