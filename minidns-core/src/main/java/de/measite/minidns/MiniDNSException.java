@@ -51,4 +51,23 @@ public abstract class MiniDNSException extends IOException {
             return "The response's ID doesn't matches the request ID. Request: " + request.id + ". Response: " + response.id;
         }
     }
+
+    public static class NullResultException extends MiniDNSException {
+
+        /**
+         * 
+         */
+        private static final long serialVersionUID = 1L;
+
+        private final DNSMessage request;
+
+        public NullResultException(DNSMessage request) {
+            super("The request yielded a 'null' result while resolving.");
+            this.request = request;
+        }
+
+        public DNSMessage getRequest() {
+            return request;
+        }
+    }
 }

@@ -15,6 +15,7 @@ import java.util.Set;
 
 import de.measite.minidns.DNSCache;
 import de.measite.minidns.DNSName;
+import de.measite.minidns.MiniDNSException.NullResultException;
 import de.measite.minidns.Question;
 import de.measite.minidns.Record.TYPE;
 import de.measite.minidns.cache.LRUCache;
@@ -115,7 +116,7 @@ public class DnssecResolverApi extends ResolverApi {
         return dnssecClient;
     }
 
-    private static <D extends Data> ResolverResult<D> toResolverResult(Question question, DNSSECMessage dnssecMessage) {
+    private static <D extends Data> ResolverResult<D> toResolverResult(Question question, DNSSECMessage dnssecMessage) throws NullResultException {
         Set<UnverifiedReason> unverifiedReasons = dnssecMessage.getUnverifiedReasons();
 
         return new ResolverResult<D>(question, dnssecMessage, unverifiedReasons);
