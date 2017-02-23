@@ -65,6 +65,8 @@ public class DNSClient extends AbstractDNSClient {
         }
     }
 
+    private static final Set<String> blacklistedDnsServers = Collections.newSetFromMap(new ConcurrentHashMap<String, Boolean>(4));
+
     private final Set<InetAddress> nonRaServers = Collections.newSetFromMap(new ConcurrentHashMap<InetAddress, Boolean>(4));
 
     private boolean askForDnssec = false;
@@ -217,6 +219,10 @@ public class DNSClient extends AbstractDNSClient {
                     LOGGER.warning("The DNS server lookup mechanism '" + mechanism.getName()
                             + "' returned an invalid non-IP address result: '" + potentialDnsServer + "'");
                     it.remove();
+                } else if (blacklistedDnsServers.contains(potentialDnsServer)) {
+                    LOGGER.fine("The DNS server lookup mechanism '" + mechanism.getName()
+                    + "' returned a blacklisted result: '" + potentialDnsServer + "'");
+                    it.remove();
                 }
             }
 
@@ -227,6 +233,7 @@ public class DNSClient extends AbstractDNSClient {
                         + "' returned not a single valid IP address after sanitazion");
             }
         }
+
         return res;
     }
 
@@ -337,6 +344,14 @@ public class DNSClient extends AbstractDNSClient {
         synchronized (LOOKUP_MECHANISMS) {
             return LOOKUP_MECHANISMS.remove(dnsServerLookup);
         }
+    }
+
+    public static boolean addBlacklistedDnsServer(String dnsServer) {
+        return blacklistedDnsServers.add(dnsServer);
+    }
+
+    public static boolean removeBlacklistedDnsServer(String dnsServer) {
+        return blacklistedDnsServers.remove(dnsServer);
     }
 
     public boolean isAskForDnssec() {

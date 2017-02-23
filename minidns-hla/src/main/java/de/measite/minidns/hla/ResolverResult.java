@@ -15,6 +15,8 @@ import java.util.Set;
 
 import de.measite.minidns.DNSMessage;
 import de.measite.minidns.DNSMessage.RESPONSE_CODE;
+import de.measite.minidns.MiniDNSException;
+import de.measite.minidns.MiniDNSException.NullResultException;
 import de.measite.minidns.Question;
 import de.measite.minidns.dnssec.DNSSECResultNotAuthenticException;
 import de.measite.minidns.dnssec.UnverifiedReason;
@@ -29,7 +31,11 @@ public class ResolverResult<D extends Data> {
     protected final Set<UnverifiedReason> unverifiedReasons;
     protected final DNSMessage answer;
 
-    ResolverResult(Question question , DNSMessage answer, Set<UnverifiedReason> unverifiedReasons) {
+    ResolverResult(Question question , DNSMessage answer, Set<UnverifiedReason> unverifiedReasons) throws NullResultException {
+        if (answer == null) {
+            throw new MiniDNSException.NullResultException(question.asMessageBuilder().build());
+        }
+
         this.question = question;
         this.responseCode = answer.responseCode;
         this.answer = answer;
@@ -56,6 +62,10 @@ public class ResolverResult<D extends Data> {
 
     public Set<D> getAnswers() {
         throwIseIfErrorResponse();
+        return data;
+    }
+
+    public Set<D> getAnswersOrEmptySet() {
         return data;
     }
 

@@ -18,6 +18,7 @@ import java.util.Set;
 
 import de.measite.minidns.AbstractDNSClient.IpVersionSetting;
 import de.measite.minidns.DNSName;
+import de.measite.minidns.MiniDNSException.NullResultException;
 import de.measite.minidns.record.A;
 import de.measite.minidns.record.AAAA;
 import de.measite.minidns.record.InternetAddressRR;
@@ -31,7 +32,7 @@ public class SrvResolverResult extends ResolverResult<SRV> {
 
     private List<ResolvedSrvRecord> sortedSrvResolvedAddresses;
 
-    SrvResolverResult(ResolverResult<SRV> srvResult, ResolverApi resolver) {
+    SrvResolverResult(ResolverResult<SRV> srvResult, ResolverApi resolver) throws NullResultException {
         super(srvResult.question, srvResult.answer, srvResult.unverifiedReasons);
         this.resolver = resolver;
         this.ipVersion = resolver.getClient().getPreferedIpVersion();
