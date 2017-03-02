@@ -60,6 +60,10 @@ public class DNSName implements CharSequence, Serializable, Comparable<DNSName> 
 
     public static final DNSName ROOT = new DNSName(".", false);
 
+    public static final DNSName IN_ADDR_ARPA = new DNSName("in-addr.arpa", false);
+
+    public static final DNSName IP6_ARPA = new DNSName("ip6.arpa", false);
+
     /**
      * Whether or not the DNS name is validated on construction.
      */
@@ -106,15 +110,10 @@ public class DNSName implements CharSequence, Serializable, Comparable<DNSName> 
         validateMaxDnsnameLengthInOctets(name);
 
         setLabelsIfRequired();
-        for (String label : labels) {
-            if (label.length() <= MAX_LABEL_LENGTH_IN_OCTETS)
-                continue;
-
-            throw new InvalidDNSNameException.LabelTooLongException(name, label);
-        }
+        validateMaxLabelLength();
     }
 
-    private DNSName(String[] labels, boolean shouldBeValidated) {
+    private DNSName(String[] labels, boolean validateMaxDnsnameLength, boolean validateMaxLabelLength) {
         this.labels = labels;
 
         int size = 0;
@@ -128,11 +127,24 @@ public class DNSName implements CharSequence, Serializable, Comparable<DNSName> 
         sb.setLength(sb.length() - 1);
         ace = sb.toString();
 
-        if (!shouldBeValidated || !VALIDATE) {
+        if (validateMaxLabelLength) {
+            validateMaxLabelLength();
+        }
+
+        if (!validateMaxDnsnameLength || !VALIDATE) {
             return;
         }
 
         validateMaxDnsnameLengthInOctets(ace);
+    }
+
+    private void validateMaxLabelLength() {
+        for (String label : labels) {
+            if (label.length() <= MAX_LABEL_LENGTH_IN_OCTETS)
+                continue;
+
+            throw new InvalidDNSNameException.LabelTooLongException(ace, label);
+        }
     }
 
     private void validateMaxDnsnameLengthInOctets(String name) {
@@ -281,7 +293,7 @@ public class DNSName implements CharSequence, Serializable, Comparable<DNSName> 
         String[] labels = new String[left.labels.length + right.labels.length];
         System.arraycopy(right.labels, 0, labels, 0, right.labels.length);
         System.arraycopy(left.labels, 0, labels, right.labels.length, left.labels.length);
-        return new DNSName(labels, true);
+        return new DNSName(labels, true, false);
     }
 
     public static DNSName from(DNSName... nameComponents) {
@@ -299,7 +311,20 @@ public class DNSName implements CharSequence, Serializable, Comparable<DNSName> 
             destLabelPos += component.labels.length;
         }
 
-        return new DNSName(labels, true);
+        return new DNSName(labels, true, false);
+    }
+
+    public static DNSName from(String[] parts, boolean inIdnForm) {
+        String[] labels = new String[parts.length];
+        for (int i = 0; i < parts.length; i++) {
+            if (inIdnForm) {
+                labels[i] = parts[i].toLowerCase(Locale.US);
+            } else {
+                labels[i] = MiniDnsIdna.toASCII(parts[i]);
+            }
+        }
+
+        return new DNSName(labels, true, true);
     }
 
     /**
@@ -445,7 +470,7 @@ public class DNSName implements CharSequence, Serializable, Comparable<DNSName> 
 
         String[] stripedLabels = Arrays.copyOfRange(labels, 0, labelCount);
 
-        return new DNSName(stripedLabels, false);
+        return new DNSName(stripedLabels, false, false);
     }
 
     /**

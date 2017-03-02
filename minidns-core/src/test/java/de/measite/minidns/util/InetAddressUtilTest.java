@@ -10,7 +10,14 @@
  */
 package de.measite.minidns.util;
 
+import static org.junit.Assert.assertEquals;
+
+import java.net.Inet4Address;
+import java.net.Inet6Address;
+
 import org.junit.Test;
+
+import de.measite.minidns.DNSName;
 
 public class InetAddressUtilTest {
 
@@ -101,5 +108,19 @@ public class InetAddressUtilTest {
                         address + " is believed to be valid IPv4 Address by isIpv4Address(), although it should not be one");
             }
         }
+    }
+
+    @Test
+    public void testReverseInet6Address() {
+        Inet6Address inet6Address = InetAddressUtil.ipv6From(VALID_IPV6[0]);
+        DNSName reversedIpv6Address = InetAddressUtil.reverseIpAddressOf(inet6Address);
+        assertEquals(DNSName.from("3.0.a.2.0.0.0.4.2.0.0.0.5.f.2.0.0.0.0.0.0.0.0.0.0.0.0.0.1.0.0.0"), reversedIpv6Address);
+    }
+
+    @Test
+    public void testReverseInet4Address() {
+        Inet4Address inet4Address = InetAddressUtil.ipv4From(VALID_IPV4[0]);
+        DNSName reversedIpv4Address = InetAddressUtil.reverseIpAddressOf(inet4Address);
+        assertEquals(DNSName.from("1.0.168.192"), reversedIpv4Address);
     }
 }

@@ -11,6 +11,9 @@
 package de.measite.minidns.hla;
 
 import java.io.IOException;
+import java.net.Inet4Address;
+import java.net.Inet6Address;
+import java.net.InetAddress;
 
 import de.measite.minidns.AbstractDNSClient;
 import de.measite.minidns.DNSMessage;
@@ -19,7 +22,9 @@ import de.measite.minidns.Question;
 import de.measite.minidns.Record.TYPE;
 import de.measite.minidns.iterative.ReliableDNSClient;
 import de.measite.minidns.record.Data;
+import de.measite.minidns.record.PTR;
 import de.measite.minidns.record.SRV;
+import de.measite.minidns.util.InetAddressUtil;
 
 /**
  * The high-level MiniDNS resolving API. It is designed to be easy to use.
@@ -133,6 +138,33 @@ public class ResolverApi {
 
     public SrvResolverResult resolveSrv(String name) throws IOException {
         return resolveSrv(DNSName.from(name));
+    }
+
+    public ResolverResult<PTR> reverseLookup(CharSequence inetAddressCs) throws IOException {
+        InetAddress inetAddress = InetAddress.getByName(inetAddressCs.toString());
+        return reverseLookup(inetAddress);
+    }
+
+    public ResolverResult<PTR> reverseLookup(InetAddress inetAddress) throws IOException {
+        if (inetAddress instanceof Inet4Address) {
+            return reverseLookup((Inet4Address) inetAddress);
+        } else if (inetAddress instanceof Inet6Address) {
+            return reverseLookup((Inet6Address) inetAddress);
+        } else {
+            throw new IllegalArgumentException("The given InetAddress '" + inetAddress + "' is neither of type Inet4Address or Inet6Address");
+        }
+    }
+
+    public ResolverResult<PTR> reverseLookup(Inet4Address inet4Address) throws IOException {
+        DNSName reversedIpAddress = InetAddressUtil.reverseIpAddressOf(inet4Address);
+        DNSName dnsName = DNSName.from(reversedIpAddress, DNSName.IN_ADDR_ARPA);
+        return resolve(dnsName, PTR.class);
+    }
+
+    public ResolverResult<PTR> reverseLookup(Inet6Address inet6Address) throws IOException {
+        DNSName reversedIpAddress = InetAddressUtil.reverseIpAddressOf(inet6Address);
+        DNSName dnsName = DNSName.from(reversedIpAddress, DNSName.IP6_ARPA);
+        return resolve(dnsName, PTR.class);
     }
 
     /**
