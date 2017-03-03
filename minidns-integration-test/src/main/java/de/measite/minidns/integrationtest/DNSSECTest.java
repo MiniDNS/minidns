@@ -13,6 +13,8 @@ package de.measite.minidns.integrationtest;
 import java.io.IOException;
 import java.util.Iterator;
 
+import org.junit.Ignore;
+
 import de.measite.minidns.Record;
 import de.measite.minidns.cache.LRUCache;
 import de.measite.minidns.dnssec.DNSSECClient;
@@ -24,10 +26,11 @@ import static org.junit.Assert.assertFalse;
 
 public class DNSSECTest {
 
+    @Ignore
     @IntegrationTest
-    public static void testVerisignDaneBadSig() throws Exception {
+    public static void testOarcDaneBadSig() throws Exception {
         DNSSECClient client = new DNSSECClient(new LRUCache(1024));
-        assertFalse(client.query("_443._tcp.bad-sig.dane.verisignlabs.com", Record.TYPE.TLSA).authenticData);
+        assertFalse(client.query("_443._tcp.bad-sig.dane.dns-oarc.net", Record.TYPE.TLSA).authenticData);
     }
 
     @IntegrationTest
