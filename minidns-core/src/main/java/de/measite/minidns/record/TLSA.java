@@ -17,37 +17,82 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 
 public class TLSA extends Data {
 
-    public static final byte CERT_USAGE_CA_CONSTRAINT = 0;
-    public static final byte CERT_USAGE_SERVICE_CERTIFICATE_CONSTRAINT = 1;
-    public static final byte CRET_USAGE_TRUST_ANCHOR_ASSERTION = 2;
-    public static final byte CERT_USAGE_DOMAIN_ISSUED_CERTIFICATE = 3;
+    private static final Map<Byte, CertUsage> CERT_USAGE_LUT = new HashMap<>();
 
-    public static final byte SELECTOR_FULL_CERTIFICATE = 0;
-    public static final byte SELECTOR_SUBJECT_PUBLIC_KEY_INFO = 1;
+    public enum CertUsage {
 
-    public static final byte MATCHING_TYPE_NO_HASH = 0;
-    public static final byte MATCHING_TYPE_SHA_256 = 1;
-    public static final byte MATCHING_TYPE_SHA_512 = 2;
+        caConstraint((byte) 0),
+        serviceCertificateConstraint((byte) 1),
+        trustAnchorAssertion((byte) 2),
+        domainIssuedCertificate((byte) 3),
+        ;
+
+        public final byte byteValue;
+
+        private CertUsage(byte byteValue) {
+            this.byteValue = byteValue;
+            CERT_USAGE_LUT.put(byteValue, this);
+        }
+    }
+
+    private static final Map<Byte, Selector> SELECTOR_LUT = new HashMap<>();
+
+    public enum Selector {
+        fullCertificate((byte) 0),
+        subjectPublicKeyInfo((byte) 1),
+        ;
+
+        public final byte byteValue;
+
+        private Selector(byte byteValue) {
+            this.byteValue = byteValue;
+            SELECTOR_LUT.put(byteValue, this);
+        }
+    }
+
+    private static final Map<Byte, MatchingType> MATCHING_TYPE_LUT = new HashMap<>();
+
+    public enum MatchingType {
+        noHash((byte) 0),
+        sha256((byte) 1),
+        sha512((byte) 2),
+        ;
+
+        public final byte byteValue;
+
+        private MatchingType(byte byteValue) {
+            this.byteValue = byteValue;
+            MATCHING_TYPE_LUT.put(byteValue, this);
+        }
+    }
 
     /**
      * The provided association that will be used to match the certificate presented in
      * the TLS handshake.
      */
-    public final byte certUsage;
+    public final byte certUsageByte;
+
+    public final CertUsage certUsage;
 
     /**
      * Which part of the TLS certificate presented by the server will be matched against the
      * association data.
      */
-    public final byte selector;
+    public final byte selectorByte;
+
+    public final Selector selector;
 
     /**
      * How the certificate association is presented.
      */
-    public final byte matchingType;
+    public final byte matchingTypeByte;
+
+    public final MatchingType matchingType;
 
     /**
      * The "certificate association data" to be matched.
@@ -63,10 +108,16 @@ public class TLSA extends Data {
         return new TLSA(certUsage, selector, matchingType, certificateAssociation);
     }
 
-    TLSA(byte certUsage, byte selector, byte matchingType, byte[] certificateAssociation) {
-        this.certUsage = certUsage;
-        this.selector = selector;
-        this.matchingType = matchingType;
+    TLSA(byte certUsageByte, byte selectorByte, byte matchingTypeByte, byte[] certificateAssociation) {
+        this.certUsageByte = certUsageByte;
+        this.certUsage = CERT_USAGE_LUT.get(certUsageByte);
+
+        this.selectorByte = selectorByte;
+        this.selector = SELECTOR_LUT.get(selectorByte);
+
+        this.matchingTypeByte = matchingTypeByte;
+        this.matchingType = MATCHING_TYPE_LUT.get(matchingTypeByte);
+
         this.certificateAssociation = certificateAssociation;
     }
 
@@ -77,18 +128,18 @@ public class TLSA extends Data {
 
     @Override
     public void serialize(DataOutputStream dos) throws IOException {
-        dos.writeByte(certUsage);
-        dos.writeByte(selector);
-        dos.writeByte(matchingType);
+        dos.writeByte(certUsageByte);
+        dos.writeByte(selectorByte);
+        dos.writeByte(matchingTypeByte);
         dos.write(certificateAssociation);
     }
 
     @Override
     public String toString() {
         return new StringBuilder()
-                .append(certUsage).append(' ')
-                .append(selector).append(' ')
-                .append(matchingType).append(' ')
+                .append(certUsageByte).append(' ')
+                .append(selectorByte).append(' ')
+                .append(matchingTypeByte).append(' ')
                 .append(new BigInteger(1, certificateAssociation).toString(16)).toString();
     }
 

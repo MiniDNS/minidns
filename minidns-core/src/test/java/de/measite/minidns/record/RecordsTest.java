@@ -249,9 +249,9 @@ public class RecordsTest {
         assertEquals(TYPE.TLSA, tlsa.getType());
         byte[] tlsab = tlsa.toByteArray();
         tlsa = TLSA.parse(new DataInputStream(new ByteArrayInputStream(tlsab)), tlsab.length);
-        assertEquals(1, tlsa.certUsage);
-        assertEquals(1, tlsa.selector);
-        assertEquals(1, tlsa.matchingType);
+        assertEquals(1, tlsa.certUsageByte);
+        assertEquals(1, tlsa.selectorByte);
+        assertEquals(1, tlsa.matchingTypeByte);
         assertArrayEquals(new byte[]{0x13, 0x37}, tlsa.getCertificateAssociation());
     }
 }

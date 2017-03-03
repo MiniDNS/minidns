@@ -146,42 +146,56 @@ public class DaneVerifier {
     }
 
     private static boolean checkCertificateMatches(X509Certificate cert, TLSA tlsa, String hostName) throws CertificateException {
+        if (tlsa.certUsage == null) {
+            LOGGER.warning("TLSA certificate usage byte " + tlsa.certUsageByte + " is not supported while verifying " + hostName);
+            return false;
+        }
+
         switch (tlsa.certUsage) {
-        case TLSA.CERT_USAGE_SERVICE_CERTIFICATE_CONSTRAINT:
-        case TLSA.CERT_USAGE_DOMAIN_ISSUED_CERTIFICATE:
+        case serviceCertificateConstraint:
+        case domainIssuedCertificate:
             break;
-        case TLSA.CERT_USAGE_CA_CONSTRAINT:
-        case TLSA.CRET_USAGE_TRUST_ANCHOR_ASSERTION:
+        case caConstraint:
+        case trustAnchorAssertion:
         default:
-            LOGGER.warning("TLSA certificate usage " + tlsa.certUsage + " not supported while verifying " + hostName);
+            LOGGER.warning("TLSA certificate usage " + tlsa.certUsage + " (" + tlsa.certUsageByte + ") not supported while verifying " + hostName);
+            return false;
+        }
+
+        if (tlsa.selector == null) {
+            LOGGER.warning("TLSA selector byte " + tlsa.selectorByte + " is not supported while verifying " + hostName);
             return false;
         }
 
         byte[] comp = null;
         switch (tlsa.selector) {
-            case TLSA.SELECTOR_FULL_CERTIFICATE:
+            case fullCertificate:
                 comp = cert.getEncoded();
                 break;
-            case TLSA.SELECTOR_SUBJECT_PUBLIC_KEY_INFO:
+            case subjectPublicKeyInfo:
                 comp = cert.getPublicKey().getEncoded();
                 break;
             default:
-                LOGGER.warning("TLSA selector " + tlsa.selector + " not supported while verifying " + hostName);
+                LOGGER.warning("TLSA selector " + tlsa.selector + " (" + tlsa.selectorByte + ") not supported while verifying " + hostName);
                 return false;
+        }
 
+        if (tlsa.matchingType == null) {
+            LOGGER.warning("TLSA matching type byte " + tlsa.matchingTypeByte + " is not supported while verifying " + hostName);
+            return false;
         }
 
         switch (tlsa.matchingType) {
-            case TLSA.MATCHING_TYPE_NO_HASH:
+            case noHash:
                 break;
-            case TLSA.MATCHING_TYPE_SHA_256:
+            case sha256:
                 try {
                     comp = MessageDigest.getInstance("SHA-256").digest(comp);
                 } catch (NoSuchAlgorithmException e) {
                     throw new CertificateException("Verification using TLSA failed: could not SHA-256 for matching", e);
                 }
                 break;
-            case TLSA.MATCHING_TYPE_SHA_512:
+            case sha512:
                 try {
                     comp = MessageDigest.getInstance("SHA-512").digest(comp);
                 } catch (NoSuchAlgorithmException e) {
@@ -200,7 +214,7 @@ public class DaneVerifier {
 
         // domain issued certificate does not require further verification,
         // service certificate constraint does.
-        return tlsa.certUsage == TLSA.CERT_USAGE_DOMAIN_ISSUED_CERTIFICATE;
+        return tlsa.certUsage == TLSA.CertUsage.domainIssuedCertificate;
     }
 
     /**
