@@ -69,6 +69,7 @@ class DSASignatureVerifier extends JavaSecSignatureVerifier {
         return bos.toByteArray();
     }
 
+    @Override
     protected PublicKey getPublicKey(byte[] key) {
         DataInput dis = new DataInputStream(new ByteArrayInputStream(key));
 

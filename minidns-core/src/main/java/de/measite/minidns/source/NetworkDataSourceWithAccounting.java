@@ -32,6 +32,7 @@ public class NetworkDataSourceWithAccounting extends NetworkDataSource {
     private final AtomicInteger tcpResponseSize = new AtomicInteger();
     private final AtomicInteger failedTcpQueries = new AtomicInteger();
 
+    @Override
     public DNSMessage query(DNSMessage message, InetAddress address, int port) throws IOException {
         DNSMessage response;
         try {
@@ -47,6 +48,7 @@ public class NetworkDataSourceWithAccounting extends NetworkDataSource {
         return response;
     }
 
+    @Override
     protected DNSMessage queryUdp(DNSMessage message, InetAddress address, int port) throws IOException {
         DNSMessage response;
         try {
@@ -62,6 +64,7 @@ public class NetworkDataSourceWithAccounting extends NetworkDataSource {
         return response;
     }
 
+    @Override
     protected DNSMessage queryTcp(DNSMessage message, InetAddress address, int port) throws IOException {
         DNSMessage response;
         try {

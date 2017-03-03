@@ -27,6 +27,7 @@ class RSASignatureVerifier extends JavaSecSignatureVerifier {
         super("RSA", algorithm);
     }
 
+    @Override
     protected PublicKey getPublicKey(byte[] key) {
         DataInput dis = new DataInputStream(new ByteArrayInputStream(key));
 

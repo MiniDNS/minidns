@@ -32,6 +32,7 @@ public class NetworkDataSource extends DNSDataSource {
 
     protected static final Logger LOGGER = Logger.getLogger(NetworkDataSource.class.getName());
 
+    @Override
     public DNSMessage query(DNSMessage message, InetAddress address, int port) throws IOException {
         List<IOException> ioExceptions = new ArrayList<>(2);
         DNSMessage dnsMessage = null;

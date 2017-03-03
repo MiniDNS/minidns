@@ -84,6 +84,7 @@ public class DaneExtendedTrustManager extends X509ExtendedTrustManager {
         this.base = base;
     }
 
+    @Override
     public void checkClientTrusted(X509Certificate[] chain, String authType, Socket socket) throws CertificateException {
         if (base == null) {
             LOGGER.warning("DaneExtendedTrustManager invalidly used for client certificate check and no fallback X509TrustManager specified");
@@ -97,6 +98,7 @@ public class DaneExtendedTrustManager extends X509ExtendedTrustManager {
         }
     }
 
+    @Override
     public void checkServerTrusted(X509Certificate[] chain, String authType, Socket socket) throws CertificateException {
         if (!verifier.verifyCertificateChain(chain, socket.getInetAddress().getHostName(), socket.getPort())) {
             if (base instanceof X509ExtendedTrustManager) {
@@ -107,6 +109,7 @@ public class DaneExtendedTrustManager extends X509ExtendedTrustManager {
         }
     }
 
+    @Override
     public void checkClientTrusted(X509Certificate[] chain, String authType, SSLEngine engine) throws CertificateException {
         if (base == null) {
             LOGGER.warning("DaneExtendedTrustManager invalidly used for client certificate check and no fallback X509TrustManager specified");
@@ -120,6 +123,7 @@ public class DaneExtendedTrustManager extends X509ExtendedTrustManager {
         }
     }
 
+    @Override
     public void checkServerTrusted(X509Certificate[] chain, String authType, SSLEngine engine) throws CertificateException {
         if (!verifier.verifyCertificateChain(chain, engine.getPeerHost(), engine.getPeerPort())) {
             if (base instanceof X509ExtendedTrustManager) {
