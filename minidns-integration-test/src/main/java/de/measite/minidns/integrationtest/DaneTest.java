@@ -14,6 +14,8 @@ import de.measite.minidns.dane.DaneVerifier;
 
 import javax.net.ssl.HttpsURLConnection;
 
+import org.junit.Ignore;
+
 import java.io.IOException;
 import java.net.URL;
 import java.security.cert.CertificateException;
@@ -21,20 +23,21 @@ import java.security.cert.CertificateException;
 public class DaneTest {
 
     @IntegrationTest
-    public static void testVerisignDaneGood() throws IOException, CertificateException {
+    public static void testOarcDaneGood() throws IOException, CertificateException {
         DaneVerifier daneVerifier = new DaneVerifier();
-        daneVerifier.verifiedConnect((HttpsURLConnection) new URL("https://good.dane.verisignlabs.com/").openConnection());
+        daneVerifier.verifiedConnect((HttpsURLConnection) new URL("https://good.dane.dns-oarc.net/").openConnection());
     }
 
-    @IntegrationTest(expected = CertificateException.class)
-    public static void testVerisignDaneBadHash() throws IOException, CertificateException {
+    @Ignore
+    @IntegrationTest()
+    public static void testOarcDaneBadHash() throws IOException, CertificateException {
         DaneVerifier daneVerifier = new DaneVerifier();
-        daneVerifier.verifiedConnect((HttpsURLConnection) new URL("https://bad-hash.dane.verisignlabs.com/").openConnection());
+        daneVerifier.verifiedConnect((HttpsURLConnection) new URL("https://bad-hash.dane.dns-oarc.net/").openConnection());
     }
 
     @IntegrationTest
-    public static void testVerisignDaneBadParams() throws IOException, CertificateException {
+    public static void testOarcDaneBadParams() throws IOException, CertificateException {
         DaneVerifier daneVerifier = new DaneVerifier();
-        daneVerifier.verifiedConnect((HttpsURLConnection) new URL("https://bad-params.dane.verisignlabs.com/").openConnection());
+        daneVerifier.verifiedConnect((HttpsURLConnection) new URL("https://bad-params.dane.dns-oarc.net/").openConnection());
     }
 }
