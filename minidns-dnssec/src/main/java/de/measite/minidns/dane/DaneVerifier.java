@@ -240,6 +240,8 @@ public class DaneVerifier {
             conn.connect();
             boolean fullyVerified = verifyCertificateChain(convert(conn.getServerCertificates()), conn.getURL().getHost(),
                     conn.getURL().getPort() < 0 ? conn.getURL().getDefaultPort() : conn.getURL().getPort());
+            // If fullyVerified is true then it's the DANE verification performed by verifiyCertificateChain() is
+            // sufficient to verify the certificate and we ignore possible pending exceptions of ExpectingTrustManager.
             if (!fullyVerified && expectingTrustManager.hasException()) {
                 throw new IOException("Peer verification failed using PKIX", expectingTrustManager.getException());
             }
