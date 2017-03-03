@@ -129,6 +129,27 @@ public class ResolverResult<D extends Data> {
         return answer;
     }
 
+    @Override
+    public final String toString() {
+        StringBuilder sb = new StringBuilder();
+
+        sb.append(getClass().getName()).append('\n')
+               .append("Question: ").append(question).append('\n')
+               .append("Response Code: ").append(responseCode).append('\n');
+
+        if (responseCode == RESPONSE_CODE.NO_ERROR) {
+            if (isAuthenticData) {
+                sb.append("Results verified via DNSSEC\n");
+            }
+            if (!unverifiedReasons.isEmpty()) {
+                sb.append(unverifiedReasons).append('\n');
+            }
+            sb.append(answer.answerSection);
+        }
+
+        return sb.toString();
+    }
+
     boolean hasUnverifiedReasons() {
         return unverifiedReasons != null && !unverifiedReasons.isEmpty();
     }
