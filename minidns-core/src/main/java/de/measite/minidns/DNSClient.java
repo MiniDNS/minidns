@@ -70,6 +70,8 @@ public class DNSClient extends AbstractDNSClient {
     private boolean askForDnssec = false;
     private boolean disableResultFilter = false;
 
+    private boolean useHardcodedDnsServers = true;
+
     /**
      * Create a new DNS client using the global default cache.
      */
@@ -121,7 +123,7 @@ public class DNSClient extends AbstractDNSClient {
         }
 
         InetAddress[] selectedHardcodedDnsServerAddresses = new InetAddress[2];
-        {
+        if (useHardcodedDnsServers) {
             InetAddress primaryHardcodedDnsServer = null, secondaryHardcodedDnsServer = null;
             switch (ipVersionSetting) {
             case v4v6:
@@ -270,6 +272,14 @@ public class DNSClient extends AbstractDNSClient {
 
     public void setDisableResultFilter(boolean disableResultFilter) {
         this.disableResultFilter = disableResultFilter;
+    }
+
+    public boolean isUseHardcodedDnsServersEnabled() {
+        return useHardcodedDnsServers;
+    }
+
+    public void setUseHardcodedDnsServers(boolean useHardcodedDnsServers) {
+        this.useHardcodedDnsServers = useHardcodedDnsServers;
     }
 
     public InetAddress getRandomHardcodedIpv4DnsServer() {
