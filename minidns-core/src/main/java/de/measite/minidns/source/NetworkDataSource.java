@@ -23,6 +23,7 @@ import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.SocketAddress;
+import java.net.SocketException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
@@ -66,7 +67,7 @@ public class NetworkDataSource extends DNSDataSource {
         DatagramPacket packet = message.asDatagram(address, port);
         byte[] buffer = new byte[udpPayloadSize];
         try {
-            socket = new DatagramSocket();
+            socket = createDatagramSocket();
             socket.setSoTimeout(timeout);
             socket.send(packet);
             packet = new DatagramPacket(buffer, buffer.length);
@@ -88,7 +89,7 @@ public class NetworkDataSource extends DNSDataSource {
         // required Android API level is >= 19
         Socket socket = null;
         try {
-            socket = new Socket();
+            socket = createSocket();
             SocketAddress socketAddress = new InetSocketAddress(address, port);
             socket.connect(socketAddress, timeout);
             socket.setSoTimeout(timeout);
@@ -112,5 +113,24 @@ public class NetworkDataSource extends DNSDataSource {
                 socket.close();
             }
         }
+    }
+
+    /**
+     * Create a {@link Socket} using the system default {@link javax.net.SocketFactory}.
+     *
+     * @return The new {@link Socket} instance
+     */
+    protected Socket createSocket() {
+        return new Socket();
+    }
+
+    /**
+     * Create a {@link DatagramSocket} using the system defaults.
+     *
+     * @return The new {@link DatagramSocket} instance
+     * @throws SocketException If creation of the {@link DatagramSocket} fails
+     */
+    protected DatagramSocket createDatagramSocket() throws SocketException {
+        return new DatagramSocket();
     }
 }
