@@ -152,6 +152,11 @@ jar {
 	enabled = false
 }
 
+// Disable upload archives for the root project
+uploadArchives {
+	enabled = false
+}
+
 apply plugin: "com.github.kt3k.coveralls"
 coveralls {
 	sourceDirs = files(subprojects.sourceSets.main.allSource.srcDirs).files.absolutePath
