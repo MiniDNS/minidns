@@ -10,6 +10,9 @@
  */
 package de.measite.minidns;
 
+import de.measite.minidns.MiniDnsFuture.ExceptionCallback;
+import de.measite.minidns.MiniDnsFuture.InternalMiniDnsFuture;
+import de.measite.minidns.MiniDnsFuture.SuccessCallback;
 import de.measite.minidns.dnsserverlookup.AndroidUsingExec;
 import de.measite.minidns.dnsserverlookup.AndroidUsingReflection;
 import de.measite.minidns.dnsserverlookup.DNSServerLookupMechanism;
@@ -92,19 +95,7 @@ public class DNSClient extends AbstractDNSClient {
         return message;
     }
 
-    @Override
-    public DNSMessage query(DNSMessage.Builder queryBuilder) throws IOException {
-        DNSMessage q = newQuestion(queryBuilder).build();
-        // While this query method does in fact re-use query(Question, String)
-        // we still do a cache lookup here in order to avoid unnecessary
-        // findDNS()calls, which are expensive on Android. Note that we do not
-        // put the results back into the Cache, as this is already done by
-        // query(Question, String).
-        DNSMessage responseMessage = (cache == null) ? null : cache.get(q);
-        if (responseMessage != null) {
-            return responseMessage;
-        }
-
+    private List<InetAddress> getServerAddresses() {
         List<InetAddress> dnsServerAddresses = findDnsAddresses();
 
         InetAddress[] selectedHardcodedDnsServerAddresses = new InetAddress[2];
@@ -133,6 +124,24 @@ public class DNSClient extends AbstractDNSClient {
             if (selectedHardcodedDnsServerAddress == null) continue;
             dnsServerAddresses.add(selectedHardcodedDnsServerAddress);
         }
+
+        return dnsServerAddresses;
+    }
+
+    @Override
+    public DNSMessage query(DNSMessage.Builder queryBuilder) throws IOException {
+        DNSMessage q = newQuestion(queryBuilder).build();
+        // While this query method does in fact re-use query(Question, String)
+        // we still do a cache lookup here in order to avoid unnecessary
+        // findDNS()calls, which are expensive on Android. Note that we do not
+        // put the results back into the Cache, as this is already done by
+        // query(Question, String).
+        DNSMessage responseMessage = (cache == null) ? null : cache.get(q);
+        if (responseMessage != null) {
+            return responseMessage;
+        }
+
+        List<InetAddress> dnsServerAddresses = getServerAddresses();
 
         List<IOException> ioExceptions = new ArrayList<>(dnsServerAddresses.size());
         for (InetAddress dns : dnsServerAddresses) {
@@ -186,6 +195,66 @@ public class DNSClient extends AbstractDNSClient {
         MultipleIoException.throwIfRequired(ioExceptions);
         // TODO assert that we never return null here.
         return null;
+    }
+
+    @Override
+    protected MiniDnsFuture<DNSMessage, IOException> queryAsync(DNSMessage.Builder queryBuilder) {
+        DNSMessage q = newQuestion(queryBuilder).build();
+        // While this query method does in fact re-use query(Question, String)
+        // we still do a cache lookup here in order to avoid unnecessary
+        // findDNS()calls, which are expensive on Android. Note that we do not
+        // put the results back into the Cache, as this is already done by
+        // query(Question, String).
+        DNSMessage responseMessage = (cache == null) ? null : cache.get(q);
+        if (responseMessage != null) {
+            return MiniDnsFuture.from(responseMessage);
+        }
+
+        final List<InetAddress> dnsServerAddresses = getServerAddresses();
+
+        final InternalMiniDnsFuture<DNSMessage, IOException> future = new InternalMiniDnsFuture<>();
+        final List<IOException> exceptions = Collections.synchronizedList(new ArrayList<IOException>(dnsServerAddresses.size()));
+
+        // Filter loop.
+        Iterator<InetAddress> it = dnsServerAddresses.iterator();
+        while (it.hasNext()) {
+            InetAddress dns = it.next();
+            if (nonRaServers.contains(dns)) {
+                it.remove();
+                LOGGER.finer("Skipping " + dns + " because it was marked as \"recursion not available\"");
+                continue;
+            }
+        }
+
+        List<MiniDnsFuture<DNSMessage, IOException>> futures = new ArrayList<>(dnsServerAddresses.size());
+        // "Main" loop.
+        for (InetAddress dns : dnsServerAddresses) {
+            if (future.isDone()) {
+                for (MiniDnsFuture<DNSMessage, IOException> futureToCancel : futures) {
+                    futureToCancel.cancel(true);
+                }
+                break;
+            }
+
+            MiniDnsFuture<DNSMessage, IOException> f = queryAsync(q, dns);
+            f.onSuccessOrError(new SuccessCallback<DNSMessage>() {
+                @Override
+                public void onSuccess(DNSMessage result) {
+                    future.setResult(result);
+                }
+            }, new ExceptionCallback<IOException>() {
+                @Override
+                public void processException(IOException exception) {
+                    exceptions.add(exception);
+                    if (exceptions.size() == dnsServerAddresses.size()) {
+                        future.setException(MultipleIoException.toIOException(exceptions));
+                    }
+                }
+            });
+            futures.add(f);
+        }
+
+        return future;
     }
 
     /**

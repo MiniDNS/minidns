@@ -21,6 +21,7 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.InetAddress;
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -456,9 +457,8 @@ public class DNSMessage {
      * Generate a binary dns packet out of this message.
      *
      * @return byte[] the binary representation.
-     * @throws IOException Should never happen.
      */
-    public byte[] toArray() throws IOException {
+    public byte[] toArray() {
         return serialize().clone();
     }
 
@@ -471,6 +471,11 @@ public class DNSMessage {
         byte[] bytes = serialize();
         dataOutputStream.writeShort(bytes.length);
         dataOutputStream.write(bytes);
+    }
+
+    public ByteBuffer getInByteBuffer() {
+        byte[] bytes = serialize().clone();
+        return ByteBuffer.wrap(bytes);
     }
 
     private byte[] byteCache;

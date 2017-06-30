@@ -37,18 +37,35 @@ public class NetworkDataSource extends DNSDataSource {
     public DNSMessage query(DNSMessage message, InetAddress address, int port) throws IOException {
         List<IOException> ioExceptions = new ArrayList<>(2);
         DNSMessage dnsMessage = null;
-        try {
-            dnsMessage = queryUdp(message, address, port);
-        } catch (IOException e) {
-            ioExceptions.add(e);
+        final QueryMode queryMode = getQueryMode();
+        boolean doUdpFirst;
+        switch (queryMode) {
+        case dontCare:
+        case udpTcp:
+            doUdpFirst = true;
+            break;
+        case tcp:
+            doUdpFirst = false;
+            break;
+        default:
+            throw new IllegalStateException("Unsupported query mode: " + queryMode);
         }
 
-        if (dnsMessage != null && !dnsMessage.truncated) {
-            return dnsMessage;
-        }
+        if (doUdpFirst) {
+            try {
+                dnsMessage = queryUdp(message, address, port);
+            } catch (IOException e) {
+                ioExceptions.add(e);
+            }
 
-        assert(dnsMessage == null || dnsMessage.truncated || ioExceptions.size() == 1);
-        LOGGER.log(Level.FINE, "Fallback to TCP because {0}", new Object[] { dnsMessage != null ? "response is truncated" : ioExceptions.get(0) });
+            if (dnsMessage != null && !dnsMessage.truncated) {
+                return dnsMessage;
+            }
+
+            assert (dnsMessage == null || dnsMessage.truncated || ioExceptions.size() == 1);
+            LOGGER.log(Level.FINE, "Fallback to TCP because {0}",
+                    new Object[] { dnsMessage != null ? "response is truncated" : ioExceptions.get(0) });
+        }
 
         try {
             dnsMessage = queryTcp(message, address, port);

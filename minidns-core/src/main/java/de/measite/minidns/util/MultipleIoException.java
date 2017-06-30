@@ -56,4 +56,14 @@ public class MultipleIoException extends IOException {
         }
         throw new MultipleIoException(ioExceptions);
     }
+
+    public static IOException toIOException(List<? extends IOException> ioExceptions) {
+        int size = ioExceptions.size();
+        if (size == 1) {
+            return ioExceptions.get(0);
+        } else if (size > 1) {
+            return new MultipleIoException(ioExceptions);
+        }
+        return null;
+    }
 }

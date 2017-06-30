@@ -4,6 +4,7 @@
 rootProject.name = 'MiniDNS'
 
 include 'minidns-core'
+include 'minidns-async'
 include 'minidns-iterative-resolver'
 include 'minidns-dnssec'
 include 'minidns-dane-java7'
