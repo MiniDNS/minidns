@@ -31,7 +31,7 @@ allprojects {
 	ext {
 		junitVersion = 4.11
 		minidnsMinAndroidSdk = 9
-		androidBootClasspath = getAndroidRuntimeJar()
+		androidBootClasspath = getAndroidRuntimeJar(minidnsMinAndroidSdk)
 		rootConfigDir = new File(rootDir, 'config')
 		gitCommit = getGitCommit()
 		builtDate = (new java.text.SimpleDateFormat("yyyy-MM-dd")).format(new Date())
@@ -136,7 +136,7 @@ allprojects {
 	}
 }
 
-configure(subprojects.findAll{!it.name.endsWith('-java7')}) {
+configure(subprojects.findAll{!it.name.endsWith('-java7') && !it.name.endsWith('-android21')}) {
 	task compileAndroid(type: JavaCompile) {
 		source = compileJava.source
 		classpath = compileJava.classpath
@@ -194,13 +194,13 @@ task checkFull {
 	}
 }
 
-def getAndroidRuntimeJar() {
+def getAndroidRuntimeJar(androidSdkApiLevel) {
 	def androidHome = getAndroidHome()
-	def androidJar = new File("$androidHome/platforms/android-$minidnsMinAndroidSdk/android.jar")
+	def androidJar = new File("$androidHome/platforms/android-$androidSdkApiLevel/android.jar")
 	if (androidJar.isFile()) {
 		return androidJar
 	} else {
-		throw new Exception("Can't find android.jar for $minidnsMinAndroidSdk API. Please install corresponding SDK platform package")
+		throw new Exception("Can't find android.jar for $androidSdkApiLevel API. Please install corresponding SDK platform package")
 	}
 }
 

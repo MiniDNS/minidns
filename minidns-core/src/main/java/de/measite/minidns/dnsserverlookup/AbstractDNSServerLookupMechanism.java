@@ -10,6 +10,9 @@
  */
  package de.measite.minidns.dnsserverlookup;
 
+import java.net.InetAddress;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.logging.Logger;
 
@@ -42,4 +45,13 @@ public abstract class AbstractDNSServerLookupMechanism implements DNSServerLooku
 
     @Override
     public abstract List<String> getDnsServerAddresses();
+
+    protected static List<String> toListOfStrings(Collection<? extends InetAddress> inetAddresses) {
+        List<String> result = new ArrayList<>(inetAddresses.size());
+        for (InetAddress inetAddress : inetAddresses) {
+            String address = inetAddress.getHostAddress();
+            result.add(address);
+        }
+        return result;
+    }
 }
