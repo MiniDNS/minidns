@@ -14,6 +14,8 @@ dependencies {
 
 }
 
-task printClasspath(dependsOn: assemble) << {
-    println sourceSets.main.runtimeClasspath.asPath
+task printClasspath(dependsOn: assemble) {
+	doLast {
+		println sourceSets.main.runtimeClasspath.asPath
+	}
 }
