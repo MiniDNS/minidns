@@ -78,6 +78,11 @@ public class ResolverResult<D extends Data> {
         return isAuthenticData;
     }
 
+    /**
+     * Get the reasons the result could not be verified if any exists.
+     *
+     * @return The reasons the result could not be verified or <code>null</code>.
+     */
     public Set<UnverifiedReason> getUnverifiedReasons() {
         throwIseIfErrorResponse();
         return unverifiedReasons;
