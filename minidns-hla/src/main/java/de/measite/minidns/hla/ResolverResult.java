@@ -141,7 +141,7 @@ public class ResolverResult<D extends Data> {
             if (isAuthenticData) {
                 sb.append("Results verified via DNSSEC\n");
             }
-            if (!unverifiedReasons.isEmpty()) {
+            if (hasUnverifiedReasons()) {
                 sb.append(unverifiedReasons).append('\n');
             }
             sb.append(answer.answerSection);
