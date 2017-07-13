@@ -284,13 +284,25 @@ public class DNSName implements CharSequence, Serializable, Comparable<DNSName> 
         return new DNSName(name, true);
     }
 
-    public static DNSName from(DNSName left, DNSName right) {
-        left.setLabelsIfRequired();
-        right.setLabelsIfRequired();
+    /**
+     * Create a DNS name by "concatenating" the child under the parent name. The child can also be seen as the "left"
+     * part of the resulting DNS name and the parent is the "right" part.
+     * <p>
+     * For example using "i.am.the.child" as child and "of.this.parent.example" as parent, will result in a DNS name:
+     * "i.am.the.child.of.this.parent.example".
+     * </p>
+     *
+     * @param child the child DNS name.
+     * @param parent the parent DNS name.
+     * @return the resulting of DNS name.
+     */
+    public static DNSName from(DNSName child, DNSName parent) {
+        child.setLabelsIfRequired();
+        parent.setLabelsIfRequired();
 
-        String[] labels = new String[left.labels.length + right.labels.length];
-        System.arraycopy(right.labels, 0, labels, 0, right.labels.length);
-        System.arraycopy(left.labels, 0, labels, right.labels.length, left.labels.length);
+        String[] labels = new String[child.labels.length + parent.labels.length];
+        System.arraycopy(parent.labels, 0, labels, 0, parent.labels.length);
+        System.arraycopy(child.labels, 0, labels, parent.labels.length, child.labels.length);
         return new DNSName(labels, true, false);
     }
 
