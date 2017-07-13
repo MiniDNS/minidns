@@ -93,11 +93,12 @@ public class DNSName implements CharSequence, Serializable, Comparable<DNSName> 
         this(name, true);
     }
 
-    private DNSName(String name, boolean inIdnForm) {
-        if (inIdnForm) {
-            ace = MiniDnsIdna.toASCII(name);
-        } else {
+    private DNSName(String name, boolean inAce) {
+        if (inAce) {
+            // Name is already in ACE format, just do some minor sanitation.
             ace = name.toLowerCase(Locale.US);
+        } else {
+            ace = MiniDnsIdna.toASCII(name);
         }
 
         if (!VALIDATE) {
@@ -281,7 +282,7 @@ public class DNSName implements CharSequence, Serializable, Comparable<DNSName> 
     }
 
     public static DNSName from(String name) {
-        return new DNSName(name, true);
+        return new DNSName(name, false);
     }
 
     /**
@@ -324,14 +325,10 @@ public class DNSName implements CharSequence, Serializable, Comparable<DNSName> 
         return new DNSName(labels, true, false);
     }
 
-    public static DNSName from(String[] parts, boolean inIdnForm) {
+    public static DNSName from(String[] parts) {
         String[] labels = new String[parts.length];
         for (int i = 0; i < parts.length; i++) {
-            if (inIdnForm) {
-                labels[i] = parts[i].toLowerCase(Locale.US);
-            } else {
-                labels[i] = MiniDnsIdna.toASCII(parts[i]);
-            }
+            labels[i] = MiniDnsIdna.toASCII(parts[i]);
         }
 
         return new DNSName(labels, true, true);

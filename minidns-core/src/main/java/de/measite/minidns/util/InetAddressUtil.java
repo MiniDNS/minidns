@@ -90,13 +90,13 @@ public class InetAddressUtil {
             }
         }
 
-        return DNSName.from(parts, true);
+        return DNSName.from(parts);
     }
 
     public static DNSName reverseIpAddressOf(Inet4Address inet4Address) {
         final String[] ipAddressParts = inet4Address.getHostAddress().split("\\.");
         assert(ipAddressParts.length == 4);
 
-        return DNSName.from(ipAddressParts, true);
+        return DNSName.from(ipAddressParts);
     }
 }
