@@ -92,7 +92,7 @@ public class DNSName implements CharSequence, Serializable, Comparable<DNSName> 
     private int size = -1;
 
     private DNSName(String name) {
-        this(name, false);
+        this(name, true);
     }
 
     private DNSName(String name, boolean inIdnForm) {
