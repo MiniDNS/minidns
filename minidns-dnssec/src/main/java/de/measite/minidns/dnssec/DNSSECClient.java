@@ -61,7 +61,7 @@ public class DNSSECClient extends ReliableDNSClient {
      */
     public DNSSECClient(DNSCache cache) {
         super(cache);
-        addSecureEntryPoint(DNSName.EMPTY, rootEntryKey.toByteArray());
+        addSecureEntryPoint(DNSName.ROOT, rootEntryKey.toByteArray());
     }
 
     private Verifier verifier = new Verifier();

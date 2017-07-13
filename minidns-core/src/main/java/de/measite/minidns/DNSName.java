@@ -56,8 +56,6 @@ public class DNSName implements CharSequence, Serializable, Comparable<DNSName> 
 
     public static final int MAX_LABELS = 128;
 
-    public static final DNSName EMPTY = new DNSName("", false);
-
     public static final DNSName ROOT = new DNSName(".", false);
 
     public static final DNSName IN_ADDR_ARPA = new DNSName("in-addr.arpa", false);
@@ -346,7 +344,7 @@ public class DNSName implements CharSequence, Serializable, Comparable<DNSName> 
             return parse(data, c, jumps);
         }
         if (c == 0) {
-            return DNSName.EMPTY;
+            return DNSName.ROOT;
         }
         byte b[] = new byte[c];
         dis.readFully(b);
@@ -379,7 +377,7 @@ public class DNSName implements CharSequence, Serializable, Comparable<DNSName> 
             return parse(data, c, jumps);
         }
         if (c == 0) {
-            return DNSName.EMPTY;
+            return DNSName.ROOT;
         }
 
         String childLabelString = new String(data, offset + 1, c);
@@ -465,7 +463,7 @@ public class DNSName implements CharSequence, Serializable, Comparable<DNSName> 
         }
 
         if (labelCount == 0) {
-            return EMPTY;
+            return ROOT;
         }
 
         String[] stripedLabels = Arrays.copyOfRange(labels, 0, labelCount);
@@ -485,7 +483,7 @@ public class DNSName implements CharSequence, Serializable, Comparable<DNSName> 
      * @return the parent of this DNS label.
      */
     public DNSName getParent() {
-        if (isRootLabel()) return EMPTY;
+        if (isRootLabel()) return ROOT;
         return stripToLabels(getLabelCount() - 1);
     }
 

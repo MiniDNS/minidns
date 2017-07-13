@@ -145,7 +145,7 @@ public class EDNS {
             long optFlags = flags;
             optFlags |= (extendedRcode << 8);
             optFlags |= (version << 16);
-            optRecord = new Record<OPT>(DNSName.EMPTY, Record.TYPE.OPT, udpPayloadSize, optFlags, new OPT(variablePart));
+            optRecord = new Record<OPT>(DNSName.ROOT, Record.TYPE.OPT, udpPayloadSize, optFlags, new OPT(variablePart));
         }
         return optRecord;
     }

@@ -226,7 +226,7 @@ public class DNSMessageTest {
         assertEquals(3, answers.size());
         for (int i = 0; i < answers.size(); i++) {
             Record<? extends Data> answer = answers.get(i);
-            assertCsEquals("", answer.name);
+            assertCsEquals(".", answer.name);
             assertEquals(19593, answer.getTtl());
             assertEquals(TYPE.DNSKEY, answer.type);
             assertEquals(TYPE.DNSKEY, answer.getPayload().getType());
@@ -291,7 +291,7 @@ public class DNSMessageTest {
         assertCsEquals("20150629170000", dateFormat.format(rrsig.signatureExpiration));
         assertCsEquals("20150619160000", dateFormat.format(rrsig.signatureInception));
         assertEquals(48613, rrsig.keyTag);
-        assertCsEquals("", rrsig.signerName);
+        assertCsEquals(".", rrsig.signerName);
         assertEquals(128, rrsig.signature.length);
 
         List<Record<? extends Data>> arr = m.additionalSection;

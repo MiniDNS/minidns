@@ -56,7 +56,7 @@ public class DNSNameTest {
         assertCsEquals(DNSName.from("www.example.com"), DNSName.from("www.example.com").stripToLabels(3));
         assertCsEquals(DNSName.from("example.com"), DNSName.from("www.example.com").stripToLabels(2));
         assertCsEquals(DNSName.from("com"), DNSName.from("www.example.com").stripToLabels(1));
-        assertCsEquals(DNSName.from(""), DNSName.from("www.example.com").stripToLabels(0));
+        assertCsEquals(DNSName.from("."), DNSName.from("www.example.com").stripToLabels(0));
     }
 
     @Test(expected = IllegalArgumentException.class)

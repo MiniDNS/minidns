@@ -84,7 +84,7 @@ public class DNSSECClientTest {
     @Before
     public void setUp() throws Exception {
         client = new DNSSECClient(new LRUCache(0));
-        client.addSecureEntryPoint(DNSName.EMPTY, rootKSK.getKey());
+        client.addSecureEntryPoint(DNSName.ROOT, rootKSK.getKey());
     }
 
     void checkCorrectExampleMessage(DNSMessage message) {
