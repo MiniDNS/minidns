@@ -350,12 +350,12 @@ public class DNSName implements CharSequence, Serializable, Comparable<DNSName> 
         }
         byte b[] = new byte[c];
         dis.readFully(b);
-        String s = MiniDnsIdna.toUnicode(new String(b));
-        DNSName t = parse(dis, data);
-        if (t.length() > 0) {
-            s = s + "." + t;
-        }
-        return new DNSName(s);
+
+        String childLabelString = new String(b);
+        DNSName child = new DNSName(childLabelString);
+
+        DNSName parent = parse(dis, data);
+        return DNSName.from(child, parent);
     }
 
     /**
@@ -381,12 +381,12 @@ public class DNSName implements CharSequence, Serializable, Comparable<DNSName> 
         if (c == 0) {
             return DNSName.EMPTY;
         }
-        String s = new String(data, offset + 1, c);
-        DNSName t = parse(data, offset + 1 + c, jumps);
-        if (t.length() > 0) {
-            s = s + "." + t;
-        }
-        return new DNSName(s);
+
+        String childLabelString = new String(data, offset + 1, c);
+        DNSName child = new DNSName(childLabelString);
+
+        DNSName parent = parse(data, offset + 1 + c, jumps);
+        return DNSName.from(child, parent);
     }
 
     @Override
