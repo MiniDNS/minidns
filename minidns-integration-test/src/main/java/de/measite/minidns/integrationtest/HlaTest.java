@@ -12,6 +12,7 @@ package de.measite.minidns.integrationtest;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
 import java.util.Set;
@@ -19,6 +20,7 @@ import java.util.Set;
 import de.measite.minidns.hla.ResolverApi;
 import de.measite.minidns.hla.ResolverResult;
 import de.measite.minidns.record.A;
+import de.measite.minidns.record.SRV;
 
 public class HlaTest {
 
@@ -31,4 +33,16 @@ public class HlaTest {
         assertArrayEquals(new A(37, 221, 197, 223).toByteArray(), answers.iterator().next().toByteArray());
     }
 
+    @IntegrationTest
+    public static void idnSrvTest() throws IOException {
+        ResolverResult<SRV> res = ResolverApi.INSTANCE.resolve("_xmpp-client._tcp.im.plä.net", SRV.class);
+        Set<SRV> answers = res.getAnswers();
+        assertEquals(1, answers.size());
+
+        SRV srv = answers.iterator().next();
+
+        ResolverResult<A> aRes = ResolverApi.INSTANCE.resolve(srv.target, A.class);
+
+        assertTrue(aRes.wasSuccessful());
+    }
 }
