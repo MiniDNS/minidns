@@ -94,7 +94,9 @@ public class DNSName implements CharSequence, Serializable, Comparable<DNSName> 
     }
 
     private DNSName(String name, boolean inAce) {
-        if (inAce) {
+        if (name.isEmpty()) {
+            ace = ROOT.ace;
+        } else if (inAce) {
             // Name is already in ACE format, just do some minor sanitation.
             ace = name.toLowerCase(Locale.US);
         } else {
