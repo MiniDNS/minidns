@@ -147,7 +147,7 @@ public class AsyncNetworkDataSource extends DNSDataSource {
                 AsyncDnsRequest nearestDeadline;
                 while ((nearestDeadline = DEADLINE_QUEUE.peek()) != null) {
                     if (!nearestDeadline.wasDeadlineMissedAndFutureNotified()) {
-                        // This is the nearest deadline.
+                        // This is the nearest deadline that we did not miss.
                         break;
                     }
                     // Remove the async DNS request from the deadline queue, as it was just finished with an error.
