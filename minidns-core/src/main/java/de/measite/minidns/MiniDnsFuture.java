@@ -77,7 +77,7 @@ public abstract class MiniDnsFuture<V, E extends Exception> implements Future<V>
         return this;
     }
 
-    private final V getOrThrowExceptionException() throws ExecutionException {
+    private final V getOrThrowExecutionException() throws ExecutionException {
         assert (result != null || exception != null || cancelled);
         if (result != null) {
             return result;
@@ -96,7 +96,7 @@ public abstract class MiniDnsFuture<V, E extends Exception> implements Future<V>
             wait();
         }
 
-        return getOrThrowExceptionException();
+        return getOrThrowExecutionException();
     }
 
     public synchronized final V getOrThrow() throws E {
@@ -139,7 +139,7 @@ public abstract class MiniDnsFuture<V, E extends Exception> implements Future<V>
             throw new TimeoutException();
         }
 
-        return getOrThrowExceptionException();
+        return getOrThrowExecutionException();
     }
 
     private static final ExecutorService EXECUTOR_SERVICE;
