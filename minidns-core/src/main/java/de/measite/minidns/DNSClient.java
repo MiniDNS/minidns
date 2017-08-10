@@ -113,13 +113,15 @@ public class DNSClient extends AbstractDNSClient {
         }
 
         List<InetAddress> dnsServerAddresses = new ArrayList<>(dnsServerCount + 2);
-        for (String dnsServerString : dnsServerStrings) {
-            if (dnsServerString == null || dnsServerString.isEmpty()) {
-                LOGGER.finest("findDns() returned null or empty string as dns server");
-                continue;
+        if (dnsServerStrings != null) {
+            for (String dnsServerString : dnsServerStrings) {
+                if (dnsServerString == null || dnsServerString.isEmpty()) {
+                    LOGGER.finest("findDns() returned null or empty string as dns server");
+                    continue;
+                }
+                InetAddress dnsServerAddress = InetAddress.getByName(dnsServerString);
+                dnsServerAddresses.add(dnsServerAddress);
             }
-            InetAddress dnsServerAddress = InetAddress.getByName(dnsServerString);
-            dnsServerAddresses.add(dnsServerAddress);
         }
 
         InetAddress[] selectedHardcodedDnsServerAddresses = new InetAddress[2];
