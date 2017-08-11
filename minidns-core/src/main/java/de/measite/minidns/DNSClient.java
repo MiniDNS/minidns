@@ -108,6 +108,7 @@ public class DNSClient extends AbstractDNSClient {
         int dnsServerCount;
         if (dnsServerStrings == null) {
             dnsServerCount = 0;
+            dnsServerStrings = new String[0];
         } else {
             dnsServerCount = dnsServerStrings.length;
         }
