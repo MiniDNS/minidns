@@ -10,15 +10,15 @@
  */
 package de.measite.minidns;
 
-import de.measite.minidns.MiniDnsFuture.ExceptionCallback;
 import de.measite.minidns.MiniDnsFuture.InternalMiniDnsFuture;
-import de.measite.minidns.MiniDnsFuture.SuccessCallback;
 import de.measite.minidns.dnsserverlookup.AndroidUsingExec;
 import de.measite.minidns.dnsserverlookup.AndroidUsingReflection;
 import de.measite.minidns.dnsserverlookup.DNSServerLookupMechanism;
 import de.measite.minidns.dnsserverlookup.UnixUsingEtcResolvConf;
 import de.measite.minidns.util.CollectionsUtil;
+import de.measite.minidns.util.ExceptionCallback;
 import de.measite.minidns.util.InetAddressUtil;
+import de.measite.minidns.util.SuccessCallback;
 import de.measite.minidns.util.MultipleIoException;
 
 import java.io.IOException;
@@ -237,12 +237,13 @@ public class DNSClient extends AbstractDNSClient {
             }
 
             MiniDnsFuture<DNSMessage, IOException> f = queryAsync(q, dns);
-            f.onSuccessOrError(new SuccessCallback<DNSMessage>() {
+            f.onSuccess(new SuccessCallback<DNSMessage>() {
                 @Override
                 public void onSuccess(DNSMessage result) {
                     future.setResult(result);
                 }
-            }, new ExceptionCallback<IOException>() {
+            });
+            f.onError(new ExceptionCallback<IOException>() {
                 @Override
                 public void processException(IOException exception) {
                     exceptions.add(exception);

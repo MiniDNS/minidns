@@ -22,7 +22,11 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-public abstract class MiniDnsFuture<V, E extends Exception> implements Future<V> {
+import de.measite.minidns.util.CallbackRecipient;
+import de.measite.minidns.util.ExceptionCallback;
+import de.measite.minidns.util.SuccessCallback;
+
+public abstract class MiniDnsFuture<V, E extends Exception> implements Future<V>, CallbackRecipient<V, E> {
 
     private boolean cancelled;
 
@@ -59,19 +63,18 @@ public abstract class MiniDnsFuture<V, E extends Exception> implements Future<V>
         return result != null;
     }
 
-    public void onSuccessOrError(SuccessCallback<V> successCallback, ExceptionCallback<E> exceptionCallback) {
+    @Override
+    public CallbackRecipient<V, E> onSuccess(SuccessCallback<V> successCallback) {
         this.successCallback = successCallback;
-        this.exceptionCallback = exceptionCallback;
-
         maybeInvokeCallbacks();
+        return this;
     }
 
-    public void onSuccess(SuccessCallback<V> successCallback) {
-        onSuccessOrError(successCallback, null);
-    }
-
-    public void onError(ExceptionCallback<E> exceptionCallback) {
-        onSuccessOrError(null, exceptionCallback);
+    @Override
+    public CallbackRecipient<V, E> onError(ExceptionCallback<E> exceptionCallback) {
+        this.exceptionCallback = exceptionCallback;
+        maybeInvokeCallbacks();
+        return this;
     }
 
     private final V getOrThrowExceptionException() throws ExecutionException {
@@ -204,21 +207,10 @@ public abstract class MiniDnsFuture<V, E extends Exception> implements Future<V>
         }
     }
 
-    public interface SuccessCallback<T> {
-
-        public void onSuccess(T result);
-
-    }
-
-    public interface ExceptionCallback<E> {
-
-        public void processException(E exception);
-
-    }
-
     public static <V, E extends Exception> MiniDnsFuture<V, E> from(V result) {
         InternalMiniDnsFuture<V, E> future = new InternalMiniDnsFuture<>();
         future.setResult(result);
         return future;
     }
+
 }
