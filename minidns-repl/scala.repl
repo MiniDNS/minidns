@@ -12,6 +12,8 @@ import de.measite.minidns.minidnsrepl.MiniDNSStats._
 
 import de.measite.minidns.jul.MiniDnsJul._
 
+import java.net.InetAddress
+
 // Some standard values
 Predef.println("Set value 'c' to DNSClient")
 val c = de.measite.minidns.minidnsrepl.MiniDnsRepl.DNSCLIENT
