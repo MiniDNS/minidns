@@ -27,6 +27,13 @@ import de.measite.minidns.idna.MiniDnsIdna;
  * <p>
  * Instances of this class can be created by using {@link #from(String)}.
  * </p>
+ * <p>
+ * This class holds three representations of a DNS name: ACE, raw ACE and IDN. ACE (ASCII Compatible Encoding), which
+ * can be accessed via {@link #ace}, represents mostly the data that got send over the wire. But since DNS names are
+ * case insensitive, the ACE value is normalized to lower case. You can use {@link #getRawAce()} to get the raw ACE data
+ * that was received, which possibly includes upper case characters. The IDN (Internationalized Domain Name), that is
+ * the DNS name as it should be shown to the user, can be retrieved using {@link #asIdn()}.
+ * </p>
  *
  * @see <a href="https://tools.ietf.org/html/rfc3696">RFC 3696</a>
  * @author Florian Schmaus
@@ -72,7 +79,15 @@ public class DNSName implements CharSequence, Serializable, Comparable<DNSName> 
      */
     public final String ace;
 
+    /**
+     * The DNS name in raw format, i.e. as it was received from the remote server. This means that compared to
+     * {@link #ace}, this String may not be lower-cased.
+     */
+    private final String rawAce;
+
     private transient byte[] bytes;
+
+    private transient byte[] rawBytes;
 
     private transient String idn;
 
@@ -85,6 +100,8 @@ public class DNSName implements CharSequence, Serializable, Comparable<DNSName> 
      */
     private transient String[] labels;
 
+    private transient String[] rawLabels;
+
     private transient int hashCode;
 
     private int size = -1;
@@ -95,13 +112,15 @@ public class DNSName implements CharSequence, Serializable, Comparable<DNSName> 
 
     private DNSName(String name, boolean inAce) {
         if (name.isEmpty()) {
-            ace = ROOT.ace;
+            rawAce = ROOT.rawAce;
         } else if (inAce) {
-            // Name is already in ACE format, just do some minor sanitation.
-            ace = name.toLowerCase(Locale.US);
+            // Name is already in ACE format.
+            rawAce = name;
         } else {
-            ace = MiniDnsIdna.toASCII(name);
+            rawAce = MiniDnsIdna.toASCII(name);
         }
+
+        ace = rawAce.toLowerCase(Locale.US);
 
         if (!VALIDATE) {
             return;
@@ -114,19 +133,18 @@ public class DNSName implements CharSequence, Serializable, Comparable<DNSName> 
         validateMaxLabelLength();
     }
 
-    private DNSName(String[] labels, boolean validateMaxDnsnameLength, boolean validateMaxLabelLength) {
-        this.labels = labels;
+    private DNSName(String[] rawLabels, boolean validateMaxDnsnameLength, boolean validateMaxLabelLength) {
+        this.rawLabels = rawLabels;
+        this.labels = new String[rawLabels.length];
 
         int size = 0;
-        for (String label : labels) {
-            size += label.length() + 1;
+        for (int i = 0; i < rawLabels.length; i++) {
+            size += rawLabels[i].length() + 1;
+            labels[i] = rawLabels[i].toLowerCase(Locale.US);
         }
-        StringBuilder sb = new StringBuilder(size);
-        for (int i = labels.length - 1; i >= 0; i--) {
-            sb.append(labels[i]).append('.');
-        }
-        sb.setLength(sb.length() - 1);
-        ace = sb.toString();
+
+        rawAce = labelsToString(rawLabels, size);
+        ace    = labelsToString(labels,    size);
 
         if (validateMaxLabelLength) {
             validateMaxLabelLength();
@@ -137,6 +155,15 @@ public class DNSName implements CharSequence, Serializable, Comparable<DNSName> 
         }
 
         validateMaxDnsnameLengthInOctets(ace);
+    }
+
+    private static String labelsToString(String[] labels, int stringLength) {
+        StringBuilder sb = new StringBuilder(stringLength);
+        for (int i = labels.length - 1; i >= 0; i--) {
+            sb.append(labels[i]).append('.');
+        }
+        sb.setLength(sb.length() - 1);
+        return sb.toString();
     }
 
     private void validateMaxLabelLength() {
@@ -170,12 +197,25 @@ public class DNSName implements CharSequence, Serializable, Comparable<DNSName> 
         return bytes.clone();
     }
 
+    public byte[] getRawBytes() {
+        if (rawBytes == null) {
+            setLabelsIfRequired();
+            rawBytes = toBytes(rawLabels);
+        }
+
+        return rawBytes.clone();
+    }
+
     private void setBytesIfRequired() {
         if (bytes != null)
             return;
 
-        ByteArrayOutputStream baos = new ByteArrayOutputStream(64);
         setLabelsIfRequired();
+        bytes = toBytes(labels);
+    }
+
+    private static byte[] toBytes(String[] labels) {
+        ByteArrayOutputStream baos = new ByteArrayOutputStream(64);
         for (int i = labels.length - 1; i >= 0; i--) {
             byte[] buffer = labels[i].getBytes();
             baos.write(buffer.length);
@@ -186,18 +226,23 @@ public class DNSName implements CharSequence, Serializable, Comparable<DNSName> 
 
         assert (baos.size() <= MAX_DNSNAME_LENGTH_IN_OCTETS);
 
-        bytes = baos.toByteArray();
+        return baos.toByteArray();
     }
 
     private void setLabelsIfRequired() {
-        if (labels != null) return;
+        if (labels != null && rawLabels != null) return;
 
         if (isRootLabel()) {
-            labels = new String[0];
+            rawLabels = labels = new String[0];
             return;
         }
 
-        labels = ace.split(LABEL_SEP_REGEX, MAX_LABELS);
+        labels = getLabels(ace);
+        rawLabels = getLabels(rawAce);
+    }
+
+    private static String[] getLabels(String input) {
+        String[] labels = input.split(LABEL_SEP_REGEX, MAX_LABELS);
 
         // Reverse the labels, so that 'foo, example, org' becomes 'org, example, foo'.
         for (int i = 0; i < labels.length / 2; i++) {
@@ -206,6 +251,12 @@ public class DNSName implements CharSequence, Serializable, Comparable<DNSName> 
             labels[i] = labels[j];
             labels[j] = t;
         }
+
+        return labels;
+    }
+
+    public String getRawAce() {
+        return rawAce;
     }
 
     public String asIdn() {
@@ -303,37 +354,37 @@ public class DNSName implements CharSequence, Serializable, Comparable<DNSName> 
         child.setLabelsIfRequired();
         parent.setLabelsIfRequired();
 
-        String[] labels = new String[child.labels.length + parent.labels.length];
-        System.arraycopy(parent.labels, 0, labels, 0, parent.labels.length);
-        System.arraycopy(child.labels, 0, labels, parent.labels.length, child.labels.length);
-        return new DNSName(labels, true, false);
+        String[] rawLabels = new String[child.rawLabels.length + parent.rawLabels.length];
+        System.arraycopy(parent.rawLabels, 0, rawLabels, 0, parent.rawLabels.length);
+        System.arraycopy(child.rawLabels, 0, rawLabels, parent.rawLabels.length, child.rawLabels.length);
+        return new DNSName(rawLabels, true, false);
     }
 
     public static DNSName from(DNSName... nameComponents) {
         int labelCount = 0;
         for (DNSName component : nameComponents) {
             component.setLabelsIfRequired();
-            labelCount += component.labels.length;
+            labelCount += component.rawLabels.length;
         }
 
-        String[] labels = new String[labelCount];
+        String[] rawLabels = new String[labelCount];
         int destLabelPos = 0;
         for (int i = nameComponents.length - 1; i >= 0; i--) {
             DNSName component = nameComponents[i];
-            System.arraycopy(component.labels, 0, labels, destLabelPos, component.labels.length);
-            destLabelPos += component.labels.length;
+            System.arraycopy(component.rawLabels, 0, rawLabels, destLabelPos, component.rawLabels.length);
+            destLabelPos += component.rawLabels.length;
         }
 
-        return new DNSName(labels, true, false);
+        return new DNSName(rawLabels, true, false);
     }
 
     public static DNSName from(String[] parts) {
-        String[] labels = new String[parts.length];
+        String[] rawLabels = new String[parts.length];
         for (int i = 0; i < parts.length; i++) {
-            labels[i] = MiniDnsIdna.toASCII(parts[i]);
+            rawLabels[i] = parts[i];
         }
 
-        return new DNSName(labels, true, true);
+        return new DNSName(rawLabels, true, true);
     }
 
     /**
@@ -477,7 +528,7 @@ public class DNSName implements CharSequence, Serializable, Comparable<DNSName> 
             return ROOT;
         }
 
-        String[] stripedLabels = Arrays.copyOfRange(labels, 0, labelCount);
+        String[] stripedLabels = Arrays.copyOfRange(rawLabels, 0, labelCount);
 
         return new DNSName(stripedLabels, false, false);
     }

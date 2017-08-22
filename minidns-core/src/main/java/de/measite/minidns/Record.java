@@ -488,7 +488,7 @@ public final class Record<D extends Data> {
      */
     @Override
     public String toString() {
-        return name + ".\t" + ttl + '\t' + clazz + '\t' + type + '\t' + payloadData;
+        return name.getRawAce() + ".\t" + ttl + '\t' + clazz + '\t' + type + '\t' + payloadData;
     }
 
     /**

@@ -164,7 +164,7 @@ public class Question {
 
     @Override
     public String toString() {
-        return name + ".\t" + clazz + '\t' + type;
+        return name.getRawAce() + ".\t" + clazz + '\t' + type;
     }
 
     public DNSMessage.Builder asMessageBuilder() {

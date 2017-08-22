@@ -93,9 +93,25 @@ public class DNSNameTest {
         DNSName name = DNSName.from(left, middle, right);
 
         String completeString = leftString + '.' + middleString + '.' + rightString;
-        assertEquals(name.ace, completeString);
+        assertEquals(name.getRawAce(), completeString);
 
         DNSName expected = DNSName.from(completeString);
         assertEquals(name, expected);
+    }
+
+    @Test
+    public void caseInsenstiveCompare() {
+        DNSName lowercase = DNSName.from("cs.fau.de");
+        DNSName uppercase = DNSName.from("CS.fau.de");
+
+        assertEquals(lowercase, uppercase);
+    }
+
+    @Test
+    public void rawFieldsKeepCase() {
+        String mixedCaseDnsName = "UP.low.UP.low.UP";
+        DNSName mixedCase = DNSName.from(mixedCaseDnsName);
+
+        assertEquals(mixedCaseDnsName, mixedCase.getRawAce());
     }
 }
