@@ -341,6 +341,21 @@ public abstract class AbstractDNSClient {
         return query(q, address);
     }
 
+    /**
+     * Query a nameserver for a single entry of class IN.
+     *
+     * @param name    The DNS name to request.
+     * @param type    The DNS type to request (SRV, A, AAAA, ...).
+     * @param address The DNS server host.
+     * @return The response (or null on timeout / failure).
+     * @throws IOException On IO Errors.
+     */
+    public DNSMessage query(String name, TYPE type, InetAddress address)
+            throws IOException {
+        Question q = new Question(name, type, CLASS.IN);
+        return query(q, address);
+    }
+
     public final DNSMessage query(DNSMessage query, InetAddress host) throws IOException {
         return query(query, host, 53);
     }
