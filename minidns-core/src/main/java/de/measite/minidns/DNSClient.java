@@ -231,6 +231,7 @@ public class DNSClient extends AbstractDNSClient {
             }
 
             if (!res.isEmpty()) {
+                resArray = res.toArray(new String[res.size()]);
                 break;
             }
         }
