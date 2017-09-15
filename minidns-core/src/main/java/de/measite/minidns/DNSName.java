@@ -63,11 +63,11 @@ public class DNSName implements CharSequence, Serializable, Comparable<DNSName> 
 
     public static final int MAX_LABELS = 128;
 
-    public static final DNSName ROOT = new DNSName(".", false);
+    public static final DNSName ROOT = new DNSName(".");
 
-    public static final DNSName IN_ADDR_ARPA = new DNSName("in-addr.arpa", false);
+    public static final DNSName IN_ADDR_ARPA = new DNSName("in-addr.arpa");
 
-    public static final DNSName IP6_ARPA = new DNSName("ip6.arpa", false);
+    public static final DNSName IP6_ARPA = new DNSName("ip6.arpa");
 
     /**
      * Whether or not the DNS name is validated on construction.
