@@ -3,6 +3,7 @@ sudo: false
 android:
   components:
     - android-9
+    - android-21
 jdk:
   - oraclejdk8
 
