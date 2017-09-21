@@ -64,12 +64,12 @@ List<ResolvedSrvRecord> srvRecords = result.getSortedSrvResolvedAddresses();
 // Loop over the domain names pointed by the SRV RR. MiniDNS will return the list
 // correctly sorted by the priority and weight of the related SRV RR.
 for (ResolvedSrvRecord srvRecord : srvRecord) {
-    // Loop over the Internet Address RRs resolved for the SRV RR. The order of
+	// Loop over the Internet Address RRs resolved for the SRV RR. The order of
 	// the list depends on the prefered IP version setting of MiniDNS.
 	for (InternetAddressRR inetAddressRR : srvRecord.addresses) {
-	    InetAddress inetAddress = inetAddressRR.getInetAddress();
-	    int port = srvAddresses.port;
-	    // Try to connect to inetAddress at port.
+		InetAddress inetAddress = inetAddressRR.getInetAddress();
+		int port = srvAddresses.port;
+		// Try to connect to inetAddress at port.
 		…
 	}
 }
