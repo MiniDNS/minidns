@@ -359,7 +359,7 @@ public class DNSSECWorld extends DNSWorld {
                 if (record.type == Record.TYPE.NSEC)
                     nsecRecord = record;
             }
-            return address.equals(this.address) && Verifier.nsecMatches(request.getQuestion().name.ace, nsecRecord.name.ace, ((NSEC) nsecRecord.payloadData).next.ace);
+            return address.equals(this.address) && Verifier.nsecMatches(request.getQuestion().name, nsecRecord.name, ((NSEC) nsecRecord.payloadData).next);
         }
 
         @Override
