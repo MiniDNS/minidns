@@ -14,10 +14,10 @@ public abstract class InvalidDNSNameException extends IllegalStateException {
 
     private static final long serialVersionUID = 1L;
 
-    protected final String name;
+    protected final String ace;
 
-    protected InvalidDNSNameException(String name) {
-        this.name = name;
+    protected InvalidDNSNameException(String ace) {
+        this.ace = ace;
     }
 
     public static class LabelTooLongException extends InvalidDNSNameException {
@@ -28,14 +28,14 @@ public abstract class InvalidDNSNameException extends IllegalStateException {
 
         private final String label;
 
-        public LabelTooLongException(String name, String label) {
-            super(name);
+        public LabelTooLongException(String ace, String label) {
+            super(ace);
             this.label = label;
         }
 
         @Override
         public String getMessage() {
-            return "The DNS name '" + name + "' contains the label '" + label
+            return "The DNS name '" + ace + "' contains the label '" + label
                     + "' which exceeds the maximum label length of " + DNSName.MAX_LABEL_LENGTH_IN_OCTETS + " octets by "
                     + (label.length() - DNSName.MAX_LABEL_LENGTH_IN_OCTETS) + " octets.";
         }
@@ -49,14 +49,14 @@ public abstract class InvalidDNSNameException extends IllegalStateException {
 
         private final byte[] bytes;
 
-        public DNSNameTooLongException(String name, byte[] bytes) {
-            super(name);
+        public DNSNameTooLongException(String ace, byte[] bytes) {
+            super(ace);
             this.bytes = bytes;
         }
 
         @Override
         public String getMessage() {
-            return "The DNS name '" + name + "' exceeds the maximum name length of "
+            return "The DNS name '" + ace + "' exceeds the maximum name length of "
                     + DNSName.MAX_DNSNAME_LENGTH_IN_OCTETS + " octets by "
                     + (bytes.length - DNSName.MAX_DNSNAME_LENGTH_IN_OCTETS) + " octets.";
         }

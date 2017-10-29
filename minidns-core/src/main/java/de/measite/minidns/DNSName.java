@@ -127,7 +127,7 @@ public class DNSName implements CharSequence, Serializable, Comparable<DNSName> 
         }
 
         // Validate the DNS name.
-        validateMaxDnsnameLengthInOctets(name);
+        validateMaxDnsnameLengthInOctets();
 
         setLabelsIfRequired();
         validateMaxLabelLength();
@@ -154,7 +154,7 @@ public class DNSName implements CharSequence, Serializable, Comparable<DNSName> 
             return;
         }
 
-        validateMaxDnsnameLengthInOctets(ace);
+        validateMaxDnsnameLengthInOctets();
     }
 
     private static String labelsToString(String[] labels, int stringLength) {
@@ -175,10 +175,10 @@ public class DNSName implements CharSequence, Serializable, Comparable<DNSName> 
         }
     }
 
-    private void validateMaxDnsnameLengthInOctets(String name) {
+    private void validateMaxDnsnameLengthInOctets() {
         setBytesIfRequired();
         if (bytes.length > MAX_DNSNAME_LENGTH_IN_OCTETS) {
-            throw new InvalidDNSNameException.DNSNameTooLongException(name, bytes);
+            throw new InvalidDNSNameException.DNSNameTooLongException(ace, bytes);
         }
     }
 
