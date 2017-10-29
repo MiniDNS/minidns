@@ -10,6 +10,8 @@
  */
 package de.measite.minidns;
 
+import de.measite.minidns.dnslabel.DNSLabel;
+
 public abstract class InvalidDNSNameException extends IllegalStateException {
 
     private static final long serialVersionUID = 1L;
@@ -36,8 +38,8 @@ public abstract class InvalidDNSNameException extends IllegalStateException {
         @Override
         public String getMessage() {
             return "The DNS name '" + ace + "' contains the label '" + label
-                    + "' which exceeds the maximum label length of " + DNSName.MAX_LABEL_LENGTH_IN_OCTETS + " octets by "
-                    + (label.length() - DNSName.MAX_LABEL_LENGTH_IN_OCTETS) + " octets.";
+                    + "' which exceeds the maximum label length of " + DNSLabel.MAX_LABEL_LENGTH_IN_OCTETS + " octets by "
+                    + (label.length() - DNSLabel.MAX_LABEL_LENGTH_IN_OCTETS) + " octets.";
         }
     }
 
