@@ -20,6 +20,8 @@ import java.io.IOException;
 
 import org.junit.Test;
 
+import de.measite.minidns.dnslabel.DNSLabel;
+
 public class DNSNameTest {
 
     @Test
@@ -113,5 +115,19 @@ public class DNSNameTest {
         DNSName mixedCase = DNSName.from(mixedCaseDnsName);
 
         assertEquals(mixedCaseDnsName, mixedCase.getRawAce());
+    }
+
+    @Test
+    public void getLabelsTest() {
+        final String tldLabelString = "tld";
+        final String secondLevelString = "second-level-domain";
+        final String thirdLevelString = "third-level-domain";
+        final String dnsNameString = thirdLevelString + '.' + secondLevelString + '.' + tldLabelString;
+        final DNSName dnsName = DNSName.from(dnsNameString);
+
+        DNSLabel[] labels = dnsName.getLabels();
+        assertEquals(tldLabelString, labels[0].label);
+        assertEquals(secondLevelString, labels[1].label);
+        assertEquals(thirdLevelString, labels[2].label);
     }
 }
