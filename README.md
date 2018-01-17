@@ -1,7 +1,7 @@
 MiniDNS
 =======
 
-[![Build Status](https://travis-ci.org/rtreffer/minidns.svg)](https://travis-ci.org/rtreffer/minidns)  [![Coverage Status](https://coveralls.io/repos/rtreffer/minidns/badge.svg)](https://coveralls.io/r/rtreffer/minidns)
+[![Build Status](https://travis-ci.org/MiniDNS/minidns.svg)](https://travis-ci.org/MiniDNS/minidns)  [![Coverage Status](https://coveralls.io/repos/MiniDNS/minidns/badge.svg)](https://coveralls.io/r/MiniDNS/minidns)
 
 MiniDNS is a minimal DNS client client library for Android and Java SE. It can parse most relevant resource records (A, AAAA, NS, SRV, …) and is easy to use and extend. It also provides experimental support for DNSSEC and DANE.
 
