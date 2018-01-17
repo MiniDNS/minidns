@@ -12,14 +12,17 @@ package de.measite.minidns.dnsserverlookup;
 
 import de.measite.minidns.util.PlatformDetection;
 
+import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.LineNumberReader;
 import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.logging.Level;
 
 /**
@@ -41,38 +44,7 @@ public class AndroidUsingExec extends AbstractDNSServerLookupMechanism {
             InputStream inputStream = process.getInputStream();
             LineNumberReader lnr = new LineNumberReader(
                 new InputStreamReader(inputStream));
-            String line = null;
-            HashSet<String> server = new HashSet<String>(6);
-            while ((line = lnr.readLine()) != null) {
-                int split = line.indexOf("]: [");
-                if (split == -1) {
-                    continue;
-                }
-                String property = line.substring(1, split);
-                String value = line.substring(split + 4, line.length() - 1);
-
-                if (value.isEmpty()) {
-                    continue;
-                }
-
-                if (property.endsWith(".dns") || property.endsWith(".dns1") ||
-                    property.endsWith(".dns2") || property.endsWith(".dns3") ||
-                    property.endsWith(".dns4")) {
-
-                    // normalize the address
-
-                    InetAddress ip = InetAddress.getByName(value);
-
-                    if (ip == null) continue;
-
-                    value = ip.getHostAddress();
-
-                    if (value == null) continue;
-                    if (value.length() == 0) continue;
-
-                    server.add(value);
-                }
-            }
+            Set<String> server = parseProps(lnr, true);
             if (server.size() > 0) {
                 List<String> res = new ArrayList<>(server.size());
                 res.addAll(server);
@@ -89,4 +61,54 @@ public class AndroidUsingExec extends AbstractDNSServerLookupMechanism {
         return PlatformDetection.isAndroid();
     }
 
+    private static final String PROP_DELIM = "]: [";
+    protected static Set<String> parseProps(BufferedReader lnr, boolean logWarning) throws UnknownHostException, IOException {
+        String line = null;
+        Set<String> server = new HashSet<String>(6);
+
+        while ((line = lnr.readLine()) != null) {
+            int split = line.indexOf(PROP_DELIM);
+            if (split == -1) {
+                continue;
+            }
+            String property = line.substring(1, split);
+
+            int valueStart = split + PROP_DELIM.length();
+            int valueEnd = line.length() - 1;
+            if (valueEnd < valueStart) {
+                // This can happen if a newline sneaks in as the first character of the property value. For example
+                // "[propName]: [\n…]".
+                if (logWarning) {
+                    LOGGER.warning("Malformed property detected: \"" + line + '"');
+                }
+                continue;
+            }
+
+            String value = line.substring(valueStart, valueEnd);
+
+            if (value.isEmpty()) {
+                continue;
+            }
+
+            if (property.endsWith(".dns") || property.endsWith(".dns1") ||
+                property.endsWith(".dns2") || property.endsWith(".dns3") ||
+                property.endsWith(".dns4")) {
+
+                // normalize the address
+
+                InetAddress ip = InetAddress.getByName(value);
+
+                if (ip == null) continue;
+
+                value = ip.getHostAddress();
+
+                if (value == null) continue;
+                if (value.length() == 0) continue;
+
+                server.add(value);
+            }
+        }
+
+        return server;
+    }
 }
