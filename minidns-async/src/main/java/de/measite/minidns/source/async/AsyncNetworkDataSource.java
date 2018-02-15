@@ -21,6 +21,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Iterator;
+import java.util.List;
 import java.util.PriorityQueue;
 import java.util.Queue;
 import java.util.Set;
@@ -142,63 +143,83 @@ public class AsyncNetworkDataSource extends DNSDataSource {
         }
 
         private static Collection<SelectionKey> performSelect() {
-            long selectWait;
+            AsyncDnsRequest nearestDeadline = null;
+            AsyncDnsRequest nextInQueue;
+
             synchronized (DEADLINE_QUEUE) {
-                AsyncDnsRequest nearestDeadline;
-                while ((nearestDeadline = DEADLINE_QUEUE.peek()) != null) {
-                    if (!nearestDeadline.wasDeadlineMissedAndFutureNotified()) {
-                        // This is the nearest deadline that we did not miss.
+                while ((nextInQueue = DEADLINE_QUEUE.peek()) != null) {
+                    if (nextInQueue.wasDeadlineMissedAndFutureNotified()) {
+                        // We notified the future, associated with the AsyncDnsRequest nearestDeadline,
+                        // that the deadline has passed, hence remove it from the queue.
+                        DEADLINE_QUEUE.poll();
+                    } else {
+                        // We found a nearest deadline that has not yet passed, break out of the loop.
+                        nearestDeadline = nextInQueue;
                         break;
                     }
-                    // Remove the async DNS request from the deadline queue, as it was just finished with an error.
-                    DEADLINE_QUEUE.poll();
                 }
-                if (nearestDeadline == null) {
-                    selectWait = 0;
-                } else {
-                    selectWait = nearestDeadline.deadline - System.currentTimeMillis();
+
+            }
+
+            long selectWait;
+            if (nearestDeadline == null) {
+                // There is no deadline, wait indefinitely in select().
+                selectWait = 0;
+            } else {
+                // There is a deadline in the future, only block in select() until the deadline.
+                selectWait = nextInQueue.deadline - System.currentTimeMillis();
+                if (selectWait < 0) {
+                    // We already have a missed deadline. Do not call select() and handle the tasks which are past their
+                    // deadline.
+                    return Collections.emptyList();
                 }
             }
 
-            if (selectWait < 0) {
-                // We already have a missed deadline.
-                return Collections.emptyList();
-            }
-
+            List<SelectionKey> selectedKeys;
+            int newSelectedKeysCount;
             synchronized (SELECTOR) {
-                int newSelectedKeysCount;
                 try {
                     newSelectedKeysCount = SELECTOR.select(selectWait);
                 } catch (IOException e) {
-                    LOGGER.log(Level.SEVERE, "IOException while using select()", e);
+                    LOGGER.log(Level.WARNING, "IOException while using select()", e);
                     return Collections.emptyList();
                 }
 
-                Set<SelectionKey> selectedKeys = SELECTOR.selectedKeys();
-                int selectedKeysCount = selectedKeys.size();
-
-                final Level LOG_LEVEL = Level.FINER;
-                if (LOGGER.isLoggable(LOG_LEVEL)) {
-                    LOGGER.log(LOG_LEVEL,
-                            "New selected key count: " + newSelectedKeysCount + ". Total selected key count " + selectedKeysCount);
+                if (newSelectedKeysCount == 0) {
+                    return Collections.emptyList();
                 }
 
-                int myKeyCount = selectedKeysCount / REACTOR_THREAD_COUNT;
-                Collection<SelectionKey> mySelectedKeys = new ArrayList<>(myKeyCount);
-                Iterator<SelectionKey> it = selectedKeys.iterator();
-                for (int i = 0; i < myKeyCount; i++) {
-                    SelectionKey selectionKey = it.next();
+                Set<SelectionKey> selectedKeySet = SELECTOR.selectedKeys();
+                for (SelectionKey selectionKey : selectedKeySet) {
                     selectionKey.interestOps(0);
-                    mySelectedKeys.add(selectionKey);
                 }
-                while (it.hasNext()) {
-                    // Drain to PENDING_SELECTION_KEYS
-                    SelectionKey selectionKey = it.next();
-                    selectionKey.interestOps(0);
-                    PENDING_SELECTION_KEYS.add(selectionKey);
-                }
-                return mySelectedKeys;
+
+                selectedKeys = new ArrayList<>(selectedKeySet.size());
+                selectedKeys.addAll(selectedKeySet);
+                selectedKeySet.clear();
             }
+
+            int selectedKeysCount = selectedKeys.size();
+
+            final Level LOG_LEVEL = Level.FINER;
+            if (LOGGER.isLoggable(LOG_LEVEL)) {
+                LOGGER.log(LOG_LEVEL, "New selected key count: " + newSelectedKeysCount + ". Total selected key count "
+                        + selectedKeysCount);
+            }
+
+            int myKeyCount = selectedKeysCount / REACTOR_THREAD_COUNT;
+            Collection<SelectionKey> mySelectedKeys = new ArrayList<>(myKeyCount);
+            Iterator<SelectionKey> it = selectedKeys.iterator();
+            for (int i = 0; i < myKeyCount; i++) {
+                SelectionKey selectionKey = it.next();
+                mySelectedKeys.add(selectionKey);
+            }
+            while (it.hasNext()) {
+                // Drain to PENDING_SELECTION_KEYS
+                SelectionKey selectionKey = it.next();
+                PENDING_SELECTION_KEYS.add(selectionKey);
+            }
+            return mySelectedKeys;
         }
 
         private static void handlePendingSelectionKeys() {
@@ -219,6 +240,7 @@ public class AsyncNetworkDataSource extends DNSDataSource {
             }
 
             if (!PENDING_SELECTION_KEYS.isEmpty()) {
+                // There is more work in the pending selection keys queue, wakeup another thread to handle it.
                 SELECTOR.wakeup();
             }
 
