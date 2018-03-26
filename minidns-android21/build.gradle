@@ -1,3 +1,5 @@
+apply plugin: 'ru.vyarus.animalsniffer'
+
 ext {
 	android21BootClasspath = getAndroidRuntimeJar(21)
 }
@@ -9,13 +11,11 @@ dependencies {
 
 	// Add the Android jar to the Eclipse .classpath.
 	compile files(android21BootClasspath)
+
+	// For AnimalSniffer
+	signature "net.sf.androidscents.signature:android-api-level-21:5.0.1_r2@signature"
 }
 
-task compileAndroid21(type: JavaCompile) {
-	source = compileJava.source
-	classpath = compileJava.classpath
-	destinationDir = new File(buildDir, 'android')
-	options.bootClasspath = android21BootClasspath
+animalsniffer {
+	sourceSets = [sourceSets.main]
 }
-
-test.dependsOn compileAndroid21

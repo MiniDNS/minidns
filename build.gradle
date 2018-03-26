@@ -14,6 +14,10 @@ buildscript {
     }
 }
 
+plugins {
+    id 'ru.vyarus.animalsniffer' version '1.4.3'
+}
+
 allprojects {
 	apply plugin: 'java'
 	apply plugin: 'eclipse'
@@ -137,14 +141,13 @@ allprojects {
 }
 
 configure(subprojects.findAll{!it.name.endsWith('-java7') && !it.name.endsWith('-android21')}) {
-	task compileAndroid(type: JavaCompile) {
-		source = compileJava.source
-		classpath = compileJava.classpath
-		destinationDir = new File(buildDir, 'android')
-		options.bootClasspath = androidBootClasspath
-	}
-
-	test { dependsOn compileAndroid }
+   apply plugin: 'ru.vyarus.animalsniffer'
+   dependencies {
+       signature "net.sf.androidscents.signature:android-api-level-${minidnsMinAndroidSdk}:2.3.1_r2@signature"
+   }
+   animalsniffer {
+       sourceSets = [sourceSets.main]
+   }
 }
 
 jar {
