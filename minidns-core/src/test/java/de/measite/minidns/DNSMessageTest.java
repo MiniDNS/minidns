@@ -12,6 +12,7 @@ package de.measite.minidns;
 
 import de.measite.minidns.DNSSECConstants.DigestAlgorithm;
 import de.measite.minidns.DNSSECConstants.SignatureAlgorithm;
+import de.measite.minidns.Record.CLASS;
 import de.measite.minidns.Record.TYPE;
 import de.measite.minidns.record.A;
 import de.measite.minidns.record.AAAA;
@@ -35,6 +36,8 @@ import org.junit.Test;
 
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -45,10 +48,6 @@ import java.util.TimeZone;
 import java.util.TreeMap;
 
 import static de.measite.minidns.Assert.assertCsEquals;
-import static de.measite.minidns.DNSWorld.a;
-import static de.measite.minidns.DNSWorld.aaaa;
-import static de.measite.minidns.DNSWorld.ns;
-import static de.measite.minidns.DNSWorld.record;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -535,5 +534,61 @@ public class DNSMessageTest {
         message.addAdditionalResourceRecord(record("ns.example.com", a("127.0.0.1")));
         message.getEdnsBuilder().setUdpPayloadSize(512);
         assertNotNull(message.build().asTerminalOutput());
+    }
+
+    public static Record<Data> record(String name, long ttl, Data data) {
+        return new Record<>(name, data.getType(), CLASS.IN, ttl, data, false);
+    }
+
+    public static Record<Data> record(DNSName name, long ttl, Data data) {
+        return new Record<>(name, data.getType(), CLASS.IN, ttl, data, false);
+    }
+
+    public static Record<Data> record(String name, Data data) {
+        return record(name, 3600, data);
+    }
+
+    public static A a(String ipString) {
+        return a(parseIpV4(ipString));
+    }
+
+    public static A a(byte[] ip) {
+        return new A(ip);
+    }
+
+    public static byte[] parseIpV4(String ipString) {
+        String[] split = ipString.split("\\.");
+        if (split.length != 4) {
+            throw new IllegalArgumentException(ipString + " is not an valid IPv4 address");
+        }
+        byte[] ip = new byte[4];
+        for (int i = 0; i < 4; i++) {
+            ip[i] = (byte) Integer.parseInt(split[i]);
+        }
+        return ip;
+    }
+
+    public static NS ns(String name) {
+        return ns(DNSName.from(name));
+    }
+
+    public static NS ns(DNSName name) {
+        return new NS(name);
+    }
+
+    public static AAAA aaaa(byte[] ip) {
+        return new AAAA(ip);
+    }
+
+    public static AAAA aaaa(String ipString) {
+        return aaaa(parseIpV6(ipString));
+    }
+
+    static byte[] parseIpV6(String ipString) {
+        try {
+            return InetAddress.getByName(ipString).getAddress();
+        } catch (UnknownHostException e) {
+            throw new IllegalArgumentException(ipString + " is not an valid IPv6 address", e);
+        }
     }
 }

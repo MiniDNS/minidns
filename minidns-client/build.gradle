@@ -1,23 +1,5 @@
 dependencies {
-    testCompile "junit:junit:$junitVersion"
+	compile project(':minidns-core')
+    testCompile project(path: ":minidns-core", configuration: "testRuntime")
+    testCompile project(path: ":minidns-core", configuration: "archives")
 }
-
-class CreateFileTask extends DefaultTask {
-	@Input
-	String fileContent
-
-	@OutputFile
-	File outputFile
-
-	@TaskAction
-	def createFile() {
-		outputFile.text = fileContent
-	}
-}
-
-task createVersionResource(type: CreateFileTask) {
-	fileContent = version + ' (' + gitCommit + ' ' + builtDate + ')'
-	outputFile = new File(projectDir, 'src/main/resources/de.measite.minidns/version')
-}
-
-compileJava.dependsOn(createVersionResource)
