@@ -12,8 +12,10 @@ package de.measite.minidns.record;
 
 import java.io.DataInputStream;
 import java.io.IOException;
+import java.net.Inet4Address;
 
 import de.measite.minidns.Record.TYPE;
+import de.measite.minidns.util.InetAddressUtil;
 
 /**
  * A record payload (ip pointer).
@@ -23,6 +25,11 @@ public class A extends InternetAddressRR {
     @Override
     public TYPE getType() {
         return TYPE.A;
+    }
+
+    public A(Inet4Address inet4Address) {
+        super(inet4Address.getAddress());
+        assert(ip.length == 4);
     }
 
     public A(int q1, int q2, int q3, int q4) {
@@ -37,6 +44,10 @@ public class A extends InternetAddressRR {
         if (ip.length != 4) {
             throw new IllegalArgumentException("IPv4 address in A record is always 4 byte");
         }
+    }
+
+    public A(CharSequence ipv4CharSequence) {
+        this(InetAddressUtil.ipv4From(ipv4CharSequence));
     }
 
     public static A parse(DataInputStream dis)

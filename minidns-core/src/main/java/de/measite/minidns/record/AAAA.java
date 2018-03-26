@@ -12,8 +12,10 @@ package de.measite.minidns.record;
 
 import java.io.DataInputStream;
 import java.io.IOException;
+import java.net.Inet6Address;
 
 import de.measite.minidns.Record.TYPE;
+import de.measite.minidns.util.InetAddressUtil;
 
 /**
  * AAAA payload (an ipv6 pointer).
@@ -25,11 +27,20 @@ public class AAAA extends InternetAddressRR {
         return TYPE.AAAA;
     }
 
+    public AAAA(Inet6Address inet6address) {
+        super(inet6address.getAddress());
+        assert(ip.length == 16);
+    }
+
     public AAAA(byte[] ip) {
         super(ip);
         if (ip.length != 16) {
             throw new IllegalArgumentException("IPv6 address in AAAA record is always 16 byte");
         }
+    }
+
+    public AAAA(CharSequence ipv6CharSequence) {
+        this(InetAddressUtil.ipv6From(ipv6CharSequence));
     }
 
     public static AAAA parse(DataInputStream dis)
