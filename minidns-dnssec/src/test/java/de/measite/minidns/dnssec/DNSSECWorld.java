@@ -23,6 +23,7 @@ import de.measite.minidns.record.DS;
 import de.measite.minidns.record.Data;
 import de.measite.minidns.record.NSEC;
 import de.measite.minidns.record.RRSIG;
+import de.measite.minidns.util.InetAddressUtil;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -30,6 +31,7 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.math.BigInteger;
+import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.security.InvalidAlgorithmParameterException;
@@ -54,8 +56,9 @@ public class DNSSECWorld extends DNSWorld {
     }
 
     public static Zone signedZone(String zoneName, String nsName, String nsIp, SignedRRSet... records) {
+        Inet4Address inet4Address = InetAddressUtil.ipv4From(nsIp);
         try {
-            return signedZone(zoneName, InetAddress.getByAddress(nsName, parseIpV4(nsIp)), records);
+            return signedZone(zoneName, InetAddress.getByAddress(nsName, inet4Address.getAddress()), records);
         } catch (UnknownHostException e) {
             // This will never happen, as we already ensured the validity of the IP address by using parseIpV4()
             throw new RuntimeException(e);

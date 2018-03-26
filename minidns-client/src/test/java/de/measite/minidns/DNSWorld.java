@@ -29,7 +29,9 @@ import de.measite.minidns.record.RRSIG;
 import de.measite.minidns.record.SOA;
 import de.measite.minidns.record.SRV;
 import de.measite.minidns.source.DNSDataSource;
+import de.measite.minidns.util.InetAddressUtil;
 
+import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
@@ -377,8 +379,9 @@ public class DNSWorld extends DNSDataSource {
     }
 
     public static Zone zone(String zoneName, String nsName, String nsIp, List<Record<? extends Data>> records) {
+        Inet4Address inet4Address = InetAddressUtil.ipv4From(nsIp);
         try {
-            return zone(zoneName, InetAddress.getByAddress(nsName, parseIpV4(nsIp)), records);
+            return zone(zoneName, InetAddress.getByAddress(nsName, inet4Address.getAddress()), records);
         } catch (UnknownHostException e) {
             // This will never happen, as we already ensured the validity of the IP address by using parseIpV4()
             throw new RuntimeException(e);
@@ -405,16 +408,16 @@ public class DNSWorld extends DNSDataSource {
         return new A(ip);
     }
 
-    public static A a(String ipString) {
-        return a(parseIpV4(ipString));
+    public static A a(CharSequence ipCharSequence) {
+        return new A(ipCharSequence);
     }
 
     public static AAAA aaaa(byte[] ip) {
         return new AAAA(ip);
     }
 
-    public static AAAA aaaa(String ipString) {
-        return aaaa(parseIpV6(ipString));
+    public static AAAA CharSequence(CharSequence ipCharSequence) {
+        return new AAAA(ipCharSequence);
     }
 
     public static CNAME cname(String name) {
@@ -527,23 +530,4 @@ public class DNSWorld extends DNSDataSource {
         return srv(10, 10, port, name);
     }
 
-    public static byte[] parseIpV4(String ipString) {
-        String[] split = ipString.split("\\.");
-        if (split.length != 4) {
-            throw new IllegalArgumentException(ipString + " is not an valid IPv4 address");
-        }
-        byte[] ip = new byte[4];
-        for (int i = 0; i < 4; i++) {
-            ip[i] = (byte) Integer.parseInt(split[i]);
-        }
-        return ip;
-    }
-
-    static byte[] parseIpV6(String ipString) {
-        try {
-            return InetAddress.getByName(ipString).getAddress();
-        } catch (UnknownHostException e) {
-            throw new IllegalArgumentException(ipString + " is not an valid IPv6 address", e);
-        }
-    }
 }

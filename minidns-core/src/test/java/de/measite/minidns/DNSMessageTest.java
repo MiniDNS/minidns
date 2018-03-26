@@ -36,8 +36,6 @@ import org.junit.Test;
 
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
-import java.net.InetAddress;
-import java.net.UnknownHostException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -548,24 +546,8 @@ public class DNSMessageTest {
         return record(name, 3600, data);
     }
 
-    public static A a(String ipString) {
-        return a(parseIpV4(ipString));
-    }
-
-    public static A a(byte[] ip) {
-        return new A(ip);
-    }
-
-    public static byte[] parseIpV4(String ipString) {
-        String[] split = ipString.split("\\.");
-        if (split.length != 4) {
-            throw new IllegalArgumentException(ipString + " is not an valid IPv4 address");
-        }
-        byte[] ip = new byte[4];
-        for (int i = 0; i < 4; i++) {
-            ip[i] = (byte) Integer.parseInt(split[i]);
-        }
-        return ip;
+    public static A a(CharSequence ipv4CharSequence) {
+        return new A(ipv4CharSequence);
     }
 
     public static NS ns(String name) {
@@ -576,19 +558,8 @@ public class DNSMessageTest {
         return new NS(name);
     }
 
-    public static AAAA aaaa(byte[] ip) {
-        return new AAAA(ip);
+    public static AAAA aaaa(CharSequence ipv6CharSequence) {
+        return new AAAA(ipv6CharSequence);
     }
 
-    public static AAAA aaaa(String ipString) {
-        return aaaa(parseIpV6(ipString));
-    }
-
-    static byte[] parseIpV6(String ipString) {
-        try {
-            return InetAddress.getByName(ipString).getAddress();
-        } catch (UnknownHostException e) {
-            throw new IllegalArgumentException(ipString + " is not an valid IPv6 address", e);
-        }
-    }
 }
