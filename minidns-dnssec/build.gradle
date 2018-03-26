@@ -1,6 +1,6 @@
 dependencies {
-    compile project(':minidns-core')
+    compile project(':minidns-client')
     compile project(':minidns-iterative-resolver')
-    testCompile project(path: ":minidns-core", configuration: "testRuntime")
-    testCompile project(path: ":minidns-core", configuration: "archives")
+    testCompile project(path: ":minidns-client", configuration: "testRuntime")
+    testCompile project(path: ":minidns-client", configuration: "archives")
 }

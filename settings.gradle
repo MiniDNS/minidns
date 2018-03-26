@@ -3,7 +3,7 @@
 // name of the root directory
 rootProject.name = 'MiniDNS'
 
-include 'minidns-core'
+include 'minidns-client'
 include 'minidns-async'
 include 'minidns-iterative-resolver'
 include 'minidns-dnssec'

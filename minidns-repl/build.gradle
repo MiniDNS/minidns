@@ -3,14 +3,14 @@ ext {
 }
 
 dependencies {
-    compile project(':minidns-core')
+    compile project(':minidns-client')
     compile project(':minidns-iterative-resolver')
     compile project(':minidns-dnssec')
     compile project(':minidns-integration-test')
     compile project(':minidns-hla')
     compile "com.lihaoyi:ammonite_$scalaVersion:0.8.0"
-    testCompile project(path: ":minidns-core", configuration: "testRuntime")
-    testCompile project(path: ":minidns-core", configuration: "archives")
+    testCompile project(path: ":minidns-client", configuration: "testRuntime")
+    testCompile project(path: ":minidns-client", configuration: "archives")
 
 }
 

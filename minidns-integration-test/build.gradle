@@ -14,14 +14,14 @@ mainClassName = 'de.measite.minidns.integrationtest.IntegrationTestHelper'
 applicationDefaultJvmArgs = ["-enableassertions"]
 
 dependencies {
-    compile project(':minidns-core')
+    compile project(':minidns-client')
     compile project(':minidns-async')
 	compile project(':minidns-iterative-resolver')
     compile project(':minidns-dnssec')
     compile project(':minidns-hla')
     compile "junit:junit:$junitVersion"
-    testCompile project(path: ":minidns-core", configuration: "testRuntime")
-    testCompile project(path: ":minidns-core", configuration: "archives")
+    testCompile project(path: ":minidns-client", configuration: "testRuntime")
+    testCompile project(path: ":minidns-client", configuration: "archives")
 }
 
 run {
