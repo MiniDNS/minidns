@@ -22,6 +22,7 @@ import java.security.cert.CertificateException;
 
 public class DaneTest {
 
+    @Ignore
     @IntegrationTest
     public static void testOarcDaneGood() throws IOException, CertificateException {
         DaneVerifier daneVerifier = new DaneVerifier();
@@ -35,6 +36,7 @@ public class DaneTest {
         daneVerifier.verifiedConnect((HttpsURLConnection) new URL("https://bad-hash.dane.dns-oarc.net/").openConnection());
     }
 
+    @Ignore
     @IntegrationTest
     public static void testOarcDaneBadParams() throws IOException, CertificateException {
         DaneVerifier daneVerifier = new DaneVerifier();
