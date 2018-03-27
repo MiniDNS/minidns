@@ -19,7 +19,7 @@ Quickstart
 The easiest way to use MiniDNS is by its high-level API provided by the minidns-hla Maven artifact. Simply add the artifact to your projects dependencies. For example with gradle
 
 ```groovy
-compile "de.measite.minidns:minidns-hla:$minidnsVersion"
+compile "org.minidns:minidns-hla:$minidnsVersion"
 ```
 
 Then you can use the `ResolverApi` or `DnssecResolverApi` class to perform DNS lookups and check if the result was authenticated via DNSSEC. The following example shows a lookup of A records of 'verteiltesysteme.net'.
@@ -84,7 +84,7 @@ MiniDNS comes with a REPL which can be used to perform DNS lookups and to test t
 minidns $ ./repl
 ...
 scala> c query ("measite.de", TYPE.A)
-res4: de.measite.minidns.DNSMessage = DNSMessage@54653(QUERY NO_ERROR qr rd ra) { \
+res4: org.minidns.DNSMessage = DNSMessage@54653(QUERY NO_ERROR qr rd ra) { \
   [Q: measite.de.	IN	A] \
   [A: measite.de.	3599	IN	A	85.10.226.249] \
   [X: EDNS: version: 0, flags:; udp: 512]

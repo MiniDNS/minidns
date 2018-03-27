@@ -10,7 +10,7 @@
  */
 apply plugin: 'application'
 
-mainClassName = 'de.measite.minidns.integrationtest.IntegrationTestHelper'
+mainClassName = 'org.minidns.integrationtest.IntegrationTestHelper'
 applicationDefaultJvmArgs = ["-enableassertions"]
 
 dependencies {

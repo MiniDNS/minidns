@@ -26,7 +26,7 @@ allprojects {
 	apply plugin: 'checkstyle'
 	apply plugin: 'jacoco'
 
-	group = 'de.measite.minidns'
+	group = 'org.minidns'
 	description = "A minimal DNS client library with support for A, AAAA, NS and SRV records"
 	sourceCompatibility = 1.7
 	version = 'dev'

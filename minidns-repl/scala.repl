@@ -1,32 +1,32 @@
-de.measite.minidns.minidnsrepl.MiniDnsRepl.init()
+org.minidns.minidnsrepl.MiniDnsRepl.init()
 
-import de.measite.minidns._
-import de.measite.minidns.record._
-import de.measite.minidns.Record.TYPE
+import org.minidns._
+import org.minidns.record._
+import org.minidns.Record.TYPE
 
-import de.measite.minidns.dnssec.DNSSECClient
+import org.minidns.dnssec.DNSSECClient
 
-import de.measite.minidns.minidnsrepl.MiniDnsRepl.clearCache
+import org.minidns.minidnsrepl.MiniDnsRepl.clearCache
 
-import de.measite.minidns.minidnsrepl.MiniDNSStats._
+import org.minidns.minidnsrepl.MiniDNSStats._
 
-import de.measite.minidns.jul.MiniDnsJul._
+import org.minidns.jul.MiniDnsJul._
 
 import java.net.InetAddress
 
 // Some standard values
 Predef.println("Set value 'c' to DNSClient")
-val c = de.measite.minidns.minidnsrepl.MiniDnsRepl.DNSCLIENT
+val c = org.minidns.minidnsrepl.MiniDnsRepl.DNSCLIENT
 Predef.println("Set value 'ic' to IterativeDNSClient")
-val ic = de.measite.minidns.minidnsrepl.MiniDnsRepl.ITERATIVEDNSCLIENT
+val ic = org.minidns.minidnsrepl.MiniDnsRepl.ITERATIVEDNSCLIENT
 Predef.println("Set value 'dc' to DNSSECClient")
-val dc = de.measite.minidns.minidnsrepl.MiniDnsRepl.DNSSECCLIENT
+val dc = org.minidns.minidnsrepl.MiniDnsRepl.DNSSECCLIENT
 // A normal resolver
 Predef.println("Set value 'r' to ResolverApi")
-val r = de.measite.minidns.hla.ResolverApi.INSTANCE
+val r = org.minidns.hla.ResolverApi.INSTANCE
 // A DNSSEC resolver
 Predef.println("Set value 'dr' to DnssecResolverApi")
-val dr = de.measite.minidns.hla.DnssecResolverApi.INSTANCE
+val dr = org.minidns.hla.DnssecResolverApi.INSTANCE
 
 Predef.println("Enjoy MiniDNS. Go ahead and try a query. For example:")
 Predef.println("c query (\"geekplace.eu\", TYPE.A)")
