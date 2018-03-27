@@ -18,6 +18,8 @@ plugins {
     id 'ru.vyarus.animalsniffer' version '1.4.3'
 }
 
+apply from: 'version.gradle'
+
 allprojects {
 	apply plugin: 'java'
 	apply plugin: 'eclipse'
@@ -29,29 +31,27 @@ allprojects {
 	group = 'org.minidns'
 	description = "A minimal DNS client library with support for A, AAAA, NS and SRV records"
 	sourceCompatibility = 1.7
-	version = 'dev'
-	ext.isSnapshot = true
+	version = shortVersion
 
 	ext {
 		junitVersion = 4.11
-		minidnsMinAndroidSdk = 9
 		androidBootClasspath = getAndroidRuntimeJar(minidnsMinAndroidSdk)
 		rootConfigDir = new File(rootDir, 'config')
 		gitCommit = getGitCommit()
 		builtDate = (new java.text.SimpleDateFormat("yyyy-MM-dd")).format(new Date())
 	}
 
+	if (isSnapshot) {
+		version = version + '-SNAPSHOT'
+	}
+
 	if (!ext.isSnapshot && 'git rev-parse --abbrev-ref HEAD'.execute().text.trim() == 'master') {
 		throw new org.gradle.api.InvalidUserDataException('Untagged version detected! Please tag every release.')
 	}
-	if (version != 'dev' && version != 'git tag --points-at HEAD'.execute().text.trim()) {
+	if (!version.endsWith('-SNAPSHOT') && version != 'git tag --points-at HEAD'.execute().text.trim()) {
 		throw new org.gradle.api.InvalidUserDataException(
 			'Tag mismatch detected, version is ' + version + ' but should be ' +
 			'git tag --points-at HEAD'.execute().text.trim())
-	}
-
-	if (ext.isSnapshot) {
-		version = version + '-SNAPSHOT'
 	}
 
 	repositories {
