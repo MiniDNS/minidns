@@ -70,7 +70,7 @@ allprojects {
 	modifyPom {
 		project {
 			name 'minidns'
-			description 'Minimal DNS library for java and android systems'
+			description 'A DNS library for Java and Android systems'
 			url 'https://github.com/minidns/minidns'
 			inceptionYear '2014'
 
