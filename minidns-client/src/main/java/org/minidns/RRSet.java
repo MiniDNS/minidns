@@ -52,11 +52,9 @@ public class RRSet {
                 name = record.name;
                 type = record.type;
                 clazz = record.clazz;
-            } else {
-                // Verify that the to be added record suits into the already existing ones.
-                if (!name.equals(record.name) || type != record.type || clazz != record.clazz) {
-                    throw new IllegalArgumentException();
-                }
+            } else if (!couldContain(record)) {
+                throw new IllegalArgumentException(
+                        "Can not add " + record + " to RRSet " + name + ' ' + type + ' ' + clazz);
             }
 
             boolean didNotExist = records.add(record);
