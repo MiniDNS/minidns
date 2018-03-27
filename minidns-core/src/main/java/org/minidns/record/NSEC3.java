@@ -10,7 +10,7 @@
  */
 package org.minidns.record;
 
-import org.minidns.Record.TYPE;
+import org.minidns.record.Record.TYPE;
 import org.minidns.util.Base32;
 
 import java.io.DataInputStream;

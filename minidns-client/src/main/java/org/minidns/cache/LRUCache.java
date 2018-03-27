@@ -16,8 +16,8 @@ import java.util.Map.Entry;
 import org.minidns.DNSCache;
 import org.minidns.DNSMessage;
 import org.minidns.DNSName;
-import org.minidns.Record;
 import org.minidns.record.Data;
+import org.minidns.record.Record;
 
 /**
  * LRU based DNSCache backed by a LinkedHashMap.

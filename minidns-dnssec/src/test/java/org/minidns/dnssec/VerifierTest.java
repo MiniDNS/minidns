@@ -11,11 +11,10 @@
 package org.minidns.dnssec;
 
 import org.minidns.Question;
-import org.minidns.Record;
-import org.minidns.Record.TYPE;
 import org.minidns.dnssec.algorithms.JavaSecDigestCalculator;
 import org.minidns.record.Data;
-
+import org.minidns.record.Record;
+import org.minidns.record.Record.TYPE;
 import org.junit.Before;
 import org.junit.Test;
 

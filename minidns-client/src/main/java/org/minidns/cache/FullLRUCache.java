@@ -12,8 +12,8 @@ package org.minidns.cache;
 
 import org.minidns.DNSName;
 import org.minidns.Question;
-import org.minidns.Record;
 import org.minidns.record.Data;
+import org.minidns.record.Record;
 
 /**
  * An <b>insecure</b> variant of {@link LRUCache} also using all the data found in the sections of an answer.

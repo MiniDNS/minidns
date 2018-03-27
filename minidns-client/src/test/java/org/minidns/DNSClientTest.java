@@ -10,13 +10,13 @@
  */
 package org.minidns;
 
-import org.minidns.Record.TYPE;
 import org.minidns.cache.LRUCache;
 import org.minidns.dnsserverlookup.AbstractDNSServerLookupMechanism;
 import org.minidns.dnsserverlookup.AndroidUsingExec;
 import org.minidns.dnsserverlookup.AndroidUsingReflection;
 import org.minidns.dnsserverlookup.DNSServerLookupMechanism;
 import org.minidns.record.A;
+import org.minidns.record.Record.TYPE;
 import org.minidns.source.DNSDataSource;
 
 import org.junit.Test;

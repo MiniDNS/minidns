@@ -17,12 +17,13 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import org.minidns.Record.TYPE;
 import org.minidns.edns.EDNSOption;
 import org.minidns.edns.NSID;
 import org.minidns.edns.UnknownEDNSOption;
 import org.minidns.record.Data;
 import org.minidns.record.OPT;
+import org.minidns.record.Record;
+import org.minidns.record.Record.TYPE;
 
 /**
  * EDNS - Extension Mechanism for DNS.

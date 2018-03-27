@@ -2,7 +2,7 @@ org.minidns.minidnsrepl.MiniDnsRepl.init()
 
 import org.minidns._
 import org.minidns.record._
-import org.minidns.Record.TYPE
+import org.minidns.record.Record.TYPE
 
 import org.minidns.dnssec.DNSSECClient
 

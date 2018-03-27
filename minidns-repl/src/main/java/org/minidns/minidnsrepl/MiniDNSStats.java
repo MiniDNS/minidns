@@ -18,10 +18,10 @@ import java.util.Arrays;
 import org.minidns.AbstractDNSClient;
 import org.minidns.DNSCache;
 import org.minidns.DNSMessage;
-import org.minidns.Record.TYPE;
 import org.minidns.dnssec.DNSSECClient;
 import org.minidns.integrationtest.IntegrationTestTools;
 import org.minidns.integrationtest.IntegrationTestTools.CacheConfig;
+import org.minidns.record.Record.TYPE;
 import org.minidns.source.NetworkDataSourceWithAccounting;
 
 public class MiniDNSStats {

@@ -12,8 +12,6 @@ package org.minidns;
 
 import org.minidns.DNSSECConstants.DigestAlgorithm;
 import org.minidns.DNSSECConstants.SignatureAlgorithm;
-import org.minidns.Record.CLASS;
-import org.minidns.Record.TYPE;
 import org.minidns.record.A;
 import org.minidns.record.AAAA;
 import org.minidns.record.CNAME;
@@ -26,8 +24,11 @@ import org.minidns.record.NS;
 import org.minidns.record.NSEC;
 import org.minidns.record.NSEC3;
 import org.minidns.record.RRSIG;
+import org.minidns.record.Record;
 import org.minidns.record.SOA;
 import org.minidns.record.SRV;
+import org.minidns.record.Record.CLASS;
+import org.minidns.record.Record.TYPE;
 import org.minidns.source.DNSDataSource;
 import org.minidns.util.InetAddressUtil;
 

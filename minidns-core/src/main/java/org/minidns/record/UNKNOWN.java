@@ -14,7 +14,7 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 
-import org.minidns.Record.TYPE;
+import org.minidns.record.Record.TYPE;
 
 public class UNKNOWN extends Data {
 

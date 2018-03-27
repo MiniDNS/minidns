@@ -11,8 +11,8 @@
 package org.minidns.dnssec;
 
 import org.minidns.DNSMessage;
-import org.minidns.Record;
 import org.minidns.record.RRSIG;
+import org.minidns.record.Record;
 
 import java.util.Collections;
 import java.util.Set;

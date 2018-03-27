@@ -11,13 +11,14 @@
 package org.minidns;
 
 import org.minidns.MiniDnsFuture.InternalMiniDnsFuture;
-import org.minidns.Record.CLASS;
-import org.minidns.Record.TYPE;
 import org.minidns.cache.LRUCache;
 import org.minidns.record.A;
 import org.minidns.record.AAAA;
 import org.minidns.record.Data;
 import org.minidns.record.NS;
+import org.minidns.record.Record;
+import org.minidns.record.Record.CLASS;
+import org.minidns.record.Record.TYPE;
 import org.minidns.source.DNSDataSource;
 import org.minidns.source.NetworkDataSource;
 

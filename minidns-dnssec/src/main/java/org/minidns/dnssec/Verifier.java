@@ -12,8 +12,6 @@ package org.minidns.dnssec;
 
 import org.minidns.DNSName;
 import org.minidns.Question;
-import org.minidns.Record;
-import org.minidns.Record.TYPE;
 import org.minidns.dnssec.UnverifiedReason.AlgorithmExceptionThrownReason;
 import org.minidns.dnssec.UnverifiedReason.AlgorithmNotSupportedReason;
 import org.minidns.dnssec.UnverifiedReason.NSECDoesNotMatchReason;
@@ -24,6 +22,8 @@ import org.minidns.record.DelegatingDnssecRR;
 import org.minidns.record.NSEC;
 import org.minidns.record.NSEC3;
 import org.minidns.record.RRSIG;
+import org.minidns.record.Record;
+import org.minidns.record.Record.TYPE;
 import org.minidns.util.Base32;
 
 import java.io.ByteArrayOutputStream;

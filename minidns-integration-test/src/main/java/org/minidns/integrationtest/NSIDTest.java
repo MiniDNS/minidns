@@ -18,9 +18,9 @@ import org.minidns.DNSMessage;
 import org.minidns.DNSMessage.Builder;
 import org.minidns.EDNS.OptionCode;
 import org.minidns.Question;
-import org.minidns.Record.TYPE;
 import org.minidns.edns.NSID;
 import org.minidns.iterative.IterativeDNSClient;
+import org.minidns.record.Record.TYPE;
 
 import static org.junit.Assert.assertNotNull;
 

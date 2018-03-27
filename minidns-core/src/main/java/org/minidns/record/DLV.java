@@ -12,7 +12,6 @@ package org.minidns.record;
 
 import org.minidns.DNSSECConstants.DigestAlgorithm;
 import org.minidns.DNSSECConstants.SignatureAlgorithm;
-import org.minidns.Record;
 
 import java.io.DataInputStream;
 import java.io.IOException;

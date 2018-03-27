@@ -15,13 +15,12 @@ import org.minidns.DNSSECConstants.DigestAlgorithm;
 import org.minidns.DNSSECConstants.SignatureAlgorithm;
 import org.minidns.DNSName;
 import org.minidns.DNSWorld;
-import org.minidns.Record;
 import org.minidns.cache.LRUCache;
 import org.minidns.record.A;
 import org.minidns.record.DNSKEY;
 import org.minidns.record.Data;
 import org.minidns.record.RRSIG;
-
+import org.minidns.record.Record;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;

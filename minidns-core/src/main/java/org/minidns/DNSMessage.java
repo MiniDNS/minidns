@@ -10,9 +10,10 @@
  */
 package org.minidns;
 
-import org.minidns.Record.TYPE;
 import org.minidns.record.Data;
 import org.minidns.record.OPT;
+import org.minidns.record.Record;
+import org.minidns.record.Record.TYPE;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;

@@ -17,7 +17,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import org.minidns.Record.TYPE;
+import org.minidns.record.Record.TYPE;
 
 /**
  *  A TXT record. Actually a binary blob containing extents, each of which is a one-byte count

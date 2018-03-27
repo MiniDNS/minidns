@@ -15,7 +15,7 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.util.Arrays;
 
-import org.minidns.Record.TYPE;
+import org.minidns.record.Record.TYPE;
 
 /**
  * Generic payload class.

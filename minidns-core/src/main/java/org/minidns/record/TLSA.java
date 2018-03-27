@@ -10,8 +10,6 @@
  */
 package org.minidns.record;
 
-import org.minidns.Record;
-
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;

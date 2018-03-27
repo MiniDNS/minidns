@@ -19,8 +19,8 @@ import java.util.Map.Entry;
 import org.minidns.DNSMessage;
 import org.minidns.DNSName;
 import org.minidns.Question;
-import org.minidns.Record;
 import org.minidns.record.Data;
+import org.minidns.record.Record;
 
 /**
  * A variant of {@link LRUCache} also using the data found in the sections for caching.

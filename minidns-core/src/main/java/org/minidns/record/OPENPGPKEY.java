@@ -10,7 +10,6 @@
  */
 package org.minidns.record;
 
-import org.minidns.Record;
 import org.minidns.util.Base64;
 
 import java.io.DataInputStream;

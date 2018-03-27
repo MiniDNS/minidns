@@ -13,7 +13,6 @@ package org.minidns.dnssec;
 import org.minidns.DNSMessage;
 import org.minidns.DNSName;
 import org.minidns.DNSWorld;
-import org.minidns.Record;
 import org.minidns.DNSSECConstants.DigestAlgorithm;
 import org.minidns.DNSSECConstants.SignatureAlgorithm;
 import org.minidns.dnssec.algorithms.AlgorithmMap;
@@ -23,6 +22,7 @@ import org.minidns.record.DS;
 import org.minidns.record.Data;
 import org.minidns.record.NSEC;
 import org.minidns.record.RRSIG;
+import org.minidns.record.Record;
 import org.minidns.util.InetAddressUtil;
 
 import java.io.ByteArrayInputStream;

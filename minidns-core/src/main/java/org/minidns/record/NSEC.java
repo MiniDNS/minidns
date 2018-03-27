@@ -11,7 +11,7 @@
 package org.minidns.record;
 
 import org.minidns.DNSName;
-import org.minidns.Record.TYPE;
+import org.minidns.record.Record.TYPE;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;

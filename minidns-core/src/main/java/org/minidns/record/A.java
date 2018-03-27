@@ -14,7 +14,7 @@ import java.io.DataInputStream;
 import java.io.IOException;
 import java.net.Inet4Address;
 
-import org.minidns.Record.TYPE;
+import org.minidns.record.Record.TYPE;
 import org.minidns.util.InetAddressUtil;
 
 /**

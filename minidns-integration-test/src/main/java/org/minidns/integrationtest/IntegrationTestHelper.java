@@ -23,8 +23,8 @@ import java.util.logging.Logger;
 import org.junit.Ignore;
 
 import org.minidns.DNSName;
-import org.minidns.Record.TYPE;
 import org.minidns.jul.MiniDnsJul;
+import org.minidns.record.Record.TYPE;
 
 public class IntegrationTestHelper {
 

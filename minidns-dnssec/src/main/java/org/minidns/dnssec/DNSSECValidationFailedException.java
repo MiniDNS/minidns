@@ -11,8 +11,8 @@
 package org.minidns.dnssec;
 
 import org.minidns.Question;
-import org.minidns.Record;
 import org.minidns.record.Data;
+import org.minidns.record.Record;
 
 import java.util.List;
 

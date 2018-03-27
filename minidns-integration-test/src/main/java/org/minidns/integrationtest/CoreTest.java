@@ -12,9 +12,9 @@ package org.minidns.integrationtest;
 
 import org.minidns.DNSClient;
 import org.minidns.DNSMessage;
-import org.minidns.Record;
 import org.minidns.cache.LRUCache;
 import org.minidns.record.Data;
+import org.minidns.record.Record;
 
 import java.io.IOException;
 import java.util.ArrayList;

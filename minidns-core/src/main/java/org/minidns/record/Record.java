@@ -8,30 +8,7 @@
  * upon the condition that you accept all of the terms of either
  * the Apache License 2.0, the LGPL 2.1+ or the WTFPL.
  */
-package org.minidns;
-
-import org.minidns.record.A;
-import org.minidns.record.AAAA;
-import org.minidns.record.CNAME;
-import org.minidns.record.DNAME;
-import org.minidns.record.DLV;
-import org.minidns.record.DNSKEY;
-import org.minidns.record.DS;
-import org.minidns.record.Data;
-import org.minidns.record.MX;
-import org.minidns.record.NS;
-import org.minidns.record.NSEC;
-import org.minidns.record.NSEC3;
-import org.minidns.record.NSEC3PARAM;
-import org.minidns.record.OPENPGPKEY;
-import org.minidns.record.OPT;
-import org.minidns.record.PTR;
-import org.minidns.record.RRSIG;
-import org.minidns.record.SOA;
-import org.minidns.record.SRV;
-import org.minidns.record.TLSA;
-import org.minidns.record.TXT;
-import org.minidns.record.UNKNOWN;
+package org.minidns.record;
 
 import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
@@ -42,6 +19,10 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import org.minidns.DNSMessage;
+import org.minidns.DNSName;
+import org.minidns.Question;
 
 /**
  * A generic DNS record.
@@ -334,7 +315,7 @@ public final class Record<D extends Data> {
     /**
      * MDNS defines the highest bit of the class as the unicast query bit.
      */
-    protected final boolean unicastQuery;
+    public final boolean unicastQuery;
 
     /**
      * Parse a given record based on the full message data and the current

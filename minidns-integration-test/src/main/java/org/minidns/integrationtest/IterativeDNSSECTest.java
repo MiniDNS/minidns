@@ -15,11 +15,11 @@ import static org.junit.Assert.assertTrue;
 import java.io.IOException;
 
 import org.minidns.DNSName;
-import org.minidns.Record.TYPE;
 import org.minidns.dnssec.DNSSECClient;
 import org.minidns.dnssec.DNSSECMessage;
 import org.minidns.integrationtest.IntegrationTestTools.CacheConfig;
 import org.minidns.iterative.ReliableDNSClient.Mode;
+import org.minidns.record.Record.TYPE;
 import org.minidns.source.NetworkDataSourceWithAccounting;
 
 public class IterativeDNSSECTest {

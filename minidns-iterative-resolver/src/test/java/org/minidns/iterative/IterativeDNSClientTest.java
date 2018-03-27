@@ -14,12 +14,11 @@ import java.io.IOException;
 import java.util.List;
 
 import org.minidns.DNSMessage;
-import org.minidns.Record;
-import org.minidns.Record.TYPE;
 import org.minidns.cache.LRUCache;
 import org.minidns.record.A;
 import org.minidns.record.Data;
-
+import org.minidns.record.Record;
+import org.minidns.record.Record.TYPE;
 import org.junit.Test;
 
 import static org.minidns.DNSWorld.a;

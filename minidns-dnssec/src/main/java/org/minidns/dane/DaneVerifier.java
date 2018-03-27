@@ -13,11 +13,11 @@ package org.minidns.dane;
 import org.minidns.AbstractDNSClient;
 import org.minidns.DNSMessage;
 import org.minidns.DNSName;
-import org.minidns.Record;
 import org.minidns.dnssec.DNSSECClient;
 import org.minidns.dnssec.DNSSECMessage;
 import org.minidns.dnssec.UnverifiedReason;
 import org.minidns.record.Data;
+import org.minidns.record.Record;
 import org.minidns.record.TLSA;
 
 import javax.net.ssl.HttpsURLConnection;

@@ -15,7 +15,7 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 
 import org.minidns.DNSName;
-import org.minidns.Record.TYPE;
+import org.minidns.record.Record.TYPE;
 
 /**
  * SRV record payload (service pointer).

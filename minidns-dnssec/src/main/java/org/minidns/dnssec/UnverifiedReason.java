@@ -14,12 +14,12 @@ import java.util.Collections;
 import java.util.List;
 
 import org.minidns.Question;
-import org.minidns.Record;
-import org.minidns.Record.TYPE;
 import org.minidns.DNSSECConstants.DigestAlgorithm;
 import org.minidns.record.DNSKEY;
 import org.minidns.record.Data;
 import org.minidns.record.RRSIG;
+import org.minidns.record.Record;
+import org.minidns.record.Record.TYPE;
 
 public abstract class UnverifiedReason {
     public abstract String getReasonString();

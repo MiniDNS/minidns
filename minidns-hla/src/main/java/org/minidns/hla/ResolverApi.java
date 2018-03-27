@@ -19,11 +19,11 @@ import org.minidns.AbstractDNSClient;
 import org.minidns.DNSMessage;
 import org.minidns.DNSName;
 import org.minidns.Question;
-import org.minidns.Record.TYPE;
 import org.minidns.iterative.ReliableDNSClient;
 import org.minidns.record.Data;
 import org.minidns.record.PTR;
 import org.minidns.record.SRV;
+import org.minidns.record.Record.TYPE;
 import org.minidns.util.InetAddressUtil;
 
 /**

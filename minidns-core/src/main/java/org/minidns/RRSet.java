@@ -14,9 +14,10 @@ import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
-import org.minidns.Record.CLASS;
-import org.minidns.Record.TYPE;
 import org.minidns.record.Data;
+import org.minidns.record.Record;
+import org.minidns.record.Record.CLASS;
+import org.minidns.record.Record.TYPE;
 
 public class RRSet {
 

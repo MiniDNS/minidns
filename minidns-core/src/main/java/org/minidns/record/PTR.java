@@ -14,7 +14,7 @@ import java.io.DataInputStream;
 import java.io.IOException;
 
 import org.minidns.DNSName;
-import org.minidns.Record.TYPE;
+import org.minidns.record.Record.TYPE;
 
 /**
  * A PTR record is handled like a CNAME.

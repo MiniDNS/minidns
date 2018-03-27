@@ -14,13 +14,12 @@ import java.io.IOException;
 import java.util.Iterator;
 
 import org.junit.Ignore;
-
-import org.minidns.Record;
 import org.minidns.cache.LRUCache;
 import org.minidns.dnssec.DNSSECClient;
 import org.minidns.dnssec.DNSSECMessage;
 import org.minidns.dnssec.DNSSECValidationFailedException;
 import org.minidns.dnssec.UnverifiedReason;
+import org.minidns.record.Record;
 
 import static org.junit.Assert.assertFalse;
 
