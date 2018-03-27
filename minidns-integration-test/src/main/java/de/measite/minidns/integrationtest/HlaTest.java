@@ -30,7 +30,7 @@ public class HlaTest {
         assertEquals(true, res.wasSuccessful());
         Set<A> answers = res.getAnswers();
         assertEquals(1, answers.size());
-        assertArrayEquals(new A(37, 221, 197, 223).toByteArray(), answers.iterator().next().toByteArray());
+        assertArrayEquals(new A(5, 45, 100, 158).toByteArray(), answers.iterator().next().toByteArray());
     }
 
     @IntegrationTest
