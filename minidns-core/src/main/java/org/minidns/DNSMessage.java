@@ -10,6 +10,7 @@
  */
 package org.minidns;
 
+import org.minidns.edns.EDNS;
 import org.minidns.record.Data;
 import org.minidns.record.OPT;
 import org.minidns.record.Record;

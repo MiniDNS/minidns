@@ -16,9 +16,9 @@ import java.net.InetAddress;
 import org.minidns.DNSClient;
 import org.minidns.DNSMessage;
 import org.minidns.DNSMessage.Builder;
-import org.minidns.EDNS.OptionCode;
 import org.minidns.Question;
 import org.minidns.edns.NSID;
+import org.minidns.edns.EDNS.OptionCode;
 import org.minidns.iterative.IterativeDNSClient;
 import org.minidns.record.Record.TYPE;
 

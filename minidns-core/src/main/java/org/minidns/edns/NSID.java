@@ -10,7 +10,7 @@
  */
 package org.minidns.edns;
 
-import org.minidns.EDNS.OptionCode;
+import org.minidns.edns.EDNS.OptionCode;
 import org.minidns.util.Hex;
 
 public class NSID extends EDNSOption {

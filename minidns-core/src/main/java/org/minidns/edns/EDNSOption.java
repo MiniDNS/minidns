@@ -13,7 +13,7 @@ package org.minidns.edns;
 import java.io.DataOutputStream;
 import java.io.IOException;
 
-import org.minidns.EDNS.OptionCode;
+import org.minidns.edns.EDNS.OptionCode;
 
 public abstract class EDNSOption {
 

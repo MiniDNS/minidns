@@ -8,7 +8,7 @@
  * upon the condition that you accept all of the terms of either
  * the Apache License 2.0, the LGPL 2.1+ or the WTFPL.
  */
-package org.minidns;
+package org.minidns.edns;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -18,9 +18,6 @@ import java.util.List;
 import java.util.Map;
 
 import org.minidns.dnsname.DNSName;
-import org.minidns.edns.EDNSOption;
-import org.minidns.edns.NSID;
-import org.minidns.edns.UnknownEDNSOption;
 import org.minidns.record.Data;
 import org.minidns.record.OPT;
 import org.minidns.record.Record;
