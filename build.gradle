@@ -71,13 +71,13 @@ allprojects {
 		project {
 			name 'minidns'
 			description 'Minimal DNS library for java and android systems'
-			url 'https://github.com/rtreffer/minidns'
+			url 'https://github.com/minidns/minidns'
 			inceptionYear '2014'
 
 			scm {
-				url 'https://github.com/rtreffer/minidns'
-				connection 'scm:https://github.com/rtreffer/minidns'
-				developerConnection 'scm:git://github.com/rtreffer/minidns.git'
+				url 'https://github.com/minidns/minidns'
+				connection 'scm:https://github.com/minidns/minidns'
+				developerConnection 'scm:git://github.com/minidns/minidns.git'
 			}
 
 			licenses {
