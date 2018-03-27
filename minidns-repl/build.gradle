@@ -1,5 +1,5 @@
 ext {
-    scalaVersion = '2.11.7'
+    scalaVersion = '2.12.4'
 }
 
 dependencies {
@@ -8,7 +8,7 @@ dependencies {
     compile project(':minidns-dnssec')
     compile project(':minidns-integration-test')
     compile project(':minidns-hla')
-    compile "com.lihaoyi:ammonite_$scalaVersion:0.8.0"
+    compile "com.lihaoyi:ammonite_$scalaVersion:1.1.0"
     testCompile project(path: ":minidns-client", configuration: "testRuntime")
     testCompile project(path: ":minidns-client", configuration: "archives")
 
