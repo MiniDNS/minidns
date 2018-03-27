@@ -14,6 +14,8 @@ import org.junit.Before;
 import org.junit.Test;
 
 import org.minidns.cache.LRUCache;
+import org.minidns.dnsmessage.DNSMessage;
+import org.minidns.dnsmessage.Question;
 import org.minidns.record.Record;
 
 import static org.minidns.DNSWorld.a;

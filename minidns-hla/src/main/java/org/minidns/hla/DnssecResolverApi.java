@@ -15,9 +15,9 @@ import java.util.Set;
 
 import org.minidns.DNSCache;
 import org.minidns.MiniDNSException.NullResultException;
-import org.minidns.Question;
 import org.minidns.cache.LRUCache;
 import org.minidns.cache.MiniDnsCacheFactory;
+import org.minidns.dnsmessage.Question;
 import org.minidns.dnsname.DNSName;
 import org.minidns.dnssec.DNSSECClient;
 import org.minidns.dnssec.DNSSECMessage;

@@ -12,6 +12,8 @@ package org.minidns;
 
 import java.io.IOException;
 
+import org.minidns.dnsmessage.DNSMessage;
+
 public abstract class MiniDNSException extends IOException {
     /**
      * 

@@ -10,8 +10,8 @@
  */
 package org.minidns.source;
 
-import org.minidns.DNSMessage;
 import org.minidns.MiniDNSException;
+import org.minidns.dnsmessage.DNSMessage;
 import org.minidns.util.MultipleIoException;
 
 import java.io.DataInputStream;

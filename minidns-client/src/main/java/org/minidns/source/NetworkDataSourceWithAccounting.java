@@ -16,7 +16,7 @@ import java.util.Locale;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.minidns.AbstractDNSClient;
-import org.minidns.DNSMessage;
+import org.minidns.dnsmessage.DNSMessage;
 
 public class NetworkDataSourceWithAccounting extends NetworkDataSource {
 

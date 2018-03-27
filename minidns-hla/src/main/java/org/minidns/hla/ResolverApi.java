@@ -16,8 +16,8 @@ import java.net.Inet6Address;
 import java.net.InetAddress;
 
 import org.minidns.AbstractDNSClient;
-import org.minidns.DNSMessage;
-import org.minidns.Question;
+import org.minidns.dnsmessage.DNSMessage;
+import org.minidns.dnsmessage.Question;
 import org.minidns.dnsname.DNSName;
 import org.minidns.iterative.ReliableDNSClient;
 import org.minidns.record.Data;

@@ -18,8 +18,8 @@ import java.util.logging.Level;
 import org.minidns.AbstractDNSClient;
 import org.minidns.DNSCache;
 import org.minidns.DNSClient;
-import org.minidns.DNSMessage;
-import org.minidns.Question;
+import org.minidns.dnsmessage.DNSMessage;
+import org.minidns.dnsmessage.Question;
 import org.minidns.source.DNSDataSource;
 import org.minidns.util.MultipleIoException;
 

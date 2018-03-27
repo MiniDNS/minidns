@@ -15,8 +15,8 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
 
-import org.minidns.DNSMessage;
-import org.minidns.Question;
+import org.minidns.dnsmessage.DNSMessage;
+import org.minidns.dnsmessage.Question;
 import org.minidns.iterative.IterativeClientException.LoopDetected;
 import org.minidns.iterative.IterativeClientException.MaxIterativeStepsReached;
 

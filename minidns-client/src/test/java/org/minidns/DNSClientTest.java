@@ -11,6 +11,7 @@
 package org.minidns;
 
 import org.minidns.cache.LRUCache;
+import org.minidns.dnsmessage.DNSMessage;
 import org.minidns.dnsserverlookup.AbstractDNSServerLookupMechanism;
 import org.minidns.dnsserverlookup.AndroidUsingExec;
 import org.minidns.dnsserverlookup.AndroidUsingReflection;

@@ -12,8 +12,8 @@ package org.minidns.iterative;
 
 import org.minidns.AbstractDNSClient;
 import org.minidns.DNSCache;
-import org.minidns.DNSMessage;
-import org.minidns.Question;
+import org.minidns.dnsmessage.DNSMessage;
+import org.minidns.dnsmessage.Question;
 import org.minidns.dnsname.DNSName;
 import org.minidns.iterative.IterativeClientException.LoopDetected;
 import org.minidns.record.A;

@@ -10,8 +10,8 @@
  */
 package org.minidns.source;
 
-import org.minidns.DNSMessage;
 import org.junit.Test;
+import org.minidns.dnsmessage.DNSMessage;
 
 import java.io.IOException;
 import java.net.InetAddress;

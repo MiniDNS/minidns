@@ -10,6 +10,7 @@
  */
 package org.minidns;
 
+import org.minidns.dnsmessage.DNSMessage;
 import org.minidns.dnsname.DNSName;
 
 /**

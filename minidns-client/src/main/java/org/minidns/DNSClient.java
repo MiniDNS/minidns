@@ -11,6 +11,7 @@
 package org.minidns;
 
 import org.minidns.MiniDnsFuture.InternalMiniDnsFuture;
+import org.minidns.dnsmessage.DNSMessage;
 import org.minidns.dnsserverlookup.AndroidUsingExec;
 import org.minidns.dnsserverlookup.AndroidUsingReflection;
 import org.minidns.dnsserverlookup.DNSServerLookupMechanism;

@@ -13,8 +13,8 @@ package org.minidns.dnssec;
 import java.util.Collections;
 import java.util.List;
 
-import org.minidns.Question;
 import org.minidns.DNSSECConstants.DigestAlgorithm;
+import org.minidns.dnsmessage.Question;
 import org.minidns.record.DNSKEY;
 import org.minidns.record.Data;
 import org.minidns.record.RRSIG;

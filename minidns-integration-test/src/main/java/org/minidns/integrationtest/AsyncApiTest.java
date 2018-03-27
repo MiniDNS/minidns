@@ -15,10 +15,10 @@ import static org.junit.Assert.assertEquals;
 import java.io.IOException;
 
 import org.minidns.DNSClient;
-import org.minidns.DNSMessage;
-import org.minidns.DNSMessage.RESPONSE_CODE;
 import org.minidns.record.Record;
 import org.minidns.MiniDnsFuture;
+import org.minidns.dnsmessage.DNSMessage;
+import org.minidns.dnsmessage.DNSMessage.RESPONSE_CODE;
 import org.minidns.source.DNSDataSource;
 import org.minidns.source.DNSDataSource.QueryMode;
 import org.minidns.source.async.AsyncNetworkDataSource;

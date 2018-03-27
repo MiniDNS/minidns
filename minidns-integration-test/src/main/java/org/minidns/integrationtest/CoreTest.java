@@ -11,8 +11,8 @@
 package org.minidns.integrationtest;
 
 import org.minidns.DNSClient;
-import org.minidns.DNSMessage;
 import org.minidns.cache.LRUCache;
+import org.minidns.dnsmessage.DNSMessage;
 import org.minidns.record.Data;
 import org.minidns.record.Record;
 

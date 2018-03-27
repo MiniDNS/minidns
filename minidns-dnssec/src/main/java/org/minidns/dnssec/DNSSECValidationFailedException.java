@@ -10,7 +10,7 @@
  */
 package org.minidns.dnssec;
 
-import org.minidns.Question;
+import org.minidns.dnsmessage.Question;
 import org.minidns.record.Data;
 import org.minidns.record.Record;
 

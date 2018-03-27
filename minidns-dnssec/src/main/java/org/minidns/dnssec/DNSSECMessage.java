@@ -10,7 +10,7 @@
  */
 package org.minidns.dnssec;
 
-import org.minidns.DNSMessage;
+import org.minidns.dnsmessage.DNSMessage;
 import org.minidns.record.RRSIG;
 import org.minidns.record.Record;
 

@@ -13,11 +13,11 @@ package org.minidns.hla;
 import java.util.Collections;
 import java.util.Set;
 
-import org.minidns.DNSMessage;
-import org.minidns.DNSMessage.RESPONSE_CODE;
 import org.minidns.MiniDNSException;
 import org.minidns.MiniDNSException.NullResultException;
-import org.minidns.Question;
+import org.minidns.dnsmessage.DNSMessage;
+import org.minidns.dnsmessage.Question;
+import org.minidns.dnsmessage.DNSMessage.RESPONSE_CODE;
 import org.minidns.dnssec.DNSSECResultNotAuthenticException;
 import org.minidns.dnssec.UnverifiedReason;
 import org.minidns.record.Data;

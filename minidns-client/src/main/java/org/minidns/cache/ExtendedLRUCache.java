@@ -16,8 +16,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import org.minidns.DNSMessage;
-import org.minidns.Question;
+import org.minidns.dnsmessage.DNSMessage;
+import org.minidns.dnsmessage.Question;
 import org.minidns.dnsname.DNSName;
 import org.minidns.record.Data;
 import org.minidns.record.Record;

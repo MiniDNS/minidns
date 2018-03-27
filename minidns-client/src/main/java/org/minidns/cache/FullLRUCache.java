@@ -10,7 +10,7 @@
  */
 package org.minidns.cache;
 
-import org.minidns.Question;
+import org.minidns.dnsmessage.Question;
 import org.minidns.dnsname.DNSName;
 import org.minidns.record.Data;
 import org.minidns.record.Record;

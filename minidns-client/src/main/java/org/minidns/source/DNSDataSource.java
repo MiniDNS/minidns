@@ -11,9 +11,9 @@
 package org.minidns.source;
 
 import org.minidns.DNSCache;
-import org.minidns.DNSMessage;
 import org.minidns.MiniDnsFuture;
 import org.minidns.MiniDnsFuture.InternalMiniDnsFuture;
+import org.minidns.dnsmessage.DNSMessage;
 
 import java.io.IOException;
 import java.net.InetAddress;

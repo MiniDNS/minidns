@@ -8,7 +8,7 @@
  * upon the condition that you accept all of the terms of either
  * the Apache License 2.0, the LGPL 2.1+ or the WTFPL.
  */
-package org.minidns;
+package org.minidns.dnsmessage;
 
 import org.minidns.edns.EDNS;
 import org.minidns.record.Data;

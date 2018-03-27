@@ -30,8 +30,8 @@ import java.util.concurrent.ExecutionException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.minidns.DNSMessage;
 import org.minidns.MiniDnsFuture;
+import org.minidns.dnsmessage.DNSMessage;
 import org.minidns.source.DNSDataSource;
 
 public class AsyncNetworkDataSource extends DNSDataSource {

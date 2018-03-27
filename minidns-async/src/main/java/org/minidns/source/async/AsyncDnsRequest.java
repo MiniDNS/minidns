@@ -26,10 +26,10 @@ import java.util.concurrent.Future;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.minidns.DNSMessage;
 import org.minidns.MiniDNSException;
 import org.minidns.MiniDnsFuture;
 import org.minidns.MiniDnsFuture.InternalMiniDnsFuture;
+import org.minidns.dnsmessage.DNSMessage;
 import org.minidns.source.DNSDataSource.OnResponseCallback;
 import org.minidns.source.DNSDataSource.QueryMode;
 import org.minidns.util.MultipleIoException;
