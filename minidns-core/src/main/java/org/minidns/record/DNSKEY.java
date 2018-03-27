@@ -10,7 +10,7 @@
  */
 package org.minidns.record;
 
-import org.minidns.DNSSECConstants.SignatureAlgorithm;
+import org.minidns.constants.DNSSECConstants.SignatureAlgorithm;
 import org.minidns.record.Record.TYPE;
 import org.minidns.util.Base64;
 

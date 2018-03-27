@@ -13,7 +13,7 @@ package org.minidns.dnssec;
 import java.util.Collections;
 import java.util.List;
 
-import org.minidns.DNSSECConstants.DigestAlgorithm;
+import org.minidns.constants.DNSSECConstants.DigestAlgorithm;
 import org.minidns.dnsmessage.Question;
 import org.minidns.record.DNSKEY;
 import org.minidns.record.Data;

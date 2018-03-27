@@ -11,8 +11,7 @@
 package org.minidns.dnssec.algorithms;
 
 import org.junit.Before;
-
-import org.minidns.DNSSECConstants.SignatureAlgorithm;
+import org.minidns.constants.DNSSECConstants.SignatureAlgorithm;
 
 import java.security.PrivateKey;
 import java.util.Random;

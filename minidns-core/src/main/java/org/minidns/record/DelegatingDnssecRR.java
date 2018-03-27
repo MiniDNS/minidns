@@ -10,14 +10,14 @@
  */
 package org.minidns.record;
 
-import org.minidns.DNSSECConstants.DigestAlgorithm;
-import org.minidns.DNSSECConstants.SignatureAlgorithm;
-
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.util.Arrays;
+
+import org.minidns.constants.DNSSECConstants.DigestAlgorithm;
+import org.minidns.constants.DNSSECConstants.SignatureAlgorithm;
 
 /**
  * DS (Delegation Signer) record payload.

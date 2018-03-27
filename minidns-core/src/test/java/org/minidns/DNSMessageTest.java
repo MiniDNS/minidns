@@ -10,8 +10,8 @@
  */
 package org.minidns;
 
-import org.minidns.DNSSECConstants.DigestAlgorithm;
-import org.minidns.DNSSECConstants.SignatureAlgorithm;
+import org.minidns.constants.DNSSECConstants.DigestAlgorithm;
+import org.minidns.constants.DNSSECConstants.SignatureAlgorithm;
 import org.minidns.dnsmessage.DNSMessage;
 import org.minidns.dnsmessage.Question;
 import org.minidns.dnsname.DNSName;

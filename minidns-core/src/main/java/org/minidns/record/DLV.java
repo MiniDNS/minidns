@@ -10,11 +10,11 @@
  */
 package org.minidns.record;
 
-import org.minidns.DNSSECConstants.DigestAlgorithm;
-import org.minidns.DNSSECConstants.SignatureAlgorithm;
-
 import java.io.DataInputStream;
 import java.io.IOException;
+
+import org.minidns.constants.DNSSECConstants.DigestAlgorithm;
+import org.minidns.constants.DNSSECConstants.SignatureAlgorithm;
 
 /**
  * DLV record payload.

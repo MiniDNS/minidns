@@ -10,8 +10,8 @@
  */
 package org.minidns.dnssec.algorithms;
 
-import org.minidns.DNSSECConstants.DigestAlgorithm;
-import org.minidns.DNSSECConstants.SignatureAlgorithm;
+import org.minidns.constants.DNSSECConstants.DigestAlgorithm;
+import org.minidns.constants.DNSSECConstants.SignatureAlgorithm;
 import org.minidns.dnssec.DNSSECValidatorInitializationException;
 import org.minidns.dnssec.DigestCalculator;
 import org.minidns.dnssec.SignatureVerifier;

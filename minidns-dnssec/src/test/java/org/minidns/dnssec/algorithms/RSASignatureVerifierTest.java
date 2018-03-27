@@ -10,7 +10,7 @@
  */
 package org.minidns.dnssec.algorithms;
 
-import org.minidns.DNSSECConstants.SignatureAlgorithm;
+import org.minidns.constants.DNSSECConstants.SignatureAlgorithm;
 import org.minidns.dnssec.DNSSECValidationFailedException;
 import org.junit.Test;
 

@@ -11,8 +11,8 @@
 package org.minidns.dnssec;
 
 import org.minidns.DNSWorld;
-import org.minidns.DNSSECConstants.DigestAlgorithm;
-import org.minidns.DNSSECConstants.SignatureAlgorithm;
+import org.minidns.constants.DNSSECConstants.DigestAlgorithm;
+import org.minidns.constants.DNSSECConstants.SignatureAlgorithm;
 import org.minidns.dnsmessage.DNSMessage;
 import org.minidns.dnsname.DNSName;
 import org.minidns.dnssec.algorithms.AlgorithmMap;
