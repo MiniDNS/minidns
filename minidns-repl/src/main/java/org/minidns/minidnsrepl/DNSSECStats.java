@@ -12,8 +12,8 @@ package org.minidns.minidnsrepl;
 
 import java.io.IOException;
 
-import org.minidns.DNSName;
 import org.minidns.cache.ExtendedLRUCache;
+import org.minidns.dnsname.DNSName;
 import org.minidns.dnssec.DNSSECClient;
 import org.minidns.dnssec.DNSSECMessage;
 import org.minidns.dnssec.UnverifiedReason;

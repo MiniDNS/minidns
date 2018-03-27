@@ -10,7 +10,7 @@
  */
 package org.minidns.hla;
 
-import org.minidns.DNSName;
+import org.minidns.dnsname.DNSName;
 
 public enum SrvService {
 

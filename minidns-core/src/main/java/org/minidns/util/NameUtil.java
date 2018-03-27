@@ -10,7 +10,7 @@
  */
 package org.minidns.util;
 
-import org.minidns.DNSName;
+import org.minidns.dnsname.DNSName;
 
 /**
  * Utilities related to internationalized domain names and dns name handling.

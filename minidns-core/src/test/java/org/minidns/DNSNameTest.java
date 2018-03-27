@@ -21,6 +21,7 @@ import java.io.IOException;
 import org.junit.Test;
 
 import org.minidns.dnslabel.DNSLabel;
+import org.minidns.dnsname.DNSName;
 
 public class DNSNameTest {
 

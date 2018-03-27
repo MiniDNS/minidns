@@ -18,7 +18,7 @@ import java.util.List;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
-import org.minidns.DNSName;
+import org.minidns.dnsname.DNSName;
 import org.minidns.record.SRV;
 
 public class SrvUtil {

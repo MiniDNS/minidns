@@ -10,6 +10,8 @@
  */
 package org.minidns;
 
+import org.minidns.dnsname.DNSName;
+
 /**
  * Cache for DNS Entries. Implementations must be thread safe.
  */

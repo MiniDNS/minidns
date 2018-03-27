@@ -21,8 +21,8 @@ import java.util.List;
 import java.util.Map;
 
 import org.minidns.DNSMessage;
-import org.minidns.DNSName;
 import org.minidns.Question;
+import org.minidns.dnsname.DNSName;
 
 /**
  * A generic DNS record.

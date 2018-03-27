@@ -14,7 +14,7 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 
-import org.minidns.DNSName;
+import org.minidns.dnsname.DNSName;
 import org.minidns.record.Record.TYPE;
 
 /**

@@ -16,6 +16,7 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.util.Arrays;
 
+import org.minidns.dnsname.DNSName;
 import org.minidns.record.Record.CLASS;
 import org.minidns.record.Record.TYPE;
 

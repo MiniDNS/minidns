@@ -17,8 +17,8 @@ import java.util.List;
 import java.util.Set;
 
 import org.minidns.AbstractDNSClient.IpVersionSetting;
-import org.minidns.DNSName;
 import org.minidns.MiniDNSException.NullResultException;
+import org.minidns.dnsname.DNSName;
 import org.minidns.record.A;
 import org.minidns.record.AAAA;
 import org.minidns.record.InternetAddressRR;

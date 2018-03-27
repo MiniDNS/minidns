@@ -12,7 +12,7 @@ package org.minidns.dane;
 
 import org.minidns.AbstractDNSClient;
 import org.minidns.DNSMessage;
-import org.minidns.DNSName;
+import org.minidns.dnsname.DNSName;
 import org.minidns.dnssec.DNSSECClient;
 import org.minidns.dnssec.DNSSECMessage;
 import org.minidns.dnssec.UnverifiedReason;

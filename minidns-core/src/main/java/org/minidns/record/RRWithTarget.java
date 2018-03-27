@@ -13,7 +13,7 @@ package org.minidns.record;
 import java.io.DataOutputStream;
 import java.io.IOException;
 
-import org.minidns.DNSName;
+import org.minidns.dnsname.DNSName;
 
 /**
  * A resource record pointing to a target.

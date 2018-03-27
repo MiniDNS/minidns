@@ -16,8 +16,7 @@ import java.net.Inet4Address;
 import java.net.Inet6Address;
 
 import org.junit.Test;
-
-import org.minidns.DNSName;
+import org.minidns.dnsname.DNSName;
 
 public class InetAddressUtilTest {
 

@@ -10,8 +10,8 @@
  */
 package org.minidns.dnssec;
 
-import org.minidns.DNSName;
 import org.minidns.Question;
+import org.minidns.dnsname.DNSName;
 import org.minidns.dnssec.UnverifiedReason.AlgorithmExceptionThrownReason;
 import org.minidns.dnssec.UnverifiedReason.AlgorithmNotSupportedReason;
 import org.minidns.dnssec.UnverifiedReason.NSECDoesNotMatchReason;

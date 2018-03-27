@@ -12,6 +12,7 @@ package org.minidns;
 
 import org.minidns.DNSSECConstants.DigestAlgorithm;
 import org.minidns.DNSSECConstants.SignatureAlgorithm;
+import org.minidns.dnsname.DNSName;
 import org.minidns.record.A;
 import org.minidns.record.AAAA;
 import org.minidns.record.CNAME;

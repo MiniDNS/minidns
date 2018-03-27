@@ -11,10 +11,10 @@
 package org.minidns.dnssec;
 
 import org.minidns.DNSMessage;
-import org.minidns.DNSName;
 import org.minidns.DNSWorld;
 import org.minidns.DNSSECConstants.DigestAlgorithm;
 import org.minidns.DNSSECConstants.SignatureAlgorithm;
+import org.minidns.dnsname.DNSName;
 import org.minidns.dnssec.algorithms.AlgorithmMap;
 import org.minidns.record.DLV;
 import org.minidns.record.DNSKEY;

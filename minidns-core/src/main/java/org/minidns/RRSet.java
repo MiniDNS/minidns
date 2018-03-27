@@ -14,6 +14,7 @@ import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
+import org.minidns.dnsname.DNSName;
 import org.minidns.record.Data;
 import org.minidns.record.Record;
 import org.minidns.record.Record.CLASS;

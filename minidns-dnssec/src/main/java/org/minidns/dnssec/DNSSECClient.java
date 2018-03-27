@@ -12,8 +12,8 @@ package org.minidns.dnssec;
 
 import org.minidns.DNSCache;
 import org.minidns.DNSMessage;
-import org.minidns.DNSName;
 import org.minidns.Question;
+import org.minidns.dnsname.DNSName;
 import org.minidns.dnssec.UnverifiedReason.NoSecureEntryPointReason;
 import org.minidns.dnssec.UnverifiedReason.NoActiveSignaturesReason;
 import org.minidns.dnssec.UnverifiedReason.NoSignaturesReason;
