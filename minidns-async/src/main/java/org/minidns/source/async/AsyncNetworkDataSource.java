@@ -27,6 +27,8 @@ import java.util.Queue;
 import java.util.Set;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -43,6 +45,8 @@ public class AsyncNetworkDataSource extends DNSDataSource {
     private static final Queue<AsyncDnsRequest> INCOMING_REQUESTS = new ConcurrentLinkedQueue<>();
 
     private static final Selector SELECTOR;
+
+    private static final Lock REGISTRATION_LOCK = new ReentrantLock();
 
     private static final Queue<SelectionKey> PENDING_SELECTION_KEYS = new ConcurrentLinkedQueue<>();
 
@@ -106,7 +110,13 @@ public class AsyncNetworkDataSource extends DNSDataSource {
     }
 
     SelectionKey registerWithSelector(SelectableChannel channel, int ops, Object attachment) throws ClosedChannelException {
-        return channel.register(SELECTOR, ops, attachment);
+        REGISTRATION_LOCK.lock();
+        try {
+            SELECTOR.wakeup();
+            return channel.register(SELECTOR, ops, attachment);
+        } finally {
+            REGISTRATION_LOCK.unlock();
+        }
     }
 
     void finished(AsyncDnsRequest asyncDnsRequest) {
@@ -178,6 +188,14 @@ public class AsyncNetworkDataSource extends DNSDataSource {
             List<SelectionKey> selectedKeys;
             int newSelectedKeysCount;
             synchronized (SELECTOR) {
+                // Ensure that a wakeup() in registerWithSelector() gives the corresponding
+                // register() in the same method the chance to actually register the channel. In
+                // other words: This construct ensure that there is never another select()
+                // between a corresponding wakeup() and register() calls.
+                // See also https://stackoverflow.com/a/1112809/194894
+                REGISTRATION_LOCK.lock();
+                REGISTRATION_LOCK.unlock();
+
                 try {
                     newSelectedKeysCount = SELECTOR.select(selectWait);
                 } catch (IOException e) {
