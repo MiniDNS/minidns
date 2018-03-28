@@ -144,6 +144,18 @@ allprojects {
 			downloadJavadoc = true
 		}
 	}
+
+	if (JavaVersion.current().isJava8Compatible()) {
+		tasks.withType(Javadoc) {
+			// The '-quiet' as second argument is actually a hack,
+			// since the one paramater addStringOption doesn't seem to
+			// work, we extra add '-quiet', which is added anyway by
+			// gradle.
+			// See https://github.com/gradle/gradle/issues/2354
+			options.addStringOption('Xdoclint:all', '-quiet')
+		}
+	}
+
 }
 
 configure(subprojects.findAll{!it.name.endsWith('-java7') && !it.name.endsWith('-android21')}) {
