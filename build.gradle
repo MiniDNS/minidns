@@ -138,6 +138,12 @@ allprojects {
 			xml.enabled true
 		}
 	}
+
+	eclipse {
+		classpath {
+			downloadJavadoc = true
+		}
+	}
 }
 
 configure(subprojects.findAll{!it.name.endsWith('-java7') && !it.name.endsWith('-android21')}) {
