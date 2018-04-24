@@ -157,6 +157,10 @@ allprojects {
 			// gradle.
 			// See https://github.com/gradle/gradle/issues/2354
 			options.addStringOption('Xdoclint:all', '-quiet')
+			// Abort on javadoc warnings.
+			// See JDK-8200363 (https://bugs.openjdk.java.net/browse/JDK-8200363)
+			// for information about the -Xwerror option.
+			options.addStringOption('Xwerror', '-quiet')
 		}
 	}
 
