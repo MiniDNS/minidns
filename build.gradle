@@ -45,7 +45,7 @@ allprojects {
 		version = version + '-SNAPSHOT'
 	}
 
-	if (!ext.isSnapshot && 'git rev-parse --abbrev-ref HEAD'.execute().text.trim() == 'master') {
+	if (!ext.isSnapshot && !'git describe --exact-match HEAD'.execute().text.trim().equals(ext.shortVersion)) {
 		throw new org.gradle.api.InvalidUserDataException('Untagged version detected! Please tag every release.')
 	}
 	if (!version.endsWith('-SNAPSHOT') && version != 'git tag --points-at HEAD'.execute().text.trim()) {
