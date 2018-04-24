@@ -81,30 +81,18 @@ public class SrvResolverResult extends ResolverResult<SRV> {
             List<InternetAddressRR> srvAddresses = new ArrayList<>(aRecords.size() + aaaaRecords.size());
             switch (ipVersion) {
             case v4only:
-                for (A a : aRecords) {
-                    srvAddresses.add(a);
-                }
+                srvAddresses.addAll(aRecords);
                 break;
             case v6only:
-                for (AAAA aaaa : aaaaRecords) {
-                    srvAddresses.add(aaaa);
-                }
+                srvAddresses.addAll(aaaaRecords);
                 break;
             case v4v6:
-                for (A a : aRecords) {
-                    srvAddresses.add(a);
-                }
-                for (AAAA aaaa : aaaaRecords) {
-                    srvAddresses.add(aaaa);
-                }
+                srvAddresses.addAll(aRecords);
+                srvAddresses.addAll(aaaaRecords);
                 break;
             case v6v4:
-                for (AAAA aaaa : aaaaRecords) {
-                    srvAddresses.add(aaaa);
-                }
-                for (A a : aRecords) {
-                    srvAddresses.add(a);
-                }
+                srvAddresses.addAll(aaaaRecords);
+                srvAddresses.addAll(aRecords);
                 break;
             }
 
