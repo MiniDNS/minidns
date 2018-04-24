@@ -145,6 +145,10 @@ allprojects {
 		}
 	}
 
+	// Make all project's 'test' targets depend on javadoc, so that
+	// javadoc is also linted.
+	test.dependsOn javadoc
+
 	if (JavaVersion.current().isJava8Compatible()) {
 		tasks.withType(Javadoc) {
 			// The '-quiet' as second argument is actually a hack,
