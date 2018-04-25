@@ -30,7 +30,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class NetworkDataSource extends DNSDataSource {
-
+    private boolean closeSocketAfterQuery = true;
     protected static final Logger LOGGER = Logger.getLogger(NetworkDataSource.class.getName());
 
     @Override
@@ -95,7 +95,7 @@ public class NetworkDataSource extends DNSDataSource {
             }
             return dnsMessage;
         } finally {
-            if (socket != null) {
+            if (socket != null && shouldCloseSocketAfterQuery()) {
                 socket.close();
             }
         }
@@ -126,10 +126,18 @@ public class NetworkDataSource extends DNSDataSource {
             }
             return dnsMessage;
         } finally {
-            if (socket != null) {
+            if (socket != null && shouldCloseSocketAfterQuery()) {
                 socket.close();
             }
         }
+    }
+
+    public void setCloseSocketAfterQuery(boolean closeSocketAfterQuery) {
+        this.closeSocketAfterQuery = closeSocketAfterQuery;
+    }
+
+    public boolean shouldCloseSocketAfterQuery() {
+        return closeSocketAfterQuery;
     }
 
     /**
