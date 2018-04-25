@@ -38,7 +38,7 @@ public class AndroidUsingExec extends AbstractDNSServerLookupMechanism {
     }
 
     @Override
-    public List<String> getDnsServerAddresses() {
+    public List<IPPortPair> getDnsServerAddresses() {
         try {
             Process process = Runtime.getRuntime().exec("getprop");
             InputStream inputStream = process.getInputStream();
@@ -48,7 +48,7 @@ public class AndroidUsingExec extends AbstractDNSServerLookupMechanism {
             if (server.size() > 0) {
                 List<String> res = new ArrayList<>(server.size());
                 res.addAll(server);
-                return res;
+                return stringCollectionToListOfIPPortPairs(res);
             }
         } catch (IOException e) {
             LOGGER.log(Level.WARNING, "Exception in findDNSByExec", e);

@@ -16,6 +16,7 @@ import org.minidns.dnsserverlookup.AbstractDNSServerLookupMechanism;
 import org.minidns.dnsserverlookup.AndroidUsingExec;
 import org.minidns.dnsserverlookup.AndroidUsingReflection;
 import org.minidns.dnsserverlookup.DNSServerLookupMechanism;
+import org.minidns.dnsserverlookup.IPPortPair;
 import org.minidns.record.A;
 import org.minidns.record.Record.TYPE;
 import org.minidns.source.DNSDataSource;
@@ -67,7 +68,7 @@ public class DNSClientTest {
             return true;
         }
         @Override
-        public List<String> getDnsServerAddresses() {
+        public List<IPPortPair> getDnsServerAddresses() {
             return null;
         }
     }

@@ -23,6 +23,7 @@ import java.util.List;
 
 import org.minidns.dnsserverlookup.AbstractDNSServerLookupMechanism;
 import org.minidns.dnsserverlookup.AndroidUsingExec;
+import org.minidns.dnsserverlookup.IPPortPair;
 
 /**
  * Requires the ACCESS_NETWORK_STATE permission.
@@ -44,7 +45,7 @@ public class AndroidUsingLinkProperties extends AbstractDNSServerLookupMechanism
 
     @Override
     @TargetApi(21)
-    public List<String> getDnsServerAddresses() {
+    public List<IPPortPair> getDnsServerAddresses() {
         Network[] networks = connectivityManager.getAllNetworks();
         if (networks == null) {
             return null;
@@ -69,7 +70,7 @@ public class AndroidUsingLinkProperties extends AbstractDNSServerLookupMechanism
             return null;
         }
 
-        return servers;
+        return stringCollectionToListOfIPPortPairs(servers);
     }
 
     @TargetApi(Build.VERSION_CODES.LOLLIPOP)
