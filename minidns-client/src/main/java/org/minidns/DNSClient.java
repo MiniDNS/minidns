@@ -293,7 +293,7 @@ public class DNSClient extends AbstractDNSClient {
                     LOGGER.warning("The DNS server lookup mechanism '" + mechanism.getName()
                             + "' returned an invalid non-IP address result: '" + potentialDnsServer + "'");
                     it.remove();
-                } else if (blacklistedDnsServers.contains(potentialDnsServer)) {
+                } else if (blacklistedDnsServers.contains(potentialDnsServer.getIp())) {
                     LOGGER.fine("The DNS server lookup mechanism '" + mechanism.getName()
                     + "' returned a blacklisted result: '" + potentialDnsServer + "'");
                     it.remove();
