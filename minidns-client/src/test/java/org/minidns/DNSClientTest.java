@@ -68,7 +68,7 @@ public class DNSClientTest {
             return true;
         }
         @Override
-        public List<IPPortPair> getDnsServerAddresses() {
+        public List<IPPortPair> getDnsServerAddressesWithPorts() {
             return null;
         }
     }

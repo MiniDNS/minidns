@@ -29,6 +29,6 @@ public interface DNSServerLookupMechanism extends Comparable<DNSServerLookupMech
      *
      * @return a List of Strings presenting hopefully IP addresses.
      */
-    public List<IPPortPair> getDnsServerAddresses();
+    public List<IPPortPair> getDnsServerAddressesWithPorts();
 
 }
