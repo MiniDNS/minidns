@@ -44,7 +44,7 @@ public abstract class AbstractDNSServerLookupMechanism implements DNSServerLooku
     }
 
     @Override
-    public abstract List<IPPortPair> getDnsServerAddressesWithPorts();
+    public abstract List<IPPortPair> getDnsServerAddresses();
 
     protected static List<String> toListOfStrings(Collection<? extends InetAddress> inetAddresses) {
         List<String> result = new ArrayList<>(inetAddresses.size());
