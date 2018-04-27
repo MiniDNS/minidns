@@ -131,4 +131,12 @@ public class DNSNameTest {
         assertEquals(secondLevelString, labels[1].label);
         assertEquals(thirdLevelString, labels[2].label);
     }
+
+    @Test
+    public void trailingDotDnsNameFromTest() {
+        final String trailingDotDnsName = "foo.bar.";
+        DNSName dnsName = DNSName.from(trailingDotDnsName);
+        assertEquals("foo.bar", dnsName.ace);
+    }
+
 }

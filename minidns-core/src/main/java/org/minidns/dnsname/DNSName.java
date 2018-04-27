@@ -109,11 +109,22 @@ public class DNSName implements CharSequence, Serializable, Comparable<DNSName> 
     private DNSName(String name, boolean inAce) {
         if (name.isEmpty()) {
             rawAce = ROOT.rawAce;
-        } else if (inAce) {
-            // Name is already in ACE format.
-            rawAce = name;
         } else {
-            rawAce = MiniDnsIdna.toASCII(name);
+            final int nameLength = name.length();
+            final int nameLastPos = nameLength - 1;
+
+            // Strip potential trailing dot. N.B. that we require nameLength > 2, because we don't want to strip the one
+            // character string containing only a single dot to the empty string.
+            if (nameLength >= 2 && name.charAt(nameLastPos) == '.') {
+                name = name.subSequence(0, nameLastPos).toString();
+            }
+
+            if (inAce) {
+                // Name is already in ACE format.
+                rawAce = name;
+            } else {
+                rawAce = MiniDnsIdna.toASCII(name);
+            }
         }
 
         ace = rawAce.toLowerCase(Locale.US);
