@@ -8,12 +8,10 @@
  * upon the condition that you accept all of the terms of either
  * the Apache License 2.0, the LGPL 2.1+ or the WTFPL.
  */
-package org.minidns;
+package org.minidns.dnsmessage;
 
 import org.minidns.constants.DNSSECConstants.DigestAlgorithm;
 import org.minidns.constants.DNSSECConstants.SignatureAlgorithm;
-import org.minidns.dnsmessage.DNSMessage;
-import org.minidns.dnsmessage.Question;
 import org.minidns.dnsname.DNSName;
 import org.minidns.edns.EDNS;
 import org.minidns.record.A;

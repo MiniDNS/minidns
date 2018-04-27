@@ -8,7 +8,7 @@
  * upon the condition that you accept all of the terms of either
  * the Apache License 2.0, the LGPL 2.1+ or the WTFPL.
  */
-package org.minidns;
+package org.minidns.dnsname;
 
 import static org.minidns.Assert.assertCsEquals;
 import static org.junit.Assert.assertArrayEquals;
@@ -21,7 +21,6 @@ import java.io.IOException;
 import org.junit.Test;
 
 import org.minidns.dnslabel.DNSLabel;
-import org.minidns.dnsname.DNSName;
 
 public class DNSNameTest {
 
