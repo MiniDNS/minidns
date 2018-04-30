@@ -20,9 +20,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.minidns.dnsmessage.DNSMessage;
+import org.minidns.dnsmessage.DnsMessage;
 import org.minidns.dnsmessage.Question;
-import org.minidns.dnsname.DNSName;
+import org.minidns.dnsname.DnsName;
 
 /**
  * A generic DNS record.
@@ -282,7 +282,7 @@ public final class Record<D extends Data> {
     /**
      * The generic name of this record.
      */
-    public final DNSName name;
+    public final DnsName name;
 
     /**
      * The type (and payload type) of this record.
@@ -327,7 +327,7 @@ public final class Record<D extends Data> {
      * @throws IOException In case of malformed replies.
      */
     public static Record<Data> parse(DataInputStream dis, byte[] data) throws IOException {
-        DNSName name = DNSName.parse(dis, data);
+        DnsName name = DnsName.parse(dis, data);
         int typeValue = dis.readUnsignedShort();
         TYPE type = TYPE.getType(typeValue);
         int clazzValue = dis.readUnsignedShort();
@@ -406,23 +406,23 @@ public final class Record<D extends Data> {
         return new Record<>(name, type, clazz, clazzValue, ttl, payloadData, unicastQuery);
     }
 
-    public Record(DNSName name, TYPE type, CLASS clazz, long ttl, D payloadData, boolean unicastQuery) {
+    public Record(DnsName name, TYPE type, CLASS clazz, long ttl, D payloadData, boolean unicastQuery) {
         this(name, type, clazz, clazz.getValue() + (unicastQuery ? 0x8000 : 0), ttl, payloadData, unicastQuery);
     }
 
     public Record(String name, TYPE type, CLASS clazz, long ttl, D payloadData, boolean unicastQuery) {
-        this(DNSName.from(name), type, clazz, ttl, payloadData, unicastQuery);
+        this(DnsName.from(name), type, clazz, ttl, payloadData, unicastQuery);
     }
 
     public Record(String name, TYPE type, int clazzValue, long ttl, D payloadData) {
-        this(DNSName.from(name), type, CLASS.NONE, clazzValue, ttl, payloadData, false);
+        this(DnsName.from(name), type, CLASS.NONE, clazzValue, ttl, payloadData, false);
     }
 
-    public Record(DNSName name, TYPE type, int clazzValue, long ttl, D payloadData) {
+    public Record(DnsName name, TYPE type, int clazzValue, long ttl, D payloadData) {
         this(name, type, CLASS.NONE, clazzValue, ttl, payloadData, false);
     }
 
-    private Record(DNSName name, TYPE type, CLASS clazz, int clazzValue, long ttl, D payloadData, boolean unicastQuery) {
+    private Record(DnsName name, TYPE type, CLASS clazz, int clazzValue, long ttl, D payloadData, boolean unicastQuery) {
         this.name = name;
         this.type = type;
         this.clazz = clazz;
@@ -526,7 +526,7 @@ public final class Record<D extends Data> {
         }
     }
 
-    public DNSMessage.Builder getQuestionMessage() {
+    public DnsMessage.Builder getQuestionMessage() {
         Question question = getQuestion();
         if (question == null) {
             return null;

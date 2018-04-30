@@ -16,7 +16,7 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.regex.Pattern;
 
-import org.minidns.dnsname.DNSName;
+import org.minidns.dnsname.DnsName;
 
 public class InetAddressUtil {
 
@@ -73,7 +73,7 @@ public class InetAddressUtil {
         return isIpV6Address(address) || isIpV4Address(address);
     }
 
-    public static DNSName reverseIpAddressOf(Inet6Address inet6Address) {
+    public static DnsName reverseIpAddressOf(Inet6Address inet6Address) {
         final String ipAddress = inet6Address.getHostAddress();
         final String[] ipAddressParts = ipAddress.split(":");
 
@@ -90,13 +90,13 @@ public class InetAddressUtil {
             }
         }
 
-        return DNSName.from(parts);
+        return DnsName.from(parts);
     }
 
-    public static DNSName reverseIpAddressOf(Inet4Address inet4Address) {
+    public static DnsName reverseIpAddressOf(Inet4Address inet4Address) {
         final String[] ipAddressParts = inet4Address.getHostAddress().split("\\.");
         assert(ipAddressParts.length == 4);
 
-        return DNSName.from(ipAddressParts);
+        return DnsName.from(ipAddressParts);
     }
 }

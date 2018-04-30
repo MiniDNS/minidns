@@ -10,7 +10,7 @@
  */
 package org.minidns.record;
 
-import org.minidns.edns.EDNSOption;
+import org.minidns.edns.EdnsOption;
 import org.minidns.record.Record.TYPE;
 
 import java.io.DataInputStream;
@@ -25,18 +25,18 @@ import java.util.List;
  */
 public class OPT extends Data {
 
-    public final List<EDNSOption> variablePart;
+    public final List<EdnsOption> variablePart;
 
     public OPT() {
-        this(Collections.<EDNSOption>emptyList());
+        this(Collections.<EdnsOption>emptyList());
     }
 
-    public OPT(List<EDNSOption> variablePart) {
+    public OPT(List<EdnsOption> variablePart) {
         this.variablePart = Collections.unmodifiableList(variablePart);
     }
 
     public static OPT parse(DataInputStream dis, int payloadLength) throws IOException {
-        List<EDNSOption> variablePart;
+        List<EdnsOption> variablePart;
         if (payloadLength == 0) {
             variablePart = Collections.emptyList();
         } else {
@@ -47,7 +47,7 @@ public class OPT extends Data {
                 int optionLength = dis.readUnsignedShort();
                 byte[] optionData = new byte[optionLength];
                 dis.read(optionData);
-                EDNSOption ednsOption = EDNSOption.parse(optionCode, optionData);
+                EdnsOption ednsOption = EdnsOption.parse(optionCode, optionData);
                 variablePart.add(ednsOption);
                 payloadLeft -= (2 + 2 + optionLength);
                 // Assert that payloadLeft never becomes negative
@@ -64,7 +64,7 @@ public class OPT extends Data {
 
     @Override
     protected void serialize(DataOutputStream dos) throws IOException {
-        for (EDNSOption endsOption : variablePart) {
+        for (EdnsOption endsOption : variablePart) {
             endsOption.writeToDos(dos);
         }
     }

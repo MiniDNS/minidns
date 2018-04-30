@@ -10,7 +10,7 @@
  */
 package org.minidns.util;
 
-import org.minidns.dnsname.DNSName;
+import org.minidns.dnsname.DnsName;
 
 /**
  * Utilities related to internationalized domain names and dns name handling.
@@ -31,7 +31,7 @@ public final class NameUtil {
         if (name2 == null) return false;
         if (name1.equals(name2)) return true;
 
-        return DNSName.from(name1).compareTo(DNSName.from(name2)) == 0;
+        return DnsName.from(name1).compareTo(DnsName.from(name2)) == 0;
     }
 
 }

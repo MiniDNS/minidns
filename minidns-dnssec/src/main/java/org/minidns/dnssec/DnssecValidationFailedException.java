@@ -1,0 +1,41 @@
+/*
+ * Copyright 2015-2018 the original author or authors
+ *
+ * This software is licensed under the Apache License, Version 2.0,
+ * the GNU Lesser General Public License version 2 or later ("LGPL")
+ * and the WTFPL.
+ * You may choose either license to govern your use of this software only
+ * upon the condition that you accept all of the terms of either
+ * the Apache License 2.0, the LGPL 2.1+ or the WTFPL.
+ */
+package org.minidns.dnssec;
+
+import org.minidns.dnsmessage.Question;
+import org.minidns.record.Data;
+import org.minidns.record.Record;
+
+import java.util.List;
+
+public class DnssecValidationFailedException extends RuntimeException {
+    private static final long serialVersionUID = 5413184667629832742L;
+
+    public DnssecValidationFailedException(Question question, String reason) {
+        super("Validation of request to " + question + " failed: " + reason);
+    }
+
+    public DnssecValidationFailedException(String message) {
+        super(message);
+    }
+
+    public DnssecValidationFailedException(String message, Throwable cause) {
+        super(message, cause);
+    }
+
+    public DnssecValidationFailedException(Record<? extends Data> record, String reason) {
+        super("Validation of record " + record + " failed: " + reason);
+    }
+
+    public DnssecValidationFailedException(List<Record<? extends Data>> records, String reason) {
+        super("Validation of " + records.size() + " " + records.get(0).type + " record" + (records.size() > 1 ? "s" : "") + " failed: " + reason);
+    }
+}

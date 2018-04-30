@@ -14,13 +14,13 @@ package org.minidns.dnslabel;
  * A DNS label which contains more than just letters, digits and a hyphen.
  *
  */
-public abstract class NonLdhLabel extends DNSLabel {
+public abstract class NonLdhLabel extends DnsLabel {
 
     protected NonLdhLabel(String label) {
         super(label);
     }
 
-    protected static DNSLabel fromInternal(String label) {
+    protected static DnsLabel fromInternal(String label) {
         if (UnderscoreLabel.isUnderscoreLabelInternal(label)) {
             return new UnderscoreLabel(label);
         }

@@ -13,8 +13,8 @@ package org.minidns.record;
 import java.io.DataInputStream;
 import java.io.IOException;
 
-import org.minidns.constants.DNSSECConstants.DigestAlgorithm;
-import org.minidns.constants.DNSSECConstants.SignatureAlgorithm;
+import org.minidns.constants.DnssecConstants.DigestAlgorithm;
+import org.minidns.constants.DnssecConstants.SignatureAlgorithm;
 
 /**
  * DLV record payload.

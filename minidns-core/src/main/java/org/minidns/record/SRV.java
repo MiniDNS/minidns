@@ -14,7 +14,7 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 
-import org.minidns.dnsname.DNSName;
+import org.minidns.dnsname.DnsName;
 import org.minidns.record.Record.TYPE;
 
 /**
@@ -41,7 +41,7 @@ public class SRV extends Data implements Comparable<SRV> {
     /**
      * The target server.
      */
-    public final DNSName target;
+    public final DnsName target;
 
     /**
      * The target server.
@@ -49,7 +49,7 @@ public class SRV extends Data implements Comparable<SRV> {
      * @deprecated use {@link #target} instead.
      */
     @Deprecated
-    public final DNSName name;
+    public final DnsName name;
 
     public static SRV parse(DataInputStream dis, byte[] data)
         throws IOException
@@ -57,15 +57,15 @@ public class SRV extends Data implements Comparable<SRV> {
         int priority = dis.readUnsignedShort();
         int weight = dis.readUnsignedShort();
         int port = dis.readUnsignedShort();
-        DNSName name = DNSName.parse(dis, data);
+        DnsName name = DnsName.parse(dis, data);
         return new SRV(priority, weight, port, name);
     }
 
     public SRV(int priority, int weight, int port, String name) {
-        this(priority, weight, port, DNSName.from(name));
+        this(priority, weight, port, DnsName.from(name));
     }
 
-    public SRV(int priority, int weight, int port, DNSName name) {
+    public SRV(int priority, int weight, int port, DnsName name) {
         this.priority = priority;
         this.weight = weight;
         this.port = port;

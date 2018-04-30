@@ -16,7 +16,7 @@ package org.minidns.dnslabel;
  * @see <a href="https://tools.ietf.org/html/rfc5890#section-2.3.1">RFC 5890 § 2.3.1. LDH Label</a>
  *
  */
-public abstract class LdhLabel extends DNSLabel {
+public abstract class LdhLabel extends DnsLabel {
 
     protected LdhLabel(String label) {
         super(label);

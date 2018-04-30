@@ -10,9 +10,9 @@
  */
 package org.minidns.iterative;
 
-import org.minidns.MiniDNSException;
+import org.minidns.MiniDnsException;
 
-public abstract class IterativeClientException extends MiniDNSException {
+public abstract class IterativeClientException extends MiniDnsException {
 
     /**
      * 

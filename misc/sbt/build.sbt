@@ -10,5 +10,5 @@ libraryDependencies += "org.minidns" % "minidns-dnssec" % "latest.integration"
 
 initialCommands in console += "import org.minidns._;"
 initialCommands in console += "import org.minidns.Record.TYPE;"
-initialCommands in console += "val client = new DNSClient(new java.util.HashMap[Question,DNSMessage]())"
+initialCommands in console += "val client = new DnsClient(new java.util.HashMap[Question,DnsMessage]())"
 

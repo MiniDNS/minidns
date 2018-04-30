@@ -10,11 +10,11 @@
  */
 package org.minidns.hla;
 
-import org.minidns.MiniDNSException;
+import org.minidns.MiniDnsException;
 import org.minidns.dnsmessage.Question;
-import org.minidns.dnsmessage.DNSMessage.RESPONSE_CODE;
+import org.minidns.dnsmessage.DnsMessage.RESPONSE_CODE;
 
-public class ResolutionUnsuccessfulException extends MiniDNSException {
+public class ResolutionUnsuccessfulException extends MiniDnsException {
 
     /**
      * 

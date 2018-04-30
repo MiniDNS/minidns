@@ -21,14 +21,14 @@ import android.os.Build;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.minidns.dnsserverlookup.AbstractDNSServerLookupMechanism;
+import org.minidns.dnsserverlookup.AbstractDnsServerLookupMechanism;
 import org.minidns.dnsserverlookup.AndroidUsingExec;
 
 /**
  * Requires the ACCESS_NETWORK_STATE permission.
  *
  */
-public class AndroidUsingLinkProperties extends AbstractDNSServerLookupMechanism {
+public class AndroidUsingLinkProperties extends AbstractDnsServerLookupMechanism {
 
     private final ConnectivityManager connectivityManager;
 

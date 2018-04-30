@@ -13,28 +13,28 @@ package org.minidns.record;
 import java.io.DataOutputStream;
 import java.io.IOException;
 
-import org.minidns.dnsname.DNSName;
+import org.minidns.dnsname.DnsName;
 
 /**
  * A resource record pointing to a target.
  */
 public abstract class RRWithTarget extends Data {
 
-    public final DNSName target;
+    public final DnsName target;
 
     /**
      * The target of this resource record.
      * @deprecated {@link #target} instead.
      */
     @Deprecated
-    public final DNSName name;
+    public final DnsName name;
 
     @Override
     public void serialize(DataOutputStream dos) throws IOException {
         target.writeToStream(dos);
     }
 
-    protected RRWithTarget(DNSName target) {
+    protected RRWithTarget(DnsName target) {
         this.target = target;
         this.name = target;
     }
@@ -44,7 +44,7 @@ public abstract class RRWithTarget extends Data {
         return target + ".";
     }
 
-    public final DNSName getTarget() {
+    public final DnsName getTarget() {
         return target;
     }
 }

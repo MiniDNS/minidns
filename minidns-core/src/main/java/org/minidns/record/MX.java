@@ -14,7 +14,7 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 
-import org.minidns.dnsname.DNSName;
+import org.minidns.dnsname.DnsName;
 import org.minidns.record.Record.TYPE;
 
 /**
@@ -30,7 +30,7 @@ public class MX extends Data {
     /**
      * The name of the target server.
      */
-    public final DNSName target;
+    public final DnsName target;
 
     /**
      * The name of the target server.
@@ -38,21 +38,21 @@ public class MX extends Data {
      * @deprecated use {@link #target} instead.
      */
     @Deprecated
-    public final DNSName name;
+    public final DnsName name;
 
     public static MX parse(DataInputStream dis, byte[] data)
         throws IOException
     {
         int priority = dis.readUnsignedShort();
-        DNSName name = DNSName.parse(dis, data);
+        DnsName name = DnsName.parse(dis, data);
         return new MX(priority, name);
     }
 
     public MX(int priority, String name) {
-        this(priority, DNSName.from(name));
+        this(priority, DnsName.from(name));
     }
 
-    public MX(int priority, DNSName name) {
+    public MX(int priority, DnsName name) {
         this.priority = priority;
         this.target = name;
         this.name = target;

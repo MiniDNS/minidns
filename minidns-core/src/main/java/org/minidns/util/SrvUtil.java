@@ -18,7 +18,7 @@ import java.util.List;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
-import org.minidns.dnsname.DNSName;
+import org.minidns.dnsname.DnsName;
 import org.minidns.record.SRV;
 
 public class SrvUtil {
@@ -37,7 +37,7 @@ public class SrvUtil {
     public static List<SRV> sortSrvRecords(Collection<SRV> srvRecords) {
         // RFC 2782, Usage rules: "If there is precisely one SRV RR, and its Target is "."
         // (the root domain), abort."
-        if (srvRecords.size() == 1 && srvRecords.iterator().next().target.equals(DNSName.ROOT)) {
+        if (srvRecords.size() == 1 && srvRecords.iterator().next().target.equals(DnsName.ROOT)) {
             return Collections.emptyList();
         }
 

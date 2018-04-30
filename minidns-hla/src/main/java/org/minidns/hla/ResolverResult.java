@@ -13,12 +13,12 @@ package org.minidns.hla;
 import java.util.Collections;
 import java.util.Set;
 
-import org.minidns.MiniDNSException;
-import org.minidns.MiniDNSException.NullResultException;
-import org.minidns.dnsmessage.DNSMessage;
+import org.minidns.MiniDnsException;
+import org.minidns.MiniDnsException.NullResultException;
+import org.minidns.dnsmessage.DnsMessage;
 import org.minidns.dnsmessage.Question;
-import org.minidns.dnsmessage.DNSMessage.RESPONSE_CODE;
-import org.minidns.dnssec.DNSSECResultNotAuthenticException;
+import org.minidns.dnsmessage.DnsMessage.RESPONSE_CODE;
+import org.minidns.dnssec.DnssecResultNotAuthenticException;
 import org.minidns.dnssec.UnverifiedReason;
 import org.minidns.record.Data;
 
@@ -29,11 +29,11 @@ public class ResolverResult<D extends Data> {
     private final Set<D> data;
     private final boolean isAuthenticData;
     protected final Set<UnverifiedReason> unverifiedReasons;
-    protected final DNSMessage answer;
+    protected final DnsMessage answer;
 
-    ResolverResult(Question question , DNSMessage answer, Set<UnverifiedReason> unverifiedReasons) throws NullResultException {
+    ResolverResult(Question question , DnsMessage answer, Set<UnverifiedReason> unverifiedReasons) throws NullResultException {
         if (answer == null) {
-            throw new MiniDNSException.NullResultException(question.asMessageBuilder().build());
+            throw new MiniDnsException.NullResultException(question.asMessageBuilder().build());
         }
 
         this.question = question;
@@ -109,16 +109,16 @@ public class ResolverResult<D extends Data> {
         return resolutionUnsuccessfulException;
     }
 
-    private DNSSECResultNotAuthenticException dnssecResultNotAuthenticException;
+    private DnssecResultNotAuthenticException dnssecResultNotAuthenticException;
 
-    public DNSSECResultNotAuthenticException getDnssecResultNotAuthenticException() {
+    public DnssecResultNotAuthenticException getDnssecResultNotAuthenticException() {
         if (!wasSuccessful())
             return null;
         if (isAuthenticData)
             return null;
 
         if (dnssecResultNotAuthenticException == null) {
-            dnssecResultNotAuthenticException = DNSSECResultNotAuthenticException.from(getUnverifiedReasons());
+            dnssecResultNotAuthenticException = DnssecResultNotAuthenticException.from(getUnverifiedReasons());
         }
 
         return dnssecResultNotAuthenticException;
@@ -130,7 +130,7 @@ public class ResolverResult<D extends Data> {
      * @return the raw answer DNS Message.
      * @see #getAnswers()
      */
-    public DNSMessage getRawAnswer() {
+    public DnsMessage getRawAnswer() {
         return answer;
     }
 

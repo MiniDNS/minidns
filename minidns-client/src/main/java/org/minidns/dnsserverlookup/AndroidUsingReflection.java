@@ -21,9 +21,9 @@ import java.util.logging.Level;
 /**
  * Try to retrieve the list of DNS server by calling SystemProperties.
  */
-public class AndroidUsingReflection extends AbstractDNSServerLookupMechanism {
+public class AndroidUsingReflection extends AbstractDnsServerLookupMechanism {
 
-    public static final DNSServerLookupMechanism INSTANCE = new AndroidUsingReflection();
+    public static final DnsServerLookupMechanism INSTANCE = new AndroidUsingReflection();
     public static final int PRIORITY = 1000;
 
     protected AndroidUsingReflection() {

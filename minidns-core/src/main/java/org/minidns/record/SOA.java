@@ -10,7 +10,7 @@
  */
 package org.minidns.record;
 
-import org.minidns.dnsname.DNSName;
+import org.minidns.dnsname.DnsName;
 import org.minidns.record.Record.TYPE;
 
 import java.io.DataInputStream;
@@ -25,12 +25,12 @@ public class SOA extends Data {
     /**
      * The domain name of the name server that was the original or primary source of data for this zone.
      */
-    public final DNSName mname;
+    public final DnsName mname;
 
     /**
      * A domain name which specifies the mailbox of the person responsible for this zone.
      */
-    public final DNSName rname;
+    public final DnsName rname;
 
     /**
      * The unsigned 32 bit version number of the original copy of the zone.  Zone transfers preserve this value.  This
@@ -61,8 +61,8 @@ public class SOA extends Data {
 
     public static SOA parse(DataInputStream dis, byte[] data)
             throws IOException {
-        DNSName mname = DNSName.parse(dis, data);
-        DNSName rname = DNSName.parse(dis, data);
+        DnsName mname = DnsName.parse(dis, data);
+        DnsName rname = DnsName.parse(dis, data);
         long serial = dis.readInt() & 0xFFFFFFFFL;
         int refresh = dis.readInt();
         int retry = dis.readInt();
@@ -72,10 +72,10 @@ public class SOA extends Data {
     }
 
     public SOA(String mname, String rname, long serial, int refresh, int retry, int expire, long minimum) {
-        this(DNSName.from(mname), DNSName.from(rname), serial, refresh, retry, expire, minimum);
+        this(DnsName.from(mname), DnsName.from(rname), serial, refresh, retry, expire, minimum);
     }
 
-    public SOA(DNSName mname, DNSName rname, long serial, int refresh, int retry, int expire, long minimum) {
+    public SOA(DnsName mname, DnsName rname, long serial, int refresh, int retry, int expire, long minimum) {
         this.mname = mname;
         this.rname = rname;
         this.serial = serial;

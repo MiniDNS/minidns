@@ -10,11 +10,11 @@
  */
 package org.minidns.dane;
 
-import org.minidns.AbstractDNSClient;
-import org.minidns.dnsmessage.DNSMessage;
-import org.minidns.dnsname.DNSName;
-import org.minidns.dnssec.DNSSECClient;
-import org.minidns.dnssec.DNSSECMessage;
+import org.minidns.AbstractDnsClient;
+import org.minidns.dnsmessage.DnsMessage;
+import org.minidns.dnsname.DnsName;
+import org.minidns.dnssec.DnssecClient;
+import org.minidns.dnssec.DnssecMessage;
 import org.minidns.dnssec.UnverifiedReason;
 import org.minidns.record.Data;
 import org.minidns.record.Record;
@@ -50,13 +50,13 @@ import java.util.logging.Logger;
 public class DaneVerifier {
     private final static Logger LOGGER = Logger.getLogger(DaneVerifier.class.getName());
 
-    private final AbstractDNSClient client;
+    private final AbstractDnsClient client;
 
     public DaneVerifier() {
-        this(new DNSSECClient());
+        this(new DnssecClient());
     }
 
-    public DaneVerifier(AbstractDNSClient client) {
+    public DaneVerifier(AbstractDnsClient client) {
         this.client = client;
     }
 
@@ -102,8 +102,8 @@ public class DaneVerifier {
      * @throws CertificateException if the certificate chain provided differs from the one enforced using DANE.
      */
     public boolean verifyCertificateChain(X509Certificate[] chain, String hostName, int port) throws CertificateException {
-        DNSName req = DNSName.from("_" + port + "._tcp." + hostName);
-        DNSMessage res;
+        DnsName req = DnsName.from("_" + port + "._tcp." + hostName);
+        DnsMessage res;
         try {
             res = client.query(req, Record.TYPE.TLSA);
         } catch (IOException e) {
@@ -111,9 +111,9 @@ public class DaneVerifier {
         }
         if (!res.authenticData) {
             String msg = "Got TLSA response from DNS server, but was not signed properly.";
-            if (res instanceof DNSSECMessage) {
+            if (res instanceof DnssecMessage) {
                 msg += " Reasons:";
-                for (UnverifiedReason reason : ((DNSSECMessage) res).getUnverifiedReasons()) {
+                for (UnverifiedReason reason : ((DnssecMessage) res).getUnverifiedReasons()) {
                     msg += " " + reason;
                 }
             }

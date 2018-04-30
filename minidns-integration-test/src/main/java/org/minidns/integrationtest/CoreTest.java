@@ -10,9 +10,9 @@
  */
 package org.minidns.integrationtest;
 
-import org.minidns.DNSClient;
-import org.minidns.cache.LRUCache;
-import org.minidns.dnsmessage.DNSMessage;
+import org.minidns.DnsClient;
+import org.minidns.cache.LruCache;
+import org.minidns.dnsmessage.DnsMessage;
 import org.minidns.record.Data;
 import org.minidns.record.Record;
 
@@ -28,7 +28,7 @@ import static org.junit.Assert.assertTrue;
 public class CoreTest {
     @IntegrationTest
     public static void testExampleCom() throws IOException {
-        DNSClient client = new DNSClient(new LRUCache(1024));
+        DnsClient client = new DnsClient(new LruCache(1024));
         String exampleIp4 = "93.184.216.34"; // stable?
         String exampleIp6 = "2606:2800:220:1:248:1893:25c8:1946"; // stable?
         assertEquals(client.query("example.com", Record.TYPE.A).answerSection.get(0).payloadData.toString(), exampleIp4);
@@ -36,7 +36,7 @@ public class CoreTest {
         assertEquals(client.query("example.com", Record.TYPE.AAAA).answerSection.get(0).payloadData.toString(), exampleIp6);
         assertEquals(client.query("www.example.com", Record.TYPE.AAAA).answerSection.get(0).payloadData.toString(), exampleIp6);
 
-        DNSMessage nsRecords = client.query("example.com", Record.TYPE.NS);
+        DnsMessage nsRecords = client.query("example.com", Record.TYPE.NS);
         List<String> values = new ArrayList<>();
         for (Record<? extends Data> record : nsRecords.answerSection) {
             values.add(record.payloadData.toString());
@@ -48,10 +48,10 @@ public class CoreTest {
 
     @IntegrationTest
     public static void testTcpAnswer() throws IOException {
-        DNSClient client = new DNSClient(new LRUCache(1024));
+        DnsClient client = new DnsClient(new LruCache(1024));
         client.setAskForDnssec(true);
         client.setDisableResultFilter(true);
-        DNSMessage result = client.query("www-nsec.example.com", Record.TYPE.A);
+        DnsMessage result = client.query("www-nsec.example.com", Record.TYPE.A);
         assertNotNull(result);
         assertTrue(result.toArray().length > 512);
     }

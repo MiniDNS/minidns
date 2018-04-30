@@ -20,9 +20,9 @@ import org.junit.Test;
 
 import java.math.BigInteger;
 
-import static org.minidns.DNSWorld.nsec;
-import static org.minidns.DNSWorld.nsec3;
-import static org.minidns.DNSWorld.record;
+import static org.minidns.DnsWorld.nsec;
+import static org.minidns.DnsWorld.nsec3;
+import static org.minidns.DnsWorld.record;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;

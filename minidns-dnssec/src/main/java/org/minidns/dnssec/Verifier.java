@@ -11,7 +11,7 @@
 package org.minidns.dnssec;
 
 import org.minidns.dnsmessage.Question;
-import org.minidns.dnsname.DNSName;
+import org.minidns.dnsname.DnsName;
 import org.minidns.dnssec.UnverifiedReason.AlgorithmExceptionThrownReason;
 import org.minidns.dnssec.UnverifiedReason.AlgorithmNotSupportedReason;
 import org.minidns.dnssec.UnverifiedReason.NSECDoesNotMatchReason;
@@ -58,7 +58,7 @@ class Verifier {
         }
 
         if (!ds.digestEquals(digest)) {
-            throw new DNSSECValidationFailedException(dnskeyRecord, "SEP is not properly signed by parent DS!");
+            throw new DnssecValidationFailedException(dnskeyRecord, "SEP is not properly signed by parent DS!");
         }
         return null;
     }
@@ -73,7 +73,7 @@ class Verifier {
         if (signatureVerifier.verify(combine, rrsig.signature, key.getKey())) {
             return null;
         } else {
-            throw new DNSSECValidationFailedException(records, "Signature is invalid.");
+            throw new DnssecValidationFailedException(records, "Signature is invalid.");
         }
     }
 
@@ -89,10 +89,10 @@ class Verifier {
     }
 
     public UnverifiedReason verifyNsec3(CharSequence zone, Record<? extends Data> nsec3Record, Question q) {
-        return verifyNsec3(DNSName.from(zone), nsec3Record, q);
+        return verifyNsec3(DnsName.from(zone), nsec3Record, q);
     }
 
-    public UnverifiedReason verifyNsec3(DNSName zone, Record<? extends Data> nsec3record, Question q) {
+    public UnverifiedReason verifyNsec3(DnsName zone, Record<? extends Data> nsec3record, Question q) {
         NSEC3 nsec3 = (NSEC3) nsec3record.payloadData;
         DigestCalculator digestCalculator = algorithmMap.getNsecDigestCalculator(nsec3.hashAlgorithm);
         if (digestCalculator == null) {
@@ -101,7 +101,7 @@ class Verifier {
 
         byte[] bytes = nsec3hash(digestCalculator, nsec3.salt, q.name.getBytes(), nsec3.iterations);
         String s = Base32.encodeToString(bytes);
-        DNSName computedNsec3Record = DNSName.from(s + "." + zone);
+        DnsName computedNsec3Record = DnsName.from(s + "." + zone);
         if (nsec3record.name.equals(computedNsec3Record)) {
             for (TYPE type : nsec3.types) {
                 if (type.equals(q.type)) {
@@ -124,15 +124,15 @@ class Verifier {
         try {
             rrsig.writePartialSignature(dos);
 
-            DNSName sigName = records.get(0).name;
+            DnsName sigName = records.get(0).name;
             if (!sigName.isRootLabel()) {
                 if (sigName.getLabelCount() < rrsig.labels) {
-                    throw new DNSSECValidationFailedException("Invalid RRsig record");
+                    throw new DnssecValidationFailedException("Invalid RRsig record");
                 }
 
                 if (sigName.getLabelCount() > rrsig.labels) {
                     // Expand wildcards
-                    sigName = DNSName.from("*." + sigName.stripToLabels(rrsig.labels));
+                    sigName = DnsName.from("*." + sigName.stripToLabels(rrsig.labels));
                 }
             }
 
@@ -168,7 +168,7 @@ class Verifier {
     }
 
     static boolean nsecMatches(String test, String lowerBound, String upperBound) {
-        return nsecMatches(DNSName.from(test), DNSName.from(lowerBound), DNSName.from(upperBound));
+        return nsecMatches(DnsName.from(test), DnsName.from(lowerBound), DnsName.from(upperBound));
     }
 
     /**
@@ -179,7 +179,7 @@ class Verifier {
      * @param upperBound exclusive upper bound
      * @return test domain name is covered by NSEC record
      */
-    static boolean nsecMatches(DNSName test, DNSName lowerBound, DNSName upperBound) {
+    static boolean nsecMatches(DnsName test, DnsName lowerBound, DnsName upperBound) {
         int lowerParts = lowerBound.getLabelCount();
         int upperParts = upperBound.getLabelCount();
         int testParts = test.getLabelCount();

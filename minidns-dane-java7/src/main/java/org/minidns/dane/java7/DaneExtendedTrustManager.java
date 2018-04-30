@@ -10,7 +10,7 @@
  */
 package org.minidns.dane.java7;
 
-import org.minidns.AbstractDNSClient;
+import org.minidns.AbstractDnsClient;
 import org.minidns.dane.DaneVerifier;
 
 import javax.net.ssl.SSLContext;
@@ -53,7 +53,7 @@ public class DaneExtendedTrustManager extends X509ExtendedTrustManager {
         this(getDefaultTrustManager());
     }
 
-    public DaneExtendedTrustManager(AbstractDNSClient client) {
+    public DaneExtendedTrustManager(AbstractDnsClient client) {
         this(client, getDefaultTrustManager());
     }
 
@@ -75,7 +75,7 @@ public class DaneExtendedTrustManager extends X509ExtendedTrustManager {
         this(new DaneVerifier(), base);
     }
 
-    public DaneExtendedTrustManager(AbstractDNSClient client, X509TrustManager base) {
+    public DaneExtendedTrustManager(AbstractDnsClient client, X509TrustManager base) {
         this(new DaneVerifier(client), base);
     }
 

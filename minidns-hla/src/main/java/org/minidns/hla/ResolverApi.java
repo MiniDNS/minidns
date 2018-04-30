@@ -15,11 +15,11 @@ import java.net.Inet4Address;
 import java.net.Inet6Address;
 import java.net.InetAddress;
 
-import org.minidns.AbstractDNSClient;
-import org.minidns.dnsmessage.DNSMessage;
+import org.minidns.AbstractDnsClient;
+import org.minidns.dnsmessage.DnsMessage;
 import org.minidns.dnsmessage.Question;
-import org.minidns.dnsname.DNSName;
-import org.minidns.iterative.ReliableDNSClient;
+import org.minidns.dnsname.DnsName;
+import org.minidns.iterative.ReliableDnsClient;
 import org.minidns.record.Data;
 import org.minidns.record.PTR;
 import org.minidns.record.SRV;
@@ -91,53 +91,53 @@ import org.minidns.util.InetAddressUtil;
  */
 public class ResolverApi {
 
-    public static final ResolverApi INSTANCE = new ResolverApi(new ReliableDNSClient());
+    public static final ResolverApi INSTANCE = new ResolverApi(new ReliableDnsClient());
 
-    private final AbstractDNSClient dnsClient;
+    private final AbstractDnsClient dnsClient;
 
-    public ResolverApi(AbstractDNSClient dnsClient) {
+    public ResolverApi(AbstractDnsClient dnsClient) {
         this.dnsClient = dnsClient;
     }
 
     public final <D extends Data> ResolverResult<D> resolve(String name, Class<D> type) throws IOException {
-        return resolve(DNSName.from(name), type);
+        return resolve(DnsName.from(name), type);
     }
 
-    public final <D extends Data> ResolverResult<D> resolve(DNSName name, Class<D> type) throws IOException {
+    public final <D extends Data> ResolverResult<D> resolve(DnsName name, Class<D> type) throws IOException {
         TYPE t = TYPE.getType(type);
         Question q = new Question(name, t);
         return resolve(q);
     }
 
     public <D extends Data> ResolverResult<D> resolve(Question question) throws IOException {
-        DNSMessage dnsMessage = dnsClient.query(question);
+        DnsMessage dnsMessage = dnsClient.query(question);
 
         return new ResolverResult<D>(question, dnsMessage, null);
     }
 
     public SrvResolverResult resolveSrv(SrvType type, String serviceName) throws IOException {
-        return resolveSrv(type.service, type.proto, DNSName.from(serviceName));
+        return resolveSrv(type.service, type.proto, DnsName.from(serviceName));
     }
 
-    public SrvResolverResult resolveSrv(SrvType type, DNSName serviceName) throws IOException {
+    public SrvResolverResult resolveSrv(SrvType type, DnsName serviceName) throws IOException {
         return resolveSrv(type.service, type.proto, serviceName);
     }
 
     public SrvResolverResult resolveSrv(SrvService service, SrvProto proto, String name) throws IOException {
-        return resolveSrv(service.dnsName, proto.dnsName, DNSName.from(name));
+        return resolveSrv(service.dnsName, proto.dnsName, DnsName.from(name));
     }
 
-    public SrvResolverResult resolveSrv(SrvService service, SrvProto proto, DNSName name) throws IOException {
+    public SrvResolverResult resolveSrv(SrvService service, SrvProto proto, DnsName name) throws IOException {
         return resolveSrv(service.dnsName, proto.dnsName, name);
     }
 
-    public SrvResolverResult resolveSrv(DNSName service, DNSName proto, DNSName name) throws IOException {
-        DNSName srvRrName = DNSName.from(service, proto, name);
+    public SrvResolverResult resolveSrv(DnsName service, DnsName proto, DnsName name) throws IOException {
+        DnsName srvRrName = DnsName.from(service, proto, name);
         return resolveSrv(srvRrName);
     }
 
     public SrvResolverResult resolveSrv(String name) throws IOException {
-        return resolveSrv(DNSName.from(name));
+        return resolveSrv(DnsName.from(name));
     }
 
     public ResolverResult<PTR> reverseLookup(CharSequence inetAddressCs) throws IOException {
@@ -156,14 +156,14 @@ public class ResolverApi {
     }
 
     public ResolverResult<PTR> reverseLookup(Inet4Address inet4Address) throws IOException {
-        DNSName reversedIpAddress = InetAddressUtil.reverseIpAddressOf(inet4Address);
-        DNSName dnsName = DNSName.from(reversedIpAddress, DNSName.IN_ADDR_ARPA);
+        DnsName reversedIpAddress = InetAddressUtil.reverseIpAddressOf(inet4Address);
+        DnsName dnsName = DnsName.from(reversedIpAddress, DnsName.IN_ADDR_ARPA);
         return resolve(dnsName, PTR.class);
     }
 
     public ResolverResult<PTR> reverseLookup(Inet6Address inet6Address) throws IOException {
-        DNSName reversedIpAddress = InetAddressUtil.reverseIpAddressOf(inet6Address);
-        DNSName dnsName = DNSName.from(reversedIpAddress, DNSName.IP6_ARPA);
+        DnsName reversedIpAddress = InetAddressUtil.reverseIpAddressOf(inet6Address);
+        DnsName dnsName = DnsName.from(reversedIpAddress, DnsName.IP6_ARPA);
         return resolve(dnsName, PTR.class);
     }
 
@@ -180,13 +180,13 @@ public class ResolverApi {
      * @return a <code>SrvResolverResult</code> instance which can be used to retrieve the addresses.
      * @throws IOException if an IO exception occurs.
      */
-    public SrvResolverResult resolveSrv(DNSName name) throws IOException {
+    public SrvResolverResult resolveSrv(DnsName name) throws IOException {
         ResolverResult<SRV> result = resolve(name, SRV.class);
         return new SrvResolverResult(result, this);
 
     }
 
-    public final AbstractDNSClient getClient() {
+    public final AbstractDnsClient getClient() {
         return dnsClient;
     }
 }

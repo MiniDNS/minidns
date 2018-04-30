@@ -15,22 +15,22 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
 
-import org.minidns.dnsmessage.DNSMessage;
+import org.minidns.dnsmessage.DnsMessage;
 import org.minidns.dnsmessage.Question;
 import org.minidns.iterative.IterativeClientException.LoopDetected;
 import org.minidns.iterative.IterativeClientException.MaxIterativeStepsReached;
 
 public class ResolutionState {
 
-    private final IterativeDNSClient recursiveDnsClient;
+    private final IterativeDnsClient recursiveDnsClient;
     private final HashMap<InetAddress, Set<Question>> map = new HashMap<>();
     private int steps;
 
-    ResolutionState(IterativeDNSClient recursiveDnsClient) {
+    ResolutionState(IterativeDnsClient recursiveDnsClient) {
         this.recursiveDnsClient = recursiveDnsClient;
     }
 
-    void recurse(InetAddress address, DNSMessage query) throws LoopDetected, MaxIterativeStepsReached {
+    void recurse(InetAddress address, DnsMessage query) throws LoopDetected, MaxIterativeStepsReached {
         Question question = query.getQuestion();
         if (!map.containsKey(address)) {
             map.put(address, new HashSet<Question>());

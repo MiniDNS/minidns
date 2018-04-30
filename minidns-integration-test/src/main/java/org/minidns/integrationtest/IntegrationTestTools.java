@@ -10,11 +10,11 @@
  */
 package org.minidns.integrationtest;
 
-import org.minidns.DNSCache;
-import org.minidns.cache.ExtendedLRUCache;
-import org.minidns.cache.FullLRUCache;
-import org.minidns.cache.LRUCache;
-import org.minidns.dnssec.DNSSECClient;
+import org.minidns.DnsCache;
+import org.minidns.cache.ExtendedLruCache;
+import org.minidns.cache.FullLruCache;
+import org.minidns.cache.LruCache;
+import org.minidns.dnssec.DnssecClient;
 import org.minidns.source.NetworkDataSourceWithAccounting;
 
 public class IntegrationTestTools {
@@ -26,26 +26,26 @@ public class IntegrationTestTools {
         full,
     }
 
-    public static DNSSECClient getClient(CacheConfig cacheConfig) {
-        DNSCache cache;
+    public static DnssecClient getClient(CacheConfig cacheConfig) {
+        DnsCache cache;
         switch (cacheConfig) {
         case without:
             cache = null;
             break;
         case normal:
-            cache = new LRUCache();
+            cache = new LruCache();
             break;
         case extended:
-            cache = new ExtendedLRUCache();
+            cache = new ExtendedLruCache();
             break;
         case full:
-            cache = new FullLRUCache();
+            cache = new FullLruCache();
             break;
         default:
             throw new IllegalStateException();
         }
 
-        DNSSECClient client = new DNSSECClient(cache);
+        DnssecClient client = new DnssecClient(cache);
         client.setDataSource(new NetworkDataSourceWithAccounting());
         return client;
     }

@@ -11,7 +11,7 @@
 package org.minidns.source;
 
 import org.junit.Test;
-import org.minidns.dnsmessage.DNSMessage;
+import org.minidns.dnsmessage.DnsMessage;
 
 import java.io.IOException;
 import java.net.InetAddress;
@@ -28,23 +28,23 @@ public class NetworkDataSourceTest {
             boolean lastQueryUdp = false;
 
             @Override
-            protected DNSMessage queryUdp(DNSMessage message, InetAddress address, int port) throws IOException {
+            protected DnsMessage queryUdp(DnsMessage message, InetAddress address, int port) throws IOException {
                 assertFalse(lastQueryUdp);
                 lastQueryUdp = true;
-                DNSMessage.Builder msg = DNSMessage.builder();
+                DnsMessage.Builder msg = DnsMessage.builder();
                 msg.setTruncated(true);
                 return msg.build();
             }
 
             @Override
-            protected DNSMessage queryTcp(DNSMessage message, InetAddress address, int port) throws IOException {
+            protected DnsMessage queryTcp(DnsMessage message, InetAddress address, int port) throws IOException {
                 assertTrue(lastQueryUdp);
                 lastQueryUdp = false;
                 return null;
             }
         }
         TestNetworkDataSource world = new TestNetworkDataSource();
-        assertNull(world.query(DNSMessage.builder().build(), null, 53));
+        assertNull(world.query(DnsMessage.builder().build(), null, 53));
         assertFalse(world.lastQueryUdp);
     }
 }

@@ -10,7 +10,7 @@
  */
 package org.minidns.record;
 
-import org.minidns.dnsname.DNSName;
+import org.minidns.dnsname.DnsName;
 import org.minidns.record.Record.TYPE;
 
 import java.io.ByteArrayInputStream;
@@ -30,7 +30,7 @@ public class NSEC extends Data {
     /**
      * The next owner name that contains a authoritative data or a delegation point.
      */
-    public final DNSName next;
+    public final DnsName next;
 
     private final byte[] typeBitmap;
 
@@ -40,7 +40,7 @@ public class NSEC extends Data {
     public final TYPE[] types;
 
     public static NSEC parse(DataInputStream dis, byte[] data, int length) throws IOException {
-        DNSName next = DNSName.parse(dis, data);
+        DnsName next = DnsName.parse(dis, data);
 
         byte[] typeBitmap = new byte[length - next.size()];
         if (dis.read(typeBitmap) != typeBitmap.length) throw new IOException();
@@ -49,10 +49,10 @@ public class NSEC extends Data {
     }
 
     public NSEC(String next, TYPE[] types) {
-        this(DNSName.from(next), types);
+        this(DnsName.from(next), types);
     }
 
-    public NSEC(DNSName next, TYPE[] types) {
+    public NSEC(DnsName next, TYPE[] types) {
         this.next = next;
         this.types = types;
         this.typeBitmap = createTypeBitMap(types);

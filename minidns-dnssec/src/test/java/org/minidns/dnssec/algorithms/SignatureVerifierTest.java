@@ -11,14 +11,14 @@
 package org.minidns.dnssec.algorithms;
 
 import org.junit.Before;
-import org.minidns.constants.DNSSECConstants.SignatureAlgorithm;
+import org.minidns.constants.DnssecConstants.SignatureAlgorithm;
 
 import java.security.PrivateKey;
 import java.util.Random;
 
-import static org.minidns.dnssec.DNSSECWorld.generatePrivateKey;
-import static org.minidns.dnssec.DNSSECWorld.publicKey;
-import static org.minidns.dnssec.DNSSECWorld.sign;
+import static org.minidns.dnssec.DnssecWorld.generatePrivateKey;
+import static org.minidns.dnssec.DnssecWorld.publicKey;
+import static org.minidns.dnssec.DnssecWorld.sign;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 

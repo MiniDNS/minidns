@@ -10,8 +10,8 @@
  */
 package org.minidns.record;
 
-import org.minidns.constants.DNSSECConstants.SignatureAlgorithm;
-import org.minidns.dnsname.DNSName;
+import org.minidns.constants.DnssecConstants.SignatureAlgorithm;
+import org.minidns.dnsname.DnsName;
 import org.minidns.record.Record.TYPE;
 import org.minidns.util.Base64;
 
@@ -70,7 +70,7 @@ public class RRSIG extends Data {
     /**
      * The owner name of the DNSKEY RR that a validator is supposed to use.
      */
-    public final DNSName signerName;
+    public final DnsName signerName;
 
     /**
      * Signature that covers RRSIG RDATA (excluding the signature field) and RRset data.
@@ -85,7 +85,7 @@ public class RRSIG extends Data {
         Date signatureExpiration = new Date((dis.readInt() & 0xFFFFFFFFL) * 1000);
         Date signatureInception = new Date((dis.readInt() & 0xFFFFFFFFL) * 1000);
         int keyTag = dis.readUnsignedShort();
-        DNSName signerName = DNSName.parse(dis, data);
+        DnsName signerName = DnsName.parse(dis, data);
         int sigSize = length - signerName.size() - 18;
         byte[] signature = new byte[sigSize];
         if (dis.read(signature) != signature.length) throw new IOException();
@@ -94,7 +94,7 @@ public class RRSIG extends Data {
     }
 
     private  RRSIG(TYPE typeCovered, SignatureAlgorithm algorithm, byte algorithmByte, byte labels, long originalTtl, Date signatureExpiration, 
-            Date signatureInception, int keyTag, DNSName signerName, byte[] signature) {
+            Date signatureInception, int keyTag, DnsName signerName, byte[] signature) {
         this.typeCovered = typeCovered;
 
         assert algorithmByte == (algorithm != null ? algorithm.number : algorithmByte);
@@ -111,25 +111,25 @@ public class RRSIG extends Data {
     }
 
     public RRSIG(TYPE typeCovered, int algorithm, byte labels, long originalTtl, Date signatureExpiration, 
-            Date signatureInception, int keyTag, DNSName signerName, byte[] signature) {
+            Date signatureInception, int keyTag, DnsName signerName, byte[] signature) {
             this(typeCovered, null, (byte) algorithm, labels, originalTtl, signatureExpiration, signatureInception, keyTag, signerName, signature);
     }
 
     public RRSIG(TYPE typeCovered, int algorithm, byte labels, long originalTtl, Date signatureExpiration, 
             Date signatureInception, int keyTag, String signerName, byte[] signature) {
-            this(typeCovered, null, (byte) algorithm, labels, originalTtl, signatureExpiration, signatureInception, keyTag, DNSName.from(signerName), signature);
+            this(typeCovered, null, (byte) algorithm, labels, originalTtl, signatureExpiration, signatureInception, keyTag, DnsName.from(signerName), signature);
     }
 
     public RRSIG(TYPE typeCovered, SignatureAlgorithm algorithm, byte labels,
             long originalTtl, Date signatureExpiration, Date signatureInception,
-            int keyTag, DNSName signerName, byte[] signature) {
+            int keyTag, DnsName signerName, byte[] signature) {
         this(typeCovered,algorithm.number, labels, originalTtl, signatureExpiration, signatureInception, keyTag, signerName, signature);
     }
 
     public RRSIG(TYPE typeCovered, SignatureAlgorithm algorithm, byte labels,
             long originalTtl, Date signatureExpiration, Date signatureInception,
             int keyTag, String signerName, byte[] signature) {
-        this(typeCovered,algorithm.number, labels, originalTtl, signatureExpiration, signatureInception, keyTag, DNSName.from(signerName), signature);
+        this(typeCovered,algorithm.number, labels, originalTtl, signatureExpiration, signatureInception, keyTag, DnsName.from(signerName), signature);
     }
 
     @Override

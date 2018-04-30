@@ -10,8 +10,8 @@
  */
 package org.minidns.source;
 
-import org.minidns.MiniDNSException;
-import org.minidns.dnsmessage.DNSMessage;
+import org.minidns.MiniDnsException;
+import org.minidns.dnsmessage.DnsMessage;
 import org.minidns.util.MultipleIoException;
 
 import java.io.DataInputStream;
@@ -29,14 +29,14 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-public class NetworkDataSource extends DNSDataSource {
+public class NetworkDataSource extends DnsDataSource {
 
     protected static final Logger LOGGER = Logger.getLogger(NetworkDataSource.class.getName());
 
     @Override
-    public DNSMessage query(DNSMessage message, InetAddress address, int port) throws IOException {
+    public DnsMessage query(DnsMessage message, InetAddress address, int port) throws IOException {
         List<IOException> ioExceptions = new ArrayList<>(2);
-        DNSMessage dnsMessage = null;
+        DnsMessage dnsMessage = null;
         final QueryMode queryMode = getQueryMode();
         boolean doUdpFirst;
         switch (queryMode) {
@@ -77,7 +77,7 @@ public class NetworkDataSource extends DNSDataSource {
         return dnsMessage;
     }
 
-    protected DNSMessage queryUdp(DNSMessage message, InetAddress address, int port) throws IOException {
+    protected DnsMessage queryUdp(DnsMessage message, InetAddress address, int port) throws IOException {
         // TODO Use a try-with-resource statement here once miniDNS minimum
         // required Android API level is >= 19
         DatagramSocket socket = null;
@@ -89,9 +89,9 @@ public class NetworkDataSource extends DNSDataSource {
             socket.send(packet);
             packet = new DatagramPacket(buffer, buffer.length);
             socket.receive(packet);
-            DNSMessage dnsMessage = new DNSMessage(packet.getData());
+            DnsMessage dnsMessage = new DnsMessage(packet.getData());
             if (dnsMessage.id != message.id) {
-                throw new MiniDNSException.IdMismatch(message, dnsMessage);
+                throw new MiniDnsException.IdMismatch(message, dnsMessage);
             }
             return dnsMessage;
         } finally {
@@ -101,7 +101,7 @@ public class NetworkDataSource extends DNSDataSource {
         }
     }
 
-    protected DNSMessage queryTcp(DNSMessage message, InetAddress address, int port) throws IOException {
+    protected DnsMessage queryTcp(DnsMessage message, InetAddress address, int port) throws IOException {
         // TODO Use a try-with-resource statement here once miniDNS minimum
         // required Android API level is >= 19
         Socket socket = null;
@@ -120,9 +120,9 @@ public class NetworkDataSource extends DNSDataSource {
             while (read < length) {
                 read += dis.read(data, read, length-read);
             }
-            DNSMessage dnsMessage = new DNSMessage(data);
+            DnsMessage dnsMessage = new DnsMessage(data);
             if (dnsMessage.id != message.id) {
-                throw new MiniDNSException.IdMismatch(message, dnsMessage);
+                throw new MiniDnsException.IdMismatch(message, dnsMessage);
             }
             return dnsMessage;
         } finally {

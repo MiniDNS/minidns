@@ -10,7 +10,7 @@
  */
 package org.minidns.dnssec.algorithms;
 
-import org.minidns.dnssec.DNSSECValidationFailedException;
+import org.minidns.dnssec.DnssecValidationFailedException;
 import org.minidns.dnssec.SignatureVerifier;
 
 import java.security.InvalidKeyException;
@@ -48,7 +48,7 @@ public abstract class JavaSecSignatureVerifier implements SignatureVerifier {
             // We checked against this before, it should never happen!
             throw new IllegalStateException();
         } catch (InvalidKeyException | SignatureException | ArithmeticException e) {
-            throw new DNSSECValidationFailedException("Validating signature failed", e);
+            throw new DnssecValidationFailedException("Validating signature failed", e);
         }
     }
 
