@@ -21,16 +21,31 @@ import android.os.Build;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.minidns.DnsClient;
 import org.minidns.dnsserverlookup.AbstractDnsServerLookupMechanism;
 import org.minidns.dnsserverlookup.AndroidUsingExec;
 
 /**
+ * A DNS server lookup mechanism using Android's Link Properties method available on Android API 21 or higher. Use
+ * {@link #setup(Context)} to setup this mechanism.
+ * <p>
  * Requires the ACCESS_NETWORK_STATE permission.
- *
+ * </p>
  */
 public class AndroidUsingLinkProperties extends AbstractDnsServerLookupMechanism {
 
     private final ConnectivityManager connectivityManager;
+
+    /**
+     * Setup this DNS server lookup mechanism. You need to invoke this method only once, ideally before you do your
+     * first DNS lookup.
+     *
+     * @param context a Context instance.
+     */
+    public static void setup(Context context) {
+        AndroidUsingLinkProperties androidUsingLinkProperties = new AndroidUsingLinkProperties(context);
+        DnsClient.addDnsServerLookupMechanism(androidUsingLinkProperties);
+    }
 
     public AndroidUsingLinkProperties(Context context) {
         super(AndroidUsingLinkProperties.class.getSimpleName(), AndroidUsingExec.PRIORITY - 1);
