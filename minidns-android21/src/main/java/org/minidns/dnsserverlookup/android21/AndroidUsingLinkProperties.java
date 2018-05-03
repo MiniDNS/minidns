@@ -32,7 +32,7 @@ public class AndroidUsingLinkProperties extends AbstractDnsServerLookupMechanism
 
     private final ConnectivityManager connectivityManager;
 
-    protected AndroidUsingLinkProperties(Context context) {
+    public AndroidUsingLinkProperties(Context context) {
         super(AndroidUsingLinkProperties.class.getSimpleName(), AndroidUsingExec.PRIORITY - 1);
         connectivityManager = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
     }
