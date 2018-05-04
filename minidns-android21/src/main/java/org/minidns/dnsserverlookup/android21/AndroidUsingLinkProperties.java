@@ -41,10 +41,12 @@ public class AndroidUsingLinkProperties extends AbstractDnsServerLookupMechanism
      * first DNS lookup.
      *
      * @param context a Context instance.
+     * @return the instance of the newly setup mechanism
      */
-    public static void setup(Context context) {
+    public static AndroidUsingLinkProperties setup(Context context) {
         AndroidUsingLinkProperties androidUsingLinkProperties = new AndroidUsingLinkProperties(context);
         DnsClient.addDnsServerLookupMechanism(androidUsingLinkProperties);
+        return androidUsingLinkProperties;
     }
 
     public AndroidUsingLinkProperties(Context context) {
