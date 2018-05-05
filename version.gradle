@@ -1,7 +1,7 @@
 allprojects {
 	ext {
-		shortVersion = '0.3.0-alpha2'
-		isSnapshot = true
+		shortVersion = '0.3.0'
+		isSnapshot = false
 		minidnsMinAndroidSdk = 9
 	}
 }
