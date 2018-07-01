@@ -31,7 +31,7 @@ import org.minidns.MiniDnsFuture;
 import org.minidns.MiniDnsFuture.InternalMiniDnsFuture;
 import org.minidns.dnsmessage.DnsMessage;
 import org.minidns.source.DnsDataSource.OnResponseCallback;
-import org.minidns.source.DnsDataSource.QueryMode;
+import org.minidns.source.AbstractDnsDataSource.QueryMode;
 import org.minidns.util.MultipleIoException;
 
 public class AsyncDnsRequest {

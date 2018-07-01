@@ -19,8 +19,8 @@ import org.minidns.record.Record;
 import org.minidns.MiniDnsFuture;
 import org.minidns.dnsmessage.DnsMessage;
 import org.minidns.dnsmessage.DnsMessage.RESPONSE_CODE;
-import org.minidns.source.DnsDataSource;
-import org.minidns.source.DnsDataSource.QueryMode;
+import org.minidns.source.AbstractDnsDataSource;
+import org.minidns.source.AbstractDnsDataSource.QueryMode;
 import org.minidns.source.async.AsyncNetworkDataSource;
 
 public class AsyncApiTest {
@@ -40,7 +40,7 @@ public class AsyncApiTest {
     }
 
     public static void tcpAsyncApiTest() throws IOException {
-        DnsDataSource dataSource = new AsyncNetworkDataSource();
+        AbstractDnsDataSource dataSource = new AsyncNetworkDataSource();
         dataSource.setTimeout(60 * 60 * 1000);
         dataSource.setUdpPayloadSize(256);
         dataSource.setQueryMode(QueryMode.tcp);

@@ -10,46 +10,26 @@
  */
 package org.minidns.source;
 
-import org.minidns.DnsCache;
-import org.minidns.MiniDnsFuture;
-import org.minidns.MiniDnsFuture.InternalMiniDnsFuture;
-import org.minidns.dnsmessage.DnsMessage;
-
 import java.io.IOException;
 import java.net.InetAddress;
 
-public abstract class DnsDataSource {
+import org.minidns.MiniDnsFuture;
+import org.minidns.dnsmessage.DnsMessage;
 
-    public abstract DnsMessage query(DnsMessage message, InetAddress address, int port) throws IOException;
+public interface DnsDataSource {
 
-    public MiniDnsFuture<DnsMessage, IOException> queryAsync(DnsMessage message, InetAddress address, int port, OnResponseCallback onResponseCallback) {
-        InternalMiniDnsFuture<DnsMessage, IOException> future = new InternalMiniDnsFuture<>();
-        DnsMessage result;
-        try {
-            result = query(message, address, port);
-        } catch (IOException e) {
-            future.setException(e);
-            return future;
-        }
-        future.setResult(result);
-        return future;
-    }
+    abstract DnsMessage query(DnsMessage message, InetAddress address, int port) throws IOException;
 
-    protected int udpPayloadSize = 1024;
+    MiniDnsFuture<DnsMessage, IOException> queryAsync(DnsMessage message, InetAddress address, int port, OnResponseCallback onResponseCallback);
 
-    /**
-     * DNS timeout.
-     */
-    protected int timeout = 5000;
+    int getUdpPayloadSize();
 
     /**
      * Retrieve the current dns query timeout, in milliseconds.
      *
      * @return the current dns query timeout in milliseconds.
      */
-    public int getTimeout() {
-        return timeout;
-    }
+    int getTimeout();
 
     /**
      * Change the dns query timeout for all future queries. The timeout
@@ -57,65 +37,10 @@ public abstract class DnsDataSource {
      *
      * @param timeout new dns query timeout in milliseconds.
      */
-    public void setTimeout(int timeout) {
-        if (timeout <= 0) {
-            throw new IllegalArgumentException("Timeout must be greater than zero");
-        }
-        this.timeout = timeout;
-    }
-
-    public int getUdpPayloadSize() {
-        return udpPayloadSize;
-    }
-
-    public void setUdpPayloadSize(int udpPayloadSize) {
-        if (udpPayloadSize <= 0) {
-            throw new IllegalArgumentException("UDP payload size must be greater than zero");
-        }
-        this.udpPayloadSize = udpPayloadSize;
-    }
-
-    private DnsCache cache;
-
-    protected final void cacheResult(DnsMessage request, DnsMessage response) {
-        final DnsCache activeCache = cache;
-        if (activeCache == null) {
-            return;
-        }
-        activeCache.put(request, response);
-    }
-
-    public enum QueryMode {
-        /**
-         * Perform the query mode that is assumed "best" for that particular case.
-         */
-        dontCare,
-
-        /**
-         * Try UDP first, and if the result is bigger than the maximum UDP payload size, or if something else goes wrong, fallback to TCP.
-         */
-        udpTcp,
-
-        /**
-         * Always use only TCP when querying DNS servers.
-         */
-        tcp,
-    }
-
-    private QueryMode queryMode = QueryMode.dontCare;
-
-    public void setQueryMode(QueryMode queryMode) {
-        if (queryMode == null) {
-            throw new IllegalArgumentException();
-        }
-        this.queryMode = queryMode;
-    }
-
-    public QueryMode getQueryMode() {
-        return queryMode;
-    }
+    void setTimeout(int timeout);
 
     public interface OnResponseCallback {
         void onResponse(DnsMessage request, DnsMessage response);
     }
+
 }

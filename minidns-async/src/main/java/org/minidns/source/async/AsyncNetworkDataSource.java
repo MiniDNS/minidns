@@ -34,9 +34,9 @@ import java.util.logging.Logger;
 
 import org.minidns.MiniDnsFuture;
 import org.minidns.dnsmessage.DnsMessage;
-import org.minidns.source.DnsDataSource;
+import org.minidns.source.AbstractDnsDataSource;
 
-public class AsyncNetworkDataSource extends DnsDataSource {
+public class AsyncNetworkDataSource extends AbstractDnsDataSource {
 
     protected static final Logger LOGGER = Logger.getLogger(AsyncNetworkDataSource.class.getName());
 

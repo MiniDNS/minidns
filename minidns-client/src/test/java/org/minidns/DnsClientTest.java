@@ -18,7 +18,7 @@ import org.minidns.dnsserverlookup.AndroidUsingReflection;
 import org.minidns.dnsserverlookup.DnsServerLookupMechanism;
 import org.minidns.record.A;
 import org.minidns.record.Record.TYPE;
-import org.minidns.source.DnsDataSource;
+import org.minidns.source.AbstractDnsDataSource;
 
 import org.junit.Test;
 
@@ -90,7 +90,7 @@ public class DnsClientTest {
 
     @Test
     public void testReturnNullSource() throws IOException {
-        class NullSource extends DnsDataSource {
+        class NullSource extends AbstractDnsDataSource {
             boolean queried = false;
 
             @Override

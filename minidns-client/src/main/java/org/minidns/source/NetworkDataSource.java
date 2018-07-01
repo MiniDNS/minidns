@@ -29,7 +29,7 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-public class NetworkDataSource extends DnsDataSource {
+public class NetworkDataSource extends AbstractDnsDataSource {
 
     protected static final Logger LOGGER = Logger.getLogger(NetworkDataSource.class.getName());
 

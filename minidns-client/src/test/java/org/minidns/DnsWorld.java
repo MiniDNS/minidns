@@ -32,7 +32,7 @@ import org.minidns.record.SOA;
 import org.minidns.record.SRV;
 import org.minidns.record.Record.CLASS;
 import org.minidns.record.Record.TYPE;
-import org.minidns.source.DnsDataSource;
+import org.minidns.source.AbstractDnsDataSource;
 import org.minidns.util.InetAddressUtil;
 
 import java.net.Inet4Address;
@@ -48,7 +48,7 @@ import java.util.List;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
-public class DnsWorld extends DnsDataSource {
+public class DnsWorld extends AbstractDnsDataSource {
     private List<PreparedResponse> answers = new ArrayList<>();
 
     @Override
