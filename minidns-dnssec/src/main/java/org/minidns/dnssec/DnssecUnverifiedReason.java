@@ -21,7 +21,7 @@ import org.minidns.record.RRSIG;
 import org.minidns.record.Record;
 import org.minidns.record.Record.TYPE;
 
-public abstract class UnverifiedReason {
+public abstract class DnssecUnverifiedReason {
     public abstract String getReasonString();
 
     @Override
@@ -36,10 +36,10 @@ public abstract class UnverifiedReason {
 
     @Override
     public boolean equals(Object obj) {
-        return obj instanceof UnverifiedReason && ((UnverifiedReason) obj).getReasonString().equals(getReasonString());
+        return obj instanceof DnssecUnverifiedReason && ((DnssecUnverifiedReason) obj).getReasonString().equals(getReasonString());
     }
 
-    public static class AlgorithmNotSupportedReason extends UnverifiedReason {
+    public static class AlgorithmNotSupportedReason extends DnssecUnverifiedReason {
         private final String algorithm;
         private final TYPE type;
         private final Record<? extends Data> record;
@@ -56,7 +56,7 @@ public abstract class UnverifiedReason {
         }
     }
 
-    public static class AlgorithmExceptionThrownReason extends UnverifiedReason {
+    public static class AlgorithmExceptionThrownReason extends DnssecUnverifiedReason {
         private final int algorithmNumber;
         private final String kind;
         private final Exception reason;
@@ -75,7 +75,7 @@ public abstract class UnverifiedReason {
         }
     }
 
-    public static class ConflictsWithSep extends UnverifiedReason {
+    public static class ConflictsWithSep extends DnssecUnverifiedReason {
         private final Record<DNSKEY> record;
 
         public ConflictsWithSep(Record<DNSKEY> record) {
@@ -88,7 +88,7 @@ public abstract class UnverifiedReason {
         }
     }
 
-    public static class NoTrustAnchorReason extends UnverifiedReason {
+    public static class NoTrustAnchorReason extends DnssecUnverifiedReason {
         private final String zone;
 
         public NoTrustAnchorReason(String zone) {
@@ -101,7 +101,7 @@ public abstract class UnverifiedReason {
         }
     }
 
-    public static class NoSecureEntryPointReason extends UnverifiedReason {
+    public static class NoSecureEntryPointReason extends DnssecUnverifiedReason {
         private final String zone;
 
         public NoSecureEntryPointReason(String zone) {
@@ -114,7 +114,7 @@ public abstract class UnverifiedReason {
         }
     }
 
-    public static class NoRootSecureEntryPointReason extends UnverifiedReason {
+    public static class NoRootSecureEntryPointReason extends DnssecUnverifiedReason {
         public NoRootSecureEntryPointReason() {
         }
 
@@ -124,7 +124,7 @@ public abstract class UnverifiedReason {
         }
     }
 
-    public static class NoSignaturesReason extends UnverifiedReason {
+    public static class NoSignaturesReason extends DnssecUnverifiedReason {
         private final Question question;
 
         public NoSignaturesReason(Question question) {
@@ -137,7 +137,7 @@ public abstract class UnverifiedReason {
         }
     }
 
-    public static class NoActiveSignaturesReason extends UnverifiedReason {
+    public static class NoActiveSignaturesReason extends DnssecUnverifiedReason {
         private final Question question;
         private final List<RRSIG> outdatedRrSigs;
 
@@ -157,7 +157,7 @@ public abstract class UnverifiedReason {
         }
     }
 
-    public static class NSECDoesNotMatchReason extends UnverifiedReason {
+    public static class NSECDoesNotMatchReason extends DnssecUnverifiedReason {
         private final Question question;
         private final Record<? extends Data> record;
 

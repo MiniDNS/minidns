@@ -17,8 +17,8 @@ import java.io.IOException;
 import org.minidns.DnsClient;
 import org.minidns.record.Record;
 import org.minidns.MiniDnsFuture;
-import org.minidns.dnsmessage.DnsMessage;
 import org.minidns.dnsmessage.DnsMessage.RESPONSE_CODE;
+import org.minidns.dnsqueryresult.DnsQueryResult;
 import org.minidns.source.AbstractDnsDataSource;
 import org.minidns.source.AbstractDnsDataSource.QueryMode;
 import org.minidns.source.async.AsyncNetworkDataSource;
@@ -34,9 +34,9 @@ public class AsyncApiTest {
         client.setDataSource(new AsyncNetworkDataSource());
         client.getDataSource().setTimeout(60 * 60 * 1000);
 
-        MiniDnsFuture<DnsMessage, IOException> future = client.queryAsync("example.com", Record.TYPE.NS);
-        DnsMessage response = future.getOrThrow();
-        assertEquals(RESPONSE_CODE.NO_ERROR, response.responseCode);
+        MiniDnsFuture<DnsQueryResult, IOException> future = client.queryAsync("example.com", Record.TYPE.NS);
+        DnsQueryResult result = future.getOrThrow();
+        assertEquals(RESPONSE_CODE.NO_ERROR, result.response.responseCode);
     }
 
     public static void tcpAsyncApiTest() throws IOException {
@@ -49,8 +49,8 @@ public class AsyncApiTest {
         client.setDataSource(dataSource);
         client.setAskForDnssec(true);
 
-        MiniDnsFuture<DnsMessage, IOException> future = client.queryAsync("google.com", Record.TYPE.AAAA);
-        DnsMessage response = future.getOrThrow();
-        assertEquals(RESPONSE_CODE.NO_ERROR, response.responseCode);
+        MiniDnsFuture<DnsQueryResult, IOException> future = client.queryAsync("google.com", Record.TYPE.AAAA);
+        DnsQueryResult result = future.getOrThrow();
+        assertEquals(RESPONSE_CODE.NO_ERROR, result.response.responseCode);
     }
 }

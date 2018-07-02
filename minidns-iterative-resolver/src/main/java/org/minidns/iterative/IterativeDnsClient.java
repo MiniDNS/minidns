@@ -15,6 +15,7 @@ import org.minidns.DnsCache;
 import org.minidns.dnsmessage.DnsMessage;
 import org.minidns.dnsmessage.Question;
 import org.minidns.dnsname.DnsName;
+import org.minidns.dnsqueryresult.DnsQueryResult;
 import org.minidns.iterative.IterativeClientException.LoopDetected;
 import org.minidns.record.A;
 import org.minidns.record.AAAA;
@@ -103,11 +104,11 @@ public class IterativeDnsClient extends AbstractDnsClient {
      * @throws IOException if an IO error occurs.
      */
     @Override
-    protected DnsMessage query(DnsMessage.Builder queryBuilder) throws IOException {
+    protected DnsQueryResult query(DnsMessage.Builder queryBuilder) throws IOException {
         DnsMessage q = queryBuilder.build();
         ResolutionState resolutionState = new ResolutionState(this);
-        DnsMessage message = queryRecursive(resolutionState, q);
-        return message;
+        DnsQueryResult result = queryRecursive(resolutionState, q);
+        return result;
     }
 
     private Inet4Address getRandomIpv4RootServer() {
@@ -150,7 +151,7 @@ public class IterativeDnsClient extends AbstractDnsClient {
         return res;
     }
 
-    private DnsMessage queryRecursive(ResolutionState resolutionState, DnsMessage q) throws IOException {
+    private DnsQueryResult queryRecursive(ResolutionState resolutionState, DnsMessage q) throws IOException {
         InetAddress primaryTarget = null, secondaryTarget = null;
 
         Question question = q.getQuestion();
@@ -233,22 +234,23 @@ public class IterativeDnsClient extends AbstractDnsClient {
         return null;
     }
 
-    private DnsMessage queryRecursive(ResolutionState resolutionState, DnsMessage q, InetAddress address, DnsName authoritativeZone) throws IOException {
+    private DnsQueryResult queryRecursive(ResolutionState resolutionState, DnsMessage q, InetAddress address, DnsName authoritativeZone) throws IOException {
         resolutionState.recurse(address, q);
 
-        DnsMessage resMessage = query(q, address);
+        DnsQueryResult dnsQueryResult = query(q, address);
 
-        if (resMessage == null) {
+        if (dnsQueryResult == null) {
             // TODO throw exception here?
             return null;
         }
 
+        DnsMessage resMessage = dnsQueryResult.response;
         if (resMessage.authoritativeAnswer) {
-            return resMessage;
+            return dnsQueryResult;
         }
 
         if (cache != null) {
-            cache.offer(q, resMessage, authoritativeZone);
+            cache.offer(q, dnsQueryResult, authoritativeZone);
         }
 
         List<Record<? extends Data>> authorities = resMessage.copyAuthority();
@@ -266,7 +268,7 @@ public class IterativeDnsClient extends AbstractDnsClient {
             IpResultSet gluedNs = searchAdditional(resMessage, name);
             for (Iterator<InetAddress> addressIterator = gluedNs.addresses.iterator(); addressIterator.hasNext(); ) {
                 InetAddress target = addressIterator.next();
-                DnsMessage recursive = null;
+                DnsQueryResult recursive = null;
                 try {
                     recursive = queryRecursive(resolutionState, q, target, record.name);
                 } catch (IOException e) {
@@ -305,7 +307,7 @@ public class IterativeDnsClient extends AbstractDnsClient {
             }
 
             for (InetAddress target : res.addresses) {
-                DnsMessage recursive = null;
+                DnsQueryResult recursive = null;
                 try {
                     recursive = queryRecursive(resolutionState, q, target, record.name);
                 } catch (IOException e) {
@@ -331,7 +333,9 @@ public class IterativeDnsClient extends AbstractDnsClient {
             // TODO Try to retrieve A records for name out from cache.
             Question question = new Question(name, TYPE.A);
             final DnsMessage query = getQueryFor(question);
-            DnsMessage aMessage = queryRecursive(resolutionState, query);
+            DnsQueryResult aDnsQueryResult = queryRecursive(resolutionState, query);
+            // TODO: queryRecurisve() should probably never return null. Verify that and then remove the follwing null check.
+            DnsMessage aMessage = aDnsQueryResult != null ? aDnsQueryResult.response : null;
             if (aMessage != null) {
                 for (Record<? extends Data> answer : aMessage.answerSection) {
                     if (answer.isAnswer(question)) {
@@ -348,7 +352,9 @@ public class IterativeDnsClient extends AbstractDnsClient {
             // TODO Try to retrieve AAAA records for name out from cache.
             Question question = new Question(name, TYPE.AAAA);
             final DnsMessage query = getQueryFor(question);
-            DnsMessage aMessage = queryRecursive(resolutionState, query);
+            DnsQueryResult aDnsQueryResult = queryRecursive(resolutionState, query);
+            // TODO: queryRecurisve() should probably never return null. Verify that and then remove the follwing null check.
+            DnsMessage aMessage = aDnsQueryResult != null ? aDnsQueryResult.response : null;
             if (aMessage != null) {
                 for (Record<? extends Data> answer : aMessage.answerSection) {
                     if (answer.isAnswer(question)) {
@@ -476,8 +482,8 @@ public class IterativeDnsClient extends AbstractDnsClient {
     }
 
     @Override
-    protected boolean isResponseCacheable(Question q, DnsMessage dnsMessage) {
-        return dnsMessage.authoritativeAnswer;
+    protected boolean isResponseCacheable(Question q, DnsQueryResult result) {
+        return result.response.authoritativeAnswer;
     }
 
     @Override

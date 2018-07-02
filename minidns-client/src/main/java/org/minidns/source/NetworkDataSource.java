@@ -12,6 +12,8 @@ package org.minidns.source;
 
 import org.minidns.MiniDnsException;
 import org.minidns.dnsmessage.DnsMessage;
+import org.minidns.dnsqueryresult.DnsQueryResult.QueryMethod;
+import org.minidns.dnsqueryresult.StandardDnsQueryResult;
 import org.minidns.util.MultipleIoException;
 
 import java.io.DataInputStream;
@@ -33,10 +35,9 @@ public class NetworkDataSource extends AbstractDnsDataSource {
 
     protected static final Logger LOGGER = Logger.getLogger(NetworkDataSource.class.getName());
 
+    // TODO: Rename 'message' parameter to query.
     @Override
-    public DnsMessage query(DnsMessage message, InetAddress address, int port) throws IOException {
-        List<IOException> ioExceptions = new ArrayList<>(2);
-        DnsMessage dnsMessage = null;
+    public StandardDnsQueryResult query(DnsMessage message, InetAddress address, int port) throws IOException {
         final QueryMode queryMode = getQueryMode();
         boolean doUdpFirst;
         switch (queryMode) {
@@ -51,6 +52,9 @@ public class NetworkDataSource extends AbstractDnsDataSource {
             throw new IllegalStateException("Unsupported query mode: " + queryMode);
         }
 
+        List<IOException> ioExceptions = new ArrayList<>(2);
+        DnsMessage dnsMessage = null;
+
         if (doUdpFirst) {
             try {
                 dnsMessage = queryUdp(message, address, port);
@@ -58,8 +62,9 @@ public class NetworkDataSource extends AbstractDnsDataSource {
                 ioExceptions.add(e);
             }
 
+            // TODO: This null check could probably be removed by now.
             if (dnsMessage != null && !dnsMessage.truncated) {
-                return dnsMessage;
+                return new StandardDnsQueryResult(address, port, QueryMethod.udp, message, dnsMessage);
             }
 
             assert (dnsMessage == null || dnsMessage.truncated || ioExceptions.size() == 1);
@@ -74,7 +79,7 @@ public class NetworkDataSource extends AbstractDnsDataSource {
             MultipleIoException.throwIfRequired(ioExceptions);
         }
 
-        return dnsMessage;
+        return new StandardDnsQueryResult(address, port, QueryMethod.tcp, message, dnsMessage);
     }
 
     protected DnsMessage queryUdp(DnsMessage message, InetAddress address, int port) throws IOException {

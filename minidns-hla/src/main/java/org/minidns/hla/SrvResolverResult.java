@@ -33,7 +33,7 @@ public class SrvResolverResult extends ResolverResult<SRV> {
     private List<ResolvedSrvRecord> sortedSrvResolvedAddresses;
 
     SrvResolverResult(ResolverResult<SRV> srvResult, ResolverApi resolver) throws NullResultException {
-        super(srvResult.question, srvResult.answer, srvResult.unverifiedReasons);
+        super(srvResult.question, srvResult.result, srvResult.unverifiedReasons);
         this.resolver = resolver;
         this.ipVersion = resolver.getClient().getPreferedIpVersion();
     }

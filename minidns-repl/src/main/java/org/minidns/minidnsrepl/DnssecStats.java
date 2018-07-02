@@ -15,8 +15,8 @@ import java.io.IOException;
 import org.minidns.cache.ExtendedLruCache;
 import org.minidns.dnsname.DnsName;
 import org.minidns.dnssec.DnssecClient;
-import org.minidns.dnssec.DnssecMessage;
-import org.minidns.dnssec.UnverifiedReason;
+import org.minidns.dnssec.DnssecQueryResult;
+import org.minidns.dnssec.DnssecUnverifiedReason;
 import org.minidns.integrationtest.IntegrationTestTools.CacheConfig;
 import org.minidns.iterative.ReliableDnsClient.Mode;
 import org.minidns.jul.MiniDnsJul;
@@ -35,13 +35,13 @@ public class DnssecStats {
     private static void iterativeDnssecLookup(CacheConfig cacheConfig) throws IOException {
         DnssecClient client = MiniDnsStats.getClient(cacheConfig);
         client.setMode(Mode.iterativeOnly);
-        DnssecMessage secRes = client.queryDnssec(DOMAIN, RR_TYPE);
+        DnssecQueryResult secRes = client.queryDnssec(DOMAIN, RR_TYPE);
 
         StringBuilder stats = MiniDnsStats.getStats(client);
         stats.append('\n');
         stats.append(secRes);
         stats.append('\n');
-        for (UnverifiedReason r : secRes.getUnverifiedReasons()) {
+        for (DnssecUnverifiedReason r : secRes.getUnverifiedReasons()) {
             stats.append(r);
         }
         stats.append("\n\n");
@@ -55,7 +55,7 @@ public class DnssecStats {
         DnssecClient client = new DnssecClient(new ExtendedLruCache());
         client.setMode(Mode.iterativeOnly);
 
-        DnssecMessage secRes = client.queryDnssec("verteiltesysteme.net", TYPE.A);
+        DnssecQueryResult secRes = client.queryDnssec("verteiltesysteme.net", TYPE.A);
 
         // CHECKSTYLE:OFF
         System.out.println(secRes);

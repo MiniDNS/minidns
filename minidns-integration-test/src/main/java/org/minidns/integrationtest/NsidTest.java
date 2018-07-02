@@ -14,8 +14,8 @@ import java.io.IOException;
 import java.net.InetAddress;
 
 import org.minidns.DnsClient;
-import org.minidns.dnsmessage.DnsMessage;
 import org.minidns.dnsmessage.Question;
+import org.minidns.dnsqueryresult.DnsQueryResult;
 import org.minidns.dnsmessage.DnsMessage.Builder;
 import org.minidns.edns.Nsid;
 import org.minidns.edns.Edns.OptionCode;
@@ -35,17 +35,17 @@ public class NsidTest {
                 return super.newQuestion(message);
             }
         };
-        DnsMessage response = null;
+        DnsQueryResult result = null;
         Question q = new Question("de", TYPE.NS);
         for (InetAddress lRoot : IterativeDnsClient.getRootServer('l')) {
             try {
-                response = client.query(q, lRoot);
+                result = client.query(q, lRoot);
             } catch (IOException e) {
                 continue;
             }
             break;
         }
-        Nsid nsid = response.getEdns().getEdnsOption(OptionCode.NSID);
+        Nsid nsid = result.response.getEdns().getEdnsOption(OptionCode.NSID);
         assertNotNull(nsid);
         return nsid;
     }

@@ -15,12 +15,13 @@ import java.net.InetAddress;
 
 import org.minidns.MiniDnsFuture;
 import org.minidns.dnsmessage.DnsMessage;
+import org.minidns.dnsqueryresult.DnsQueryResult;
 
 public interface DnsDataSource {
 
-    abstract DnsMessage query(DnsMessage message, InetAddress address, int port) throws IOException;
+    abstract DnsQueryResult query(DnsMessage message, InetAddress address, int port) throws IOException;
 
-    MiniDnsFuture<DnsMessage, IOException> queryAsync(DnsMessage message, InetAddress address, int port, OnResponseCallback onResponseCallback);
+    MiniDnsFuture<DnsQueryResult, IOException> queryAsync(DnsMessage message, InetAddress address, int port, OnResponseCallback onResponseCallback);
 
     int getUdpPayloadSize();
 
@@ -40,7 +41,7 @@ public interface DnsDataSource {
     void setTimeout(int timeout);
 
     public interface OnResponseCallback {
-        void onResponse(DnsMessage request, DnsMessage response);
+        void onResponse(DnsMessage request, DnsQueryResult result);
     }
 
 }

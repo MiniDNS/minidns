@@ -20,8 +20,8 @@ import org.minidns.cache.MiniDnsCacheFactory;
 import org.minidns.dnsmessage.Question;
 import org.minidns.dnsname.DnsName;
 import org.minidns.dnssec.DnssecClient;
-import org.minidns.dnssec.DnssecMessage;
-import org.minidns.dnssec.UnverifiedReason;
+import org.minidns.dnssec.DnssecQueryResult;
+import org.minidns.dnssec.DnssecUnverifiedReason;
 import org.minidns.iterative.ReliableDnsClient.Mode;
 import org.minidns.record.Data;
 import org.minidns.record.Record.TYPE;
@@ -62,7 +62,7 @@ public class DnssecResolverApi extends ResolverApi {
 
     @Override
     public <D extends Data> ResolverResult<D> resolve(Question question) throws IOException {
-        DnssecMessage dnssecMessage = dnssecClient.queryDnssec(question);
+        DnssecQueryResult dnssecMessage = dnssecClient.queryDnssec(question);
         return toResolverResult(question, dnssecMessage);
     }
 
@@ -105,8 +105,8 @@ public class DnssecResolverApi extends ResolverApi {
      * @throws IOException in case an exception happens while resolving.
      */
     public <D extends Data> ResolverResult<D> resolveDnssecReliable(Question question) throws IOException {
-        DnssecMessage dnssecMessage = recursiveOnlyDnssecClient.queryDnssec(question);
-        if (dnssecMessage == null || !dnssecMessage.authenticData) {
+        DnssecQueryResult dnssecMessage = recursiveOnlyDnssecClient.queryDnssec(question);
+        if (dnssecMessage == null || !dnssecMessage.isAuthenticData()) {
             dnssecMessage = iterativeOnlyDnssecClient.queryDnssec(question);
         }
         return toResolverResult(question, dnssecMessage);
@@ -116,9 +116,9 @@ public class DnssecResolverApi extends ResolverApi {
         return dnssecClient;
     }
 
-    private static <D extends Data> ResolverResult<D> toResolverResult(Question question, DnssecMessage dnssecMessage) throws NullResultException {
-        Set<UnverifiedReason> unverifiedReasons = dnssecMessage.getUnverifiedReasons();
+    private static <D extends Data> ResolverResult<D> toResolverResult(Question question, DnssecQueryResult dnssecMessage) throws NullResultException {
+        Set<DnssecUnverifiedReason> unverifiedReasons = dnssecMessage.getUnverifiedReasons();
 
-        return new ResolverResult<D>(question, dnssecMessage, unverifiedReasons);
+        return new ResolverResult<D>(question, dnssecMessage.dnsQueryResult, unverifiedReasons);
     }
 }

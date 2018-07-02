@@ -17,7 +17,7 @@ import java.util.Arrays;
 
 import org.minidns.AbstractDnsClient;
 import org.minidns.DnsCache;
-import org.minidns.dnsmessage.DnsMessage;
+import org.minidns.dnsqueryresult.DnsQueryResult;
 import org.minidns.dnssec.DnssecClient;
 import org.minidns.integrationtest.IntegrationTestTools;
 import org.minidns.integrationtest.IntegrationTestTools.CacheConfig;
@@ -59,11 +59,11 @@ public class MiniDnsStats {
     }
 
     public static StringBuilder gatherStatsFor(DnssecClient client, String testName, String name, TYPE type) throws IOException {
-        DnsMessage response;
+        DnsQueryResult result;
         long start, stop;
 
         start = System.currentTimeMillis();
-        response = client.query(name, type);
+        result = client.query(name, type);
         stop = System.currentTimeMillis();
 
         StringBuilder sb = new StringBuilder();
@@ -71,7 +71,7 @@ public class MiniDnsStats {
         char[] headline = new char[testName.length()];
         Arrays.fill(headline, '#');
         sb.append(headline).append('\n');
-        sb.append(response).append('\n');
+        sb.append(result).append('\n');
         sb.append("Took ").append(stop - start).append("ms").append('\n');
         sb.append(getStats(client)).append('\n');
         sb.append('\n');

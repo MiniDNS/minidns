@@ -16,6 +16,7 @@ import org.junit.Test;
 import org.minidns.cache.LruCache;
 import org.minidns.dnsmessage.DnsMessage;
 import org.minidns.dnsmessage.Question;
+import org.minidns.dnsqueryresult.TestWorldDnsQueryResult;
 import org.minidns.record.Record;
 
 import static org.minidns.DnsWorld.a;
@@ -26,6 +27,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 
 public class LruCacheTest {
+
     private LruCache lruCache;
 
     @Before
@@ -35,10 +37,10 @@ public class LruCacheTest {
 
     @Test
     public void testOutdatedCacheEntry() {
-        DnsMessage message = createSampleMessage(1);
         Question q = new Question("", Record.TYPE.A);
+        TestWorldDnsQueryResult result = createSampleMessage(q, 1);
         DnsMessage question = q.asQueryMessage();
-        lruCache.put(question, message);
+        lruCache.put(question, result);
 
         assertNull(lruCache.get(question));
         assertNull(lruCache.get(question));
@@ -48,31 +50,39 @@ public class LruCacheTest {
 
     @Test
     public void testOverfilledCache() {
-        Question q = new Question("", Record.TYPE.A);
-        DnsMessage question = q.asQueryMessage();
-        lruCache.put(question, createSampleMessage());
-        assertNotNull(lruCache.get(question));
-        lruCache.put(new Question("1", Record.TYPE.A).asQueryMessage(), createSampleMessage());
-        lruCache.put(new Question("2", Record.TYPE.A).asQueryMessage(), createSampleMessage());
-        lruCache.put(new Question("3", Record.TYPE.A).asQueryMessage(), createSampleMessage());
-        lruCache.put(new Question("4", Record.TYPE.A).asQueryMessage(), createSampleMessage());
-        lruCache.put(new Question("5", Record.TYPE.A).asQueryMessage(), createSampleMessage());
+        Question firstQuestion = new Question("", Record.TYPE.A);
+        lruCache.put(firstQuestion.asQueryMessage(), createSampleMessage(firstQuestion));
+        assertNotNull(lruCache.get(firstQuestion.asQueryMessage()));
 
-        assertNull(lruCache.get(question));
+        Question question;
+        question = new Question("1", Record.TYPE.A);
+        lruCache.put(question.asQueryMessage(), createSampleMessage(question));
+        question = new Question("2", Record.TYPE.A);
+        lruCache.put(question.asQueryMessage(), createSampleMessage(question));
+        question = new Question("3", Record.TYPE.A);
+        lruCache.put(question.asQueryMessage(), createSampleMessage(question));
+        question = new Question("4", Record.TYPE.A);
+        lruCache.put(question.asQueryMessage(), createSampleMessage(question));
+        question = new Question("5", Record.TYPE.A);
+        lruCache.put(question.asQueryMessage(), createSampleMessage(question));
+
+        assertNull(lruCache.get(firstQuestion.asQueryMessage()));
         assertEquals(0, lruCache.getExpireCount());
         assertEquals(1, lruCache.getMissCount());
         assertEquals(1, lruCache.getHitCount());
     }
 
-    private static DnsMessage createSampleMessage() {
-        return createSampleMessage(System.currentTimeMillis());
+    private static TestWorldDnsQueryResult createSampleMessage(Question question) {
+        return createSampleMessage(question, System.currentTimeMillis());
     }
 
-    private static DnsMessage createSampleMessage(long receiveTimestamp) {
+    private static TestWorldDnsQueryResult createSampleMessage(Question question, long receiveTimestamp) {
         DnsMessage.Builder message = DnsMessage.builder();
         message.setReceiveTimestamp(receiveTimestamp);
         message.addAnswer(record("", ns("a.root-servers.net")));
         message.addAdditionalResourceRecord(record("a.root-servers.net", a("127.0.0.1")));
-        return message.build();
+        DnsMessage responseMessage = message.build();
+        DnsMessage query = question.asQueryMessage();
+        return new TestWorldDnsQueryResult(query, responseMessage);
     }
 }

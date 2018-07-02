@@ -52,7 +52,6 @@ import static org.minidns.dnssec.DnssecWorld.signedZone;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 public class DnssecClientTest {
@@ -115,9 +114,9 @@ public class DnssecClientTest {
                                 record("example.com", a("1.1.1.2")))
                 )
         );
-        DnsMessage message = client.query("example.com", Record.TYPE.A);
-        assertNotNull(message);
-        assertTrue(message.authenticData);
+        DnssecQueryResult result = client.queryDnssec("example.com", Record.TYPE.A);
+        assertTrue(result.isAuthenticData());
+        DnsMessage message = result.synthesizedResponse;
         checkCorrectExampleMessage(message);
     }
 
@@ -144,9 +143,9 @@ public class DnssecClientTest {
                                 record("example.com", a("1.1.1.2")))
                 )
         );
-        DnsMessage message = client.query("example.com", Record.TYPE.A);
-        assertNotNull(message);
-        assertTrue(message.authenticData);
+        DnssecQueryResult result = client.queryDnssec("example.com", Record.TYPE.A);
+        assertTrue(result.isAuthenticData());
+        DnsMessage message = result.synthesizedResponse;
         checkCorrectExampleMessage(message);
     }
 
@@ -171,9 +170,9 @@ public class DnssecClientTest {
                                 record("example.com", a("1.1.1.2")))
                 )
         );
-        DnsMessage message = client.query("example.com", Record.TYPE.A);
-        assertNotNull(message);
-        assertTrue(message.authenticData);
+        DnssecQueryResult result = client.queryDnssec("example.com", Record.TYPE.A);
+        assertTrue(result.isAuthenticData());
+        DnsMessage message = result.synthesizedResponse;
         checkCorrectExampleMessage(message);
     }
 
@@ -197,9 +196,9 @@ public class DnssecClientTest {
                                 record("example.com", a("1.1.1.2")))
                 )
         );
-        DnsMessage message = client.query("example.com", Record.TYPE.A);
-        assertNotNull(message);
-        assertFalse(message.authenticData);
+        DnssecQueryResult result = client.queryDnssec("example.com", Record.TYPE.A);
+        assertFalse(result.isAuthenticData());
+        DnsMessage message = result.synthesizedResponse;
         checkCorrectExampleMessage(message);
     }
 
@@ -219,9 +218,9 @@ public class DnssecClientTest {
                                 record("example.com", a("1.1.1.2")))
                 )
         );
-        DnsMessage message = client.query("example.com", Record.TYPE.A);
-        assertNotNull(message);
-        assertFalse(message.authenticData);
+        DnssecQueryResult result = client.queryDnssec("example.com", Record.TYPE.A);
+        assertFalse(result.isAuthenticData());
+        DnsMessage message = result.synthesizedResponse;
         checkCorrectExampleMessage(message);
     }
 
@@ -248,12 +247,12 @@ public class DnssecClientTest {
                                 record("example.com", a("1.1.1.2")))
                 )
         );
-        DnssecMessage message = client.queryDnssec("example.com", Record.TYPE.A);
-        assertNotNull(message);
-        assertFalse(message.authenticData);
+        DnssecQueryResult result = client.queryDnssec("example.com", Record.TYPE.A);
+        assertFalse(result.isAuthenticData());
+        DnsMessage message = result.synthesizedResponse;
         checkCorrectExampleMessage(message);
-        assertEquals(1, message.getUnverifiedReasons().size());
-        assertTrue(message.getUnverifiedReasons().iterator().next() instanceof UnverifiedReason.NoRootSecureEntryPointReason);
+        assertEquals(1, result.getUnverifiedReasons().size());
+        assertTrue(result.getUnverifiedReasons().iterator().next() instanceof DnssecUnverifiedReason.NoRootSecureEntryPointReason);
     }
 
     @SuppressWarnings("unchecked")
@@ -274,9 +273,9 @@ public class DnssecClientTest {
                         record("example.com", a("1.1.1.2"))
                 )
         );
-        DnsMessage message = client.query("example.com", Record.TYPE.A);
-        assertNotNull(message);
-        assertFalse(message.authenticData);
+        DnssecQueryResult result = client.queryDnssec("example.com", Record.TYPE.A);
+        assertFalse(result.isAuthenticData());
+        DnsMessage message = result.dnsQueryResult.response;
         checkCorrectExampleMessage(message);
     }
 
@@ -377,9 +376,9 @@ public class DnssecClientTest {
                         record("example.com", unknownRrsig)
                 )
         );
-        DnsMessage message = client.query("example.com", Record.TYPE.A);
-        assertNotNull(message);
-        assertFalse(message.authenticData);
+        DnssecQueryResult result = client.queryDnssec("example.com", Record.TYPE.A);
+        assertFalse(result.isAuthenticData());
+        DnsMessage message = result.synthesizedResponse;
         checkCorrectExampleMessage(message);
     }
 
@@ -430,9 +429,9 @@ public class DnssecClientTest {
                                 record("example.com", a("1.1.1.2")))
                 )
         );
-        DnsMessage message = client.query("example.com", Record.TYPE.A);
-        assertNotNull(message);
-        assertFalse(message.authenticData);
+        DnssecQueryResult result = client.queryDnssec("example.com", Record.TYPE.A);
+        assertFalse(result.isAuthenticData());
+        DnsMessage message = result.synthesizedResponse;
         checkCorrectExampleMessage(message);
     }
 
@@ -461,9 +460,9 @@ public class DnssecClientTest {
                                 record("example.com", a("1.1.1.2")))
                 )
         );
-        DnsMessage message = client.query("example.com", Record.TYPE.A);
-        assertNotNull(message);
-        assertFalse(message.authenticData);
+        DnssecQueryResult result = client.queryDnssec("example.com", Record.TYPE.A);
+        assertFalse(result.isAuthenticData());
+        DnsMessage message = result.synthesizedResponse;
         checkCorrectExampleMessage(message);
     }
 
@@ -492,9 +491,9 @@ public class DnssecClientTest {
                                 record("example.com", a("1.1.1.2")))
                 )
         );
-        DnsMessage message = client.query("example.com", Record.TYPE.A);
-        assertNotNull(message);
-        assertFalse(message.authenticData);
+        DnssecQueryResult result = client.queryDnssec("example.com", Record.TYPE.A);
+        assertFalse(result.isAuthenticData());
+        DnsMessage message = result.synthesizedResponse;
         checkCorrectExampleMessage(message);
     }
 
@@ -529,9 +528,10 @@ public class DnssecClientTest {
         nsecMessage.setNameserverRecords(records);
         nsecMessage.setAuthoritativeAnswer(true);
         world.addPreparedResponse(new DnssecWorld.AddressedNsecResponse(InetAddress.getByAddress("ns.com", new byte[]{1, 1, 1, 1}), nsecMessage.build()));
-        DnsMessage message = client.query("nsec.example.com", Record.TYPE.A);
+        DnssecQueryResult result = client.queryDnssec("nsec.example.com", Record.TYPE.A);
+        // TODO: The setSripSignatureRecords() call could probably be removed. It does not appear to server any purpose here.
         client.setStripSignatureRecords(false);
-        assertNotNull(message);
+        DnsMessage message = result.synthesizedResponse;
         assertEquals(0, message.answerSection.size());
         assertTrue(message.authenticData);
     }
@@ -571,14 +571,15 @@ public class DnssecClientTest {
                 )
         );
         client.configureLookasideValidation(DnsName.from("dlv"));
-        DnsMessage message = client.query("example.com", Record.TYPE.A);
-        assertNotNull(message);
-        assertTrue(message.authenticData);
+        DnssecQueryResult result = client.queryDnssec("example.com", Record.TYPE.A);
+        assertTrue(result.isAuthenticData());
+        DnsMessage message = result.synthesizedResponse;
         checkCorrectExampleMessage(message);
+
         client.disableLookasideValidation();
-        message = client.query("example.com", Record.TYPE.A);
-        assertNotNull(message);
-        assertFalse(message.authenticData);
+        result = client.queryDnssec("example.com", Record.TYPE.A);
+        assertFalse(result.isAuthenticData());
+        message = result.synthesizedResponse;
         checkCorrectExampleMessage(message);
     }
 }

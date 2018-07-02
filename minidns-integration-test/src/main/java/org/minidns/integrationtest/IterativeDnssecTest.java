@@ -16,7 +16,7 @@ import java.io.IOException;
 
 import org.minidns.dnsname.DnsName;
 import org.minidns.dnssec.DnssecClient;
-import org.minidns.dnssec.DnssecMessage;
+import org.minidns.dnssec.DnssecQueryResult;
 import org.minidns.integrationtest.IntegrationTestTools.CacheConfig;
 import org.minidns.iterative.ReliableDnsClient.Mode;
 import org.minidns.record.Record.TYPE;
@@ -30,13 +30,13 @@ public class IterativeDnssecTest {
     @IntegrationTest
     public static void shouldRequireLessQueries() throws IOException {
         DnssecClient normalCacheClient = getClient(CacheConfig.normal);
-        DnssecMessage normalCacheResult = normalCacheClient.queryDnssec(DNSSEC_DOMAIN, RR_TYPE);
-        assertTrue(normalCacheResult.authenticData);
+        DnssecQueryResult normalCacheResult = normalCacheClient.queryDnssec(DNSSEC_DOMAIN, RR_TYPE);
+        assertTrue(normalCacheResult.isAuthenticData());
         NetworkDataSourceWithAccounting normalCacheNdswa = NetworkDataSourceWithAccounting.from(normalCacheClient);
 
         DnssecClient extendedCacheClient = getClient(CacheConfig.extended);
-        DnssecMessage extendedCacheResult = extendedCacheClient.queryDnssec(DNSSEC_DOMAIN, RR_TYPE);
-        assertTrue(extendedCacheResult.authenticData);
+        DnssecQueryResult extendedCacheResult = extendedCacheClient.queryDnssec(DNSSEC_DOMAIN, RR_TYPE);
+        assertTrue(extendedCacheResult.isAuthenticData());
         NetworkDataSourceWithAccounting extendedCacheNdswa = NetworkDataSourceWithAccounting.from(extendedCacheClient);
 
         assertTrue(normalCacheNdswa.getStats().successfulQueries > extendedCacheNdswa.getStats().successfulQueries);

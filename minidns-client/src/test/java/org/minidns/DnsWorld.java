@@ -15,6 +15,8 @@ import org.minidns.constants.DnssecConstants.SignatureAlgorithm;
 import org.minidns.dnsmessage.DnsMessage;
 import org.minidns.dnsmessage.Question;
 import org.minidns.dnsname.DnsName;
+import org.minidns.dnsqueryresult.DnsQueryResult;
+import org.minidns.dnsqueryresult.TestWorldDnsQueryResult;
 import org.minidns.record.A;
 import org.minidns.record.AAAA;
 import org.minidns.record.CNAME;
@@ -52,7 +54,7 @@ public class DnsWorld extends AbstractDnsDataSource {
     private List<PreparedResponse> answers = new ArrayList<>();
 
     @Override
-    public DnsMessage query(DnsMessage message, InetAddress address, int port) {
+    public DnsQueryResult query(DnsMessage message, InetAddress address, int port) {
         assertNotNull(message);
         assertNotNull(address);
         assertEquals(53, port);
@@ -62,7 +64,7 @@ public class DnsWorld extends AbstractDnsDataSource {
                 DnsMessage.Builder response = answer.getResponse().asBuilder();
                 response.setId(message.id);
                 response.setQuestions(message.questions);
-                return response.build();
+                return new TestWorldDnsQueryResult(message, response.build());
             }
         }
         // TODO We should return an error or throw an IOException here. Otherwise the (DNSSEC) unit tests will log a

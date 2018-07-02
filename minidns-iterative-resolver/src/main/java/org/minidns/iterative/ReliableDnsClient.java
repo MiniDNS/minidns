@@ -20,6 +20,7 @@ import org.minidns.DnsCache;
 import org.minidns.DnsClient;
 import org.minidns.dnsmessage.DnsMessage;
 import org.minidns.dnsmessage.Question;
+import org.minidns.dnsqueryresult.DnsQueryResult;
 import org.minidns.source.DnsDataSource;
 import org.minidns.util.MultipleIoException;
 
@@ -60,8 +61,9 @@ public class ReliableDnsClient extends AbstractDnsClient {
                 questionMessage = super.newQuestion(questionMessage);
                 return ReliableDnsClient.this.newQuestion(questionMessage);
             }
+            // TODO: Rename dnsMessage to result.
             @Override
-            protected boolean isResponseCacheable(Question q, DnsMessage dnsMessage) {
+            protected boolean isResponseCacheable(Question q, DnsQueryResult dnsMessage) {
                 boolean res = super.isResponseCacheable(q, dnsMessage);
                 return ReliableDnsClient.this.isResponseCacheable(q, dnsMessage) && res;
             }
@@ -72,8 +74,9 @@ public class ReliableDnsClient extends AbstractDnsClient {
                 questionMessage = super.newQuestion(questionMessage);
                 return ReliableDnsClient.this.newQuestion(questionMessage);
             }
+            // TODO: Rename dnsMessage to result.
             @Override
-            protected boolean isResponseCacheable(Question q, DnsMessage dnsMessage) {
+            protected boolean isResponseCacheable(Question q, DnsQueryResult dnsMessage) {
                 boolean res = super.isResponseCacheable(q, dnsMessage);
                 return ReliableDnsClient.this.isResponseCacheable(q, dnsMessage) && res;
             }
@@ -85,8 +88,8 @@ public class ReliableDnsClient extends AbstractDnsClient {
     }
 
     @Override
-    protected DnsMessage query(DnsMessage.Builder q) throws IOException {
-        DnsMessage dnsMessage = null;
+    protected DnsQueryResult query(DnsMessage.Builder q) throws IOException {
+        DnsQueryResult dnsMessage = null;
         String unacceptableReason = null;
         List<IOException> ioExceptions = new LinkedList<>();
 
@@ -95,7 +98,7 @@ public class ReliableDnsClient extends AbstractDnsClient {
             try {
                 dnsMessage = dnsClient.query(q);
                 if (dnsMessage != null) {
-                    unacceptableReason = isResponseAcceptable(dnsMessage);
+                    unacceptableReason = isResponseAcceptable(dnsMessage.response);
                     if (unacceptableReason == null) {
                         return dnsMessage;
                     }
@@ -143,8 +146,8 @@ public class ReliableDnsClient extends AbstractDnsClient {
     }
 
     @Override
-    protected boolean isResponseCacheable(Question q, DnsMessage dnsMessage) {
-        return isResponseAcceptable(dnsMessage) == null;
+    protected boolean isResponseCacheable(Question q, DnsQueryResult result) {
+        return isResponseAcceptable(result.response) == null;
     }
 
     /**

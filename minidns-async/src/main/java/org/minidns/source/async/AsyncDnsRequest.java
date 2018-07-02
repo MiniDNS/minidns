@@ -13,7 +13,6 @@ package org.minidns.source.async;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
-import java.net.SocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.ClosedChannelException;
 import java.nio.channels.DatagramChannel;
@@ -30,6 +29,9 @@ import org.minidns.MiniDnsException;
 import org.minidns.MiniDnsFuture;
 import org.minidns.MiniDnsFuture.InternalMiniDnsFuture;
 import org.minidns.dnsmessage.DnsMessage;
+import org.minidns.dnsqueryresult.DnsQueryResult;
+import org.minidns.dnsqueryresult.DnsQueryResult.QueryMethod;
+import org.minidns.dnsqueryresult.StandardDnsQueryResult;
 import org.minidns.source.DnsDataSource.OnResponseCallback;
 import org.minidns.source.AbstractDnsDataSource.QueryMode;
 import org.minidns.util.MultipleIoException;
@@ -38,7 +40,7 @@ public class AsyncDnsRequest {
 
     private static final Logger LOGGER = Logger.getLogger(AsyncDnsRequest.class.getName());
 
-    private final InternalMiniDnsFuture<DnsMessage, IOException> future = new InternalMiniDnsFuture<DnsMessage, IOException>() {
+    private final InternalMiniDnsFuture<DnsQueryResult, IOException> future = new InternalMiniDnsFuture<DnsQueryResult, IOException>() {
         @Override
         public boolean cancel(boolean mayInterruptIfRunning) {
             boolean res = super.cancel(mayInterruptIfRunning);
@@ -51,7 +53,7 @@ public class AsyncDnsRequest {
 
     private final int udpPayloadSize;
 
-    private final SocketAddress socketAddress;
+    private final InetSocketAddress socketAddress;
 
     private final AsyncNetworkDataSource asyncNds;
 
@@ -132,7 +134,7 @@ public class AsyncDnsRequest {
         exceptions.add(e);
     }
 
-    private final void gotResult(DnsMessage result) {
+    private final void gotResult(DnsQueryResult result) {
         if (onResponseCallback != null) {
             onResponseCallback.onResponse(request, result);
         }
@@ -140,7 +142,7 @@ public class AsyncDnsRequest {
         future.setResult(result);
     }
 
-    MiniDnsFuture<DnsMessage, IOException> getFuture() {
+    MiniDnsFuture<DnsQueryResult, IOException> getFuture() {
         return future;
     }
 
@@ -300,7 +302,9 @@ public class AsyncDnsRequest {
                 return;
             }
 
-            gotResult(response);
+            DnsQueryResult result = new StandardDnsQueryResult(socketAddress.getAddress(), socketAddress.getPort(),
+                    QueryMethod.asyncUdp, request, response);
+            gotResult(result);
         }
     }
 
@@ -536,7 +540,9 @@ public class AsyncDnsRequest {
                 return;
             }
 
-            gotResult(response);
+            DnsQueryResult result = new StandardDnsQueryResult(socketAddress.getAddress(), socketAddress.getPort(),
+                    QueryMethod.asyncTcp, request, response);
+            gotResult(result);
         }
 
     }

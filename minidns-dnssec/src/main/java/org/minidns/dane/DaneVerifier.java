@@ -10,12 +10,11 @@
  */
 package org.minidns.dane;
 
-import org.minidns.AbstractDnsClient;
 import org.minidns.dnsmessage.DnsMessage;
 import org.minidns.dnsname.DnsName;
 import org.minidns.dnssec.DnssecClient;
-import org.minidns.dnssec.DnssecMessage;
-import org.minidns.dnssec.UnverifiedReason;
+import org.minidns.dnssec.DnssecQueryResult;
+import org.minidns.dnssec.DnssecUnverifiedReason;
 import org.minidns.record.Data;
 import org.minidns.record.Record;
 import org.minidns.record.TLSA;
@@ -50,13 +49,13 @@ import java.util.logging.Logger;
 public class DaneVerifier {
     private final static Logger LOGGER = Logger.getLogger(DaneVerifier.class.getName());
 
-    private final AbstractDnsClient client;
+    private final DnssecClient client;
 
     public DaneVerifier() {
         this(new DnssecClient());
     }
 
-    public DaneVerifier(AbstractDnsClient client) {
+    public DaneVerifier(DnssecClient client) {
         this.client = client;
     }
 
@@ -103,19 +102,20 @@ public class DaneVerifier {
      */
     public boolean verifyCertificateChain(X509Certificate[] chain, String hostName, int port) throws CertificateException {
         DnsName req = DnsName.from("_" + port + "._tcp." + hostName);
-        DnsMessage res;
+        DnssecQueryResult result;
         try {
-            res = client.query(req, Record.TYPE.TLSA);
+            result = client.queryDnssec(req, Record.TYPE.TLSA);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-        if (!res.authenticData) {
+        DnsMessage res = result.dnsQueryResult.response;
+        // TODO: We previously used the AD bit here. This allowed non-DNSSEC aware clients to be plugged into
+        // DaneVerifier, which, in turn, allows to use a trusted forward as DNSSEC validator. Is this a good idea?
+        if (!result.isAuthenticData()) {
             String msg = "Got TLSA response from DNS server, but was not signed properly.";
-            if (res instanceof DnssecMessage) {
-                msg += " Reasons:";
-                for (UnverifiedReason reason : ((DnssecMessage) res).getUnverifiedReasons()) {
-                    msg += " " + reason;
-                }
+            msg += " Reasons:";
+            for (DnssecUnverifiedReason reason : result.getUnverifiedReasons()) {
+                 msg += " " + reason;
             }
             LOGGER.info(msg);
             return false;

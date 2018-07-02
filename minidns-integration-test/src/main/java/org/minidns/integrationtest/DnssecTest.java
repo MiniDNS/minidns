@@ -16,9 +16,9 @@ import java.util.Iterator;
 import org.junit.Ignore;
 import org.minidns.cache.LruCache;
 import org.minidns.dnssec.DnssecClient;
-import org.minidns.dnssec.DnssecMessage;
+import org.minidns.dnssec.DnssecQueryResult;
+import org.minidns.dnssec.DnssecUnverifiedReason;
 import org.minidns.dnssec.DnssecValidationFailedException;
-import org.minidns.dnssec.UnverifiedReason;
 import org.minidns.record.Record;
 
 import static org.junit.Assert.assertFalse;
@@ -29,7 +29,7 @@ public class DnssecTest {
     @IntegrationTest
     public static void testOarcDaneBadSig() throws Exception {
         DnssecClient client = new DnssecClient(new LruCache(1024));
-        assertFalse(client.query("_443._tcp.bad-sig.dane.dns-oarc.net", Record.TYPE.TLSA).authenticData);
+        assertFalse(client.queryDnssec("_443._tcp.bad-sig.dane.dns-oarc.net", Record.TYPE.TLSA).isAuthenticData());
     }
 
     @IntegrationTest
@@ -50,13 +50,13 @@ public class DnssecTest {
         assertAuthentic(client.queryDnssec("www.cloudflare-dnssec-auth.com", Record.TYPE.A));
     }
 
-    private static void assertAuthentic(DnssecMessage dnssecMessage) {
-        if (dnssecMessage.authenticData) return;
+    private static void assertAuthentic(DnssecQueryResult dnssecMessage) {
+        if (dnssecMessage.isAuthenticData()) return;
 
         StringBuilder sb = new StringBuilder();
         sb.append("Answer should contain authentic data while it does not. Reasons:\n");
-        for (Iterator<UnverifiedReason> it = dnssecMessage.getUnverifiedReasons().iterator(); it.hasNext(); ) {
-            UnverifiedReason unverifiedReason = it.next();
+        for (Iterator<DnssecUnverifiedReason> it = dnssecMessage.getUnverifiedReasons().iterator(); it.hasNext(); ) {
+            DnssecUnverifiedReason unverifiedReason = it.next();
             sb.append(unverifiedReason);
             if (it.hasNext()) sb.append('\n');
         }

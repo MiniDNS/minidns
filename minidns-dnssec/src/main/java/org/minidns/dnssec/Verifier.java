@@ -12,9 +12,9 @@ package org.minidns.dnssec;
 
 import org.minidns.dnsmessage.Question;
 import org.minidns.dnsname.DnsName;
-import org.minidns.dnssec.UnverifiedReason.AlgorithmExceptionThrownReason;
-import org.minidns.dnssec.UnverifiedReason.AlgorithmNotSupportedReason;
-import org.minidns.dnssec.UnverifiedReason.NSECDoesNotMatchReason;
+import org.minidns.dnssec.DnssecUnverifiedReason.AlgorithmExceptionThrownReason;
+import org.minidns.dnssec.DnssecUnverifiedReason.AlgorithmNotSupportedReason;
+import org.minidns.dnssec.DnssecUnverifiedReason.NSECDoesNotMatchReason;
 import org.minidns.dnssec.algorithms.AlgorithmMap;
 import org.minidns.record.DNSKEY;
 import org.minidns.record.Data;
@@ -38,7 +38,7 @@ import java.util.List;
 class Verifier {
     private AlgorithmMap algorithmMap = AlgorithmMap.INSTANCE;
 
-    public UnverifiedReason verify(Record<DNSKEY> dnskeyRecord, DelegatingDnssecRR ds) {
+    public DnssecUnverifiedReason verify(Record<DNSKEY> dnskeyRecord, DelegatingDnssecRR ds) {
         DNSKEY dnskey = dnskeyRecord.payloadData;
         DigestCalculator digestCalculator = algorithmMap.getDsDigestCalculator(ds.digestType);
         if (digestCalculator == null) {
@@ -63,7 +63,7 @@ class Verifier {
         return null;
     }
 
-    public UnverifiedReason verify(List<Record<? extends Data>> records, RRSIG rrsig, DNSKEY key) {
+    public DnssecUnverifiedReason verify(List<Record<? extends Data>> records, RRSIG rrsig, DNSKEY key) {
         SignatureVerifier signatureVerifier = algorithmMap.getSignatureVerifier(rrsig.algorithm);
         if (signatureVerifier == null) {
             return new AlgorithmNotSupportedReason(rrsig.algorithmByte, rrsig.getType(), records.get(0));
@@ -77,7 +77,7 @@ class Verifier {
         }
     }
 
-    public UnverifiedReason verifyNsec(Record<? extends Data> nsecRecord, Question q) {
+    public DnssecUnverifiedReason verifyNsec(Record<? extends Data> nsecRecord, Question q) {
         NSEC nsec = (NSEC) nsecRecord.payloadData;
         if (nsecRecord.name.equals(q.name) && !Arrays.asList(nsec.types).contains(q.type)) {
             // records with same name but different types exist
@@ -88,11 +88,11 @@ class Verifier {
         return new NSECDoesNotMatchReason(q, nsecRecord);
     }
 
-    public UnverifiedReason verifyNsec3(CharSequence zone, Record<? extends Data> nsec3Record, Question q) {
+    public DnssecUnverifiedReason verifyNsec3(CharSequence zone, Record<? extends Data> nsec3Record, Question q) {
         return verifyNsec3(DnsName.from(zone), nsec3Record, q);
     }
 
-    public UnverifiedReason verifyNsec3(DnsName zone, Record<? extends Data> nsec3record, Question q) {
+    public DnssecUnverifiedReason verifyNsec3(DnsName zone, Record<? extends Data> nsec3record, Question q) {
         NSEC3 nsec3 = (NSEC3) nsec3record.payloadData;
         DigestCalculator digestCalculator = algorithmMap.getNsecDigestCalculator(nsec3.hashAlgorithm);
         if (digestCalculator == null) {

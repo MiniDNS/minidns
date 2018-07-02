@@ -14,6 +14,7 @@ import org.minidns.DnsCache;
 import org.minidns.MiniDnsFuture;
 import org.minidns.MiniDnsFuture.InternalMiniDnsFuture;
 import org.minidns.dnsmessage.DnsMessage;
+import org.minidns.dnsqueryresult.DnsQueryResult;
 
 import java.io.IOException;
 import java.net.InetAddress;
@@ -21,12 +22,12 @@ import java.net.InetAddress;
 public abstract class AbstractDnsDataSource implements DnsDataSource {
 
     @Override
-    public abstract DnsMessage query(DnsMessage message, InetAddress address, int port) throws IOException;
+    public abstract DnsQueryResult query(DnsMessage message, InetAddress address, int port) throws IOException;
 
     @Override
-    public MiniDnsFuture<DnsMessage, IOException> queryAsync(DnsMessage message, InetAddress address, int port, OnResponseCallback onResponseCallback) {
-        InternalMiniDnsFuture<DnsMessage, IOException> future = new InternalMiniDnsFuture<>();
-        DnsMessage result;
+    public MiniDnsFuture<DnsQueryResult, IOException> queryAsync(DnsMessage message, InetAddress address, int port, OnResponseCallback onResponseCallback) {
+        InternalMiniDnsFuture<DnsQueryResult, IOException> future = new InternalMiniDnsFuture<>();
+        DnsQueryResult result;
         try {
             result = query(message, address, port);
         } catch (IOException e) {
@@ -71,7 +72,7 @@ public abstract class AbstractDnsDataSource implements DnsDataSource {
 
     private DnsCache cache;
 
-    protected final void cacheResult(DnsMessage request, DnsMessage response) {
+    protected final void cacheResult(DnsMessage request, DnsQueryResult response) {
         final DnsCache activeCache = cache;
         if (activeCache == null) {
             return;

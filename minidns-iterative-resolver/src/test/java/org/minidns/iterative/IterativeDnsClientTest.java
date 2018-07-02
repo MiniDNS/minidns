@@ -15,6 +15,7 @@ import java.util.List;
 
 import org.minidns.cache.LruCache;
 import org.minidns.dnsmessage.DnsMessage;
+import org.minidns.dnsqueryresult.DnsQueryResult;
 import org.minidns.record.A;
 import org.minidns.record.Data;
 import org.minidns.record.Record;
@@ -29,7 +30,6 @@ import static org.minidns.DnsWorld.rootZone;
 import static org.minidns.DnsWorld.zone;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 
 public class IterativeDnsClientTest {
@@ -49,8 +49,8 @@ public class IterativeDnsClientTest {
                         record("www.example.com", a("1.1.1.3"))
                 )
         );
-        DnsMessage message = client.query("www.example.com", TYPE.A);
-        assertNotNull(message);
+        DnsQueryResult result = client.query("www.example.com", TYPE.A);
+        DnsMessage message = result.response;
         List<Record<? extends Data>> answers = message.answerSection;
         assertEquals(1, answers.size());
         assertEquals(TYPE.A, answers.get(0).type);
@@ -94,8 +94,8 @@ public class IterativeDnsClientTest {
                         record("www.example.com", a("1.1.1.3"))
                 )
         );
-        DnsMessage message = client.query("www.example.com", TYPE.A);
-        assertNotNull(message);
+        DnsQueryResult result = client.query("www.example.com", TYPE.A);
+        DnsMessage message = result.response;
         List<Record<? extends Data>> answers = message.answerSection;
         assertEquals(1, answers.size());
         assertEquals(TYPE.A, answers.get(0).type);

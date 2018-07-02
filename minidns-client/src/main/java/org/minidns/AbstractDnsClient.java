@@ -15,6 +15,7 @@ import org.minidns.cache.LruCache;
 import org.minidns.dnsmessage.DnsMessage;
 import org.minidns.dnsmessage.Question;
 import org.minidns.dnsname.DnsName;
+import org.minidns.dnsqueryresult.DnsQueryResult;
 import org.minidns.record.A;
 import org.minidns.record.AAAA;
 import org.minidns.record.Data;
@@ -52,7 +53,7 @@ public abstract class AbstractDnsClient {
      */
     private final DnsDataSource.OnResponseCallback onResponseCallback = new DnsDataSource.OnResponseCallback() {
         @Override
-        public void onResponse(DnsMessage requestMessage, DnsMessage responseMessage) {
+        public void onResponse(DnsMessage requestMessage, DnsQueryResult responseMessage) {
             final Question q = requestMessage.getQuestion();
             if (cache != null && isResponseCacheable(q, responseMessage)) {
                 cache.put(requestMessage.asNormalizedVersion(), responseMessage);
@@ -149,7 +150,7 @@ public abstract class AbstractDnsClient {
      * @return The response (or null on timeout/error).
      * @throws IOException if an IO error occurs.
      */
-    public final DnsMessage query(String name, TYPE type, CLASS clazz) throws IOException {
+    public final DnsQueryResult query(String name, TYPE type, CLASS clazz) throws IOException {
         Question q = new Question(name, type, clazz);
         return query(q);
     }
@@ -163,7 +164,7 @@ public abstract class AbstractDnsClient {
      * @return The response (or null on timeout/error).
      * @throws IOException if an IO error occurs.
      */
-    public final DnsMessage query(DnsName name, TYPE type) throws IOException {
+    public final DnsQueryResult query(DnsName name, TYPE type) throws IOException {
         Question q = new Question(name, type, CLASS.IN);
         return query(q);
     }
@@ -177,12 +178,12 @@ public abstract class AbstractDnsClient {
      * @return The response (or null on timeout/error).
      * @throws IOException if an IO error occurs.
      */
-    public final DnsMessage query(CharSequence name, TYPE type) throws IOException {
+    public final DnsQueryResult query(CharSequence name, TYPE type) throws IOException {
         Question q = new Question(name, type, CLASS.IN);
         return query(q);
     }
 
-    public DnsMessage query(Question q) throws IOException {
+    public DnsQueryResult query(Question q) throws IOException {
         DnsMessage.Builder query = buildMessage(q);
         return query(query);
     }
@@ -194,14 +195,14 @@ public abstract class AbstractDnsClient {
      * @return The response (or null).
      * @throws IOException if an IO error occurs.
      */
-    protected abstract DnsMessage query(DnsMessage.Builder query) throws IOException;
+    protected abstract DnsQueryResult query(DnsMessage.Builder query) throws IOException;
 
-    public final MiniDnsFuture<DnsMessage, IOException> queryAsync(CharSequence name, TYPE type) {
+    public final MiniDnsFuture<DnsQueryResult, IOException> queryAsync(CharSequence name, TYPE type) {
         Question q = new Question(name, type, CLASS.IN);
         return queryAsync(q);
     }
 
-    public final MiniDnsFuture<DnsMessage, IOException> queryAsync(Question q) {
+    public final MiniDnsFuture<DnsQueryResult, IOException> queryAsync(Question q) {
         DnsMessage.Builder query = buildMessage(q);
         return queryAsync(query);
     }
@@ -215,9 +216,9 @@ public abstract class AbstractDnsClient {
      * @param query the query.
      * @return a future for this query.
      */
-    protected MiniDnsFuture<DnsMessage, IOException> queryAsync(DnsMessage.Builder query) {
-        InternalMiniDnsFuture<DnsMessage, IOException> future = new InternalMiniDnsFuture<>();
-        DnsMessage result;
+    protected MiniDnsFuture<DnsQueryResult, IOException> queryAsync(DnsMessage.Builder query) {
+        InternalMiniDnsFuture<DnsQueryResult, IOException> future = new InternalMiniDnsFuture<>();
+        DnsQueryResult result;
         try {
             result = query(query);
         } catch (IOException e) {
@@ -228,14 +229,14 @@ public abstract class AbstractDnsClient {
         return future;
     }
 
-    public final DnsMessage query(Question q, InetAddress server, int port) throws IOException {
+    public final DnsQueryResult query(Question q, InetAddress server, int port) throws IOException {
         DnsMessage query = getQueryFor(q);
         return query(query, server, port);
     }
 
-    public final DnsMessage query(DnsMessage requestMessage, InetAddress address, int port) throws IOException {
+    public final DnsQueryResult query(DnsMessage requestMessage, InetAddress address, int port) throws IOException {
         // See if we have the answer to this question already cached
-        DnsMessage responseMessage = (cache == null) ? null : cache.get(requestMessage);
+        DnsQueryResult responseMessage = (cache == null) ? null : cache.get(requestMessage);
         if (responseMessage != null) {
             return responseMessage;
         }
@@ -265,9 +266,9 @@ public abstract class AbstractDnsClient {
         return responseMessage;
     }
 
-    public final MiniDnsFuture<DnsMessage, IOException> queryAsync(DnsMessage requestMessage, InetAddress address, int port) {
+    public final MiniDnsFuture<DnsQueryResult, IOException> queryAsync(DnsMessage requestMessage, InetAddress address, int port) {
         // See if we have the answer to this question already cached
-        DnsMessage responseMessage = (cache == null) ? null : cache.get(requestMessage);
+        DnsQueryResult responseMessage = (cache == null) ? null : cache.get(requestMessage);
         if (responseMessage != null) {
             return MiniDnsFuture.from(responseMessage);
         }
@@ -284,10 +285,11 @@ public abstract class AbstractDnsClient {
      * Whether a response from the DNS system should be cached or not.
      *
      * @param q          The question the response message should answer.
-     * @param dnsMessage The response message received using the DNS client.
+     * @param result The DNS query result.
      * @return True, if the response should be cached, false otherwise.
      */
-    protected boolean isResponseCacheable(Question q, DnsMessage dnsMessage) {
+    protected boolean isResponseCacheable(Question q, DnsQueryResult result) {
+        DnsMessage dnsMessage = result.response;
         for (Record<? extends Data> record : dnsMessage.answerSection) {
             if (record.isAnswer(q)) {
                 return true;
@@ -323,7 +325,7 @@ public abstract class AbstractDnsClient {
      * @return The response (or null on timeout / failure).
      * @throws IOException On IO Errors.
      */
-    public DnsMessage query(String name, TYPE type, CLASS clazz, InetAddress address, int port)
+    public DnsQueryResult query(String name, TYPE type, CLASS clazz, InetAddress address, int port)
             throws IOException {
         Question q = new Question(name, type, clazz);
         return query(q, address, port);
@@ -339,7 +341,7 @@ public abstract class AbstractDnsClient {
      * @return The response (or null on timeout / failure).
      * @throws IOException On IO Errors.
      */
-    public DnsMessage query(String name, TYPE type, CLASS clazz, InetAddress address)
+    public DnsQueryResult query(String name, TYPE type, CLASS clazz, InetAddress address)
             throws IOException {
         Question q = new Question(name, type, clazz);
         return query(q, address);
@@ -354,13 +356,13 @@ public abstract class AbstractDnsClient {
      * @return The response (or null on timeout / failure).
      * @throws IOException On IO Errors.
      */
-    public DnsMessage query(String name, TYPE type, InetAddress address)
+    public DnsQueryResult query(String name, TYPE type, InetAddress address)
             throws IOException {
         Question q = new Question(name, type, CLASS.IN);
         return query(q, address);
     }
 
-    public final DnsMessage query(DnsMessage query, InetAddress host) throws IOException {
+    public final DnsQueryResult query(DnsMessage query, InetAddress host) throws IOException {
         return query(query, host, 53);
     }
 
@@ -369,14 +371,14 @@ public abstract class AbstractDnsClient {
      *
      * @param q       The question section of the DNS query.
      * @param address The dns server address.
-     * @return The response (or null on timeout/error).
+     * @return The a DNS query result.
      * @throws IOException On IOErrors.
      */
-    public DnsMessage query(Question q, InetAddress address) throws IOException {
+    public DnsQueryResult query(Question q, InetAddress address) throws IOException {
         return query(q, address, 53);
     }
 
-    public final MiniDnsFuture<DnsMessage, IOException> queryAsync(DnsMessage query, InetAddress dnsServer) {
+    public final MiniDnsFuture<DnsQueryResult, IOException> queryAsync(DnsMessage query, InetAddress dnsServer) {
         return queryAsync(query, dnsServer, 53);
     }
 
@@ -423,12 +425,12 @@ public abstract class AbstractDnsClient {
     private <D extends Data> Set<D> getCachedRecordsFor(DnsName dnsName, TYPE type) {
         Question dnsNameNs = new Question(dnsName, type);
         DnsMessage queryDnsNameNs = getQueryFor(dnsNameNs);
-        DnsMessage cachedResult = cache.get(queryDnsNameNs);
+        DnsQueryResult cachedResult = cache.get(queryDnsNameNs);
 
         if (cachedResult == null)
             return Collections.emptySet();
 
-        return cachedResult.getAnswersFor(dnsNameNs);
+        return cachedResult.response.getAnswersFor(dnsNameNs);
     }
 
     public Set<NS> getCachedNameserverRecordsFor(DnsName dnsName) {

@@ -34,6 +34,7 @@ import java.util.logging.Logger;
 
 import org.minidns.MiniDnsFuture;
 import org.minidns.dnsmessage.DnsMessage;
+import org.minidns.dnsqueryresult.DnsQueryResult;
 import org.minidns.source.AbstractDnsDataSource;
 
 public class AsyncNetworkDataSource extends AbstractDnsDataSource {
@@ -81,7 +82,7 @@ public class AsyncNetworkDataSource extends AbstractDnsDataSource {
     }
 
     @Override
-    public MiniDnsFuture<DnsMessage, IOException> queryAsync(DnsMessage message, InetAddress address, int port, OnResponseCallback onResponseCallback) {
+    public MiniDnsFuture<DnsQueryResult, IOException> queryAsync(DnsMessage message, InetAddress address, int port, OnResponseCallback onResponseCallback) {
         AsyncDnsRequest asyncDnsRequest = new AsyncDnsRequest(message, address, port, udpPayloadSize, this, onResponseCallback);
         INCOMING_REQUESTS.add(asyncDnsRequest);
         synchronized (DEADLINE_QUEUE) {
@@ -92,8 +93,8 @@ public class AsyncNetworkDataSource extends AbstractDnsDataSource {
     }
 
     @Override
-    public DnsMessage query(DnsMessage message, InetAddress address, int port) throws IOException {
-        MiniDnsFuture<DnsMessage, IOException> future = queryAsync(message, address, port, null);
+    public DnsQueryResult query(DnsMessage message, InetAddress address, int port) throws IOException {
+        MiniDnsFuture<DnsQueryResult, IOException> future = queryAsync(message, address, port, null);
         try {
             return future.get();
         } catch (InterruptedException e) {

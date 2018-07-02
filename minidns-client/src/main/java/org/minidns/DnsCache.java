@@ -12,6 +12,8 @@ package org.minidns;
 
 import org.minidns.dnsmessage.DnsMessage;
 import org.minidns.dnsname.DnsName;
+import org.minidns.dnsqueryresult.CachedDnsQueryResult;
+import org.minidns.dnsqueryresult.DnsQueryResult;
 
 /**
  * Cache for DNS Entries. Implementations must be thread safe.
@@ -24,25 +26,25 @@ public abstract class DnsCache {
      * Add an an dns answer/response for a given dns question. Implementations
      * should honor the ttl / receive timestamp.
      * @param query The query message containing a question.
-     * @param message The dns message.
+     * @param result The DNS query result.
      */
-    public final void put(DnsMessage query, DnsMessage message) {
-        putNormalized(query.asNormalizedVersion(), message);
+    public final void put(DnsMessage query, DnsQueryResult result) {
+        putNormalized(query.asNormalizedVersion(), result);
     }
 
-    protected abstract void putNormalized(DnsMessage normalizedQuery, DnsMessage reply);
+    protected abstract void putNormalized(DnsMessage normalizedQuery, DnsQueryResult result);
 
-    public abstract void offer(DnsMessage query, DnsMessage reply, DnsName authoritativeZone);
+    public abstract void offer(DnsMessage query, DnsQueryResult result, DnsName authoritativeZone);
 
     /**
      * Request a cached dns response.
      * @param query The query message containing a question.
      * @return The dns message.
      */
-    public final DnsMessage get(DnsMessage query) {
+    public final CachedDnsQueryResult get(DnsMessage query) {
         return getNormalized(query.asNormalizedVersion());
     }
 
-    protected abstract DnsMessage getNormalized(DnsMessage normalizedQuery);
+    protected abstract CachedDnsQueryResult getNormalized(DnsMessage normalizedQuery);
 
 }

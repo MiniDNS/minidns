@@ -17,9 +17,10 @@ import org.minidns.MiniDnsException;
 import org.minidns.MiniDnsException.NullResultException;
 import org.minidns.dnsmessage.DnsMessage;
 import org.minidns.dnsmessage.Question;
+import org.minidns.dnsqueryresult.DnsQueryResult;
 import org.minidns.dnsmessage.DnsMessage.RESPONSE_CODE;
 import org.minidns.dnssec.DnssecResultNotAuthenticException;
-import org.minidns.dnssec.UnverifiedReason;
+import org.minidns.dnssec.DnssecUnverifiedReason;
 import org.minidns.record.Data;
 
 public class ResolverResult<D extends Data> {
@@ -28,14 +29,19 @@ public class ResolverResult<D extends Data> {
     private final RESPONSE_CODE responseCode;
     private final Set<D> data;
     private final boolean isAuthenticData;
-    protected final Set<UnverifiedReason> unverifiedReasons;
+    protected final Set<DnssecUnverifiedReason> unverifiedReasons;
     protected final DnsMessage answer;
+    protected final DnsQueryResult result;
 
-    ResolverResult(Question question , DnsMessage answer, Set<UnverifiedReason> unverifiedReasons) throws NullResultException {
-        if (answer == null) {
+    ResolverResult(Question question, DnsQueryResult result, Set<DnssecUnverifiedReason> unverifiedReasons) throws NullResultException {
+        // TODO: Is this null check still needed?
+        if (result == null) {
             throw new MiniDnsException.NullResultException(question.asMessageBuilder().build());
         }
 
+        this.result = result;
+
+        DnsMessage answer = result.response;
         this.question = question;
         this.responseCode = answer.responseCode;
         this.answer = answer;
@@ -83,7 +89,7 @@ public class ResolverResult<D extends Data> {
      *
      * @return The reasons the result could not be verified or <code>null</code>.
      */
-    public Set<UnverifiedReason> getUnverifiedReasons() {
+    public Set<DnssecUnverifiedReason> getUnverifiedReasons() {
         throwIseIfErrorResponse();
         return unverifiedReasons;
     }
@@ -132,6 +138,10 @@ public class ResolverResult<D extends Data> {
      */
     public DnsMessage getRawAnswer() {
         return answer;
+    }
+
+    public DnsQueryResult getDnsQueryResult() {
+        return result;
     }
 
     @Override

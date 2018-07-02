@@ -17,6 +17,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import org.minidns.AbstractDnsClient;
 import org.minidns.dnsmessage.DnsMessage;
+import org.minidns.dnsqueryresult.StandardDnsQueryResult;
 
 public class NetworkDataSourceWithAccounting extends NetworkDataSource {
 
@@ -33,8 +34,8 @@ public class NetworkDataSourceWithAccounting extends NetworkDataSource {
     private final AtomicInteger failedTcpQueries = new AtomicInteger();
 
     @Override
-    public DnsMessage query(DnsMessage message, InetAddress address, int port) throws IOException {
-        DnsMessage response;
+    public StandardDnsQueryResult query(DnsMessage message, InetAddress address, int port) throws IOException {
+        StandardDnsQueryResult response;
         try {
             response = super.query(message, address, port);
         } catch (IOException e) {
@@ -43,7 +44,7 @@ public class NetworkDataSourceWithAccounting extends NetworkDataSource {
         }
 
         successfulQueries.incrementAndGet();
-        responseSize.addAndGet(response.toArray().length);
+        responseSize.addAndGet(response.response.toArray().length);
 
         return response;
     }

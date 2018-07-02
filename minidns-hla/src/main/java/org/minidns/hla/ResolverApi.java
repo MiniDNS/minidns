@@ -16,9 +16,9 @@ import java.net.Inet6Address;
 import java.net.InetAddress;
 
 import org.minidns.AbstractDnsClient;
-import org.minidns.dnsmessage.DnsMessage;
 import org.minidns.dnsmessage.Question;
 import org.minidns.dnsname.DnsName;
+import org.minidns.dnsqueryresult.DnsQueryResult;
 import org.minidns.iterative.ReliableDnsClient;
 import org.minidns.record.Data;
 import org.minidns.record.PTR;
@@ -110,9 +110,9 @@ public class ResolverApi {
     }
 
     public <D extends Data> ResolverResult<D> resolve(Question question) throws IOException {
-        DnsMessage dnsMessage = dnsClient.query(question);
+        DnsQueryResult dnsQueryResult = dnsClient.query(question);
 
-        return new ResolverResult<D>(question, dnsMessage, null);
+        return new ResolverResult<D>(question, dnsQueryResult, null);
     }
 
     public SrvResolverResult resolveSrv(SrvType type, String serviceName) throws IOException {

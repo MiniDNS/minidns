@@ -12,7 +12,7 @@ package org.minidns.integrationtest;
 
 import org.minidns.DnsClient;
 import org.minidns.cache.LruCache;
-import org.minidns.dnsmessage.DnsMessage;
+import org.minidns.dnsqueryresult.DnsQueryResult;
 import org.minidns.record.Data;
 import org.minidns.record.Record;
 
@@ -31,14 +31,14 @@ public class CoreTest {
         DnsClient client = new DnsClient(new LruCache(1024));
         String exampleIp4 = "93.184.216.34"; // stable?
         String exampleIp6 = "2606:2800:220:1:248:1893:25c8:1946"; // stable?
-        assertEquals(client.query("example.com", Record.TYPE.A).answerSection.get(0).payloadData.toString(), exampleIp4);
-        assertEquals(client.query("www.example.com", Record.TYPE.A).answerSection.get(0).payloadData.toString(), exampleIp4);
-        assertEquals(client.query("example.com", Record.TYPE.AAAA).answerSection.get(0).payloadData.toString(), exampleIp6);
-        assertEquals(client.query("www.example.com", Record.TYPE.AAAA).answerSection.get(0).payloadData.toString(), exampleIp6);
+        assertEquals(client.query("example.com", Record.TYPE.A).response.answerSection.get(0).payloadData.toString(), exampleIp4);
+        assertEquals(client.query("www.example.com", Record.TYPE.A).response.answerSection.get(0).payloadData.toString(), exampleIp4);
+        assertEquals(client.query("example.com", Record.TYPE.AAAA).response.answerSection.get(0).payloadData.toString(), exampleIp6);
+        assertEquals(client.query("www.example.com", Record.TYPE.AAAA).response.answerSection.get(0).payloadData.toString(), exampleIp6);
 
-        DnsMessage nsRecords = client.query("example.com", Record.TYPE.NS);
+        DnsQueryResult nsResult = client.query("example.com", Record.TYPE.NS);
         List<String> values = new ArrayList<>();
-        for (Record<? extends Data> record : nsRecords.answerSection) {
+        for (Record<? extends Data> record : nsResult.response.answerSection) {
             values.add(record.payloadData.toString());
         }
         Collections.sort(values);
@@ -51,8 +51,8 @@ public class CoreTest {
         DnsClient client = new DnsClient(new LruCache(1024));
         client.setAskForDnssec(true);
         client.setDisableResultFilter(true);
-        DnsMessage result = client.query("www-nsec.example.com", Record.TYPE.A);
+        DnsQueryResult result = client.query("www-nsec.example.com", Record.TYPE.A);
         assertNotNull(result);
-        assertTrue(result.toArray().length > 512);
+        assertTrue(result.response.toArray().length > 512);
     }
 }

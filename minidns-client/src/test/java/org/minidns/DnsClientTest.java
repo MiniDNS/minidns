@@ -12,6 +12,7 @@ package org.minidns;
 
 import org.minidns.cache.LruCache;
 import org.minidns.dnsmessage.DnsMessage;
+import org.minidns.dnsqueryresult.DnsQueryResult;
 import org.minidns.dnsserverlookup.AbstractDnsServerLookupMechanism;
 import org.minidns.dnsserverlookup.AndroidUsingExec;
 import org.minidns.dnsserverlookup.AndroidUsingReflection;
@@ -77,15 +78,17 @@ public class DnsClientTest {
     public void testSingleRecordQuery() throws IOException {
         DnsClient client = new DnsClient(new LruCache(0));
         applyStubRecords(client, record("www.example.com", a("127.0.0.1")));
-        DnsMessage response = client.query("www.example.com", TYPE.A);
+        DnsQueryResult result = client.query("www.example.com", TYPE.A);
+        DnsMessage response = result.response;
         assertNotNull(response);
         assertEquals(1, response.answerSection.size());
         assertEquals(TYPE.A, response.answerSection.get(0).type);
         assertArrayEquals(new byte[]{127, 0, 0, 1}, ((A) response.answerSection.get(0).payloadData).getIp());
-        response = client.query("www2.example.com", TYPE.A);
-        assertNull(response);
-        response = client.query("www.example.com", TYPE.CNAME);
-        assertNull(response);
+        result = client.query("www2.example.com", TYPE.A);
+        // TODO: Why do we return null here? This should probably return something else, like NXDOMAIN.
+        assertNull(result);
+        result = client.query("www.example.com", TYPE.CNAME);
+        assertNull(result);
     }
 
     @Test
@@ -94,7 +97,7 @@ public class DnsClientTest {
             boolean queried = false;
 
             @Override
-            public DnsMessage query(DnsMessage message, InetAddress address, int port) {
+            public DnsQueryResult query(DnsMessage message, InetAddress address, int port) {
                 queried = true;
                 return null;
             }
@@ -102,7 +105,7 @@ public class DnsClientTest {
         DnsClient client = new DnsClient(new LruCache(0));
         NullSource source = new NullSource();
         client.setDataSource(source);
-        DnsMessage message = client.query("www.example.com", TYPE.A);
+        DnsQueryResult message = client.query("www.example.com", TYPE.A);
         assertNull(message);
         assertTrue(source.queried);
     }

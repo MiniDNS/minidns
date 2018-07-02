@@ -22,9 +22,9 @@ public class DnssecResultNotAuthenticException extends MiniDnsException {
      */
     private static final long serialVersionUID = 1L;
 
-    private final Set<UnverifiedReason> unverifiedReasons;
+    private final Set<DnssecUnverifiedReason> unverifiedReasons;
 
-    private DnssecResultNotAuthenticException(String message, Set<UnverifiedReason> unverifiedReasons) {
+    private DnssecResultNotAuthenticException(String message, Set<DnssecUnverifiedReason> unverifiedReasons) {
         super(message);
         if (unverifiedReasons.isEmpty()) {
             throw new IllegalArgumentException();
@@ -32,17 +32,17 @@ public class DnssecResultNotAuthenticException extends MiniDnsException {
         this.unverifiedReasons = Collections.unmodifiableSet(unverifiedReasons);
     }
 
-    public static DnssecResultNotAuthenticException from(Set<UnverifiedReason> unverifiedReasons) {
+    public static DnssecResultNotAuthenticException from(Set<DnssecUnverifiedReason> unverifiedReasons) {
         StringBuilder sb = new StringBuilder();
         sb.append("DNSSEC result not authentic. Reasons: ");
-        for (UnverifiedReason reason : unverifiedReasons) {
+        for (DnssecUnverifiedReason reason : unverifiedReasons) {
             sb.append(reason).append('.');
         }
 
         return new DnssecResultNotAuthenticException(sb.toString(), unverifiedReasons);
     }
 
-    public Set<UnverifiedReason> getUnverifiedReasons() {
+    public Set<DnssecUnverifiedReason> getUnverifiedReasons() {
         return unverifiedReasons;
     }
 }

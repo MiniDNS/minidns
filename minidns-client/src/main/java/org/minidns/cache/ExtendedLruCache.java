@@ -19,6 +19,9 @@ import java.util.Map.Entry;
 import org.minidns.dnsmessage.DnsMessage;
 import org.minidns.dnsmessage.Question;
 import org.minidns.dnsname.DnsName;
+import org.minidns.dnsqueryresult.CachedDnsQueryResult;
+import org.minidns.dnsqueryresult.DnsQueryResult;
+import org.minidns.dnsqueryresult.SynthesizedCachedDnsQueryResult;
 import org.minidns.record.Data;
 import org.minidns.record.Record;
 
@@ -40,19 +43,21 @@ public class ExtendedLruCache extends LruCache {
     }
 
     @Override
-    protected void putNormalized(DnsMessage q, DnsMessage message) {
-        super.putNormalized(q, message);
+    protected void putNormalized(DnsMessage q, DnsQueryResult result) {
+        super.putNormalized(q, result);
+        DnsMessage message = result.response;
         Map<DnsMessage, List<Record<? extends Data>>> extraCaches = new HashMap<>(message.additionalSection.size());
 
         gather(extraCaches, q, message.answerSection, null);
         gather(extraCaches, q, message.authoritySection, null);
         gather(extraCaches, q, message.additionalSection, null);
 
-        putExtraCaches(message, extraCaches);
+        putExtraCaches(result, extraCaches);
     }
 
     @Override
-    public void offer(DnsMessage query, DnsMessage reply, DnsName authoritativeZone) {
+    public void offer(DnsMessage query, DnsQueryResult result, DnsName authoritativeZone) {
+        DnsMessage reply = result.response;
         // The reply shouldn't be an authoritative answers when offer() is used. That would be a case for put().
         assert(!reply.authoritativeAnswer);
 
@@ -62,7 +67,7 @@ public class ExtendedLruCache extends LruCache {
         gather(extraCaches, query, reply.authoritySection, authoritativeZone);
         gather(extraCaches, query, reply.additionalSection, authoritativeZone);
 
-        putExtraCaches(reply, extraCaches);
+        putExtraCaches(result, extraCaches);
     }
 
     private final void gather(Map<DnsMessage, List<Record<?extends Data>>> extraCaches, DnsMessage q, List<Record<? extends Data>> records, DnsName authoritativeZone) {
@@ -93,7 +98,8 @@ public class ExtendedLruCache extends LruCache {
         }
     }
 
-    private final void putExtraCaches(DnsMessage reply, Map<DnsMessage, List<Record<? extends Data>>> extraCaches) {
+    private final void putExtraCaches(DnsQueryResult synthesynthesizationSource, Map<DnsMessage, List<Record<? extends Data>>> extraCaches) {
+        DnsMessage reply = synthesynthesizationSource.response;
         for (Entry<DnsMessage, List<Record<? extends Data>>> entry : extraCaches.entrySet()) {
             DnsMessage question = entry.getKey();
             DnsMessage answer = reply.asBuilder()
@@ -101,7 +107,10 @@ public class ExtendedLruCache extends LruCache {
                     .setAuthoritativeAnswer(true)
                     .addAnswers(entry.getValue())
                     .build();
-            super.putNormalized(question, answer);
+            CachedDnsQueryResult cachedDnsQueryResult = new SynthesizedCachedDnsQueryResult(question, answer, synthesynthesizationSource);
+            synchronized (this) {
+                backend.put(question, cachedDnsQueryResult);
+            }
         }
     }
 

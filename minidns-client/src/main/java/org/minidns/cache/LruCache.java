@@ -16,6 +16,9 @@ import java.util.Map.Entry;
 import org.minidns.DnsCache;
 import org.minidns.dnsmessage.DnsMessage;
 import org.minidns.dnsname.DnsName;
+import org.minidns.dnsqueryresult.CachedDnsQueryResult;
+import org.minidns.dnsqueryresult.DirectCachedDnsQueryResult;
+import org.minidns.dnsqueryresult.DnsQueryResult;
 import org.minidns.record.Data;
 import org.minidns.record.Record;
 
@@ -52,7 +55,7 @@ public class LruCache extends DnsCache {
     /**
      * The backend cache.
      */
-    protected LinkedHashMap<DnsMessage, DnsMessage> backend;
+    protected LinkedHashMap<DnsMessage, CachedDnsQueryResult> backend;
 
     /**
      * Create a new LRUCache with given capacity and upper bound ttl.
@@ -63,12 +66,12 @@ public class LruCache extends DnsCache {
     public LruCache(final int capacity, final long maxTTL) {
         this.capacity = capacity;
         this.maxTTL = maxTTL;
-        backend = new LinkedHashMap<DnsMessage, DnsMessage>(
+        backend = new LinkedHashMap<DnsMessage, CachedDnsQueryResult>(
                 Math.min(capacity + (capacity + 3) / 4 + 2, 11), 0.75f, true)
             {
                 @Override
                 protected boolean removeEldestEntry(
-                        Entry<DnsMessage, DnsMessage> eldest) {
+                        Entry<DnsMessage, CachedDnsQueryResult> eldest) {
                     return size() > capacity;
                 }
             };
@@ -87,21 +90,22 @@ public class LruCache extends DnsCache {
     }
 
     @Override
-    protected synchronized void putNormalized(DnsMessage q, DnsMessage message) {
-        if (message.receiveTimestamp <= 0L) {
+    protected synchronized void putNormalized(DnsMessage q, DnsQueryResult result) {
+        if (result.response.receiveTimestamp <= 0L) {
             return;
         }
-        backend.put(q, message);
+        backend.put(q, new DirectCachedDnsQueryResult(q, result));
     }
 
     @Override
-    protected synchronized DnsMessage getNormalized(DnsMessage q) {
-        DnsMessage message = backend.get(q);
-        if (message == null) {
+    protected synchronized CachedDnsQueryResult getNormalized(DnsMessage q) {
+        CachedDnsQueryResult result = backend.get(q);
+        if (result == null) {
             missCount++;
             return null;
         }
 
+        DnsMessage message = result.response;
         long ttl = maxTTL;
         // RFC 2181 § 5.2 says that all TTLs in a RRSet should be equal, if this isn't the case, then we assume the
         // shortest TTL to be the effective one.
@@ -115,7 +119,7 @@ public class LruCache extends DnsCache {
             return null;
         } else {
             hitCount++;
-            return message;
+            return result;
         }
     }
 
@@ -161,6 +165,6 @@ public class LruCache extends DnsCache {
     }
 
     @Override
-    public void offer(DnsMessage query, DnsMessage reply, DnsName knownAuthoritativeZone) {
+    public void offer(DnsMessage query, DnsQueryResult result, DnsName knownAuthoritativeZone) {
     }
 }
