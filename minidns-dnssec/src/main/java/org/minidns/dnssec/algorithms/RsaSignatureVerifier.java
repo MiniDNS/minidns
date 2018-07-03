@@ -10,7 +10,8 @@
  */
 package org.minidns.dnssec.algorithms;
 
-import org.minidns.dnssec.DnssecValidationFailedException;
+import org.minidns.dnssec.DnssecValidationFailedException.DnssecInvalidKeySpecException;
+import org.minidns.dnssec.DnssecValidationFailedException.DataMalformedException;
 
 import java.io.ByteArrayInputStream;
 import java.io.DataInput;
@@ -28,8 +29,9 @@ class RsaSignatureVerifier extends JavaSecSignatureVerifier {
     }
 
     @Override
-    protected PublicKey getPublicKey(byte[] key) {
+    protected PublicKey getPublicKey(byte[] key) throws DataMalformedException, DnssecInvalidKeySpecException {
         DataInput dis = new DataInputStream(new ByteArrayInputStream(key));
+        BigInteger exponent, modulus;
 
         try {
             int exponentLength = dis.readUnsignedByte();
@@ -42,15 +44,19 @@ class RsaSignatureVerifier extends JavaSecSignatureVerifier {
             byte[] exponentBytes = new byte[exponentLength];
             dis.readFully(exponentBytes);
             bytesRead += exponentLength;
-            BigInteger exponent = new BigInteger(1, exponentBytes);
+            exponent = new BigInteger(1, exponentBytes);
 
             byte[] modulusBytes = new byte[key.length - bytesRead];
             dis.readFully(modulusBytes);
-            BigInteger modulus = new BigInteger(1, modulusBytes);
+            modulus = new BigInteger(1, modulusBytes);
+        } catch (IOException e) {
+            throw new DataMalformedException(e, key);
+        }
 
+        try {
             return getKeyFactory().generatePublic(new RSAPublicKeySpec(modulus, exponent));
-        } catch (IOException | InvalidKeySpecException e) {
-            throw new DnssecValidationFailedException("Invalid public key!", e);
+        } catch (InvalidKeySpecException e) {
+            throw new DnssecInvalidKeySpecException(e);
         }
     }
 

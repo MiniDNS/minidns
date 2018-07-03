@@ -38,7 +38,7 @@ import java.util.List;
 class Verifier {
     private AlgorithmMap algorithmMap = AlgorithmMap.INSTANCE;
 
-    public DnssecUnverifiedReason verify(Record<DNSKEY> dnskeyRecord, DelegatingDnssecRR ds) {
+    public DnssecUnverifiedReason verify(Record<DNSKEY> dnskeyRecord, DelegatingDnssecRR ds) throws DnssecValidationFailedException {
         DNSKEY dnskey = dnskeyRecord.payloadData;
         DigestCalculator digestCalculator = algorithmMap.getDsDigestCalculator(ds.digestType);
         if (digestCalculator == null) {
@@ -63,7 +63,7 @@ class Verifier {
         return null;
     }
 
-    public DnssecUnverifiedReason verify(List<Record<? extends Data>> records, RRSIG rrsig, DNSKEY key) {
+    public DnssecUnverifiedReason verify(List<Record<? extends Data>> records, RRSIG rrsig, DNSKEY key) throws IOException {
         SignatureVerifier signatureVerifier = algorithmMap.getSignatureVerifier(rrsig.algorithm);
         if (signatureVerifier == null) {
             return new AlgorithmNotSupportedReason(rrsig.algorithmByte, rrsig.getType(), records.get(0));

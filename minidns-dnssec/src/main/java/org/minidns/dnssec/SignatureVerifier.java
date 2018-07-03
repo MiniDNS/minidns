@@ -11,5 +11,5 @@
 package org.minidns.dnssec;
 
 public interface SignatureVerifier {
-    boolean verify(byte[] content, byte[] rrsigData, byte[] key);
+    boolean verify(byte[] content, byte[] rrsigData, byte[] key) throws DnssecValidationFailedException;
 }

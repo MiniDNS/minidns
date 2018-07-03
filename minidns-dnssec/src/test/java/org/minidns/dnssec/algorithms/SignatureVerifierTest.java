@@ -12,6 +12,7 @@ package org.minidns.dnssec.algorithms;
 
 import org.junit.Before;
 import org.minidns.constants.DnssecConstants.SignatureAlgorithm;
+import org.minidns.dnssec.DnssecValidationFailedException;
 
 import java.security.PrivateKey;
 import java.util.Random;
@@ -34,19 +35,19 @@ public class SignatureVerifierTest extends AlgorithmTest {
         RANDOM.nextBytes(sample);
     }
 
-    protected void verifierTest(int length, SignatureAlgorithm algorithm) {
+    protected void verifierTest(int length, SignatureAlgorithm algorithm) throws DnssecValidationFailedException {
         verifierTest(generatePrivateKey(algorithm, length), algorithm);
     }
 
-    protected void verifierTest(PrivateKey privateKey, SignatureAlgorithm algorithm) {
+    protected void verifierTest(PrivateKey privateKey, SignatureAlgorithm algorithm) throws DnssecValidationFailedException {
         assertSignatureValid(publicKey(algorithm, privateKey), algorithm, sign(privateKey, algorithm, sample));
     }
 
-    protected void assertSignatureValid(byte[] publicKey, SignatureAlgorithm algorithm, byte[] signature) {
+    protected void assertSignatureValid(byte[] publicKey, SignatureAlgorithm algorithm, byte[] signature) throws DnssecValidationFailedException {
         assertTrue(algorithmMap.getSignatureVerifier(algorithm).verify(sample, signature, publicKey));
     }
 
-    protected void assertSignatureInvalid(byte[] publicKey, SignatureAlgorithm algorithm, byte[] signature) {
+    protected void assertSignatureInvalid(byte[] publicKey, SignatureAlgorithm algorithm, byte[] signature) throws DnssecValidationFailedException {
         assertFalse(algorithmMap.getSignatureVerifier(algorithm).verify(sample, signature, publicKey));
     }
 }

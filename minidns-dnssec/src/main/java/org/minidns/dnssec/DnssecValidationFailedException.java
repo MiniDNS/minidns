@@ -14,9 +14,11 @@ import org.minidns.dnsmessage.Question;
 import org.minidns.record.Data;
 import org.minidns.record.Record;
 
+import java.io.IOException;
+import java.security.spec.InvalidKeySpecException;
 import java.util.List;
 
-public class DnssecValidationFailedException extends RuntimeException {
+public class DnssecValidationFailedException extends IOException {
     private static final long serialVersionUID = 5413184667629832742L;
 
     public DnssecValidationFailedException(Question question, String reason) {
@@ -37,5 +39,46 @@ public class DnssecValidationFailedException extends RuntimeException {
 
     public DnssecValidationFailedException(List<Record<? extends Data>> records, String reason) {
         super("Validation of " + records.size() + " " + records.get(0).type + " record" + (records.size() > 1 ? "s" : "") + " failed: " + reason);
+    }
+
+    public static class DataMalformedException extends DnssecValidationFailedException {
+
+        /**
+         * 
+         */
+        private static final long serialVersionUID = 1L;
+
+        private final byte[] data;
+
+        public DataMalformedException(IOException exception, byte[] data) {
+            super("Malformed data", exception);
+            this.data = data;
+        }
+
+        public DataMalformedException(String message, IOException exception, byte[] data) {
+            super(message, exception);
+            this.data = data;
+        }
+
+        public byte[] getData() {
+            return data;
+        }
+    }
+
+    public static class DnssecInvalidKeySpecException extends DnssecValidationFailedException {
+
+        /**
+         * 
+         */
+        private static final long serialVersionUID = 1L;
+
+        public DnssecInvalidKeySpecException(InvalidKeySpecException exception) {
+            super("Invalid key spec", exception);
+        }
+
+        public DnssecInvalidKeySpecException(String message, InvalidKeySpecException exception, byte[] data) {
+            super(message, exception);
+        }
+
     }
 }

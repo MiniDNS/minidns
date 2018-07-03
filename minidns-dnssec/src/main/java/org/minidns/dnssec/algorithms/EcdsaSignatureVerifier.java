@@ -10,7 +10,8 @@
  */
 package org.minidns.dnssec.algorithms;
 
-import org.minidns.dnssec.DnssecValidationFailedException;
+import org.minidns.dnssec.DnssecValidationFailedException.DataMalformedException;
+import org.minidns.dnssec.DnssecValidationFailedException.DnssecInvalidKeySpecException;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -43,7 +44,7 @@ abstract class EcdsaSignatureVerifier extends JavaSecSignatureVerifier {
     }
 
     @Override
-    protected byte[] getSignature(byte[] rrsigData) {
+    protected byte[] getSignature(byte[] rrsigData) throws DataMalformedException {
         DataInput dis = new DataInputStream(new ByteArrayInputStream(rrsigData));
         ByteArrayOutputStream bos = new ByteArrayOutputStream();
         DataOutputStream dos = new DataOutputStream(bos);
@@ -70,28 +71,33 @@ abstract class EcdsaSignatureVerifier extends JavaSecSignatureVerifier {
             if (slen > length) dos.writeByte(0);
             dos.write(s);
         } catch (IOException e) {
-            throw new DnssecValidationFailedException("Invalid signature!", e);
+            throw new DataMalformedException(e, rrsigData);
         }
 
         return bos.toByteArray();
     }
 
     @Override
-    protected PublicKey getPublicKey(byte[] key) {
+    protected PublicKey getPublicKey(byte[] key) throws DataMalformedException, DnssecInvalidKeySpecException {
         DataInput dis = new DataInputStream(new ByteArrayInputStream(key));
+        BigInteger x, y;
 
         try {
             byte[] xBytes = new byte[length];
             dis.readFully(xBytes);
-            BigInteger x = new BigInteger(1, xBytes);
+            x = new BigInteger(1, xBytes);
 
             byte[] yBytes = new byte[length];
             dis.readFully(yBytes);
-            BigInteger y = new BigInteger(1, yBytes);
+            y = new BigInteger(1, yBytes);
+        } catch (IOException e) {
+            throw new DataMalformedException(e, key);
+        }
 
+        try {
             return getKeyFactory().generatePublic(new ECPublicKeySpec(new ECPoint(x, y), spec));
-        } catch (IOException | InvalidKeySpecException e) {
-            throw new DnssecValidationFailedException("Invalid public key!", e);
+        } catch (InvalidKeySpecException e) {
+            throw new DnssecInvalidKeySpecException(e);
         }
     }
 

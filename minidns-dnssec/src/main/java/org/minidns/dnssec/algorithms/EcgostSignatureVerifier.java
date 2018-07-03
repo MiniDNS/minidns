@@ -10,7 +10,8 @@
  */
 package org.minidns.dnssec.algorithms;
 
-import org.minidns.dnssec.DnssecValidationFailedException;
+import org.minidns.dnssec.DnssecValidationFailedException.DnssecInvalidKeySpecException;
+import org.minidns.dnssec.DnssecValidationFailedException.DataMalformedException;
 
 import java.io.ByteArrayInputStream;
 import java.io.DataInput;
@@ -49,23 +50,28 @@ class EcgostSignatureVerifier extends JavaSecSignatureVerifier {
     }
 
     @Override
-    protected PublicKey getPublicKey(byte[] key) {
+    protected PublicKey getPublicKey(byte[] key) throws DataMalformedException, DnssecInvalidKeySpecException {
         DataInput dis = new DataInputStream(new ByteArrayInputStream(key));
+        BigInteger x, y;
 
         try {
             byte[] xBytes = new byte[LENGTH];
             dis.readFully(xBytes);
             reverse(xBytes);
-            BigInteger x = new BigInteger(1, xBytes);
+            x = new BigInteger(1, xBytes);
 
             byte[] yBytes = new byte[LENGTH];
             dis.readFully(yBytes);
             reverse(yBytes);
-            BigInteger y = new BigInteger(1, yBytes);
+            y = new BigInteger(1, yBytes);
+        } catch (IOException e) {
+            throw new DataMalformedException(e, key);
+        }
 
+        try {
             return getKeyFactory().generatePublic(new ECPublicKeySpec(new ECPoint(x, y), SPEC));
-        } catch (IOException | InvalidKeySpecException e) {
-            throw new DnssecValidationFailedException("Invalid public key!", e);
+        } catch (InvalidKeySpecException e) {
+            throw new DnssecInvalidKeySpecException(e);
         }
     }
 

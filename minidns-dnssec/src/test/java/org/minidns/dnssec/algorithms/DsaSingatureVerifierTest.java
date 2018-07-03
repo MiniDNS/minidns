@@ -12,6 +12,7 @@ package org.minidns.dnssec.algorithms;
 
 import org.minidns.constants.DnssecConstants.SignatureAlgorithm;
 import org.minidns.dnssec.DnssecValidationFailedException;
+import org.minidns.dnssec.DnssecValidationFailedException.DataMalformedException;
 import org.junit.Test;
 
 import static org.minidns.dnssec.DnssecWorld.generatePrivateKey;
@@ -22,28 +23,28 @@ public class DsaSingatureVerifierTest extends SignatureVerifierTest {
     private static final SignatureAlgorithm ALGORITHM = SignatureAlgorithm.DSA;
 
     @Test
-    public void testDSA1024Valid() {
+    public void testDSA1024Valid() throws DnssecValidationFailedException {
         verifierTest(1024, ALGORITHM);
     }
 
     @Test
-    public void testDSA512Valid() {
+    public void testDSA512Valid() throws DnssecValidationFailedException {
         verifierTest(512, ALGORITHM);
     }
 
 
-    @Test(expected = DnssecValidationFailedException.class)
-    public void testDSAIllegalSignature() {
+    @Test(expected = DataMalformedException.class)
+    public void testDSAIllegalSignature() throws DnssecValidationFailedException {
         assertSignatureValid(publicKey(ALGORITHM, generatePrivateKey(ALGORITHM, 1024)), ALGORITHM, new byte[]{0x0});
     }
 
-    @Test(expected = DnssecValidationFailedException.class)
-    public void testDSAIllegalPublicKey() {
+    @Test(expected = DataMalformedException.class)
+    public void testDSAIllegalPublicKey() throws DnssecValidationFailedException {
         assertSignatureValid(new byte[]{0x0}, ALGORITHM, sign(generatePrivateKey(ALGORITHM, 1024), ALGORITHM, sample));
     }
 
     @Test
-    public void testDSAWrongSignature() {
+    public void testDSAWrongSignature() throws DnssecValidationFailedException {
         assertSignatureInvalid(publicKey(ALGORITHM, generatePrivateKey(ALGORITHM, 1024)), ALGORITHM, sign(generatePrivateKey(ALGORITHM, 1024), ALGORITHM, sample));
     }
 
