@@ -906,7 +906,8 @@ public class DnsMessage {
         }
 
         /**
-         * Set the QR flag.
+         * Set the QR flag. Note that this will be <code>true</code> if the message is a
+         * <b>response</b> and <code>false</code> if it is a <b>query</b>.
          *
          * @param query The new QR flag status.
          * @return a reference to this builder.
