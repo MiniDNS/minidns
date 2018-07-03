@@ -46,7 +46,7 @@ public abstract class JavaSecSignatureVerifier implements SignatureVerifier {
             return signature.verify(getSignature(rrsigData));
         } catch (NoSuchAlgorithmException e) {
             // We checked against this before, it should never happen!
-            throw new IllegalStateException();
+            throw new AssertionError(e);
         } catch (InvalidKeyException | SignatureException | ArithmeticException e) {
             throw new DnssecValidationFailedException("Validating signature failed", e);
         }
