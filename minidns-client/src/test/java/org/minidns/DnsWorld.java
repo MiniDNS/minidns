@@ -13,6 +13,7 @@ package org.minidns;
 import org.minidns.constants.DnssecConstants.DigestAlgorithm;
 import org.minidns.constants.DnssecConstants.SignatureAlgorithm;
 import org.minidns.dnsmessage.DnsMessage;
+import org.minidns.dnsmessage.DnsMessage.RESPONSE_CODE;
 import org.minidns.dnsmessage.Question;
 import org.minidns.dnsname.DnsName;
 import org.minidns.dnsqueryresult.DnsQueryResult;
@@ -67,9 +68,13 @@ public class DnsWorld extends AbstractDnsDataSource {
                 return new TestWorldDnsQueryResult(message, response.build());
             }
         }
-        // TODO We should return an error or throw an IOException here. Otherwise the (DNSSEC) unit tests will log a
-        // bunch of server "NULL response from..." messages.
-        return null;
+
+        DnsMessage nxDomainResponse = message
+                .getResponseBuilder(RESPONSE_CODE.NX_DOMAIN)
+                .setRecursionAvailable(true)
+                .setAuthoritativeAnswer(true)
+                .build();
+        return new TestWorldDnsQueryResult(message, nxDomainResponse);
     }
 
     public void addPreparedResponse(PreparedResponse answer) {
