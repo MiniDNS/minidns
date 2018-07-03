@@ -807,6 +807,19 @@ public class DnsMessage {
         return normalizedVersionCache;
     }
 
+    public Builder getResponseBuilder(RESPONSE_CODE responseCode) {
+        if (qr) {
+            throw new IllegalStateException();
+        }
+        Builder responseBuilder = DnsMessage.builder()
+                .setQrFlag(true)
+                .setResponseCode(responseCode)
+                .setId(id)
+                .setQuestion(getQuestion());
+
+        return responseBuilder;
+    }
+
     private transient Integer hashCodeCache;
 
     @Override
