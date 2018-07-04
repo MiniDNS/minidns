@@ -129,11 +129,13 @@ public class ReliableDnsClient extends AbstractDnsClient {
 
         try {
             dnsMessage = recursiveDnsClient.query(q);
+            assert dnsMessage != null;
         } catch (IOException ioException) {
             ioExceptions.add(ioException);
         }
 
         if (dnsMessage == null) {
+            assert !ioExceptions.isEmpty();
             MultipleIoException.throwIfRequired(ioExceptions);
         }
 
