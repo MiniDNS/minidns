@@ -39,7 +39,12 @@ public class IterativeDnssecTest {
         assertTrue(extendedCacheResult.isAuthenticData());
         NetworkDataSourceWithAccounting extendedCacheNdswa = NetworkDataSourceWithAccounting.from(extendedCacheClient);
 
-        assertTrue(normalCacheNdswa.getStats().successfulQueries > extendedCacheNdswa.getStats().successfulQueries);
+        final int normalCacheSuccessfulQueries = normalCacheNdswa.getStats().successfulQueries;
+        final int extendedCacheSuccessfulQueries = extendedCacheNdswa.getStats().successfulQueries;
+        assertTrue(
+                "Extend cache successful query count " + extendedCacheSuccessfulQueries
+                        + " is not less than normal cache successful query count " + normalCacheSuccessfulQueries,
+                normalCacheSuccessfulQueries > extendedCacheSuccessfulQueries);
     }
 
     private static DnssecClient getClient(CacheConfig cacheConfig) {
