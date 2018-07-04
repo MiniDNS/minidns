@@ -155,7 +155,7 @@ public class LruCache extends DnsCache {
     }
 
     /**
-     * The cache hit count (all sucessful calls to get).
+     * The cache hit count (all successful calls to get).
      * @return The hit count.
      */
     public long getHitCount() {
