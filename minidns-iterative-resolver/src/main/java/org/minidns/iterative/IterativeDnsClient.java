@@ -17,6 +17,7 @@ import org.minidns.dnsmessage.Question;
 import org.minidns.dnsname.DnsName;
 import org.minidns.dnsqueryresult.DnsQueryResult;
 import org.minidns.iterative.IterativeClientException.LoopDetected;
+import org.minidns.iterative.IterativeClientException.NotAuthoritativeNorGlueRrFound;
 import org.minidns.record.A;
 import org.minidns.record.AAAA;
 import org.minidns.record.RRWithTarget;
@@ -239,11 +240,6 @@ public class IterativeDnsClient extends AbstractDnsClient {
 
         DnsQueryResult dnsQueryResult = query(q, address);
 
-        if (dnsQueryResult == null) {
-            // TODO throw exception here?
-            return null;
-        }
-
         DnsMessage resMessage = dnsQueryResult.response;
         if (resMessage.authoritativeAnswer) {
             return dnsQueryResult;
@@ -321,9 +317,9 @@ public class IterativeDnsClient extends AbstractDnsClient {
 
         MultipleIoException.throwIfRequired(ioExceptions);
 
-        // TODO throw exception here? Reaching this point would mean we did not receive an authoritative answer, nor
+        // Reaching this point means we did not receive an authoritative answer, nor
         // where we able to find glue records or the IPs of the next nameservers.
-        return null;
+        throw new NotAuthoritativeNorGlueRrFound(q, dnsQueryResult, authoritativeZone);
     }
 
     private IpResultSet resolveIpRecursive(ResolutionState resolutionState, DnsName name) throws IOException {
