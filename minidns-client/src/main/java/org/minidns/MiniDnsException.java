@@ -13,6 +13,7 @@ package org.minidns;
 import java.io.IOException;
 
 import org.minidns.dnsmessage.DnsMessage;
+import org.minidns.dnsqueryresult.DnsQueryResult;
 
 public abstract class MiniDnsException extends IOException {
     /**
@@ -81,20 +82,20 @@ public abstract class MiniDnsException extends IOException {
         private static final long serialVersionUID = 1L;
 
         private final DnsMessage request;
-        private final DnsMessage response;
+        private final DnsQueryResult result;
 
-        public ErrorResponseException(DnsMessage request, DnsMessage response) {
-            super("TOOD");
+        public ErrorResponseException(DnsMessage request, DnsQueryResult result) {
+            super("Received " + result.response.responseCode + " error response\n" + result);
             this.request = request;
-            this.response = response;
+            this.result = result;
         }
 
         public DnsMessage getRequest() {
             return request;
         }
 
-        public DnsMessage getResponse() {
-            return response;
+        public DnsQueryResult getResult() {
+            return result;
         }
     }
 
@@ -108,7 +109,7 @@ public abstract class MiniDnsException extends IOException {
         private final DnsMessage request;
 
         public NoQueryPossibleException(DnsMessage request) {
-            super("TOOD");
+            super("No DNS server could be queried");
             this.request = request;
         }
 

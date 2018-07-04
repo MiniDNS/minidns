@@ -189,7 +189,7 @@ public class DnsClient extends AbstractDnsClient {
                 }
                 LOGGER.warning(warning);
 
-                ErrorResponseException exception = new ErrorResponseException(q, responseMessage);
+                ErrorResponseException exception = new ErrorResponseException(q, dnsQueryResult);
                 ioExceptions.add(exception);
                 continue;
             }
