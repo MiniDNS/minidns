@@ -108,7 +108,10 @@ public class LruCache extends DnsCache {
         for (Record<? extends Data> r : message.answerSection) {
             ttl = Math.min(ttl, r.ttl);
         }
-        if (message.receiveTimestamp + ttl < System.currentTimeMillis()) {
+
+        final long expiryDate = message.receiveTimestamp + (ttl * 1000);
+        final long now = System.currentTimeMillis();
+        if (expiryDate < now) {
             missCount++;
             expireCount++;
             backend.remove(q);
