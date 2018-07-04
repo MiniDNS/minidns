@@ -156,45 +156,45 @@ public class DnsClient extends AbstractDnsClient {
 
             try {
                 dnsQueryResult = query(q, dns);
-
-                DnsMessage responseMessage = dnsQueryResult.response;
-                if (!responseMessage.recursionAvailable) {
-                    boolean newRaServer = nonRaServers.add(dns);
-                    if (newRaServer) {
-                        LOGGER.warning("The DNS server "
-                                + dns
-                                + " returned a response without the \"recursion available\" (RA) flag set. This likely indicates a misconfiguration because the server is not suitable for DNS resolution");
-                    }
-                    continue;
-                }
-
-                if (disableResultFilter) {
-                    return dnsQueryResult;
-                }
-
-                switch (responseMessage.responseCode) {
-                case NO_ERROR:
-                case NX_DOMAIN:
-                    break;
-                default:
-                    String warning = "Response from " + dns + " asked for " + q.getQuestion() + " with error code: "
-                            + responseMessage.responseCode + '.';
-                    if (!LOGGER.isLoggable(Level.FINE)) {
-                        // Only append the responseMessage is log level is not fine. If it is fine or higher, the
-                        // response has already been logged.
-                        warning += "\n" + responseMessage;
-                    }
-                    LOGGER.warning(warning);
-
-                    ErrorResponseException exception = new ErrorResponseException(q, responseMessage);
-                    ioExceptions.add(exception);
-                    continue;
-                }
-
-                return dnsQueryResult;
             } catch (IOException ioe) {
                 ioExceptions.add(ioe);
+                continue;
             }
+
+            DnsMessage responseMessage = dnsQueryResult.response;
+            if (!responseMessage.recursionAvailable) {
+                boolean newRaServer = nonRaServers.add(dns);
+                if (newRaServer) {
+                    LOGGER.warning("The DNS server " + dns
+                            + " returned a response without the \"recursion available\" (RA) flag set. This likely indicates a misconfiguration because the server is not suitable for DNS resolution");
+                }
+                continue;
+            }
+
+            if (disableResultFilter) {
+                return dnsQueryResult;
+            }
+
+            switch (responseMessage.responseCode) {
+            case NO_ERROR:
+            case NX_DOMAIN:
+                break;
+            default:
+                String warning = "Response from " + dns + " asked for " + q.getQuestion() + " with error code: "
+                        + responseMessage.responseCode + '.';
+                if (!LOGGER.isLoggable(Level.FINE)) {
+                    // Only append the responseMessage is log level is not fine. If it is fine or higher, the
+                    // response has already been logged.
+                    warning += "\n" + responseMessage;
+                }
+                LOGGER.warning(warning);
+
+                ErrorResponseException exception = new ErrorResponseException(q, responseMessage);
+                ioExceptions.add(exception);
+                continue;
+            }
+
+            return dnsQueryResult;
         }
         MultipleIoException.throwIfRequired(ioExceptions);
 
