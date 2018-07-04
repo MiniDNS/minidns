@@ -19,8 +19,6 @@ import org.minidns.dnsname.DnsName;
 import org.minidns.dnsqueryresult.CachedDnsQueryResult;
 import org.minidns.dnsqueryresult.DirectCachedDnsQueryResult;
 import org.minidns.dnsqueryresult.DnsQueryResult;
-import org.minidns.record.Data;
-import org.minidns.record.Record;
 
 /**
  * LRU based DNSCache backed by a LinkedHashMap.
@@ -106,12 +104,11 @@ public class LruCache extends DnsCache {
         }
 
         DnsMessage message = result.response;
-        long ttl = maxTTL;
+
         // RFC 2181 § 5.2 says that all TTLs in a RRSet should be equal, if this isn't the case, then we assume the
         // shortest TTL to be the effective one.
-        for (Record<? extends Data> r : message.answerSection) {
-            ttl = Math.min(ttl, r.ttl);
-        }
+        final long answersMinTtl = message.getAnswersMinTtl();
+        final long ttl = Math.min(answersMinTtl, maxTTL);
 
         final long expiryDate = message.receiveTimestamp + (ttl * 1000);
         final long now = System.currentTimeMillis();
