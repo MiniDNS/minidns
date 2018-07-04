@@ -15,6 +15,7 @@ import java.util.List;
 
 import org.minidns.constants.DnssecConstants.DigestAlgorithm;
 import org.minidns.dnsmessage.Question;
+import org.minidns.dnsname.DnsName;
 import org.minidns.record.DNSKEY;
 import org.minidns.record.Data;
 import org.minidns.record.RRSIG;
@@ -89,9 +90,9 @@ public abstract class DnssecUnverifiedReason {
     }
 
     public static class NoTrustAnchorReason extends DnssecUnverifiedReason {
-        private final String zone;
+        private final DnsName zone;
 
-        public NoTrustAnchorReason(String zone) {
+        public NoTrustAnchorReason(DnsName zone) {
             this.zone = zone;
         }
 
@@ -102,9 +103,9 @@ public abstract class DnssecUnverifiedReason {
     }
 
     public static class NoSecureEntryPointReason extends DnssecUnverifiedReason {
-        private final String zone;
+        private final DnsName zone;
 
-        public NoSecureEntryPointReason(String zone) {
+        public NoSecureEntryPointReason(DnsName zone) {
             this.zone = zone;
         }
 

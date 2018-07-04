@@ -189,7 +189,7 @@ public class DnssecClient extends ReliableDnsClient {
             result.addAll(sepReasons);
         }
         if (verifiedSignatures.sepSignatureRequired && !verifiedSignatures.sepSignaturePresent) {
-            result.add(new NoSecureEntryPointReason(q.name.ace));
+            result.add(new NoSecureEntryPointReason(q.name));
         }
         if (!toBeVerified.isEmpty()) {
             if (toBeVerified.size() != answers.size()) {
@@ -354,7 +354,7 @@ public class DnssecClient extends ReliableDnsClient {
             }
         } else if (q.type == TYPE.DS && rrsig.signerName.equals(q.name)) {
             // We should not probe for the self signed DS negative response, as it will be an endless loop.
-            result.add(new NoTrustAnchorReason(q.name.ace));
+            result.add(new NoTrustAnchorReason(q.name));
             return result;
         } else {
             DnssecQueryResult dnskeyRes = queryDnssec(rrsig.signerName, TYPE.DNSKEY);
@@ -442,7 +442,7 @@ public class DnssecClient extends ReliableDnsClient {
                 unverifiedReasons = activeReasons;
             }
         } else if (unverifiedReasons.isEmpty()) {
-            unverifiedReasons.add(new NoTrustAnchorReason(sepRecord.name.ace));
+            unverifiedReasons.add(new NoTrustAnchorReason(sepRecord.name));
         }
         return unverifiedReasons;
     }
