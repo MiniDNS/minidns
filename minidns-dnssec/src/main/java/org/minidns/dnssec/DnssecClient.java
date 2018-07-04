@@ -358,10 +358,6 @@ public class DnssecClient extends ReliableDnsClient {
             return result;
         } else {
             DnssecQueryResult dnskeyRes = queryDnssec(rrsig.signerName, TYPE.DNSKEY);
-            if (dnskeyRes == null) {
-                // TODO: Is this still true? Shouldn't be there an IOException in this case instead of 'null' being returned?
-                throw new DnssecValidationFailedException(q, "There is no DNSKEY " + rrsig.signerName + ", but it is used");
-            }
             result.addAll(dnskeyRes.getUnverifiedReasons());
             for (Record<? extends Data> record : dnskeyRes.dnsQueryResult.response.answerSection) {
                 Record<DNSKEY> dnsKeyRecord = record.ifPossibleAs(DNSKEY.class);
@@ -405,42 +401,36 @@ public class DnssecClient extends ReliableDnsClient {
 
         DelegatingDnssecRR delegation = null;
         DnssecQueryResult dsResp = queryDnssec(sepRecord.name, TYPE.DS);
-        if (dsResp == null) {
-            // TODO: Is this still true? Shouldn't be there an IOException in this case instead of 'null' being returned?
-            LOGGER.fine("There is no DS record for " + sepRecord.name + ", server gives no result");
-        } else {
-            unverifiedReasons.addAll(dsResp.getUnverifiedReasons());
-            for (Record<? extends Data> record : dsResp.dnsQueryResult.response.answerSection) {
-                Record<DS> dsRecord = record.ifPossibleAs(DS.class);
-                if (dsRecord == null) continue;
+        unverifiedReasons.addAll(dsResp.getUnverifiedReasons());
+        for (Record<? extends Data> record : dsResp.dnsQueryResult.response.answerSection) {
+            Record<DS> dsRecord = record.ifPossibleAs(DS.class);
+            if (dsRecord == null)
+                continue;
 
-                DS ds = dsRecord.payloadData;
-                if (dnskey.getKeyTag() == ds.keyTag) {
-                    delegation = ds;
-                    activeReasons = dsResp.getUnverifiedReasons();
-                    break;
-                }
+            DS ds = dsRecord.payloadData;
+            if (dnskey.getKeyTag() == ds.keyTag) {
+                delegation = ds;
+                activeReasons = dsResp.getUnverifiedReasons();
+                break;
             }
-            if (delegation == null) {
-                LOGGER.fine("There is no DS record for " + sepRecord.name + ", server gives empty result");
-            }
+        }
+        if (delegation == null) {
+            LOGGER.fine("There is no DS record for " + sepRecord.name + ", server gives empty result");
         }
 
         if (delegation == null && dlv != null && !dlv.isChildOf(sepRecord.name)) {
             DnssecQueryResult dlvResp = queryDnssec(DnsName.from(sepRecord.name, dlv), TYPE.DLV);
-            // TODO: Is this still true? Shouldn't be there an IOException in this case instead of 'null' being returned?
-            if (dlvResp != null) {
-                unverifiedReasons.addAll(dlvResp.getUnverifiedReasons());
-                for (Record<? extends Data> record : dlvResp.dnsQueryResult.response.answerSection) {
-                    Record<DLV> dlvRecord = record.ifPossibleAs(DLV.class);
-                    if (dlvRecord == null) continue;
+            unverifiedReasons.addAll(dlvResp.getUnverifiedReasons());
+            for (Record<? extends Data> record : dlvResp.dnsQueryResult.response.answerSection) {
+                Record<DLV> dlvRecord = record.ifPossibleAs(DLV.class);
+                if (dlvRecord == null)
+                    continue;
 
-                    if (sepRecord.payloadData.getKeyTag() == dlvRecord.payloadData.keyTag) {
-                        LOGGER.fine("Found DLV for " + sepRecord.name + ", awesome.");
-                        delegation = dlvRecord.payloadData;
-                        activeReasons = dlvResp.getUnverifiedReasons();
-                        break;
-                    }
+                if (sepRecord.payloadData.getKeyTag() == dlvRecord.payloadData.keyTag) {
+                    LOGGER.fine("Found DLV for " + sepRecord.name + ", awesome.");
+                    delegation = dlvRecord.payloadData;
+                    activeReasons = dlvResp.getUnverifiedReasons();
+                    break;
                 }
             }
         }
