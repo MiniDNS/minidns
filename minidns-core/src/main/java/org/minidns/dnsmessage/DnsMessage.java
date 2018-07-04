@@ -794,6 +794,25 @@ public class DnsMessage {
         return res;
     }
 
+    private long answersMinTtlCache = -1;
+
+    /**
+     * Get the minimum TTL from all answers in seconds.
+     *
+     * @return the minimum TTL from all answers in seconds.
+     */
+    public long getAnswersMinTtl() {
+        if (answersMinTtlCache >= 0) {
+            return answersMinTtlCache;
+        }
+
+        answersMinTtlCache = Long.MAX_VALUE;
+        for (Record<? extends Data> r : answerSection) {
+            answersMinTtlCache = Math.min(answersMinTtlCache, r.ttl);
+        }
+        return answersMinTtlCache;
+    }
+
     public Builder asBuilder() {
         return new Builder(this);
     }
