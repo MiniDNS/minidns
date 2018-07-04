@@ -10,6 +10,8 @@
  */
 package org.minidns;
 
+import org.minidns.MiniDnsException.ErrorResponseException;
+import org.minidns.MiniDnsException.NoQueryPossibleException;
 import org.minidns.MiniDnsFuture.InternalMiniDnsFuture;
 import org.minidns.dnsmessage.DnsMessage;
 import org.minidns.dnsqueryresult.DnsQueryResult;
@@ -154,9 +156,6 @@ public class DnsClient extends AbstractDnsClient {
 
             try {
                 dnsQueryResult = query(q, dns);
-                if (dnsQueryResult == null) {
-                    continue;
-                }
 
                 DnsMessage responseMessage = dnsQueryResult.response;
                 if (!responseMessage.recursionAvailable) {
@@ -186,7 +185,9 @@ public class DnsClient extends AbstractDnsClient {
                         warning += "\n" + responseMessage;
                     }
                     LOGGER.warning(warning);
-                    // TODO Create new IOException and add to ioExceptions.
+
+                    ErrorResponseException exception = new ErrorResponseException(q, responseMessage);
+                    ioExceptions.add(exception);
                     continue;
                 }
 
@@ -196,8 +197,9 @@ public class DnsClient extends AbstractDnsClient {
             }
         }
         MultipleIoException.throwIfRequired(ioExceptions);
-        // TODO assert that we never return null here.
-        return null;
+
+        // TODO: Shall we add the attempted DNS servers to the exception?
+        throw new NoQueryPossibleException(q);
     }
 
     @Override

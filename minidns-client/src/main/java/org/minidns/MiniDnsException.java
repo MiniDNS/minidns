@@ -72,4 +72,48 @@ public abstract class MiniDnsException extends IOException {
             return request;
         }
     }
+
+    public static class ErrorResponseException extends MiniDnsException {
+
+        /**
+         *
+         */
+        private static final long serialVersionUID = 1L;
+
+        private final DnsMessage request;
+        private final DnsMessage response;
+
+        public ErrorResponseException(DnsMessage request, DnsMessage response) {
+            super("TOOD");
+            this.request = request;
+            this.response = response;
+        }
+
+        public DnsMessage getRequest() {
+            return request;
+        }
+
+        public DnsMessage getResponse() {
+            return response;
+        }
+    }
+
+    public static class NoQueryPossibleException extends MiniDnsException {
+
+        /**
+         *
+         */
+        private static final long serialVersionUID = 1L;
+
+        private final DnsMessage request;
+
+        public NoQueryPossibleException(DnsMessage request) {
+            super("TOOD");
+            this.request = request;
+        }
+
+        public DnsMessage getRequest() {
+            return request;
+        }
+    }
 }
