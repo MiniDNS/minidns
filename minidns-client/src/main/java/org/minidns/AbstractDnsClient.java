@@ -252,14 +252,8 @@ public abstract class AbstractDnsClient {
             LOGGER.log(TRACE_LOG_LEVEL, "IOException {0} on {1} while resolving {2}: {3}", new Object[] { address, port, q, e});
             throw e;
         }
-        if (responseMessage != null) {
-            LOGGER.log(TRACE_LOG_LEVEL, "Response from {0} on {1} for {2}:\n{3}", new Object[] { address, port, q, responseMessage });
-        } else {
-            // TODO When should this ever happen?
-            LOGGER.log(Level.SEVERE, "NULL response from " + address + " on " + port + " for " + q);
-        }
 
-        if (responseMessage == null) return null;
+        LOGGER.log(TRACE_LOG_LEVEL, "Response from {0} on {1} for {2}:\n{3}", new Object[] { address, port, q, responseMessage });
 
         onResponseCallback.onResponse(requestMessage, responseMessage);
 
