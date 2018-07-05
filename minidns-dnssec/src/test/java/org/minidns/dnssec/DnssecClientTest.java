@@ -16,6 +16,7 @@ import org.minidns.constants.DnssecConstants.DigestAlgorithm;
 import org.minidns.constants.DnssecConstants.SignatureAlgorithm;
 import org.minidns.dnsmessage.DnsMessage;
 import org.minidns.dnsname.DnsName;
+import org.minidns.dnssec.DnssecValidationFailedException.AuthorityDoesNotContainSoa;
 import org.minidns.record.A;
 import org.minidns.record.DNSKEY;
 import org.minidns.record.Data;
@@ -178,7 +179,7 @@ public class DnssecClientTest {
     }
 
     @SuppressWarnings("unchecked")
-    @Test
+    @Test(expected = AuthorityDoesNotContainSoa.class)
     public void testMissingDelegation() throws IOException {
         applyZones(client,
                 signedRootZone(
@@ -197,10 +198,7 @@ public class DnssecClientTest {
                                 record("example.com", a("1.1.1.2")))
                 )
         );
-        DnssecQueryResult result = client.queryDnssec("example.com", Record.TYPE.A);
-        assertFalse(result.isAuthenticData());
-        DnsMessage message = result.synthesizedResponse;
-        checkCorrectExampleMessage(message);
+        client.queryDnssec("example.com", Record.TYPE.A);
     }
 
     @SuppressWarnings("unchecked")

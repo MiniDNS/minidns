@@ -10,6 +10,7 @@
  */
 package org.minidns.dnssec;
 
+import org.minidns.dnsmessage.DnsMessage;
 import org.minidns.dnsmessage.Question;
 import org.minidns.record.Data;
 import org.minidns.record.Record;
@@ -80,5 +81,24 @@ public class DnssecValidationFailedException extends IOException {
             super(message, exception);
         }
 
+    }
+
+    public static class AuthorityDoesNotContainSoa extends DnssecValidationFailedException {
+
+        /**
+         *
+         */
+        private static final long serialVersionUID = 1L;
+
+        private final DnsMessage response;
+
+        public AuthorityDoesNotContainSoa(DnsMessage response) {
+            super("Autority does not contain SOA");
+            this.response = response;
+        }
+
+        public DnsMessage getResponse() {
+            return response;
+        }
     }
 }

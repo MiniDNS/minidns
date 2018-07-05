@@ -19,6 +19,7 @@ import org.minidns.dnssec.DnssecUnverifiedReason.NoActiveSignaturesReason;
 import org.minidns.dnssec.DnssecUnverifiedReason.NoSecureEntryPointReason;
 import org.minidns.dnssec.DnssecUnverifiedReason.NoSignaturesReason;
 import org.minidns.dnssec.DnssecUnverifiedReason.NoTrustAnchorReason;
+import org.minidns.dnssec.DnssecValidationFailedException.AuthorityDoesNotContainSoa;
 import org.minidns.iterative.ReliableDnsClient;
 import org.minidns.record.DLV;
 import org.minidns.record.DNSKEY;
@@ -213,7 +214,7 @@ public class DnssecClient extends ReliableDnsClient {
                 zone = nameserverRecord.name;
         }
         if (zone == null)
-            throw new DnssecValidationFailedException(q, "NSECs must always match to a SOA");
+            throw new AuthorityDoesNotContainSoa(dnsMessage);
         for (Record<? extends Data> record : nameserverRecords) {
             DnssecUnverifiedReason reason;
 
