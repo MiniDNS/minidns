@@ -11,6 +11,7 @@
 package org.minidns.dnsqueryresult;
 
 import org.minidns.dnsmessage.DnsMessage;
+import org.minidns.dnsmessage.DnsMessage.RESPONSE_CODE;
 
 public abstract class DnsQueryResult {
 
@@ -43,5 +44,9 @@ public abstract class DnsQueryResult {
     @Override
     public String toString() {
         return response.toString();
+    }
+
+    public boolean wasSuccessful() {
+        return response.responseCode == RESPONSE_CODE.NO_ERROR;
     }
 }
