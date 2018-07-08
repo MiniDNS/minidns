@@ -36,9 +36,9 @@ import java.util.Comparator;
 import java.util.List;
 
 class Verifier {
-    private AlgorithmMap algorithmMap = AlgorithmMap.INSTANCE;
+    private static final AlgorithmMap algorithmMap = AlgorithmMap.INSTANCE;
 
-    public DnssecUnverifiedReason verify(Record<DNSKEY> dnskeyRecord, DelegatingDnssecRR ds) throws DnssecValidationFailedException {
+    public static DnssecUnverifiedReason verify(Record<DNSKEY> dnskeyRecord, DelegatingDnssecRR ds) throws DnssecValidationFailedException {
         DNSKEY dnskey = dnskeyRecord.payloadData;
         DigestCalculator digestCalculator = algorithmMap.getDsDigestCalculator(ds.digestType);
         if (digestCalculator == null) {
@@ -63,7 +63,7 @@ class Verifier {
         return null;
     }
 
-    public DnssecUnverifiedReason verify(List<Record<? extends Data>> records, RRSIG rrsig, DNSKEY key) throws IOException {
+    public static DnssecUnverifiedReason verify(List<Record<? extends Data>> records, RRSIG rrsig, DNSKEY key) throws IOException {
         SignatureVerifier signatureVerifier = algorithmMap.getSignatureVerifier(rrsig.algorithm);
         if (signatureVerifier == null) {
             return new AlgorithmNotSupportedReason(rrsig.algorithmByte, rrsig.getType(), records.get(0));
@@ -77,7 +77,7 @@ class Verifier {
         }
     }
 
-    public DnssecUnverifiedReason verifyNsec(Record<NSEC> nsecRecord, Question q) {
+    public static DnssecUnverifiedReason verifyNsec(Record<NSEC> nsecRecord, Question q) {
         NSEC nsec = nsecRecord.payloadData;
         if (nsecRecord.name.equals(q.name) && !Arrays.asList(nsec.types).contains(q.type)) {
             // records with same name but different types exist
@@ -88,7 +88,7 @@ class Verifier {
         return new NSECDoesNotMatchReason(q, nsecRecord);
     }
 
-    public DnssecUnverifiedReason verifyNsec3(DnsName zone, Record<NSEC3> nsec3record, Question q) {
+    public static DnssecUnverifiedReason verifyNsec3(DnsName zone, Record<NSEC3> nsec3record, Question q) {
         NSEC3 nsec3 = nsec3record.payloadData;
         DigestCalculator digestCalculator = algorithmMap.getNsecDigestCalculator(nsec3.hashAlgorithm);
         if (digestCalculator == null) {

@@ -68,8 +68,6 @@ public class DnssecClient extends ReliableDnsClient {
         addSecureEntryPoint(DnsName.ROOT, rootEntryKey.toByteArray());
     }
 
-    private Verifier verifier = new Verifier();
-
     /**
      * Known secure entry points (SEPs).
      */
@@ -224,12 +222,12 @@ public class DnssecClient extends ReliableDnsClient {
             case NSEC:
                 nsecPresent = true;
                 Record<NSEC> nsecRecord = record.as(NSEC.class);
-                reason = verifier.verifyNsec(nsecRecord, q);
+                reason = Verifier.verifyNsec(nsecRecord, q);
                 break;
             case NSEC3:
                 nsecPresent = true;
                 Record<NSEC3> nsec3Record = record.as(NSEC3.class);
-                reason = verifier.verifyNsec3(zone, nsec3Record, q);
+                reason = Verifier.verifyNsec3(zone, nsec3Record, q);
                 break;
             default:
                 continue;
@@ -376,7 +374,7 @@ public class DnssecClient extends ReliableDnsClient {
         if (dnskey == null) {
             throw new DnssecValidationFailedException(q, records.size() + " " + rrsig.typeCovered + " record(s) are signed using an unknown key.");
         }
-        DnssecUnverifiedReason unverifiedReason = verifier.verify(records, rrsig, dnskey);
+        DnssecUnverifiedReason unverifiedReason = Verifier.verify(records, rrsig, dnskey);
         if (unverifiedReason != null) {
             result.add(unverifiedReason);
         }
@@ -440,7 +438,7 @@ public class DnssecClient extends ReliableDnsClient {
             }
         }
         if (delegation != null) {
-            DnssecUnverifiedReason unverifiedReason = verifier.verify(sepRecord, delegation);
+            DnssecUnverifiedReason unverifiedReason = Verifier.verify(sepRecord, delegation);
             if (unverifiedReason != null) {
                 unverifiedReasons.add(unverifiedReason);
             } else {
