@@ -77,8 +77,8 @@ class Verifier {
         }
     }
 
-    public DnssecUnverifiedReason verifyNsec(Record<? extends Data> nsecRecord, Question q) {
-        NSEC nsec = (NSEC) nsecRecord.payloadData;
+    public DnssecUnverifiedReason verifyNsec(Record<NSEC> nsecRecord, Question q) {
+        NSEC nsec = nsecRecord.payloadData;
         if (nsecRecord.name.equals(q.name) && !Arrays.asList(nsec.types).contains(q.type)) {
             // records with same name but different types exist
             return null;
@@ -88,12 +88,12 @@ class Verifier {
         return new NSECDoesNotMatchReason(q, nsecRecord);
     }
 
-    public DnssecUnverifiedReason verifyNsec3(CharSequence zone, Record<? extends Data> nsec3Record, Question q) {
+    public DnssecUnverifiedReason verifyNsec3(CharSequence zone, Record<NSEC3> nsec3Record, Question q) {
         return verifyNsec3(DnsName.from(zone), nsec3Record, q);
     }
 
-    public DnssecUnverifiedReason verifyNsec3(DnsName zone, Record<? extends Data> nsec3record, Question q) {
-        NSEC3 nsec3 = (NSEC3) nsec3record.payloadData;
+    public DnssecUnverifiedReason verifyNsec3(DnsName zone, Record<NSEC3> nsec3record, Question q) {
+        NSEC3 nsec3 = nsec3record.payloadData;
         DigestCalculator digestCalculator = algorithmMap.getNsecDigestCalculator(nsec3.hashAlgorithm);
         if (digestCalculator == null) {
             return new AlgorithmNotSupportedReason(nsec3.hashAlgorithmByte, nsec3.getType(), nsec3record);

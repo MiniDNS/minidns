@@ -26,6 +26,8 @@ import org.minidns.record.DNSKEY;
 import org.minidns.record.DS;
 import org.minidns.record.Data;
 import org.minidns.record.DelegatingDnssecRR;
+import org.minidns.record.NSEC;
+import org.minidns.record.NSEC3;
 import org.minidns.record.RRSIG;
 import org.minidns.record.Record;
 import org.minidns.record.Record.CLASS;
@@ -221,11 +223,13 @@ public class DnssecClient extends ReliableDnsClient {
             switch (record.type) {
             case NSEC:
                 nsecPresent = true;
-                reason = verifier.verifyNsec(record, q);
+                Record<NSEC> nsecRecord = record.as(NSEC.class);
+                reason = verifier.verifyNsec(nsecRecord, q);
                 break;
             case NSEC3:
                 nsecPresent = true;
-                reason = verifier.verifyNsec3(zone, record, q);
+                Record<NSEC3> nsec3Record = record.as(NSEC3.class);
+                reason = verifier.verifyNsec3(zone, nsec3Record, q);
                 break;
             default:
                 continue;
