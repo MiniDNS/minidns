@@ -212,6 +212,7 @@ public class DnssecClient extends ReliableDnsClient {
         for (Record<? extends Data> nameserverRecord : nameserverRecords) {
             if (nameserverRecord.type == TYPE.SOA)
                 zone = nameserverRecord.name;
+                // TODO: Add break here?
         }
         if (zone == null)
             throw new AuthorityDoesNotContainSoa(dnsMessage);
@@ -368,6 +369,7 @@ public class DnssecClient extends ReliableDnsClient {
 
                 if (dnsKeyRecord.payloadData.getKeyTag() == rrsig.keyTag) {
                     dnskey = dnsKeyRecord.payloadData;
+                    // TODO: Add break here?
                 }
             }
         }

@@ -360,6 +360,7 @@ public class DnssecWorld extends DnsWorld {
             Record<? extends Data> nsecRecord = null;
             for (Record<? extends Data> record : nsecMessage.authoritySection) {
                 if (record.type == Record.TYPE.NSEC)
+                    // TODO: Add break here?
                     nsecRecord = record;
             }
             return address.equals(this.address) && Verifier.nsecMatches(request.getQuestion().name, nsecRecord.name, ((NSEC) nsecRecord.payloadData).next);
