@@ -88,10 +88,6 @@ class Verifier {
         return new NSECDoesNotMatchReason(q, nsecRecord);
     }
 
-    public DnssecUnverifiedReason verifyNsec3(CharSequence zone, Record<NSEC3> nsec3Record, Question q) {
-        return verifyNsec3(DnsName.from(zone), nsec3Record, q);
-    }
-
     public DnssecUnverifiedReason verifyNsec3(DnsName zone, Record<NSEC3> nsec3record, Question q) {
         NSEC3 nsec3 = nsec3record.payloadData;
         DigestCalculator digestCalculator = algorithmMap.getNsecDigestCalculator(nsec3.hashAlgorithm);
