@@ -193,20 +193,6 @@ class Verifier {
         return true;
     }
 
-    static String stripToParts(String s, int parts) {
-        if (s.isEmpty() && parts == 0) return s;
-        if (s.isEmpty()) throw new IllegalArgumentException();
-        String[] split = s.split("\\.");
-        if (split.length == parts) return s;
-        if (split.length < parts) throw new IllegalArgumentException();
-        StringBuilder sb = new StringBuilder();
-        for (int i = split.length - parts; i < split.length; i++) {
-            sb.append(split[i]);
-            if (i != split.length - 1) sb.append('.');
-        }
-        return sb.toString();
-    }
-
     /**
      * Derived from RFC 5155 Section 5.
      *
