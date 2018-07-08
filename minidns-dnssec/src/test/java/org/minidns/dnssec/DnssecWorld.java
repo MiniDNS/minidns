@@ -90,16 +90,16 @@ public class DnssecWorld extends DnsWorld {
 
     public static class SignedRRSet {
         Record<? extends Data>[] records;
-        Record<? extends Data> signature;
+        Record<RRSIG> signature;
 
-        public SignedRRSet(Record<? extends Data>[] records, Record<? extends Data> signature) {
+        public SignedRRSet(Record<? extends Data>[] records, Record<RRSIG> signature) {
             this.records = records;
             this.signature = signature;
         }
     }
 
     @SuppressWarnings("unchecked")
-    public static Record<? extends Data> rrsigRecord(DNSKEY key, String signerName, PrivateKey privateKey, SignatureAlgorithm algorithm, Record<? extends Data>... records) {
+    public static Record<RRSIG> rrsigRecord(DNSKEY key, String signerName, PrivateKey privateKey, SignatureAlgorithm algorithm, Record<? extends Data>... records) {
         Record.TYPE typeCovered = records[0].type;
         String name = records[0].name.ace;
         int labels = name.isEmpty() ? 0 : name.split("\\.").length;
@@ -112,11 +112,11 @@ public class DnssecWorld extends DnsWorld {
     }
 
     @SuppressWarnings("unchecked")
-    public static Record<? extends Data> rrsigRecord(PrivateKey privateKey, RRSIG rrsig, Record<? extends Data>... records) {
+    public static Record<RRSIG> rrsigRecord(PrivateKey privateKey, RRSIG rrsig, Record<? extends Data>... records) {
         byte[] bytes = Verifier.combine(rrsig, Arrays.asList(records));
         return record(records[0].name, rrsig.originalTtl, rrsig(rrsig.typeCovered, rrsig.algorithm, rrsig.labels, rrsig.originalTtl,
                 rrsig.signatureExpiration, rrsig.signatureInception, rrsig.keyTag, rrsig.signerName,
-                sign(privateKey, rrsig.algorithm, bytes)));
+                sign(privateKey, rrsig.algorithm, bytes))).as(RRSIG.class);
     }
 
     public static DS ds(String name, DigestAlgorithm digestType, DNSKEY dnskey) {
