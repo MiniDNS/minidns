@@ -101,8 +101,7 @@ public class DnssecWorld extends DnsWorld {
     @SuppressWarnings("unchecked")
     public static Record<RRSIG> rrsigRecord(DNSKEY key, String signerName, PrivateKey privateKey, SignatureAlgorithm algorithm, Record<? extends Data>... records) {
         Record.TYPE typeCovered = records[0].type;
-        String name = records[0].name.ace;
-        int labels = name.isEmpty() ? 0 : name.split("\\.").length;
+        int labels = records[0].name.getLabelCount();
         long originalTtl = records[0].ttl;
         Date signatureExpiration = new Date(System.currentTimeMillis() + 14 * 24 * 60 * 60 * 1000);
         Date signatureInception = new Date(System.currentTimeMillis() - 14 * 24 * 60 * 60 * 1000);
