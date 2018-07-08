@@ -575,6 +575,7 @@ public final class Record<D extends Data> {
      * @param dataClass a class of the {@link Data} type.
      * @param <E> a subtype of {@link Data}.
      * @return the record with a specialized payload type or {@code null}.
+     * @see #as(Class)
      */
     @SuppressWarnings("unchecked")
     public <E extends Data> Record<E> ifPossibleAs(Class<E> dataClass) {
@@ -582,6 +583,23 @@ public final class Record<D extends Data> {
             return (Record<E>) this;
         }
         return null;
+    }
+
+    /**
+     * Return the record as record with the given {@link Data} class. If the record does not hold payload of
+     * the given data class type, then a {@link IllegalArgumentException} will be thrown.
+     *
+     * @param dataClass a class of the {@link Data} type.
+     * @param <E> a subtype of {@link Data}.
+     * @return the record with a specialized payload type.
+     * @see #ifPossibleAs(Class)
+     */
+    public <E extends Data> Record<E> as(Class<E> dataClass) {
+        Record<E> eRecord = ifPossibleAs(dataClass);
+        if (eRecord == null) {
+            throw new IllegalArgumentException("The instance " + this + " can not be cast to a Record with" + dataClass);
+        }
+        return eRecord;
     }
 
     public static <E extends Data> void filter(Collection<Record<E>> result, Class<E> dataClass,
