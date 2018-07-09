@@ -30,7 +30,6 @@ import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
@@ -79,7 +78,7 @@ class Verifier {
 
     public static DnssecUnverifiedReason verifyNsec(Record<NSEC> nsecRecord, Question q) {
         NSEC nsec = nsecRecord.payloadData;
-        if (nsecRecord.name.equals(q.name) && !Arrays.asList(nsec.types).contains(q.type)) {
+        if (nsecRecord.name.equals(q.name) && !nsec.types.contains(q.type)) {
             // records with same name but different types exist
             return null;
         } else if (nsecMatches(q.name, nsecRecord.name, nsec.next)) {
@@ -95,7 +94,7 @@ class Verifier {
             return new AlgorithmNotSupportedReason(nsec3.hashAlgorithmByte, nsec3.getType(), nsec3record);
         }
 
-        byte[] bytes = nsec3hash(digestCalculator, nsec3.salt, q.name.getBytes(), nsec3.iterations);
+        byte[] bytes = nsec3hash(digestCalculator, nsec3, q.name, nsec3.iterations);
         String s = Base32.encodeToString(bytes);
         DnsName computedNsec3Record = DnsName.from(s + "." + zone);
         if (nsec3record.name.equals(computedNsec3Record)) {
@@ -106,7 +105,7 @@ class Verifier {
             }
             return null;
         }
-        if (nsecMatches(s, nsec3record.name.getHostpart(), Base32.encodeToString(nsec3.nextHashed))) {
+        if (nsecMatches(s, nsec3record.name.getHostpart(), Base32.encodeToString(nsec3.getNextHashed()))) {
             return null;
         }
         return new NSECDoesNotMatchReason(q, nsec3record);
@@ -191,6 +190,10 @@ class Verifier {
             return false;
 
         return true;
+    }
+
+    static byte[] nsec3hash(DigestCalculator digestCalculator, NSEC3 nsec3, DnsName ownerName, int iterations) {
+        return nsec3hash(digestCalculator, nsec3.getSalt(), ownerName.getBytes(), iterations);
     }
 
     /**

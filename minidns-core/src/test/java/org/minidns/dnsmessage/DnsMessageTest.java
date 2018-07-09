@@ -33,7 +33,6 @@ import org.minidns.record.RRSIG;
 import org.minidns.record.SOA;
 import org.minidns.record.SRV;
 import org.minidns.record.TXT;
-import org.minidns.util.Base32;
 
 import org.junit.Test;
 
@@ -48,6 +47,7 @@ import java.util.Map;
 import java.util.TimeZone;
 import java.util.TreeMap;
 
+import static org.minidns.Assert.assertArrayContentEquals;
 import static org.minidns.Assert.assertCsEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -337,32 +337,23 @@ public class DnsMessageTest {
                 assertEquals(HashAlgorithm.SHA1, nsec3.hashAlgorithm);
                 assertEquals(1, nsec3.flags);
                 assertEquals(0, nsec3.iterations);
-                assertEquals(0, nsec3.salt.length);
+                assertEquals(0, nsec3.getSaltLength());
                 switch (record.name.ace) {
                     case "CK0POJMG874LJREF7EFN8430QVIT8BSM.com":
-                        assertCsEquals("CK0QFMDQRCSRU0651QLVA1JQB21IF7UR", Base32.encodeToString(nsec3.nextHashed));
+                        assertCsEquals("CK0QFMDQRCSRU0651QLVA1JQB21IF7UR", nsec3.getNextHashedBase32());
                         assertArrayContentEquals(new TYPE[]{TYPE.NS, TYPE.SOA, TYPE.RRSIG, TYPE.DNSKEY, TYPE.NSEC3PARAM}, nsec3.types);
                         break;
                     case "V2I33UBTHNVNSP9NS85CURCLSTFPTE24.com":
-                        assertCsEquals("V2I4KPUS7NGDML5EEJU3MVHO26GKB6PA", Base32.encodeToString(nsec3.nextHashed));
+                        assertCsEquals("V2I4KPUS7NGDML5EEJU3MVHO26GKB6PA", nsec3.getNextHashedBase32());
                         assertArrayContentEquals(new TYPE[]{TYPE.NS, TYPE.DS, TYPE.RRSIG}, nsec3.types);
                         break;
                     case "3RL20VCNK6KV8OT9TDIJPI0JU1SS6ONS.com":
-                        assertCsEquals("3RL3UFVFRUE94PV5888AIC2TPS0JA9V2", Base32.encodeToString(nsec3.nextHashed));
+                        assertCsEquals("3RL3UFVFRUE94PV5888AIC2TPS0JA9V2", nsec3.getNextHashedBase32());
                         assertArrayContentEquals(new TYPE[]{TYPE.NS, TYPE.DS, TYPE.RRSIG}, nsec3.types);
                         break;
                 }
             }
         }
-    }
-
-    private static void assertArrayContentEquals(Object[] expect, Object[] value) {
-        assertEquals(expect.length, value.length);
-        List<Object> list = new ArrayList<Object>(Arrays.asList(expect));
-        for (Object type : value) {
-            assertTrue(list.remove(type));
-        }
-        assertTrue(list.isEmpty());
     }
 
     @Test

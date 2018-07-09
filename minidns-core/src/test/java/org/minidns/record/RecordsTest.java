@@ -20,9 +20,13 @@ import org.junit.Test;
 
 import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
+import java.io.IOException;
+import java.util.Collections;
 import java.util.Date;
+import java.util.List;
 
 import static org.minidns.Assert.assertCsEquals;
+import static org.minidns.Assert.assertArrayContentEquals;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
@@ -136,9 +140,13 @@ public class RecordsTest {
         byte[] nsecb = nsec.toByteArray();
         nsec = NSEC.parse(new DataInputStream(new ByteArrayInputStream(nsecb)), nsecb, nsecb.length);
         assertCsEquals("example.com", nsec.next);
-        assertArrayEquals(new TYPE[]{TYPE.A, TYPE.RRSIG, TYPE.DLV}, nsec.types);
+        assertArrayContentEquals(new TYPE[]{TYPE.A, TYPE.RRSIG, TYPE.DLV}, nsec.types);
+    }
 
-        assertEquals(0, NSEC.readTypeBitMap(NSEC.createTypeBitMap(new TYPE[0])).length);
+    @Test
+    public void testNsecTypeBitmapEmpty() throws IOException {
+        List<TYPE> emptyTypes = Collections.emptyList();
+        assertEquals(0, NSEC.readTypeBitMap(NSEC.createTypeBitMap(emptyTypes)).size());
     }
 
     @Test
@@ -151,9 +159,9 @@ public class RecordsTest {
         assertEquals(HashAlgorithm.SHA1, nsec3.hashAlgorithm);
         assertEquals(1, nsec3.flags);
         assertEquals(1, nsec3.iterations);
-        assertArrayEquals(new byte[]{0x13, 0x37}, nsec3.salt);
-        assertArrayEquals(new byte[]{0x42, 0x42, 0x42, 0x42, 0x42}, nsec3.nextHashed);
-        assertArrayEquals(new TYPE[]{TYPE.A}, nsec3.types);
+        assertArrayEquals(new byte[]{0x13, 0x37}, nsec3.getSalt());
+        assertArrayEquals(new byte[]{0x42, 0x42, 0x42, 0x42, 0x42}, nsec3.getNextHashed());
+        assertArrayContentEquals(new TYPE[]{TYPE.A}, nsec3.types);
 
         assertEquals("SHA1 1 1 - ", new NSEC3((byte) 1, (byte) 1, 1, new byte[0], new byte[0], new TYPE[0]).toString());
     }

@@ -42,6 +42,7 @@ import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
 import java.util.Iterator;
@@ -484,11 +485,13 @@ public class DnsWorld extends AbstractDnsDataSource {
     }
 
     public static NSEC nsec(DnsName next, TYPE... types) {
-        return new NSEC(next, types);
+        List<TYPE> typesList = Arrays.asList(types);
+        return new NSEC(next, typesList);
     }
 
     public static NSEC3 nsec3(byte hashAlgorithm, byte flags, int iterations, byte[] salt, byte[] nextHashed, TYPE... types) {
-        return new NSEC3(hashAlgorithm, flags, iterations, salt, nextHashed, types);
+        List<TYPE> typesList = Arrays.asList(types);
+        return new NSEC3(hashAlgorithm, flags, iterations, salt, nextHashed, typesList);
     }
 
     public static RRSIG rrsig(TYPE typeCovered, SignatureAlgorithm algorithm, int labels, long originalTtl, Date signatureExpiration,
