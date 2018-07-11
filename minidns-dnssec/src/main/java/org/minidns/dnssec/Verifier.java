@@ -23,7 +23,6 @@ import org.minidns.record.NSEC;
 import org.minidns.record.NSEC3;
 import org.minidns.record.RRSIG;
 import org.minidns.record.Record;
-import org.minidns.record.Record.TYPE;
 import org.minidns.util.Base32;
 
 import java.io.ByteArrayOutputStream;
@@ -98,10 +97,9 @@ class Verifier {
         String s = Base32.encodeToString(bytes);
         DnsName computedNsec3Record = DnsName.from(s + "." + zone);
         if (nsec3record.name.equals(computedNsec3Record)) {
-            for (TYPE type : nsec3.types) {
-                if (type.equals(q.type)) {
-                    return new NSECDoesNotMatchReason(q, nsec3record);
-                }
+            if (nsec3.types.contains(q.type)) {
+                // TODO: Refine exception thrown in this case.
+                return new NSECDoesNotMatchReason(q, nsec3record);
             }
             return null;
         }
