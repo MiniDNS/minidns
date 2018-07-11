@@ -280,6 +280,11 @@ public class DnsName implements CharSequence, Serializable, Comparable<DnsName> 
         return hostpart;
     }
 
+    public DnsLabel getHostpartLabel() {
+        setLabelsIfRequired();
+        return labels[labels.length];
+    }
+
     private void setHostnameAndDomainpartIfRequired() {
         if (hostpart != null) return;
 
