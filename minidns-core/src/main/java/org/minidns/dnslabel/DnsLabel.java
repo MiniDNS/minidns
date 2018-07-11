@@ -15,12 +15,16 @@ import java.util.Locale;
 
 /**
  * A DNS label is an individual component of a DNS name. Labels are usually shown separated by dots.
+ * <p>
+ * This class implements {@link Comparable} which compares DNS labels according to the Canonical DNS Name Order as
+ * specified in <a href="https://tools.ietf.org/html/rfc4034#section-6.1">RFC 4034 § 6.1</a>.
+ * </p>
  * 
  * @see <a href="https://tools.ietf.org/html/rfc5890#section-2.2">RFC 5890 § 2.2. DNS-Related Terminology</a>
  * @author Florian Schmaus
  *
  */
-public abstract class DnsLabel implements CharSequence {
+public abstract class DnsLabel implements CharSequence, Comparable<DnsLabel> {
 
     /**
      * The maximum length of a DNS label in octets.
@@ -123,6 +127,14 @@ public abstract class DnsLabel implements CharSequence {
 
         byteArrayOutputStream.write(byteCache.length);
         byteArrayOutputStream.write(byteCache, 0, byteCache.length);
+    }
+
+    @Override
+    public final int compareTo(DnsLabel other) {
+        String myCanonical = asLowercaseVariant().label;
+        String otherCanonical = other.asLowercaseVariant().label;
+
+        return myCanonical.compareTo(otherCanonical);
     }
 
     public static DnsLabel from(String label) {
