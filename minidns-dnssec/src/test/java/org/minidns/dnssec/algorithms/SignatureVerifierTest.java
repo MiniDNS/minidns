@@ -12,7 +12,10 @@ package org.minidns.dnssec.algorithms;
 
 import org.junit.Before;
 import org.minidns.constants.DnssecConstants.SignatureAlgorithm;
+import org.minidns.dnsname.DnsName;
 import org.minidns.dnssec.DnssecValidationFailedException;
+import org.minidns.record.DNSKEY;
+import org.minidns.record.RRSIG;
 
 import java.security.PrivateKey;
 import java.util.Random;
@@ -44,10 +47,18 @@ public class SignatureVerifierTest extends AlgorithmTest {
     }
 
     protected void assertSignatureValid(byte[] publicKey, SignatureAlgorithm algorithm, byte[] signature) throws DnssecValidationFailedException {
-        assertTrue(algorithmMap.getSignatureVerifier(algorithm).verify(sample, signature, publicKey));
+        assertTrue(verify(publicKey, algorithm, signature));
     }
 
     protected void assertSignatureInvalid(byte[] publicKey, SignatureAlgorithm algorithm, byte[] signature) throws DnssecValidationFailedException {
-        assertFalse(algorithmMap.getSignatureVerifier(algorithm).verify(sample, signature, publicKey));
+        assertFalse(verify(publicKey, algorithm, signature));
+    }
+
+    private boolean verify(byte[] publicKey, SignatureAlgorithm algorithm, byte[] signature) throws DnssecValidationFailedException {
+        DNSKEY key = new DNSKEY((short) 0, (byte) 0, algorithm, publicKey);
+        RRSIG rrsig = new RRSIG(null, algorithm, (byte) 0, (long) 0, null, null, 0, DnsName.ROOT, signature);
+
+        boolean res = algorithmMap.getSignatureVerifier(algorithm).verify(sample, rrsig, key);
+        return res;
     }
 }

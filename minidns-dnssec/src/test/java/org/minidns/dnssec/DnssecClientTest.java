@@ -28,6 +28,7 @@ import org.junit.Ignore;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.lang.reflect.Field;
 import java.net.InetAddress;
 import java.security.PrivateKey;
 import java.util.Date;
@@ -326,10 +327,16 @@ public class DnssecClientTest {
 
     @SuppressWarnings("unchecked")
     @Test(expected = DnssecValidationFailedException.class)
-    public void testInvalidRRSIG() throws IOException {
-        Record<? extends Data> invalidRrSig = rrsigRecord(comZSK, "com", comPrivateZSK, algorithm, record("example.com", a("1.1.1.2")));
-        byte[] signatureMod = ((RRSIG) invalidRrSig.payloadData).signature;
+    public void testInvalidRRSIG() throws IOException, NoSuchFieldException, SecurityException, IllegalArgumentException, IllegalAccessException {
+        Record<RRSIG> invalidRrSig = rrsigRecord(comZSK, "com", comPrivateZSK, algorithm, record("example.com", a("1.1.1.2")));
+        RRSIG soonToBeInvalidRrSig = invalidRrSig.payloadData;
+        Field signature = soonToBeInvalidRrSig.getClass().getDeclaredField("signature");
+        signature.setAccessible(true);
+        byte[] signatureMod = (byte[]) signature.get(soonToBeInvalidRrSig);
+
+        // Change the signature a little bit so that it becomes invalid.
         signatureMod[signatureMod.length / 2]++;
+
         applyZones(client,
                 signedRootZone(
                         sign(rootKSK, "", rootPrivateKSK, algorithm,

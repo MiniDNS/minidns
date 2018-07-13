@@ -292,7 +292,7 @@ public class DnsMessageTest {
         assertCsEquals("20150619160000", dateFormat.format(rrsig.signatureInception));
         assertEquals(48613, rrsig.keyTag);
         assertCsEquals(".", rrsig.signerName);
-        assertEquals(128, rrsig.signature.length);
+        assertEquals(128, rrsig.getSignatureLength());
 
         List<Record<? extends Data>> arr = m.additionalSection;
         assertEquals(1, arr.size());

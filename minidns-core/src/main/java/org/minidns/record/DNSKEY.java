@@ -14,6 +14,7 @@ import org.minidns.constants.DnssecConstants.SignatureAlgorithm;
 import org.minidns.record.Record.TYPE;
 import org.minidns.util.Base64;
 
+import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -158,6 +159,10 @@ public class DNSKEY extends Data {
 
     public byte[] getKey() {
         return key.clone();
+    }
+
+    public DataInputStream getKeyAsDataInputStream() {
+        return new DataInputStream(new ByteArrayInputStream(key));
     }
 
     private String keyBase64Cache;

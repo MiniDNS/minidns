@@ -11,11 +11,11 @@
 package org.minidns.dnssec.algorithms;
 
 import org.minidns.dnssec.DnssecValidationFailedException.DnssecInvalidKeySpecException;
+import org.minidns.record.DNSKEY;
+import org.minidns.record.RRSIG;
 import org.minidns.dnssec.DnssecValidationFailedException.DataMalformedException;
 
-import java.io.ByteArrayInputStream;
 import java.io.DataInput;
-import java.io.DataInputStream;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.security.NoSuchAlgorithmException;
@@ -45,13 +45,13 @@ class EcgostSignatureVerifier extends JavaSecSignatureVerifier {
     }
 
     @Override
-    protected byte[] getSignature(byte[] rrsigData) {
-        return rrsigData;
+    protected byte[] getSignature(RRSIG rrsig) {
+        return rrsig.getSignature();
     }
 
     @Override
-    protected PublicKey getPublicKey(byte[] key) throws DataMalformedException, DnssecInvalidKeySpecException {
-        DataInput dis = new DataInputStream(new ByteArrayInputStream(key));
+    protected PublicKey getPublicKey(DNSKEY key) throws DataMalformedException, DnssecInvalidKeySpecException {
+        DataInput dis = key.getKeyAsDataInputStream();
         BigInteger x, y;
 
         try {
@@ -65,7 +65,7 @@ class EcgostSignatureVerifier extends JavaSecSignatureVerifier {
             reverse(yBytes);
             y = new BigInteger(1, yBytes);
         } catch (IOException e) {
-            throw new DataMalformedException(e, key);
+            throw new DataMalformedException(e, key.getKey());
         }
 
         try {

@@ -11,11 +11,11 @@
 package org.minidns.dnssec.algorithms;
 
 import org.minidns.dnssec.DnssecValidationFailedException.DnssecInvalidKeySpecException;
+import org.minidns.record.DNSKEY;
+import org.minidns.record.RRSIG;
 import org.minidns.dnssec.DnssecValidationFailedException.DataMalformedException;
 
-import java.io.ByteArrayInputStream;
 import java.io.DataInput;
-import java.io.DataInputStream;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.security.NoSuchAlgorithmException;
@@ -29,8 +29,8 @@ class RsaSignatureVerifier extends JavaSecSignatureVerifier {
     }
 
     @Override
-    protected PublicKey getPublicKey(byte[] key) throws DataMalformedException, DnssecInvalidKeySpecException {
-        DataInput dis = new DataInputStream(new ByteArrayInputStream(key));
+    protected PublicKey getPublicKey(DNSKEY key) throws DataMalformedException, DnssecInvalidKeySpecException {
+        DataInput dis = key.getKeyAsDataInputStream();
         BigInteger exponent, modulus;
 
         try {
@@ -46,11 +46,11 @@ class RsaSignatureVerifier extends JavaSecSignatureVerifier {
             bytesRead += exponentLength;
             exponent = new BigInteger(1, exponentBytes);
 
-            byte[] modulusBytes = new byte[key.length - bytesRead];
+            byte[] modulusBytes = new byte[key.getKeyLength() - bytesRead];
             dis.readFully(modulusBytes);
             modulus = new BigInteger(1, modulusBytes);
         } catch (IOException e) {
-            throw new DataMalformedException(e, key);
+            throw new DataMalformedException(e, key.getKey());
         }
 
         try {
@@ -61,7 +61,7 @@ class RsaSignatureVerifier extends JavaSecSignatureVerifier {
     }
 
     @Override
-    protected byte[] getSignature(byte[] rrsigData) {
-        return rrsigData;
+    protected byte[] getSignature(RRSIG rrsig) {
+        return rrsig.getSignature();
     }
 }

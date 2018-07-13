@@ -68,7 +68,7 @@ class Verifier {
         }
 
         byte[] combine = combine(rrsig, records);
-        if (signatureVerifier.verify(combine, rrsig.signature, key.getKey())) {
+        if (signatureVerifier.verify(combine, rrsig, key)) {
             return null;
         } else {
             throw new DnssecValidationFailedException(records, "Signature is invalid.");

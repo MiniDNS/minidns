@@ -15,6 +15,7 @@ import org.minidns.dnsname.DnsName;
 import org.minidns.record.Record.TYPE;
 import org.minidns.util.Base64;
 
+import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -75,7 +76,7 @@ public class RRSIG extends Data {
     /**
      * Signature that covers RRSIG RDATA (excluding the signature field) and RRset data.
      */
-    public final byte[] signature;
+    private final byte[] signature;
 
     public static RRSIG parse(DataInputStream dis, byte[] data, int length) throws IOException {
         TYPE typeCovered = TYPE.getType(dis.readUnsignedShort());
@@ -132,6 +133,27 @@ public class RRSIG extends Data {
         this(typeCovered,algorithm.number, labels, originalTtl, signatureExpiration, signatureInception, keyTag, DnsName.from(signerName), signature);
     }
 
+    public byte[] getSignature() {
+        return signature.clone();
+    }
+
+    public DataInputStream getSignatureAsDataInputStream() {
+        return new DataInputStream(new ByteArrayInputStream(signature));
+    }
+
+    public int getSignatureLength() {
+        return signature.length;
+    }
+
+    private transient String base64SignatureCache;
+
+    public String getSignatureBase64() {
+        if (base64SignatureCache == null) {
+            base64SignatureCache = Base64.encodeToString(signature);
+        }
+        return base64SignatureCache;
+    }
+
     @Override
     public TYPE getType() {
         return TYPE.RRSIG;
@@ -167,7 +189,7 @@ public class RRSIG extends Data {
                 .append(dateFormat.format(signatureInception)).append(' ')
                 .append(keyTag).append(' ')
                 .append(signerName).append(". ")
-                .append(Base64.encodeToString(signature));
+                .append(getSignatureBase64());
         return sb.toString();
     }
 }
