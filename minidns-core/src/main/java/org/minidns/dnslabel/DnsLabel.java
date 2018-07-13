@@ -33,6 +33,8 @@ public abstract class DnsLabel implements CharSequence, Comparable<DnsLabel> {
      */
     public static final int MAX_LABEL_LENGTH_IN_OCTETS = 63;
 
+    public static final DnsLabel WILDCARD_LABEL = DnsLabel.from("*");
+
     /**
      * Whether or not the DNS label is validated on construction.
      */

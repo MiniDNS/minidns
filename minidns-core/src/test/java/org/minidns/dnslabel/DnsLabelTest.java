@@ -90,4 +90,9 @@ public class DnsLabelTest {
         assertTrue(label instanceof OtherNonLdhLabel);
         assertEquals("OtherNonLdhLabel", label.getLabelType());
     }
+
+    @Test
+    public void dnsLabelWildcardStringTest() {
+        assertEquals("*", DnsLabel.WILDCARD_LABEL.toString());
+    }
 }
