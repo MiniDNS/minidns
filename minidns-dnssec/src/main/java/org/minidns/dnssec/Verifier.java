@@ -10,6 +10,7 @@
  */
 package org.minidns.dnssec;
 
+import org.minidns.dnslabel.DnsLabel;
 import org.minidns.dnsmessage.Question;
 import org.minidns.dnsname.DnsName;
 import org.minidns.dnssec.DnssecUnverifiedReason.AlgorithmExceptionThrownReason;
@@ -125,7 +126,7 @@ class Verifier {
 
                 if (sigName.getLabelCount() > rrsig.labels) {
                     // Expand wildcards
-                    sigName = DnsName.from("*." + sigName.stripToLabels(rrsig.labels));
+                    sigName = DnsName.from(DnsLabel.WILDCARD_LABEL, sigName.stripToLabels(rrsig.labels));
                 }
             }
 
