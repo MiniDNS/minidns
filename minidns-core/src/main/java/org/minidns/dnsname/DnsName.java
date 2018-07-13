@@ -150,6 +150,9 @@ public class DnsName implements CharSequence, Serializable, Comparable<DnsName> 
         rawAce = labelsToString(rawLabels, size);
         ace    = labelsToString(labels,    size);
 
+        // The following condition is deliberately designed that VALIDATE=false causes the validation to be skipped even
+        // if validateMaxDnsnameLength is set to true. There is no need to validate even if this constructor is called
+        // with validateMaxDnsnameLength set to true if VALIDATE is globally set to false.
         if (!validateMaxDnsnameLength || !VALIDATE) {
             return;
         }
