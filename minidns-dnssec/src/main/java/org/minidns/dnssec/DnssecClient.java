@@ -210,9 +210,10 @@ public class DnssecClient extends ReliableDnsClient {
         DnsName zone = null;
         List<Record<? extends Data>> nameserverRecords = dnsMessage.authoritySection;
         for (Record<? extends Data> nameserverRecord : nameserverRecords) {
-            if (nameserverRecord.type == TYPE.SOA)
+            if (nameserverRecord.type == TYPE.SOA) {
                 zone = nameserverRecord.name;
-                // TODO: Add break here?
+                break;
+            }
         }
         if (zone == null)
             throw new AuthorityDoesNotContainSoa(dnsMessage);
