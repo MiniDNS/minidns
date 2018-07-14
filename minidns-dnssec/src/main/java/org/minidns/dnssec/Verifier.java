@@ -134,7 +134,7 @@ class Verifier {
 
             List<byte[]> recordBytes = new ArrayList<>();
             for (Record<? extends Data> record : records) {
-                Record<Data> ref = new Record<>(sigName, record.type, record.clazzValue, rrsig.originalTtl, (Data) record.payloadData);
+                Record<Data> ref = new Record<Data>(sigName, record.type, record.clazzValue, rrsig.originalTtl, record.payloadData);
                 recordBytes.add(ref.toByteArray());
             }
 
