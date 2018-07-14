@@ -450,7 +450,10 @@ public final class Record<D extends Data> {
 
     public byte[] toByteArray() {
         if (bytes == null) {
-            ByteArrayOutputStream baos = new ByteArrayOutputStream(name.size() + 8 + payloadData.length());
+            int totalSize = name.size()
+                    + 10 // 2 byte short type + 2 byte short classValue + 4 byte int ttl + 2 byte short payload length.
+                    + payloadData.length();
+            ByteArrayOutputStream baos = new ByteArrayOutputStream(totalSize);
             DataOutputStream dos = new DataOutputStream(baos);
             try {
                 toOutputStream(dos);
