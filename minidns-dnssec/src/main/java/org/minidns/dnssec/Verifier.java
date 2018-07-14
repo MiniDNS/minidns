@@ -121,10 +121,12 @@ class Verifier {
             DnsName sigName = records.get(0).name;
             if (!sigName.isRootLabel()) {
                 if (sigName.getLabelCount() < rrsig.labels) {
+                    // TODO: This is currently not covered by the unit tests.
                     throw new DnssecValidationFailedException("Invalid RRsig record");
                 }
 
                 if (sigName.getLabelCount() > rrsig.labels) {
+                    // TODO: This is currently not covered by the unit tests.
                     // Expand wildcards
                     sigName = DnsName.from(DnsLabel.WILDCARD_LABEL, sigName.stripToLabels(rrsig.labels));
                 }
