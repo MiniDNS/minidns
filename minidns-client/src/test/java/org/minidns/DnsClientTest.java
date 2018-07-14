@@ -112,5 +112,6 @@ public class DnsClientTest {
         client.setDataSource(source);
         DnsQueryResult message = client.query("www.example.com", TYPE.A);
         assertTrue(source.queried);
+        assertNotNull(message);
     }
 }
