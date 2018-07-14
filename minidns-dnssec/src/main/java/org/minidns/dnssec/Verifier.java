@@ -138,7 +138,7 @@ class Verifier {
                 recordBytes.add(ref.toByteArray());
             }
 
-            // Sort correctly (cause they might be ordered randomly)
+            // Sort correctly (cause they might be ordered randomly) as per RFC 4034 § 6.3.
             final int offset = sigName.size() + 10; // Where the RDATA begins
             Collections.sort(recordBytes, new Comparator<byte[]>() {
                 @Override
