@@ -78,7 +78,7 @@ public class DNSKEY extends Data {
     /**
      * This DNSKEY's key tag. Calculated just-in-time when using {@link #getKeyTag()}
      */
-    private Integer keyTag;
+    private transient Integer keyTag;
 
     public static DNSKEY parse(DataInputStream dis, int length) throws IOException {
         short flags = dis.readShort();
@@ -165,7 +165,7 @@ public class DNSKEY extends Data {
         return new DataInputStream(new ByteArrayInputStream(key));
     }
 
-    private String keyBase64Cache;
+    private transient String keyBase64Cache;
 
     public String getKeyBase64() {
         if (keyBase64Cache == null) {

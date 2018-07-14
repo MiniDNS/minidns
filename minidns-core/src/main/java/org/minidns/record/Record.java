@@ -446,7 +446,7 @@ public final class Record<D extends Data> {
         payloadData.toOutputStream(dos);
     }
 
-    private byte[] bytes;
+    private transient byte[] bytes;
 
     public byte[] toByteArray() {
         if (bytes == null) {
