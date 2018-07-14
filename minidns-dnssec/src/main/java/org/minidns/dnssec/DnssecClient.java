@@ -207,6 +207,11 @@ public class DnssecClient extends ReliableDnsClient {
         Question q = dnsMessage.questions.get(0);
         boolean validNsec = false;
         boolean nsecPresent = false;
+
+        // Get the SOA RR that has to be in the authority section. Note that we will verify its signature later, after
+        // we have verified the NSEC3 RR. And although the data form the SOA RR is only required for NSEC3 we check for
+        // its existence here, since it would be invalid if there is none.
+        // TODO: Add a reference to the relevant RFC parts which specify that there has to be a SOA RR in X.
         DnsName zone = null;
         List<Record<? extends Data>> authoritySection = dnsMessage.authoritySection;
         for (Record<? extends Data> authorityRecord : authoritySection) {
@@ -217,6 +222,9 @@ public class DnssecClient extends ReliableDnsClient {
         }
         if (zone == null)
             throw new AuthorityDoesNotContainSoa(dnsMessage);
+
+        // TODO: This whole logic needs to be changed. It currently checks one NSEC(3) record after another, when it
+        // should first determine if we are dealing with NSEC or NSEC3 and the verify the whole response.
         for (Record<? extends Data> record : authoritySection) {
             DnssecUnverifiedReason reason;
 
@@ -241,9 +249,12 @@ public class DnssecClient extends ReliableDnsClient {
                 validNsec = true;
             }
         }
+
+        // TODO: Shouldn't we also throw if !nsecPresent?
         if (nsecPresent && !validNsec) {
             throw new DnssecValidationFailedException(q, "Invalid NSEC!");
         }
+
         List<Record<? extends Data>> toBeVerified = dnsMessage.copyAuthority();
         VerifySignaturesResult verifiedSignatures = verifySignatures(q, authoritySection, toBeVerified);
         if (validNsec && verifiedSignatures.reasons.isEmpty()) {
@@ -251,9 +262,12 @@ public class DnssecClient extends ReliableDnsClient {
         } else {
             result.addAll(verifiedSignatures.reasons);
         }
+
         if (!toBeVerified.isEmpty() && toBeVerified.size() != authoritySection.size()) {
+            // TODO Refine this exception and include the missing toBeVerified RRs and the whole DnsMessage into it.
             throw new DnssecValidationFailedException(q, "Only some resource records from the authority section are signed!");
         }
+
         return result;
     }
 
