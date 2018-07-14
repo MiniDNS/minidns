@@ -208,16 +208,16 @@ public class DnssecClient extends ReliableDnsClient {
         boolean validNsec = false;
         boolean nsecPresent = false;
         DnsName zone = null;
-        List<Record<? extends Data>> nameserverRecords = dnsMessage.authoritySection;
-        for (Record<? extends Data> nameserverRecord : nameserverRecords) {
-            if (nameserverRecord.type == TYPE.SOA) {
-                zone = nameserverRecord.name;
+        List<Record<? extends Data>> authoritySection = dnsMessage.authoritySection;
+        for (Record<? extends Data> authorityRecord : authoritySection) {
+            if (authorityRecord.type == TYPE.SOA) {
+                zone = authorityRecord.name;
                 break;
             }
         }
         if (zone == null)
             throw new AuthorityDoesNotContainSoa(dnsMessage);
-        for (Record<? extends Data> record : nameserverRecords) {
+        for (Record<? extends Data> record : authoritySection) {
             DnssecUnverifiedReason reason;
 
             switch (record.type) {
@@ -245,14 +245,14 @@ public class DnssecClient extends ReliableDnsClient {
             throw new DnssecValidationFailedException(q, "Invalid NSEC!");
         }
         List<Record<? extends Data>> toBeVerified = dnsMessage.copyAuthority();
-        VerifySignaturesResult verifiedSignatures = verifySignatures(q, nameserverRecords, toBeVerified);
+        VerifySignaturesResult verifiedSignatures = verifySignatures(q, authoritySection, toBeVerified);
         if (validNsec && verifiedSignatures.reasons.isEmpty()) {
             result.clear();
         } else {
             result.addAll(verifiedSignatures.reasons);
         }
-        if (!toBeVerified.isEmpty() && toBeVerified.size() != nameserverRecords.size()) {
-            throw new DnssecValidationFailedException(q, "Only some nameserver records are signed!");
+        if (!toBeVerified.isEmpty() && toBeVerified.size() != authoritySection.size()) {
+            throw new DnssecValidationFailedException(q, "Only some resource records from the authority section are signed!");
         }
         return result;
     }
