@@ -182,4 +182,9 @@ public class ReliableDnsClient extends AbstractDnsClient {
         }
         this.mode = mode;
     }
+
+    public void setUseHardcodedDnsServers(boolean useHardcodedDnsServers) {
+        dnsClient.setUseHardcodedDnsServers(useHardcodedDnsServers);
+    }
+
 }
