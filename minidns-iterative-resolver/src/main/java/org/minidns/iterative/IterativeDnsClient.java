@@ -255,12 +255,12 @@ public class IterativeDnsClient extends AbstractDnsClient {
 
         // Glued NS first
         for (Iterator<Record<? extends Data>> iterator = authorities.iterator(); iterator.hasNext(); ) {
-            Record<? extends Data> record = iterator.next();
-            if (record.type != TYPE.NS) {
+            Record<NS> record = iterator.next().ifPossibleAs(NS.class);
+            if (record == null) {
                 iterator.remove();
                 continue;
             }
-            DnsName name = ((NS) record.payloadData).target;
+            DnsName name = record.payloadData.target;
             IpResultSet gluedNs = searchAdditional(resMessage, name);
             for (Iterator<InetAddress> addressIterator = gluedNs.addresses.iterator(); addressIterator.hasNext(); ) {
                 InetAddress target = addressIterator.next();
