@@ -10,8 +10,11 @@
  */
 package org.minidns.iterative;
 
+import java.net.InetAddress;
+
 import org.minidns.MiniDnsException;
 import org.minidns.dnsmessage.DnsMessage;
+import org.minidns.dnsmessage.Question;
 import org.minidns.dnsname.DnsName;
 import org.minidns.dnsqueryresult.DnsQueryResult;
 
@@ -33,8 +36,13 @@ public abstract class IterativeClientException extends MiniDnsException {
          */
         private static final long serialVersionUID = 1L;
 
-        public LoopDetected() {
-            super("Resolution loop detected");
+        public final InetAddress address;
+        public final Question question;
+
+        public LoopDetected(InetAddress address, Question question) {
+            super("Resolution loop detected: We already asked " + address + " about " + question);
+            this.address = address;
+            this.question = question;
         }
 
     }

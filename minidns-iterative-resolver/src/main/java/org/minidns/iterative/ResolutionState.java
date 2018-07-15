@@ -35,7 +35,7 @@ public class ResolutionState {
         if (!map.containsKey(address)) {
             map.put(address, new HashSet<Question>());
         } else if (map.get(address).contains(question)) {
-            throw new IterativeClientException.LoopDetected();
+            throw new IterativeClientException.LoopDetected(address, question);
         }
 
         if (++steps > recursiveDnsClient.maxSteps) {
