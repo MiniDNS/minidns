@@ -226,7 +226,11 @@ public class DnsMessage {
     public final boolean qr;
 
     /**
-     * True if this is a authorative response.
+     * True if this is a authorative response. If set, the responding nameserver is an authority for the domain name in
+     * the question section. Note that the answer section may have multiple owner names because of aliases. This flag
+     * corresponds to the name which matches the query name, or the first owner name in the query section.
+     *
+     * @see <a href="https://www.ietf.org/rfc/rfc1035.txt">RFC 1035 § 4.1.1. Header section format</a>
      */
     public final boolean authoritativeAnswer;
 
