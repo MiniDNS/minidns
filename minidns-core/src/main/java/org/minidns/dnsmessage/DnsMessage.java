@@ -808,6 +808,81 @@ public class DnsMessage {
         return hashCodeCache;
     }
 
+    private enum SectionName {
+        answer,
+        authority,
+        additional,
+        ;
+    }
+
+    private <D extends Data> List<Record<D>> filterSectionByType(boolean stopOnFirst, SectionName sectionName, Class<D> type) {
+        List<Record<?>> sectionToFilter;
+        switch (sectionName) {
+        case answer:
+            sectionToFilter = answerSection;
+            break;
+        case authority:
+            sectionToFilter = authoritySection;
+            break;
+        case additional:
+            sectionToFilter = additionalSection;
+            break;
+        default:
+            throw new AssertionError("Unknown section name " + sectionName);
+        }
+
+        List<Record<D>> res = new ArrayList<>(stopOnFirst ? 1 : sectionToFilter.size());
+
+        for (Record<?> record : sectionToFilter) {
+            Record<D> target = record.ifPossibleAs(type);
+            if (target != null) {
+                res.add(target);
+                if (stopOnFirst) {
+                    return res;
+                }
+            }
+        }
+
+        return res;
+    }
+
+    private <D extends Data> List<Record<D>> filterSectionByType(SectionName sectionName, Class<D> type) {
+        return filterSectionByType(false, sectionName, type);
+    }
+
+    private <D extends Data> Record<D> getFirstOfType(SectionName sectionName, Class<D> type) {
+        List<Record<D>> result = filterSectionByType(true, sectionName, type);
+        if (result.isEmpty()) {
+            return null;
+        }
+
+        return result.get(0);
+    }
+
+    public <D extends Data> List<Record<D>> filterAnswerSectionBy(Class<D> type) {
+        return filterSectionByType(SectionName.answer, type);
+    }
+
+    public <D extends Data> List<Record<D>> filterAuthoritySectionBy(Class<D> type) {
+        return filterSectionByType(SectionName.authority, type);
+    }
+
+    public <D extends Data> List<Record<D>> filterAdditionalSectionBy(Class<D> type) {
+        return filterSectionByType(SectionName.additional, type);
+    }
+
+    public <D extends Data> Record<D> getFirstOfTypeFromAnswerSection(Class<D> type) {
+        return getFirstOfType(SectionName.answer, type);
+    }
+
+    public <D extends Data> Record<D> getFirstOfTypeFromAuthoritySection(Class<D> type) {
+        return getFirstOfType(SectionName.authority, type);
+    }
+
+    public <D extends Data> Record<D> getFirstOfTypeFromAdditionalSection(Class<D> type) {
+        return getFirstOfType(SectionName.additional, type);
+    }
+
     @Override
     public boolean equals(Object other) {
         if (!(other instanceof DnsMessage)) {

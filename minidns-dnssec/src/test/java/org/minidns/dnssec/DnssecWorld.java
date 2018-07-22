@@ -461,32 +461,27 @@ public class DnssecWorld extends DnsWorld {
         final DnsMessage nsecMessage;
         final boolean isRootNameserver;
 
+        // We currently do not use the whole list of NSEC records, but in the future we eventually will be.
+        final List<Record<NSEC>> nsecRecords;
+
         public AddressedNsecResponse(InetAddress address, DnsMessage nsecMessage) {
             this.address = address;
             this.nsecMessage = nsecMessage;
             this.isRootNameserver = address.getHostName().endsWith(".root-servers.net");
+            this.nsecRecords = nsecMessage.filterAuthoritySectionBy(NSEC.class);
         }
 
         @Override
         public boolean isResponse(DnsMessage request, InetAddress address) {
-            // TODO: This NSEC Record could be pre-computed in the constructor and should actually be a NSEC RrSet. The
-            // RrSet because future Verifier.nsecMatches() signatures may take RrSet instead of single NSEC record,
-            // because there could be multiple NSECs (e.g. because of wildcard expansion). But
-            // that means we have to think about making RrSet generic just like Record is.
-            Record<? extends Data> nsecRecord = null;
-            for (Record<? extends Data> record : nsecMessage.authoritySection) {
-                if (record.type == Record.TYPE.NSEC)
-                    // TODO: Add break here?
-                    nsecRecord = record;
-            }
-
             boolean nameserverMatches;
             if (isRootNameserver) {
                 nameserverMatches = address.getHostName().endsWith(".root-servers.net");
             } else {
                 nameserverMatches = address.equals(this.address);
             }
-            return nameserverMatches && Verifier.nsecMatches(request.getQuestion().name, nsecRecord.name, ((NSEC) nsecRecord.payloadData).next);
+
+            Record<NSEC> nsecRecord = nsecRecords.get(0);
+            return nameserverMatches && Verifier.nsecMatches(request.getQuestion().name, nsecRecord.name, nsecRecord.payloadData.next);
         }
 
         @Override
