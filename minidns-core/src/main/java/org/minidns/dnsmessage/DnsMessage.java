@@ -327,35 +327,35 @@ public class DnsMessage {
             this.questions = Collections.unmodifiableList(q);
         }
 
-        if (builder.answers == null) {
+        if (builder.answerSection == null) {
             this.answerSection = Collections.emptyList();
         } else {
-            List<Record<? extends Data>> a = new ArrayList<>(builder.answers.size());
-            a.addAll(builder.answers);
+            List<Record<? extends Data>> a = new ArrayList<>(builder.answerSection.size());
+            a.addAll(builder.answerSection);
             this.answerSection = Collections.unmodifiableList(a);
         }
 
-        if (builder.nameserverRecords == null) {
+        if (builder.authoritySection == null) {
             this.authoritySection = Collections.emptyList();
         } else {
-            List<Record<? extends Data>> n = new ArrayList<>(builder.nameserverRecords.size());
-            n.addAll(builder.nameserverRecords);
+            List<Record<? extends Data>> n = new ArrayList<>(builder.authoritySection.size());
+            n.addAll(builder.authoritySection);
             this.authoritySection = Collections.unmodifiableList(n);
         }
 
-        if (builder.additionalResourceRecords == null && builder.ednsBuilder == null) {
+        if (builder.additionalSection == null && builder.ednsBuilder == null) {
             this.additionalSection = Collections.emptyList();
         } else {
             int size = 0;
-            if (builder.additionalResourceRecords != null) {
-                size += builder.additionalResourceRecords.size();
+            if (builder.additionalSection != null) {
+                size += builder.additionalSection.size();
             }
             if (builder.ednsBuilder != null) {
                 size++;
             }
             List<Record<? extends Data>> a = new ArrayList<>(size);
-            if (builder.additionalResourceRecords != null) {
-                a.addAll(builder.additionalResourceRecords);
+            if (builder.additionalSection != null) {
+                a.addAll(builder.additionalSection);
             }
             if (builder.ednsBuilder != null) {
                 Edns edns = builder.ednsBuilder.build();
@@ -847,12 +847,12 @@ public class DnsMessage {
             // Copy the unmodifiable lists over into this new builder.
             questions = new ArrayList<>(message.questions.size());
             questions.addAll(message.questions);
-            answers = new ArrayList<>(message.answerSection.size());
-            answers.addAll(message.answerSection);
-            nameserverRecords = new ArrayList<>(message.authoritySection.size());
-            nameserverRecords.addAll(message.authoritySection);
-            additionalResourceRecords = new ArrayList<>(message.additionalSection.size());
-            additionalResourceRecords.addAll(message.additionalSection);
+            answerSection = new ArrayList<>(message.answerSection.size());
+            answerSection.addAll(message.answerSection);
+            authoritySection = new ArrayList<>(message.authoritySection.size());
+            authoritySection.addAll(message.authoritySection);
+            additionalSection = new ArrayList<>(message.additionalSection.size());
+            additionalSection.addAll(message.additionalSection);
         }
 
         private int id;
@@ -869,9 +869,9 @@ public class DnsMessage {
         private long receiveTimestamp = -1;
 
         private List<Question> questions;
-        private List<Record<? extends Data>> answers;
-        private List<Record<? extends Data>> nameserverRecords;
-        private List<Record<? extends Data>> additionalResourceRecords;
+        private List<Record<? extends Data>> answerSection;
+        private List<Record<? extends Data>> authoritySection;
+        private List<Record<? extends Data>> additionalSection;
         private Edns.Builder ednsBuilder;
 
         /**
@@ -1032,75 +1032,75 @@ public class DnsMessage {
         }
 
         public Builder addAnswer(Record<? extends Data> answer) {
-            if (answers == null) {
-                answers = new ArrayList<>(1);
+            if (answerSection == null) {
+                answerSection = new ArrayList<>(1);
             }
-            answers.add(answer);
+            answerSection.add(answer);
             return this;
         }
 
         public Builder addAnswers(Collection<Record<? extends Data>> records) {
-            if (answers == null) {
-                answers = new ArrayList<>(records.size());
+            if (answerSection == null) {
+                answerSection = new ArrayList<>(records.size());
             }
-            answers.addAll(records);
+            answerSection.addAll(records);
             return this;
         }
 
         public Builder setAnswers(Collection<Record<? extends Data>> records) {
-            answers = new ArrayList<>(records.size());
-            answers.addAll(records);
+            answerSection = new ArrayList<>(records.size());
+            answerSection.addAll(records);
             return this;
         }
 
         public List<Record<? extends Data>> getAnswers() {
-            if (answers == null) {
+            if (answerSection == null) {
                 return Collections.emptyList();
             }
-            return answers;
+            return answerSection;
         }
 
         public Builder addNameserverRecords(Record<? extends Data> record) {
-            if (nameserverRecords == null) {
-                nameserverRecords = new ArrayList<>(8);
+            if (authoritySection == null) {
+                authoritySection = new ArrayList<>(8);
             }
-            nameserverRecords.add(record);
+            authoritySection.add(record);
             return this;
         }
 
         public Builder setNameserverRecords(Collection<Record<? extends Data>> records) {
-            nameserverRecords = new ArrayList<>(records.size());
-            nameserverRecords.addAll(records);
+            authoritySection = new ArrayList<>(records.size());
+            authoritySection.addAll(records);
             return this;
         }
 
         public Builder setAdditionalResourceRecords(Collection<Record<? extends Data>> records) {
-            additionalResourceRecords = new ArrayList<>(records.size());
-            additionalResourceRecords.addAll(records);
+            additionalSection = new ArrayList<>(records.size());
+            additionalSection.addAll(records);
             return this;
         }
 
         public Builder addAdditionalResourceRecord(Record<? extends Data> record) {
-            if (additionalResourceRecords == null) {
-                additionalResourceRecords = new ArrayList<>();
+            if (additionalSection == null) {
+                additionalSection = new ArrayList<>();
             }
-            additionalResourceRecords.add(record);
+            additionalSection.add(record);
             return this;
         }
 
         public Builder addAdditionalResourceRecords(List<Record<? extends Data>> records) {
-            if (additionalResourceRecords == null) {
-                additionalResourceRecords = new ArrayList<>(records.size());
+            if (additionalSection == null) {
+                additionalSection = new ArrayList<>(records.size());
             }
-            additionalResourceRecords.addAll(records);
+            additionalSection.addAll(records);
             return this;
         }
 
         public List<Record<? extends Data>> getAdditionalResourceRecords() {
-            if (additionalResourceRecords == null) {
+            if (additionalSection == null) {
                 return Collections.emptyList();
             }
-            return additionalResourceRecords;
+            return additionalSection;
         }
 
         /**
@@ -1157,18 +1157,18 @@ public class DnsMessage {
                     sb.append("[Q: ").append(question).append("]\n");
                 }
             }
-            if (answers != null) {
-                for (Record<? extends Data> record : answers) {
+            if (answerSection != null) {
+                for (Record<? extends Data> record : answerSection) {
                     sb.append("[A: ").append(record).append("]\n");
                 }
             }
-            if (nameserverRecords != null) {
-                for (Record<? extends Data> record : nameserverRecords) {
+            if (authoritySection != null) {
+                for (Record<? extends Data> record : authoritySection) {
                     sb.append("[N: ").append(record).append("]\n");
                 }
             }
-            if (additionalResourceRecords != null) {
-                for (Record<? extends Data> record : additionalResourceRecords) {
+            if (additionalSection != null) {
+                for (Record<? extends Data> record : additionalSection) {
                     sb.append("[X: ");
                     Edns edns = Edns.fromRecord(record);
                     if (edns != null) {
