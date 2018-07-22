@@ -10,6 +10,7 @@
  */
 package org.minidns;
 
+import org.minidns.constants.DnsRootServer;
 import org.minidns.constants.DnssecConstants.DigestAlgorithm;
 import org.minidns.constants.DnssecConstants.SignatureAlgorithm;
 import org.minidns.dnsmessage.DnsMessage;
@@ -582,13 +583,7 @@ public class DnsWorld extends AbstractDnsDataSource {
 
     public InetAddress lookupSingleAuthoritativeNameserverForZone(DnsName zone) {
         if (zone.isRootLabel()) {
-            try {
-                // TODO: We may want to move the root servers database into minidns-client or even minidns-core that
-                // that we can re-use it. For example here.
-                return InetAddress.getByAddress("a.root-servers.net", new byte[] { (byte) 198, (byte) 41, (byte) 0, (byte) 4 });
-            } catch (UnknownHostException e) {
-                throw new AssertionError(e);
-            }
+            return DnsRootServer.getIpv4RootServerById('a');
         }
 
         RrSet nsRrSet = lookupRrSetFor(zone, TYPE.NS);
