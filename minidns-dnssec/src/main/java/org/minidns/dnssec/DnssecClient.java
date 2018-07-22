@@ -361,10 +361,8 @@ public class DnssecClient extends ReliableDnsClient {
 
         if (rrsig.typeCovered == TYPE.DNSKEY) {
             // Key must be present
-            for (Record<? extends Data> record : records) {
-                Record<DNSKEY> dnsKeyRecord = record.ifPossibleAs(DNSKEY.class);
-                if (dnsKeyRecord == null) continue;
-
+            List<Record<DNSKEY>> dnskeyRrs = Record.filter(DNSKEY.class, records);
+            for (Record<DNSKEY> dnsKeyRecord : dnskeyRrs) {
                 if (dnsKeyRecord.payloadData.getKeyTag() == rrsig.keyTag) {
                     dnskey = dnsKeyRecord.payloadData;
                     break;
