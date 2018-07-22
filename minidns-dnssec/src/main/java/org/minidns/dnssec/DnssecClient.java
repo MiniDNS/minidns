@@ -139,13 +139,6 @@ public class DnssecClient extends ReliableDnsClient {
         return recordList;
     }
 
-    // TODO: Why do we override this, just to delegate it again with super back to the super class? Probably this can be
-    // removed.
-    @Override
-    protected boolean isResponseCacheable(Question q, DnsQueryResult dnsMessage) {
-        return super.isResponseCacheable(q, dnsMessage);
-    }
-
     private Set<DnssecUnverifiedReason> verify(DnsMessage dnsMessage) throws IOException {
         if (!dnsMessage.answerSection.isEmpty()) {
             return verifyAnswer(dnsMessage);
