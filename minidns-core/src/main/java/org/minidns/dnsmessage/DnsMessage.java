@@ -652,54 +652,8 @@ public class DnsMessage {
     public String toString() {
         if (toStringCache != null) return toStringCache;
 
-        StringBuilder sb = new StringBuilder("DnsMessage")
-                .append('(').append(id).append(' ')
-                .append(opcode).append(' ')
-                .append(responseCode).append(' ');
-        if (qr) {
-            sb.append("resp[qr=1]");
-        } else {
-            sb.append("query[qr=0]");
-        }
-        if (authoritativeAnswer) sb.append(" aa");
-        if (truncated) sb.append(" tr");
-        if (recursionDesired) sb.append(" rd");
-        if (recursionAvailable) sb.append(" ra");
-        if (authenticData) sb.append(" ad");
-        if (checkingDisabled) sb.append(" cd");
-        sb.append(")\n");
-        if (questions != null) {
-            for (Question question : questions) {
-                sb.append("[Q: ").append(question).append("]\n");
-            }
-        }
-        if (answerSection != null) {
-            for (Record<? extends Data> record : answerSection) {
-                sb.append("[A: ").append(record).append("]\n");
-            }
-        }
-        if (authoritySection != null) {
-            for (Record<? extends Data> record : authoritySection) {
-                sb.append("[N: ").append(record).append("]\n");
-            }
-        }
-        if (additionalSection != null) {
-            for (Record<? extends Data> record : additionalSection) {
-                sb.append("[X: ");
-                Edns edns = Edns.fromRecord(record);
-                if (edns != null) {
-                    sb.append(edns.toString());
-                } else {
-                    sb.append(record);
-                }
-                sb.append("]\n");
-            }
-        }
-
-        // Strip trailing newline.
-        if (sb.charAt(sb.length() - 1) == '\n') {
-            sb.setLength(sb.length() - 1);
-        }
+        StringBuilder sb = new StringBuilder("DnsMessage");
+        asBuilder().writeToStringBuilder(sb);
 
         toStringCache = sb.toString();
         return toStringCache;
@@ -1172,6 +1126,72 @@ public class DnsMessage {
             return new DnsMessage(this);
         }
 
+        private void writeToStringBuilder(StringBuilder sb) {
+            sb.append('(')
+                .append(id)
+                .append(' ')
+                .append(opcode)
+                .append(' ')
+                .append(responseCode)
+                .append(' ');
+            if (query) {
+                sb.append("resp[qr=1]");
+            } else {
+                sb.append("query[qr=0]");
+            }
+            if (authoritativeAnswer)
+                sb.append(" aa");
+            if (truncated)
+                sb.append(" tr");
+            if (recursionDesired)
+                sb.append(" rd");
+            if (recursionAvailable)
+                sb.append(" ra");
+            if (authenticData)
+                sb.append(" ad");
+            if (checkingDisabled)
+                sb.append(" cd");
+            sb.append(")\n");
+            if (questions != null) {
+                for (Question question : questions) {
+                    sb.append("[Q: ").append(question).append("]\n");
+                }
+            }
+            if (answers != null) {
+                for (Record<? extends Data> record : answers) {
+                    sb.append("[A: ").append(record).append("]\n");
+                }
+            }
+            if (nameserverRecords != null) {
+                for (Record<? extends Data> record : nameserverRecords) {
+                    sb.append("[N: ").append(record).append("]\n");
+                }
+            }
+            if (additionalResourceRecords != null) {
+                for (Record<? extends Data> record : additionalResourceRecords) {
+                    sb.append("[X: ");
+                    Edns edns = Edns.fromRecord(record);
+                    if (edns != null) {
+                        sb.append(edns.toString());
+                    } else {
+                        sb.append(record);
+                    }
+                    sb.append("]\n");
+                }
+            }
+
+            // Strip trailing newline.
+            if (sb.charAt(sb.length() - 1) == '\n') {
+                sb.setLength(sb.length() - 1);
+            }
+        }
+
+        @Override
+        public String toString() {
+            StringBuilder sb = new StringBuilder("Builder of DnsMessage");
+            writeToStringBuilder(sb);
+            return sb.toString();
+        }
     }
 
 }
