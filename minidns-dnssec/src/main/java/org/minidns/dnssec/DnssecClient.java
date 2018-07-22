@@ -380,7 +380,7 @@ public class DnssecClient extends ReliableDnsClient {
             for (Record<DNSKEY> dnsKeyRecord : dnskeyRrs) {
                 if (dnsKeyRecord.payloadData.getKeyTag() == rrsig.keyTag) {
                     dnskey = dnsKeyRecord.payloadData;
-                    // TODO: Add break here?
+                    break;
                 }
             }
         }
