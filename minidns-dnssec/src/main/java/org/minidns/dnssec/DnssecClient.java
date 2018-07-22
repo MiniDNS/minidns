@@ -376,10 +376,8 @@ public class DnssecClient extends ReliableDnsClient {
         } else {
             DnssecQueryResult dnskeyRes = queryDnssec(rrsig.signerName, TYPE.DNSKEY);
             result.addAll(dnskeyRes.getUnverifiedReasons());
-            for (Record<? extends Data> record : dnskeyRes.dnsQueryResult.response.answerSection) {
-                Record<DNSKEY> dnsKeyRecord = record.ifPossibleAs(DNSKEY.class);
-                if (dnsKeyRecord == null) continue;
-
+            List<Record<DNSKEY>> dnskeyRrs = dnskeyRes.dnsQueryResult.response.filterAnswerSectionBy(DNSKEY.class);
+            for (Record<DNSKEY> dnsKeyRecord : dnskeyRrs) {
                 if (dnsKeyRecord.payloadData.getKeyTag() == rrsig.keyTag) {
                     dnskey = dnsKeyRecord.payloadData;
                     // TODO: Add break here?
