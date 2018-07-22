@@ -358,6 +358,7 @@ public class DnssecClient extends ReliableDnsClient {
     private Set<DnssecUnverifiedReason> verifySignedRecords(Question q, RRSIG rrsig, List<Record<? extends Data>> records) throws IOException {
         Set<DnssecUnverifiedReason> result = new HashSet<>();
         DNSKEY dnskey = null;
+
         if (rrsig.typeCovered == TYPE.DNSKEY) {
             // Key must be present
             for (Record<? extends Data> record : records) {
@@ -384,13 +385,16 @@ public class DnssecClient extends ReliableDnsClient {
                 }
             }
         }
+
         if (dnskey == null) {
             throw new DnssecValidationFailedException(q, records.size() + " " + rrsig.typeCovered + " record(s) are signed using an unknown key.");
         }
+
         DnssecUnverifiedReason unverifiedReason = Verifier.verify(records, rrsig, dnskey);
         if (unverifiedReason != null) {
             result.add(unverifiedReason);
         }
+
         return result;
     }
 
