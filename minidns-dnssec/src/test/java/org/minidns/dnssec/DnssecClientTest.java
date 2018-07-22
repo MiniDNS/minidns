@@ -17,14 +17,16 @@ import org.minidns.constants.DnssecConstants.SignatureAlgorithm;
 import org.minidns.dnsmessage.DnsMessage;
 import org.minidns.dnsname.DnsName;
 import org.minidns.dnssec.DnssecValidationFailedException.AuthorityDoesNotContainSoa;
+import org.minidns.dnssec.DnssecWorld.DnssecData;
+import org.minidns.iterative.ReliableDnsClient.Mode;
 import org.minidns.record.A;
 import org.minidns.record.DNSKEY;
 import org.minidns.record.Data;
 import org.minidns.record.RRSIG;
 import org.minidns.record.Record;
+import org.minidns.record.Record.TYPE;
 import org.junit.Before;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -44,11 +46,12 @@ import static org.minidns.DnsWorld.rootZone;
 import static org.minidns.DnsWorld.rrsig;
 import static org.minidns.DnsWorld.soa;
 import static org.minidns.DnsWorld.zone;
+import static org.minidns.dnssec.DnssecWorld.addNsec;
 import static org.minidns.dnssec.DnssecWorld.dlv;
 import static org.minidns.dnssec.DnssecWorld.ds;
-import static org.minidns.dnssec.DnssecWorld.generatePrivateKey;
 import static org.minidns.dnssec.DnssecWorld.publicKey;
 import static org.minidns.dnssec.DnssecWorld.rrsigRecord;
+import static org.minidns.dnssec.DnssecWorld.selfSignDnskeyRrSet;
 import static org.minidns.dnssec.DnssecWorld.sign;
 import static org.minidns.dnssec.DnssecWorld.signedRootZone;
 import static org.minidns.dnssec.DnssecWorld.signedZone;
@@ -56,6 +59,8 @@ import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+
+// TODO: Make selfSignDnskeyRrset() part of signedZone() and remove it from all tests
 
 public class DnssecClientTest {
     private static SignatureAlgorithm algorithm = SignatureAlgorithm.RSASHA256;
@@ -72,20 +77,24 @@ public class DnssecClientTest {
 
     @BeforeClass
     public static void generateKeys() {
-        rootPrivateKSK = generatePrivateKey(algorithm, 2048);
-        rootKSK = dnskey(DNSKEY.FLAG_ZONE | DNSKEY.FLAG_SECURE_ENTRY_POINT, algorithm, publicKey(algorithm, rootPrivateKSK));
-        rootPrivateZSK = generatePrivateKey(algorithm, 1024);
-        rootZSK = dnskey(DNSKEY.FLAG_ZONE, algorithm, publicKey(algorithm, rootPrivateZSK));
-        comPrivateKSK = generatePrivateKey(algorithm, 2048);
-        comKSK = dnskey(DNSKEY.FLAG_ZONE | DNSKEY.FLAG_SECURE_ENTRY_POINT, algorithm, publicKey(algorithm, comPrivateKSK));
-        comPrivateZSK = generatePrivateKey(algorithm, 1024);
-        comZSK = dnskey(DNSKEY.FLAG_ZONE, algorithm, publicKey(algorithm, comPrivateZSK));
+        DnssecData rootDnssecData = DnssecWorld.getDnssecDataFor("");
+        rootPrivateKSK = rootDnssecData.privateKsk;
+        rootKSK = rootDnssecData.ksk;
+        rootPrivateZSK = rootDnssecData.privateZsk;
+        rootZSK = rootDnssecData.zsk;
+
+        DnssecData comDnssecData = DnssecWorld.getDnssecDataFor("com");
+        comPrivateKSK = comDnssecData.privateKsk;
+        comKSK = comDnssecData.ksk;
+        comPrivateZSK = comDnssecData.privateZsk;
+        comZSK = comDnssecData.zsk;
     }
 
     @Before
     public void setUp() throws Exception {
         client = new DnssecClient(new LruCache(0));
         client.addSecureEntryPoint(DnsName.ROOT, rootKSK.getKey());
+        client.setMode(Mode.iterativeOnly);
     }
 
     void checkCorrectExampleMessage(DnsMessage message) {
@@ -542,42 +551,39 @@ public class DnssecClientTest {
         assertTrue(message.authenticData);
     }
 
-    @Ignore
-    @SuppressWarnings("unchecked")
+    /**
+     * Zone 'com.' has no DS in the root zone. Hence, in order to verify the results of RRs under 'com.' a DLV has to
+     * been used.
+     *
+     * @throws IOException in case of an I/O error.
+     */
     @Test
     public void testValidDLV() throws IOException {
-        PrivateKey dlvPrivateKSK = generatePrivateKey(algorithm, 2048);
-        DNSKEY dlvKSK = dnskey(DNSKEY.FLAG_ZONE | DNSKEY.FLAG_SECURE_ENTRY_POINT, algorithm, publicKey(algorithm, dlvPrivateKSK));
-        PrivateKey dlvPrivateZSK = generatePrivateKey(algorithm, 1024);
-        DNSKEY dlvZSK = dnskey(DNSKEY.FLAG_ZONE, algorithm, publicKey(algorithm, dlvPrivateZSK));
-        applyZones(client,
+        DnsWorld dnsWorld = applyZones(client,
                 signedRootZone(
-                        sign(rootKSK, "", rootPrivateKSK, algorithm,
-                                record("", rootKSK),
-                                record("", rootZSK)),
-                        sign(rootZSK, "", rootPrivateZSK, algorithm,
-                                record("dlv", ds("dlv", digestType, dlvKSK))),
-                        sign(rootZSK, "", rootPrivateZSK, algorithm,
+                        selfSignDnskeyRrSet(""),
+                        sign("",
+                                ds("dlv")),
+                        sign("",
                                 record("dlv", ns("ns.com"))),
-                        sign(rootZSK, "", rootPrivateZSK, algorithm,
+                        sign("",
                                 record("com", ns("ns.com"))),
-                        sign(rootZSK, "", rootPrivateZSK, algorithm,
+                        sign("",
                                 record("ns.com", a("1.1.1.1")))
                 ), signedZone("com", "ns.com", "1.1.1.1",
-                        sign(comKSK, "com", comPrivateKSK, algorithm,
-                                record("com", comKSK),
-                                record("com", comZSK)),
-                        sign(comZSK, "com", comPrivateZSK, algorithm,
+                        selfSignDnskeyRrSet("com"),
+                        sign("com",
                                 record("example.com", a("1.1.1.2")))
                 ), signedZone("dlv", "ns.com", "1.1.1.1",
-                        sign(dlvKSK, "dlv", dlvPrivateKSK, algorithm,
-                                record("dlv", dlvKSK),
-                                record("dlv", dlvZSK)),
-                        sign(dlvZSK, "dlv", dlvPrivateZSK, algorithm,
+                        selfSignDnskeyRrSet("dlv"),
+                        sign("dlv",
                                 record("com.dlv", dlv("com", digestType, comKSK)))
                 )
         );
-        // TODO: Add nsec response for [Q: com. IN  DS] NX_DOMAIN
+        // Add NSEC which proves that there is no DS record for 'com.'. Note that the prove comes from the parental zone
+        // nameserver in case of DS RRs.
+        addNsec(dnsWorld, "", "a.root-servers.net", "com", "dlv", TYPE.NS);
+
         client.configureLookasideValidation(DnsName.from("dlv"));
 
         DnssecQueryResult result = client.queryDnssec("example.com", Record.TYPE.A);

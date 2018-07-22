@@ -45,15 +45,19 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
 public class DnsWorld extends AbstractDnsDataSource {
     private List<PreparedResponse> answers = new ArrayList<>();
+
+    private final Map<DnsName, Map<TYPE, RrSet>> worldData = new HashMap<>();
 
     @Override
     public DnsQueryResult query(DnsMessage message, InetAddress address, int port) {
@@ -72,6 +76,7 @@ public class DnsWorld extends AbstractDnsDataSource {
 
         DnsMessage nxDomainResponse = message
                 .getResponseBuilder(RESPONSE_CODE.NX_DOMAIN)
+                // TODO: This RA is faked and eventually causes problems.
                 .setRecursionAvailable(true)
                 .setAuthoritativeAnswer(true)
                 .build();
@@ -207,6 +212,11 @@ public class DnsWorld extends AbstractDnsDataSource {
 
         @Override
         public boolean isResponse(DnsMessage request, InetAddress address) {
+            // TODO: It appears that we shouldn't hint down to the nameserver if the query is about a 'DS' RR. Because
+            // they have to get answered at the parental part of the zone cut.
+            if (request.getQuestion().type == TYPE.DS) {
+                return false;
+            }
             return address.getHostName().endsWith(".root-servers.net") && questionHintable(request);
         }
     }
@@ -233,6 +243,7 @@ public class DnsWorld extends AbstractDnsDataSource {
     }
 
     public static class Zone {
+        // TODO: Change type of zoneName to DnsName and make fields final.
         String zoneName;
         InetAddress address;
         List<Record<? extends Data>> records;
@@ -270,6 +281,18 @@ public class DnsWorld extends AbstractDnsDataSource {
         client.setDataSource(world);
         for (Zone zone : zones) {
             for (RrSet rrSet : zone.getRRSets()) {
+                // A zone may have glue RR sets, so we need use rrSet.name as zoneName here.
+                DnsName zoneName = rrSet.name;
+                Map<TYPE, RrSet> zoneData = world.worldData.get(zoneName);
+                if (zoneData == null) {
+                    zoneData = new HashMap<>();
+                    world.worldData.put(zoneName, zoneData);
+                }
+
+                // TODO: Shouldn't we try to merge with a previously existing rrSet of the same type instead of
+                // overriding it? Or does this not happen by construction?
+                zoneData.put(rrSet.type, rrSet);
+
                 DnsMessage.Builder req = client.buildMessage(new Question(rrSet.name, rrSet.type, rrSet.clazz, false));
                 DnsMessage.Builder resp = DnsMessage.builder();
                 resp.setAnswers(rrSet.records);
@@ -354,7 +377,7 @@ public class DnsWorld extends AbstractDnsDataSource {
     }
 
     @SuppressWarnings("unchecked")
-    public static DnsWorld applyStubRecords(AbstractDnsClient client, Record<Data>... records) {
+    public static DnsWorld applyStubRecords(AbstractDnsClient client, Record<? extends Data>... records) {
         DnsWorld world = new DnsWorld();
         client.setDataSource(world);
         for (Record<? extends Data> record : records) {
@@ -404,15 +427,19 @@ public class DnsWorld extends AbstractDnsDataSource {
         return new Zone(zoneName, address, records);
     }
 
-    public static Record<Data> record(String name, long ttl, Data data) {
-        return new Record<>(name, data.getType(), CLASS.IN, ttl, data, false);
+    public static <D extends Data> Record<D> record(String name, long ttl, D data) {
+        return new Record<D>(name, data.getType(), CLASS.IN, ttl, data, false);
     }
 
-    public static Record<Data> record(DnsName name, long ttl, Data data) {
-        return new Record<>(name, data.getType(), CLASS.IN, ttl, data, false);
+    public static <D extends Data> Record<D> record(DnsName name, long ttl, D data) {
+        return new Record<D>(name, data.getType(), CLASS.IN, ttl, data, false);
     }
 
-    public static Record<Data> record(String name, Data data) {
+    public static <D extends Data> Record<D> record(String name, D data) {
+        return record(name, 3600, data);
+    }
+
+    public static <D extends Data> Record<D> record(DnsName name, D data) {
         return record(name, 3600, data);
     }
 
@@ -544,4 +571,46 @@ public class DnsWorld extends AbstractDnsDataSource {
         return srv(10, 10, port, name);
     }
 
+    public RrSet lookupRrSetFor(DnsName name, TYPE type) {
+        Map<TYPE, RrSet> zoneData = worldData.get(name);
+        if (zoneData == null) {
+            return null;
+        }
+
+        return zoneData.get(type);
+    }
+
+    public InetAddress lookupSingleAuthoritativeNameserverForZone(DnsName zone) {
+        if (zone.isRootLabel()) {
+            try {
+                // TODO: We may want to move the root servers database into minidns-client or even minidns-core that
+                // that we can re-use it. For example here.
+                return InetAddress.getByAddress("a.root-servers.net", new byte[] { (byte) 198, (byte) 41, (byte) 0, (byte) 4 });
+            } catch (UnknownHostException e) {
+                throw new AssertionError(e);
+            }
+        }
+
+        RrSet nsRrSet = lookupRrSetFor(zone, TYPE.NS);
+        if (nsRrSet == null) {
+            throw new IllegalStateException();
+        }
+
+        @SuppressWarnings("unchecked")
+        Record<NS> nsRecord = (Record<NS>) nsRrSet.records.iterator().next();
+
+        RrSet aRrSet = lookupRrSetFor(nsRecord.name, TYPE.A);
+        if (aRrSet == null) {
+            throw new IllegalStateException();
+        }
+
+        @SuppressWarnings("unchecked")
+        Record<A> aRecord = (Record<A>) aRrSet.records.iterator().next();
+
+        try {
+            return InetAddress.getByAddress(nsRecord.name.toString(), aRecord.payloadData.getIp());
+        } catch (UnknownHostException e) {
+            throw new AssertionError(e);
+        }
+    }
 }

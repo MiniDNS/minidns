@@ -23,6 +23,7 @@ import org.minidns.record.Data;
 import org.minidns.record.NSEC;
 import org.minidns.record.RRSIG;
 import org.minidns.record.Record;
+import org.minidns.record.Record.TYPE;
 import org.minidns.util.InetAddressUtil;
 
 import java.io.ByteArrayInputStream;
@@ -48,9 +49,58 @@ import java.security.spec.RSAKeyGenParameterSpec;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class DnssecWorld extends DnsWorld {
+
+    public static final SignatureAlgorithm DEFAULT_DNSSEC_ALGORITHM = SignatureAlgorithm.RSASHA256;
+    public static final DigestAlgorithm DEFAULT_DIGEST_ALGORITHM = DigestAlgorithm.SHA1;
+
+    private static final Map<DnsName, DnssecData> DNSSEC_DATA = new HashMap<>();
+
+    public static class DnssecData {
+        public final DnsName zone;
+        public final DNSKEY ksk;
+        public final PrivateKey privateKsk;
+        public final DNSKEY zsk;
+        public final PrivateKey privateZsk;
+        public final SignatureAlgorithm signatureAlgorithm;
+
+        private DnssecData(DnsName zone, DNSKEY ksk, PrivateKey privateKsk, DNSKEY zsk, PrivateKey privateZsk,
+                SignatureAlgorithm signatureAlgorithm) {
+            this.zone = zone;
+            this.ksk = ksk;
+            this.privateKsk = privateKsk;
+            this.zsk = zsk;
+            this.privateZsk = privateZsk;
+            this.signatureAlgorithm = signatureAlgorithm;
+        }
+    }
+
+    public static DnssecData getDnssecDataFor(CharSequence zone) {
+        return getDnssecDataFor(DnsName.from(zone));
+    }
+
+    public static DnssecData getDnssecDataFor(DnsName zone) {
+        DnssecData dnssecData = DNSSEC_DATA.get(zone);
+        if (dnssecData != null) {
+            return dnssecData;
+        }
+
+        SignatureAlgorithm algorithm = DEFAULT_DNSSEC_ALGORITHM;
+        PrivateKey privateKsk = generatePrivateKey(algorithm, 2048);
+        DNSKEY ksk = dnskey(DNSKEY.FLAG_ZONE | DNSKEY.FLAG_SECURE_ENTRY_POINT, algorithm, publicKey(algorithm, privateKsk));
+        PrivateKey privateZsk = generatePrivateKey(algorithm, 1024);
+        DNSKEY zsk = dnskey(DNSKEY.FLAG_ZONE, algorithm, publicKey(algorithm, privateZsk));
+        dnssecData = new DnssecData(zone, ksk, privateKsk, zsk, privateZsk, algorithm);
+
+        DNSSEC_DATA.put(zone, dnssecData);
+
+        return dnssecData;
+    }
+
     public static Zone signedRootZone(SignedRRSet... rrSets) {
         return new Zone("", null, merge(rrSets));
     }
@@ -83,9 +133,55 @@ public class DnssecWorld extends DnsWorld {
         return new SignedRRSet(records, rrsigRecord(key, signerName, privateKey, algorithm, records));
     }
 
+    @SuppressWarnings("varargs")
+    @SafeVarargs
+    public static SignedRRSet sign(DNSKEY key, DnsName signerName, PrivateKey privateKey, SignatureAlgorithm algorithm, Record<? extends Data>... records) {
+        return new SignedRRSet(records, rrsigRecord(key, signerName, privateKey, algorithm, records));
+    }
+
     @SuppressWarnings("unchecked")
     public static SignedRRSet sign(PrivateKey privateKey, RRSIG rrsig, Record<? extends Data>... records) {
         return new SignedRRSet(records, rrsigRecord(privateKey, rrsig, records));
+    }
+
+    @SafeVarargs
+    public static SignedRRSet sign(CharSequence signerName, Record<? extends Data>... records) {
+        return sign(DnsName.from(signerName), records);
+    }
+
+    @SuppressWarnings("varargs")
+    @SafeVarargs
+    public static SignedRRSet sign(DnsName signerName, Record<? extends Data>... records) {
+        DnssecData dnssecData = getDnssecDataFor(signerName);
+
+        DNSKEY dnskey;
+        PrivateKey privateKey;
+        final TYPE typeToSign = records[0].type;
+        switch (typeToSign) {
+        case DNSKEY:
+            dnskey = dnssecData.ksk;
+            privateKey = dnssecData.privateKsk;
+            break;
+        default:
+            dnskey = dnssecData.zsk;
+            privateKey = dnssecData.privateZsk;
+            break;
+        }
+
+        // TODO: Check if all records are of type 'typeToSign'.
+
+        return new SignedRRSet(records, rrsigRecord(dnskey, signerName, privateKey, dnssecData.signatureAlgorithm, records));
+    }
+
+    public static SignedRRSet selfSignDnskeyRrSet(CharSequence zone) {
+        return selfSignDnskeyRrSet(DnsName.from(zone));
+    }
+
+    public static SignedRRSet selfSignDnskeyRrSet(DnsName zone) {
+        DnssecData dnssecData = getDnssecDataFor(zone);
+        return sign(zone,
+                record(zone, dnssecData.ksk),
+                record(zone, dnssecData.zsk));
     }
 
     public static class SignedRRSet {
@@ -98,8 +194,14 @@ public class DnssecWorld extends DnsWorld {
         }
     }
 
-    @SuppressWarnings("unchecked")
+
+    @SafeVarargs
     public static Record<RRSIG> rrsigRecord(DNSKEY key, String signerName, PrivateKey privateKey, SignatureAlgorithm algorithm, Record<? extends Data>... records) {
+        return rrsigRecord(key, DnsName.from(signerName), privateKey, algorithm, records);
+    }
+
+    @SuppressWarnings("unchecked")
+    public static Record<RRSIG> rrsigRecord(DNSKEY key, DnsName signerName, PrivateKey privateKey, SignatureAlgorithm algorithm, Record<? extends Data>... records) {
         Record.TYPE typeCovered = records[0].type;
         int labels = records[0].name.getLabelCount();
         long originalTtl = records[0].ttl;
@@ -116,6 +218,15 @@ public class DnssecWorld extends DnsWorld {
         return record(records[0].name, rrsig.originalTtl, rrsig(rrsig.typeCovered, rrsig.algorithm, rrsig.labels, rrsig.originalTtl,
                 rrsig.signatureExpiration, rrsig.signatureInception, rrsig.keyTag, rrsig.signerName,
                 sign(privateKey, rrsig.algorithm, bytes))).as(RRSIG.class);
+    }
+
+    public static Record<DS> ds(CharSequence zone) {
+        return ds(DnsName.from(zone));
+    }
+
+    public static Record<DS> ds(DnsName zone){
+        DnssecData dnssecData = getDnssecDataFor(zone);
+        return record(zone, ds(zone, DEFAULT_DIGEST_ALGORITHM, dnssecData.ksk));
     }
 
     public static DS ds(String name, DigestAlgorithm digestType, DNSKEY dnskey) {
@@ -348,26 +459,82 @@ public class DnssecWorld extends DnsWorld {
     public static class AddressedNsecResponse implements PreparedResponse {
         final InetAddress address;
         final DnsMessage nsecMessage;
+        final boolean isRootNameserver;
 
         public AddressedNsecResponse(InetAddress address, DnsMessage nsecMessage) {
             this.address = address;
             this.nsecMessage = nsecMessage;
+            this.isRootNameserver = address.getHostName().endsWith(".root-servers.net");
         }
 
         @Override
         public boolean isResponse(DnsMessage request, InetAddress address) {
+            // TODO: This NSEC Record could be pre-computed in the constructor and should actually be a NSEC RrSet. The
+            // RrSet because future Verifier.nsecMatches() signatures may take RrSet instead of single NSEC record,
+            // because there could be multiple NSECs (e.g. because of wildcard expansion). But
+            // that means we have to think about making RrSet generic just like Record is.
             Record<? extends Data> nsecRecord = null;
             for (Record<? extends Data> record : nsecMessage.authoritySection) {
                 if (record.type == Record.TYPE.NSEC)
                     // TODO: Add break here?
                     nsecRecord = record;
             }
-            return address.equals(this.address) && Verifier.nsecMatches(request.getQuestion().name, nsecRecord.name, ((NSEC) nsecRecord.payloadData).next);
+
+            boolean nameserverMatches;
+            if (isRootNameserver) {
+                nameserverMatches = address.getHostName().endsWith(".root-servers.net");
+            } else {
+                nameserverMatches = address.equals(this.address);
+            }
+            return nameserverMatches && Verifier.nsecMatches(request.getQuestion().name, nsecRecord.name, ((NSEC) nsecRecord.payloadData).next);
         }
 
         @Override
         public DnsMessage getResponse() {
             return nsecMessage;
         }
+
+        @Override
+        public String toString() {
+            return getClass().getSimpleName() + ": " + address + '\n'
+                    + nsecMessage;
+        }
+    }
+
+    public static void addNsec(DnsWorld dnsWorld, CharSequence zone, CharSequence zoneSoaNameserver,
+            CharSequence owner, String nextSecure, Record.TYPE... typesCovered) {
+        addNsec(dnsWorld, DnsName.from(zone), DnsName.from(zoneSoaNameserver), DnsName.from(owner),
+                DnsName.from(nextSecure), typesCovered);
+    }
+
+    public static void addNsec(DnsWorld dnsWorld, DnsName zone, DnsName zoneSoaNameserver, DnsName owner, DnsName nextSecure,
+            Record.TYPE... typesCovered) {
+        DnssecData dnssecData = getDnssecDataFor(zone);
+        PrivateKey privateKey = dnssecData.privateZsk;
+        DNSKEY key = dnssecData.zsk;
+        SignatureAlgorithm signatureAlgorithm = dnssecData.signatureAlgorithm;
+
+        DnsMessage.Builder nsecAnswerBuilder = DnsMessage.builder();
+        List<Record<? extends Data>> records = DnssecWorld.merge(
+                                sign(key, zone, privateKey, signatureAlgorithm,
+                                        record(owner, nsec(nextSecure, typesCovered))),
+                                sign(key, zone, privateKey, signatureAlgorithm,
+                                        record(owner, soa(zoneSoaNameserver,
+                                                          DnsName.from("mailbox.of.responsible.person"),
+                                                          2015081265,
+                                                          7200,
+                                                          3600,
+                                                          1209600,
+                                                          3600))));
+        nsecAnswerBuilder.setNameserverRecords(records);
+        nsecAnswerBuilder.setAuthoritativeAnswer(true);
+
+        DnsMessage nsecAnswer = nsecAnswerBuilder.build();
+
+        // Get the authoritative nameserver IP address from dns world.
+        InetAddress authoritativeNameserver = dnsWorld.lookupSingleAuthoritativeNameserverForZone(zone);
+
+        PreparedResponse preparedNsecResponse = new DnssecWorld.AddressedNsecResponse(authoritativeNameserver, nsecAnswer); 
+        dnsWorld.addPreparedResponse(preparedNsecResponse);
     }
 }
