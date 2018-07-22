@@ -223,6 +223,9 @@ public class DnssecClient extends ReliableDnsClient {
         if (zone == null)
             throw new AuthorityDoesNotContainSoa(dnsMessage);
 
+        // TODO Examine if it is better to verify the RRs in the authority section *before* we verify NSEC(3). We
+        // currently do it the other way around.
+
         // TODO: This whole logic needs to be changed. It currently checks one NSEC(3) record after another, when it
         // should first determine if we are dealing with NSEC or NSEC3 and the verify the whole response.
         for (Record<? extends Data> record : authoritySection) {
@@ -300,6 +303,8 @@ public class DnssecClient extends ReliableDnsClient {
             if (!outdatedRrSigs.isEmpty()) {
                 result.reasons.add(new NoActiveSignaturesReason(q, outdatedRrSigs));
             } else {
+                // TODO: Check if QNAME results should have signatures and add a different reason if there are RRSIGs
+                // expected compared to when not.
                 result.reasons.add(new NoSignaturesReason(q));
             }
             return result;
