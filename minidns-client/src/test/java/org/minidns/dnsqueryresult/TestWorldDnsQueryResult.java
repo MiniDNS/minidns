@@ -10,12 +10,20 @@
  */
 package org.minidns.dnsqueryresult;
 
+import org.minidns.DnsWorld.PreparedResponse;
 import org.minidns.dnsmessage.DnsMessage;
 
 public class TestWorldDnsQueryResult extends DnsQueryResult {
 
+    public final PreparedResponse preparedResponse;
+
     public TestWorldDnsQueryResult(DnsMessage query, DnsMessage response) {
+        this(query, response, null);
+    }
+
+    public TestWorldDnsQueryResult(DnsMessage query, DnsMessage response, PreparedResponse preparedResponse) {
         super(QueryMethod.testWorld, query, response);
+        this.preparedResponse = preparedResponse;
     }
 
 }

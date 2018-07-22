@@ -66,7 +66,7 @@ public class DnsWorld extends AbstractDnsDataSource {
                 DnsMessage.Builder response = answer.getResponse().asBuilder();
                 response.setId(message.id);
                 response.setQuestions(message.questions);
-                return new TestWorldDnsQueryResult(message, response.build());
+                return new TestWorldDnsQueryResult(message, response.build(), answer);
             }
         }
 
