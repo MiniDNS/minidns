@@ -34,6 +34,16 @@ public class RrSet {
         this.records = Collections.unmodifiableSet(records);
     }
 
+    @Override
+    public final String toString() {
+        StringBuilder sb = new StringBuilder();
+        sb.append(name).append('\t').append(clazz).append('\t').append(type).append('\n');
+        for (Record<?> record : records) {
+            sb.append(record).append('\n');
+        }
+        return sb.toString();
+    }
+
     public static Builder builder() {
         return new Builder();
     }
