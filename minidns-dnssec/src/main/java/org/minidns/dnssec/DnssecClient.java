@@ -420,11 +420,9 @@ public class DnssecClient extends ReliableDnsClient {
         DelegatingDnssecRR delegation = null;
         DnssecQueryResult dsResp = queryDnssec(sepRecord.name, TYPE.DS);
         unverifiedReasons.addAll(dsResp.getUnverifiedReasons());
-        for (Record<? extends Data> record : dsResp.dnsQueryResult.response.answerSection) {
-            Record<DS> dsRecord = record.ifPossibleAs(DS.class);
-            if (dsRecord == null)
-                continue;
 
+        List<Record<DS>> dsRrs = dsResp.dnsQueryResult.response.filterAnswerSectionBy(DS.class);
+        for (Record<DS> dsRecord : dsRrs) {
             DS ds = dsRecord.payloadData;
             if (dnskey.getKeyTag() == ds.keyTag) {
                 delegation = ds;
@@ -432,6 +430,7 @@ public class DnssecClient extends ReliableDnsClient {
                 break;
             }
         }
+
         if (delegation == null) {
             LOGGER.fine("There is no DS record for " + sepRecord.name + ", server gives empty result");
         }
@@ -439,11 +438,9 @@ public class DnssecClient extends ReliableDnsClient {
         if (delegation == null && dlv != null && !dlv.isChildOf(sepRecord.name)) {
             DnssecQueryResult dlvResp = queryDnssec(DnsName.from(sepRecord.name, dlv), TYPE.DLV);
             unverifiedReasons.addAll(dlvResp.getUnverifiedReasons());
-            for (Record<? extends Data> record : dlvResp.dnsQueryResult.response.answerSection) {
-                Record<DLV> dlvRecord = record.ifPossibleAs(DLV.class);
-                if (dlvRecord == null)
-                    continue;
 
+            List<Record<DLV>> dlvRrs = dlvResp.dnsQueryResult.response.filterAnswerSectionBy(DLV.class);
+            for (Record<DLV> dlvRecord : dlvRrs) {
                 if (sepRecord.payloadData.getKeyTag() == dlvRecord.payloadData.keyTag) {
                     LOGGER.fine("Found DLV for " + sepRecord.name + ", awesome.");
                     delegation = dlvRecord.payloadData;
@@ -452,6 +449,7 @@ public class DnssecClient extends ReliableDnsClient {
                 }
             }
         }
+
         if (delegation != null) {
             DnssecUnverifiedReason unverifiedReason = Verifier.verify(sepRecord, delegation);
             if (unverifiedReason != null) {
