@@ -57,6 +57,7 @@ class Verifier {
         }
 
         if (!ds.digestEquals(digest)) {
+            // TODO: Add 'ds' and 'digest' to this exception, and rename the exception to "DigestComparisionFailedException".
             throw new DnssecValidationFailedException(dnskeyRecord, "SEP is not properly signed by parent DS!");
         }
         return null;
