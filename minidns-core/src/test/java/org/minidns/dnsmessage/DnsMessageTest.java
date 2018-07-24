@@ -37,6 +37,7 @@ import org.minidns.record.TXT;
 import org.junit.Test;
 
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -56,28 +57,22 @@ import static org.junit.Assert.assertTrue;
 
 public class DnsMessageTest {
 
+    DnsMessage getMessageFromResource(final String resourceFileName) throws IOException {
+        DnsMessage result;
+        try (InputStream inputStream = getClass().getResourceAsStream(resourceFileName);
+                ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
 
-    DnsMessage getMessageFromResource(final String resourceFileName)
-        throws Exception {
-        InputStream inputStream =
-            getClass().getResourceAsStream(resourceFileName);
-        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+            // TODO: There should be a more efficient way to read the resource file as reading byte per byte.
+            for (int readBytes = inputStream.read(); readBytes >= 0; readBytes = inputStream.read())
+                outputStream.write(readBytes);
 
-        for(int readBytes = inputStream.read();
-            readBytes >= 0;
-            readBytes = inputStream.read())
-            outputStream.write(readBytes);
-
-        DnsMessage result = new DnsMessage(outputStream.toByteArray());
-
-        inputStream.close();
-        outputStream.close();
+            result = new DnsMessage(outputStream.toByteArray());
+        }
 
         assertNotNull(result);
 
         return result;
     }
-
 
     @Test
     public void testALookup() throws Exception {
