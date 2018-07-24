@@ -19,3 +19,9 @@ task printClasspath(dependsOn: assemble) {
 		println sourceSets.main.runtimeClasspath.asPath
 	}
 }
+
+animalsniffer {
+	// Disable AnimalSniffer for minidns-repl.
+	// Unfortunately I found no better way to disable it besided making the sourceSets set an empty set.
+	sourceSets = []
+}
