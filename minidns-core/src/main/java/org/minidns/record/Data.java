@@ -13,6 +13,7 @@ package org.minidns.record;
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.util.Arrays;
 
 import org.minidns.record.Record.TYPE;
@@ -55,6 +56,11 @@ public abstract class Data {
     public final int length() {
         setBytes();
         return bytes.length;
+    }
+
+    public final void toOutputStream(OutputStream outputStream) throws IOException {
+        DataOutputStream dataOutputStream = new DataOutputStream(outputStream);
+        toOutputStream(dataOutputStream);
     }
 
     /**
