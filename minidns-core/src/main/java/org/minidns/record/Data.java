@@ -22,9 +22,6 @@ import org.minidns.record.Record.TYPE;
  */
 public abstract class Data {
 
-    Data() {
-    }
-
     /**
      * The payload type.
      * @return The payload type.
