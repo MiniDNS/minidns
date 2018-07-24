@@ -475,9 +475,15 @@ public class DnsMessage {
     }
 
     public void writeTo(OutputStream outputStream) throws IOException {
+        writeTo(outputStream, true);
+    }
+
+    public void writeTo(OutputStream outputStream, boolean writeLength) throws IOException {
         byte[] bytes = serialize();
         DataOutputStream dataOutputStream = new DataOutputStream(outputStream);
-        dataOutputStream.writeShort(bytes.length);
+        if (writeLength) {
+            dataOutputStream.writeShort(bytes.length);
+        }
         dataOutputStream.write(bytes);
     }
 

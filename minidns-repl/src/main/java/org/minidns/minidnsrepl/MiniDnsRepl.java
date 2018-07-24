@@ -80,7 +80,7 @@ public class MiniDnsRepl {
 
     public static void writeToFile(DnsMessage dnsMessage, String path) throws IOException {
         try (FileOutputStream fos = new FileOutputStream(path)) {
-            dnsMessage.writeTo(fos);
+            dnsMessage.writeTo(fos, true);
         }
     }
 }
