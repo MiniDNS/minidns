@@ -7,6 +7,7 @@ import org.minidns.record.Record.TYPE
 import org.minidns.dnssec.DnssecClient
 
 import org.minidns.minidnsrepl.MiniDnsRepl.clearCache
+import org.minidns.minidnsrepl.MiniDnsRepl.writeToFile
 
 import org.minidns.minidnsrepl.MiniDnsStats._
 

@@ -10,12 +10,14 @@
  */
 package org.minidns.minidnsrepl;
 
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.lang.reflect.Field;
 
 import org.minidns.AbstractDnsClient;
 import org.minidns.DnsClient;
 import org.minidns.cache.LruCache;
+import org.minidns.dnsmessage.DnsMessage;
 import org.minidns.dnssec.DnssecClient;
 import org.minidns.hla.DnssecResolverApi;
 import org.minidns.hla.ResolverResult;
@@ -76,4 +78,9 @@ public class MiniDnsRepl {
         // CHCECKSTYLE:ON
     }
 
+    public static void writeToFile(DnsMessage dnsMessage, String path) throws IOException {
+        try (FileOutputStream fos = new FileOutputStream(path)) {
+            dnsMessage.writeTo(fos);
+        }
+    }
 }
