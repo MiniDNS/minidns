@@ -63,7 +63,7 @@ public abstract class Data {
      * @param dos the DataOutputStream to write to.
      * @throws IOException if an I/O error occurs.
      */
-    public void toOutputStream(DataOutputStream dos) throws IOException {
+    public final void toOutputStream(DataOutputStream dos) throws IOException {
         setBytes();
         dos.write(bytes);
     }
