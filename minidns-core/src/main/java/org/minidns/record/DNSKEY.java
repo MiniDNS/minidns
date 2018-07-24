@@ -18,6 +18,7 @@ import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.math.BigInteger;
 import java.util.Arrays;
 
 /**
@@ -172,6 +173,15 @@ public class DNSKEY extends Data {
             keyBase64Cache = Base64.encodeToString(key);
         }
         return keyBase64Cache;
+    }
+
+    private transient BigInteger keyBigIntegerCache;
+
+    public BigInteger getKeyBigInteger() {
+        if (keyBigIntegerCache == null) {
+            keyBigIntegerCache = new BigInteger(key);
+        }
+        return keyBigIntegerCache;
     }
 
     public boolean keyEquals(byte[] otherKey) {
