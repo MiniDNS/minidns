@@ -21,11 +21,14 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.logging.Logger;
 
 /**
  * NSEC record payload.
  */
 public class NSEC extends Data {
+
+    private static final Logger LOGGER = Logger.getLogger(NSEC.class.getName());
 
     /**
      * The next owner name that contains a authoritative data or a delegation point.
@@ -134,7 +137,13 @@ public class NSEC extends Data {
                 int b = dis.readUnsignedByte();
                 for (int j = 0; j < 8; j++) {
                     if (((b >> j) & 0x1) > 0) {
-                        typeList.add(TYPE.getType((windowBlock << 8) + (i * 8) + (7 - j)));
+                        int typeInt = (windowBlock << 8) + (i * 8) + (7 - j);
+                        TYPE type = TYPE.getType(typeInt);
+                        if (type == TYPE.UNKNOWN) {
+                            LOGGER.warning("Skipping unknown type in type bitmap: " + typeInt);
+                            continue;
+                        }
+                        typeList.add(type);
                     }
                 }
             }
