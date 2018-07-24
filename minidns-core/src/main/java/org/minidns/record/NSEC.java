@@ -22,11 +22,14 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.logging.Logger;
 
 /**
  * NSEC record payload.
  */
 public class NSEC extends Data {
+
+    private static final Logger LOGGER = Logger.getLogger(NSEC.class.getName());
 
     /**
      * The next owner name that contains a authoritative data or a delegation point.
@@ -128,6 +131,7 @@ public class NSEC extends Data {
         }
     }
 
+    // TODO: This method should probably just return List<Integer> so that unknown types can be act on later.
     static List<TYPE> readTypeBitMap(byte[] typeBitmap) throws IOException {
         DataInputStream dis = new DataInputStream(new ByteArrayInputStream(typeBitmap));
         int read = 0;
@@ -139,7 +143,13 @@ public class NSEC extends Data {
                 int b = dis.readUnsignedByte();
                 for (int j = 0; j < 8; j++) {
                     if (((b >> j) & 0x1) > 0) {
-                        typeList.add(TYPE.getType((windowBlock << 8) + (i * 8) + (7 - j)));
+                        int typeInt = (windowBlock << 8) + (i * 8) + (7 - j);
+                        TYPE type = TYPE.getType(typeInt);
+                        if (type == TYPE.UNKNOWN) {
+                            LOGGER.warning("Skipping unknown type in type bitmap: " + typeInt);
+                            continue;
+                        }
+                        typeList.add(type);
                     }
                 }
             }
