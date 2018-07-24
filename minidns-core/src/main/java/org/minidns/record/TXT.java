@@ -13,8 +13,11 @@ package org.minidns.record;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 
 import org.minidns.record.Record.TYPE;
@@ -42,27 +45,50 @@ public class TXT extends Data {
         return blob.clone();
     }
 
+    private transient String textCache;
+
     public String getText() {
-        List<byte[]> extents = getExtents();
-        StringBuilder sb = new StringBuilder();
-        int i = 0;
-        while (i < extents.size() - 1) {
-            sb.append(new String(extents.get(i))).append(" / ");
-            i++;
+        if (textCache == null) {
+            StringBuilder sb = new StringBuilder();
+            Iterator<String> it = getCharacterStrings().iterator();
+            while (it.hasNext()) {
+                sb.append(it.next());
+                if (it.hasNext()) {
+                    sb.append(" / ");
+                }
+            }
+            textCache = sb.toString();
         }
-        sb.append(new String(extents.get(i)));
-        return sb.toString();
+        return textCache;
+    }
+
+    private transient List<String> characterStringsCache;
+
+    public List<String> getCharacterStrings() {
+        if (characterStringsCache == null) {
+            List<byte[]> extents = getExtents();
+            List<String> characterStrings = new ArrayList<>(extents.size());
+            for (byte[] extent : extents) {
+                try {
+                    characterStrings.add(new String(extent, "UTF-8"));
+                } catch (UnsupportedEncodingException e) {
+                    throw new AssertionError(e);
+                }
+            }
+
+            characterStringsCache = Collections.unmodifiableList(characterStrings);
+        }
+        return characterStringsCache;
     }
 
     public List<byte[]> getExtents() {
         ArrayList<byte[]> extents = new ArrayList<byte[]>();
-        int used = 0;
-        while (used < blob.length) {
-            int segLength = 0x00ff & blob[used];
+        int segLength = 0;
+        for (int used = 0; used < blob.length; used += segLength) {
+            segLength = 0x00ff & blob[used];
             int end = ++used + segLength;
             byte[] extent = Arrays.copyOfRange(blob, used, end);
             extents.add(extent);
-            used += segLength;
         }
         return extents;
     }
