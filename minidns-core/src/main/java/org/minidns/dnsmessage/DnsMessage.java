@@ -21,6 +21,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.net.DatagramPacket;
 import java.net.InetAddress;
 import java.nio.ByteBuffer;
@@ -473,8 +474,9 @@ public class DnsMessage {
         return new DatagramPacket(bytes, bytes.length, address, port);
     }
 
-    public void writeTo(DataOutputStream dataOutputStream) throws IOException {
+    public void writeTo(OutputStream outputStream) throws IOException {
         byte[] bytes = serialize();
+        DataOutputStream dataOutputStream = new DataOutputStream(outputStream);
         dataOutputStream.writeShort(bytes.length);
         dataOutputStream.write(bytes);
     }
