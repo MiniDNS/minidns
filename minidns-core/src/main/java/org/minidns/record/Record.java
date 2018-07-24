@@ -14,6 +14,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -432,10 +433,12 @@ public final class Record<D extends Data> {
         this.unicastQuery = unicastQuery;
     }
 
-    public void toOutputStream(DataOutputStream dos) throws IOException {
+    public void toOutputStream(OutputStream outputStream) throws IOException {
         if (payloadData == null) {
             throw new IllegalStateException("Empty Record has no byte representation");
         }
+
+        DataOutputStream dos = new DataOutputStream(outputStream);
 
         name.writeToStream(dos);
         dos.writeShort(type.getValue());
