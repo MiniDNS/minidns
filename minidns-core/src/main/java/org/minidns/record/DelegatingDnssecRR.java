@@ -132,7 +132,7 @@ public abstract class DelegatingDnssecRR extends Data {
         return sb.toString();
     }
 
-    private BigInteger digestBigIntCache;
+    private transient BigInteger digestBigIntCache;
 
     public BigInteger getDigestBigInteger() {
         if (digestBigIntCache == null) {
@@ -141,7 +141,7 @@ public abstract class DelegatingDnssecRR extends Data {
         return digestBigIntCache;
     }
 
-    private String digestHexCache;
+    private transient String digestHexCache;
 
     public String getDigestHex() {
         if (digestHexCache == null) {
