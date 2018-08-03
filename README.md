@@ -13,6 +13,8 @@ If you find the project useful and if you are able to provide the resources for 
 If you are looking for a DNSSEC-enabled resolver in C (and/or Lua) then hava a look at the [Knot Resolver](https://www.knot-resolver.cz/). Also this library is not intended to be used as a DNS server. You might want to
 look into [dnsjava](http://dnsjava.org/) for such functionality.
 
+**MiniDNS release resources** (javadoc, …) an be found at https://minidns.org/releases
+
 Quickstart
 ----------
 
