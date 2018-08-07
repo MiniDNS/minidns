@@ -8,21 +8,21 @@
  * upon the condition that you accept all of the terms of either
  * the Apache License 2.0, the LGPL 2.1+ or the WTFPL.
  */
-package org.minidns.hla;
+package org.minidns.hla.srv;
 
-import org.minidns.dnslabel.DnsLabel;
-
-public enum SrvProto {
+public enum SrvType {
 
     // @formatter:off
-    tcp,
-    udp,
+    xmpp_client(SrvService.xmpp_client, SrvProto.tcp),
+    xmpp_server(SrvService.xmpp_server, SrvProto.tcp),
     ;
     // @formatter:on
 
-    public final DnsLabel dnsLabel;
+    public final SrvService service;
+    public final SrvProto proto;
 
-    SrvProto() {
-        dnsLabel = DnsLabel.from('_' + name());
+    SrvType(SrvService service, SrvProto proto) {
+        this.service = service;
+        this.proto = proto;
     }
 }

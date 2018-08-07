@@ -8,7 +8,7 @@
  * upon the condition that you accept all of the terms of either
  * the Apache License 2.0, the LGPL 2.1+ or the WTFPL.
  */
-package org.minidns.hla;
+package org.minidns.hla.srv;
 
 import org.minidns.dnslabel.DnsLabel;
 
