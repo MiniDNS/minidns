@@ -19,6 +19,7 @@ import java.util.Set;
 import org.minidns.AbstractDnsClient.IpVersionSetting;
 import org.minidns.MiniDnsException.NullResultException;
 import org.minidns.dnsname.DnsName;
+import org.minidns.hla.srv.SrvServiceProto;
 import org.minidns.record.A;
 import org.minidns.record.AAAA;
 import org.minidns.record.InternetAddressRR;
@@ -29,13 +30,15 @@ public class SrvResolverResult extends ResolverResult<SRV> {
 
     private final ResolverApi resolver;
     private final IpVersionSetting ipVersion;
+    private final SrvServiceProto srvServiceProto;
 
     private List<ResolvedSrvRecord> sortedSrvResolvedAddresses;
 
-    SrvResolverResult(ResolverResult<SRV> srvResult, ResolverApi resolver) throws NullResultException {
+    SrvResolverResult(ResolverResult<SRV> srvResult, SrvServiceProto srvServiceProto, ResolverApi resolver) throws NullResultException {
         super(srvResult.question, srvResult.result, srvResult.unverifiedReasons);
         this.resolver = resolver;
         this.ipVersion = resolver.getClient().getPreferedIpVersion();
+        this.srvServiceProto = srvServiceProto;
     }
 
     public List<ResolvedSrvRecord> getSortedSrvResolvedAddresses() throws IOException {
@@ -96,7 +99,7 @@ public class SrvResolverResult extends ResolverResult<SRV> {
                 break;
             }
 
-            ResolvedSrvRecord resolvedSrvAddresses = new ResolvedSrvRecord(question.name, srvRecord, srvAddresses,
+            ResolvedSrvRecord resolvedSrvAddresses = new ResolvedSrvRecord(question.name, srvServiceProto, srvRecord, srvAddresses,
                     aRecordsResult, aaaaRecordsResult);
             res.add(resolvedSrvAddresses);
         }
@@ -108,6 +111,7 @@ public class SrvResolverResult extends ResolverResult<SRV> {
 
     public static class ResolvedSrvRecord {
         public final DnsName name;
+        public final SrvServiceProto srvServiceProto;
         public final SRV srv;
         public final List<InternetAddressRR> addresses;
         public final ResolverResult<A> aRecordsResult;
@@ -118,8 +122,11 @@ public class SrvResolverResult extends ResolverResult<SRV> {
          */
         public final int port;
 
-        private ResolvedSrvRecord(DnsName name, SRV srv, List<InternetAddressRR> addresses, ResolverResult<A> aRecordsResult, ResolverResult<AAAA> aaaaRecordsResult) {
+        private ResolvedSrvRecord(DnsName name, SrvServiceProto srvServiceProto, SRV srv,
+                List<InternetAddressRR> addresses, ResolverResult<A> aRecordsResult,
+                ResolverResult<AAAA> aaaaRecordsResult) {
             this.name = name;
+            this.srvServiceProto = srvServiceProto;
             this.srv = srv;
             this.addresses = Collections.unmodifiableList(addresses);
             this.port = srv.port;

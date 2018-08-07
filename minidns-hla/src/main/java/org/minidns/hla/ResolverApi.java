@@ -204,7 +204,7 @@ public class ResolverApi {
         DnsName srvDnsName = DnsName.from(srvServiceProto.service, srvServiceProto.proto, name);
         ResolverResult<SRV> result = resolve(srvDnsName, SRV.class);
 
-        return new SrvResolverResult(result, this);
+        return new SrvResolverResult(result, srvServiceProto, this);
     }
 
     public final AbstractDnsClient getClient() {
