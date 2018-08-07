@@ -16,6 +16,7 @@ import java.net.Inet6Address;
 import java.net.InetAddress;
 
 import org.minidns.AbstractDnsClient;
+import org.minidns.dnslabel.DnsLabel;
 import org.minidns.dnsmessage.Question;
 import org.minidns.dnsname.DnsName;
 import org.minidns.dnsqueryresult.DnsQueryResult;
@@ -124,14 +125,14 @@ public class ResolverApi {
     }
 
     public SrvResolverResult resolveSrv(SrvService service, SrvProto proto, String name) throws IOException {
-        return resolveSrv(service.dnsName, proto.dnsName, DnsName.from(name));
+        return resolveSrv(service.dnsLabel, proto.dnsLabel, DnsName.from(name));
     }
 
     public SrvResolverResult resolveSrv(SrvService service, SrvProto proto, DnsName name) throws IOException {
-        return resolveSrv(service.dnsName, proto.dnsName, name);
+        return resolveSrv(service.dnsLabel, proto.dnsLabel, name);
     }
 
-    public SrvResolverResult resolveSrv(DnsName service, DnsName proto, DnsName name) throws IOException {
+    public SrvResolverResult resolveSrv(DnsLabel service, DnsLabel proto, DnsName name) throws IOException {
         DnsName srvRrName = DnsName.from(service, proto, name);
         return resolveSrv(srvRrName);
     }
@@ -176,14 +177,30 @@ public class ResolverApi {
      * The name of SRV records is "_[service]._[protocol].[serviceDomain]", for example "_xmpp-client._tcp.example.org".
      * </p>
      *
-     * @param name the name to resolve.
+     * @param srvDnsName the name to resolve.
      * @return a <code>SrvResolverResult</code> instance which can be used to retrieve the addresses.
      * @throws IOException if an IO exception occurs.
      */
-    public SrvResolverResult resolveSrv(DnsName name) throws IOException {
-        ResolverResult<SRV> result = resolve(name, SRV.class);
-        return new SrvResolverResult(result, this);
+    public SrvResolverResult resolveSrv(DnsName srvDnsName) throws IOException {
+        final int labelCount = srvDnsName.getLabelCount();
+        if (labelCount < 3) {
+            throw new IllegalArgumentException();
+        }
 
+        DnsLabel service = srvDnsName.getLabel(labelCount);
+        DnsLabel proto = srvDnsName.getLabel(labelCount - 1);
+        DnsName name = srvDnsName.stripToLabels(labelCount - 2);
+
+        SrvServiceProto srvServiceProto = new SrvServiceProto(service, proto);
+
+        return resolveSrv(name, srvServiceProto);
+    }
+
+    public SrvResolverResult resolveSrv(DnsName name, SrvServiceProto srvServiceProto) throws IOException {
+        DnsName srvDnsName = DnsName.from(srvServiceProto.service, srvServiceProto.proto, name);
+        ResolverResult<SRV> result = resolve(srvDnsName, SRV.class);
+
+        return new SrvResolverResult(result, this);
     }
 
     public final AbstractDnsClient getClient() {

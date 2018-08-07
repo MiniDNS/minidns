@@ -12,17 +12,16 @@ package org.minidns.hla;
 
 import org.minidns.dnslabel.DnsLabel;
 
-public enum SrvProto {
+/**
+ *  The Serivce and Protocol part of a SRV owner name. The format of a SRV owner name is "_Service._Proto.Name".
+ */
+public class SrvServiceProto {
 
-    // @formatter:off
-    tcp,
-    udp,
-    ;
-    // @formatter:on
+    public final DnsLabel service;
+    public final DnsLabel proto;
 
-    public final DnsLabel dnsLabel;
-
-    SrvProto() {
-        dnsLabel = DnsLabel.from('_' + name());
+    public SrvServiceProto(DnsLabel service, DnsLabel proto) {
+        this.service = service;
+        this.proto = proto;
     }
 }

@@ -10,7 +10,7 @@
  */
 package org.minidns.hla;
 
-import org.minidns.dnsname.DnsName;
+import org.minidns.dnslabel.DnsLabel;
 
 public enum SrvService {
 
@@ -19,21 +19,25 @@ public enum SrvService {
     xmpp_server,
 
     /**
+     * XMPP client-to-server (c2s) connections using implicit TLS (also known as "Direct TLS").
+     *
      * @see <a href="https://xmpp.org/extensions/xep-0368.html">XEP-0368: SRV records for XMPP over TLS</a>
      */
     xmpps_client,
 
     /**
+     * XMPP server-to-server (s2s) connections using implicit TLS (also known as "Direct TLS").
+     *
      * @see <a href="https://xmpp.org/extensions/xep-0368.html">XEP-0368: SRV records for XMPP over TLS</a>
      */
     xmpps_server,
     ;
     // @formatter:on
 
-    public final DnsName dnsName;
+    public final DnsLabel dnsLabel;
 
     SrvService() {
         String enumName = name().replaceAll("_", "-");
-        dnsName = DnsName.from('_' + enumName);
+        dnsLabel = DnsLabel.from('_' + enumName);
     }
 }
