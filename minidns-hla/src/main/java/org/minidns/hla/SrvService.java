@@ -17,6 +17,16 @@ public enum SrvService {
     // @formatter:off
     xmpp_client,
     xmpp_server,
+
+    /**
+     * @see <a href="https://xmpp.org/extensions/xep-0368.html">XEP-0368: SRV records for XMPP over TLS</a>
+     */
+    xmpps_client,
+
+    /**
+     * @see <a href="https://xmpp.org/extensions/xep-0368.html">XEP-0368: SRV records for XMPP over TLS</a>
+     */
+    xmpps_server,
     ;
     // @formatter:on
 
