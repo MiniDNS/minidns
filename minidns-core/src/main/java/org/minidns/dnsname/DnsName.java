@@ -541,6 +541,12 @@ public class DnsName implements CharSequence, Serializable, Comparable<DnsName> 
         return labels.clone();
     }
 
+
+    public DnsLabel getLabel(int labelNum) {
+        setLabelsIfRequired();
+        return labels[labelNum];
+    }
+
     /**
      * Get a copy of the raw labels of this DNS name. The resulting array will contain the labels in reverse order, that is,
      * the top-level domain will be at res[0].
