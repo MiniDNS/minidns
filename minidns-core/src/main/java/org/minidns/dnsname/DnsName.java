@@ -370,6 +370,16 @@ public class DnsName implements CharSequence, Serializable, Comparable<DnsName> 
         return new DnsName(rawLabels, true);
     }
 
+    public static DnsName from(DnsLabel grandchild, DnsLabel child, DnsName parent) {
+        parent.setBytesIfRequired();
+
+        DnsLabel[] rawLabels = new DnsLabel[parent.rawLabels.length + 2];
+        System.arraycopy(parent.rawLabels, 0, rawLabels, 0, parent.rawLabels.length);
+        rawLabels[parent.rawLabels.length] = child;
+        rawLabels[parent.rawLabels.length + 1] = grandchild;
+        return new DnsName(rawLabels, true);
+    }
+
     public static DnsName from(DnsName... nameComponents) {
         int labelCount = 0;
         for (DnsName component : nameComponents) {
