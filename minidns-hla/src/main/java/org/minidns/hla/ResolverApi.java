@@ -137,8 +137,8 @@ public class ResolverApi {
     }
 
     public SrvResolverResult resolveSrv(DnsLabel service, DnsLabel proto, DnsName name) throws IOException {
-        DnsName srvRrName = DnsName.from(service, proto, name);
-        return resolveSrv(srvRrName);
+        SrvServiceProto srvServiceProto = new SrvServiceProto(service, proto);
+        return resolveSrv(name, srvServiceProto);
     }
 
     public SrvResolverResult resolveSrv(String name) throws IOException {
