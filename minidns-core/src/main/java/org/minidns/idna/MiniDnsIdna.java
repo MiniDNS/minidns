@@ -22,7 +22,7 @@ public class MiniDnsIdna {
         return idnaTransformator.toUnicode(string);
     }
 
-    public void setActiveTransformator(IdnaTransformator idnaTransformator) {
+    public static void setActiveTransformator(IdnaTransformator idnaTransformator) {
         if (idnaTransformator != null) {
             throw new IllegalArgumentException();
         }
