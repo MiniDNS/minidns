@@ -12,10 +12,19 @@ package org.minidns.idna;
 
 import java.net.IDN;
 
+import org.minidns.dnsname.DnsName;
+
 public class DefaultIdnaTransformator implements IdnaTransformator {
 
     @Override
     public String toASCII(String input) {
+        // Special case if input is ".", i.e. a string containing only a single dot character. This is a workaround for
+        // IDN.toASCII() implementations throwing an IllegalArgumentException on this input string (for example Android
+        // APIs level 26).
+        if (DnsName.ROOT.ace.equals(input)) {
+            return DnsName.ROOT.ace;
+        }
+
         return IDN.toASCII(input);
     }
 
