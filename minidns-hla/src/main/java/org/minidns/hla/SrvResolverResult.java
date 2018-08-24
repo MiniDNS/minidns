@@ -41,12 +41,24 @@ public class SrvResolverResult extends ResolverResult<SRV> {
         this.srvServiceProto = srvServiceProto;
     }
 
+    /**
+     * Get a list ordered by priority and weight of the resolved SRV records. This method will throw if there was an
+     * error response or if subsequent {@link A} or {@link AAAA} resource record lookups fail. It will return
+     * {@code null} in case the service is decidedly not available at this domain.
+     *
+     * @return a list ordered by priority and weight of the related SRV records.
+     * @throws IOException in case an I/O error occurs.
+     */
     public List<ResolvedSrvRecord> getSortedSrvResolvedAddresses() throws IOException {
         if (sortedSrvResolvedAddresses != null) {
             return sortedSrvResolvedAddresses;
         }
 
         throwIseIfErrorResponse();
+
+        if (isServiceDecidedlyNotAvailableAtThisDomain()) {
+            return null;
+        }
 
         List<SRV> srvRecords = SrvUtil.sortSrvRecords(getAnswers());
 
