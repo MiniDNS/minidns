@@ -73,6 +73,19 @@ public class SRV extends Data implements Comparable<SRV> {
         this.name = target;
     }
 
+    /**
+     * Check if the service is available at this domain. This checks f the target points to the root label. As per RFC
+     * 2782 the service is decidedly not available if there is only a single SRV answer pointing to the root label. From
+     * RFC 2782:
+     *
+     * <blockquote>A Target of "." means that the service is decidedly not available at this domain.</blockquote>
+     *
+     * @return true if the service is available at this domain.
+     */
+    public boolean isServiceAvailable() {
+        return !target.isRootLabel();
+    }
+
     @Override
     public void serialize(DataOutputStream dos) throws IOException {
         dos.writeShort(priority);
