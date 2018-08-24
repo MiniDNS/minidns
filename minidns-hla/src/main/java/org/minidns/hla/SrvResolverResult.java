@@ -12,8 +12,11 @@ package org.minidns.hla;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
+import java.util.IdentityHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.minidns.AbstractDnsClient.IpVersionSetting;
@@ -155,5 +158,47 @@ public class SrvResolverResult extends ResolverResult<SRV> {
             this.aRecordsResult = aRecordsResult;
             this.aaaaRecordsResult = aaaaRecordsResult;
         }
+    }
+
+    /**
+     * Convenience method to sort multiple resolved SRV RRs. This is for example required by XEP-0368, where
+     * {@link org.minidns.hla.srv.SrvService#xmpp_client} and {@link org.minidns.hla.srv.SrvService#xmpps_client} may be
+     * sorted together.
+     *
+     * @param resolvedSrvRecordCollections a collection of resolved SRV records.
+     * @return a list ordered by priority and weight of the related SRV records.
+     */
+    @SafeVarargs
+    public static List<ResolvedSrvRecord> sortMultiple(Collection<ResolvedSrvRecord>... resolvedSrvRecordCollections) {
+        int srvRecordsCount = 0;
+        for (Collection<ResolvedSrvRecord> resolvedSrvRecords : resolvedSrvRecordCollections) {
+            if (resolvedSrvRecords == null) {
+                continue;
+            }
+            srvRecordsCount += resolvedSrvRecords.size();
+        }
+
+        List<SRV> srvToSort = new ArrayList<>(srvRecordsCount);
+        Map<SRV, ResolvedSrvRecord> identityMap = new IdentityHashMap<>(srvRecordsCount);
+        for (Collection<ResolvedSrvRecord> resolvedSrvRecords : resolvedSrvRecordCollections) {
+            if (resolvedSrvRecords == null) {
+                continue;
+            }
+            for (ResolvedSrvRecord resolvedSrvRecord : resolvedSrvRecords) {
+                srvToSort.add(resolvedSrvRecord.srv);
+                identityMap.put(resolvedSrvRecord.srv, resolvedSrvRecord);
+            }
+        }
+
+        List<SRV> sortedSrvs = SrvUtil.sortSrvRecords(srvToSort);
+        assert(sortedSrvs.size() == srvRecordsCount);
+
+        List<ResolvedSrvRecord> res = new ArrayList<>(srvRecordsCount);
+        for (SRV sortedSrv : sortedSrvs) {
+            ResolvedSrvRecord resolvedSrvRecord = identityMap.get(sortedSrv);
+            res.add(resolvedSrvRecord);
+        }
+
+        return res;
     }
 }
