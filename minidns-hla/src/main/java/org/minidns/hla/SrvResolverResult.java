@@ -109,6 +109,16 @@ public class SrvResolverResult extends ResolverResult<SRV> {
         return res;
     }
 
+    public boolean isServiceDecidedlyNotAvailableAtThisDomain() {
+        Set<SRV> answers = getAnswers();
+        if (answers.size() != 1) {
+            return false;
+        }
+
+        SRV singleAnswer = answers.iterator().next();
+        return !singleAnswer.isServiceAvailable();
+    }
+
     public static class ResolvedSrvRecord {
         public final DnsName name;
         public final SrvServiceProto srvServiceProto;
