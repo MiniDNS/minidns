@@ -182,7 +182,7 @@ public class ResolverApi {
      * </p>
      *
      * @param srvDnsName the name to resolve.
-     * @return a <code>SrvResolverResult</code> instance which can be used to retrieve the addresses.
+     * @return a <code>SrvResolverResult</code> instance which can be used to retrieve the IP addresses.
      * @throws IOException if an IO exception occurs.
      */
     public SrvResolverResult resolveSrv(DnsName srvDnsName) throws IOException {
@@ -200,6 +200,17 @@ public class ResolverApi {
         return resolveSrv(name, srvServiceProto);
     }
 
+    /**
+     * Resolve the {@link SRV} resource record for the given service name, service and protcol. After ensuring that the
+     * resolution was successful with {@link SrvResolverResult#wasSuccessful()} , and, if DNSSEC was used, that the
+     * results could be verified with {@link SrvResolverResult#isAuthenticData()}, simply use
+     * {@link SrvResolverResult#getSortedSrvResolvedAddresses()} to retrieve the resolved IP addresses.
+     *
+     * @param name the DNS name of the service.
+     * @param srvServiceProto the service and protocol to lookup.
+     * @return a <code>SrvResolverResult</code> instance which can be used to retrieve the IP addresses.
+     * @throws IOException if an I/O error occurs.
+     */
     public SrvResolverResult resolveSrv(DnsName name, SrvServiceProto srvServiceProto) throws IOException {
         DnsName srvDnsName = DnsName.from(srvServiceProto.service, srvServiceProto.proto, name);
         ResolverResult<SRV> result = resolve(srvDnsName, SRV.class);
