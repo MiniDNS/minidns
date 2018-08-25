@@ -20,7 +20,7 @@ public class DefaultIdnaTransformator implements IdnaTransformator {
     public String toASCII(String input) {
         // Special case if input is ".", i.e. a string containing only a single dot character. This is a workaround for
         // IDN.toASCII() implementations throwing an IllegalArgumentException on this input string (for example Android
-        // APIs level 26).
+        // APIs level 26, see https://issuetracker.google.com/issues/113070416).
         if (DnsName.ROOT.ace.equals(input)) {
             return DnsName.ROOT.ace;
         }
