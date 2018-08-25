@@ -23,7 +23,7 @@ public class MiniDnsIdna {
     }
 
     public static void setActiveTransformator(IdnaTransformator idnaTransformator) {
-        if (idnaTransformator != null) {
+        if (idnaTransformator == null) {
             throw new IllegalArgumentException();
         }
         MiniDnsIdna.idnaTransformator = idnaTransformator;
