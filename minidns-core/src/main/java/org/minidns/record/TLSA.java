@@ -69,6 +69,13 @@ public class TLSA extends Data {
         }
     }
 
+    static {
+        // Ensure that the LUTs are initialized.
+        CertUsage.values();
+        Selector.values();
+        MatchingType.values();
+    }
+
     /**
      * The provided association that will be used to match the certificate presented in
      * the TLS handshake.
