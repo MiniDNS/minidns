@@ -10,12 +10,11 @@
  */
 package org.minidns.dane;
 
-import org.minidns.AbstractDNSClient;
-import org.minidns.dnsmessage.DNSMessage;
-import org.minidns.dnsname.DNSName;
-import org.minidns.dnssec.DNSSECClient;
-import org.minidns.dnssec.DNSSECMessage;
-import org.minidns.dnssec.UnverifiedReason;
+import org.minidns.dnsmessage.DnsMessage;
+import org.minidns.dnsname.DnsName;
+import org.minidns.dnssec.DnssecClient;
+import org.minidns.dnssec.DnssecQueryResult;
+import org.minidns.dnssec.DnssecUnverifiedReason;
 import org.minidns.record.Data;
 import org.minidns.record.Record;
 import org.minidns.record.TLSA;
@@ -50,13 +49,13 @@ import java.util.logging.Logger;
 public class DaneVerifier {
     private final static Logger LOGGER = Logger.getLogger(DaneVerifier.class.getName());
 
-    private final AbstractDNSClient client;
+    private final DnssecClient client;
 
     public DaneVerifier() {
-        this(new DNSSECClient());
+        this(new DnssecClient());
     }
 
-    public DaneVerifier(AbstractDNSClient client) {
+    public DaneVerifier(DnssecClient client) {
         this.client = client;
     }
 
@@ -102,20 +101,21 @@ public class DaneVerifier {
      * @throws CertificateException if the certificate chain provided differs from the one enforced using DANE.
      */
     public boolean verifyCertificateChain(X509Certificate[] chain, String hostName, int port) throws CertificateException {
-        DNSName req = DNSName.from("_" + port + "._tcp." + hostName);
-        DNSMessage res;
+        DnsName req = DnsName.from("_" + port + "._tcp." + hostName);
+        DnssecQueryResult result;
         try {
-            res = client.query(req, Record.TYPE.TLSA);
+            result = client.queryDnssec(req, Record.TYPE.TLSA);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-        if (!res.authenticData) {
+        DnsMessage res = result.dnsQueryResult.response;
+        // TODO: We previously used the AD bit here. This allowed non-DNSSEC aware clients to be plugged into
+        // DaneVerifier, which, in turn, allows to use a trusted forward as DNSSEC validator. Is this a good idea?
+        if (!result.isAuthenticData()) {
             String msg = "Got TLSA response from DNS server, but was not signed properly.";
-            if (res instanceof DNSSECMessage) {
-                msg += " Reasons:";
-                for (UnverifiedReason reason : ((DNSSECMessage) res).getUnverifiedReasons()) {
-                    msg += " " + reason;
-                }
+            msg += " Reasons:";
+            for (DnssecUnverifiedReason reason : result.getUnverifiedReasons()) {
+                 msg += " " + reason;
             }
             LOGGER.info(msg);
             return false;

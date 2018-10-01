@@ -10,8 +10,10 @@
  */
 package org.minidns.source;
 
-import org.minidns.MiniDNSException;
-import org.minidns.dnsmessage.DNSMessage;
+import org.minidns.MiniDnsException;
+import org.minidns.dnsmessage.DnsMessage;
+import org.minidns.dnsqueryresult.DnsQueryResult.QueryMethod;
+import org.minidns.dnsqueryresult.StandardDnsQueryResult;
 import org.minidns.util.MultipleIoException;
 
 import java.io.DataInputStream;
@@ -29,14 +31,13 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-public class NetworkDataSource extends DNSDataSource {
+public class NetworkDataSource extends AbstractDnsDataSource {
 
     protected static final Logger LOGGER = Logger.getLogger(NetworkDataSource.class.getName());
 
+    // TODO: Rename 'message' parameter to query.
     @Override
-    public DNSMessage query(DNSMessage message, InetAddress address, int port) throws IOException {
-        List<IOException> ioExceptions = new ArrayList<>(2);
-        DNSMessage dnsMessage = null;
+    public StandardDnsQueryResult query(DnsMessage message, InetAddress address, int port) throws IOException {
         final QueryMode queryMode = getQueryMode();
         boolean doUdpFirst;
         switch (queryMode) {
@@ -51,6 +52,9 @@ public class NetworkDataSource extends DNSDataSource {
             throw new IllegalStateException("Unsupported query mode: " + queryMode);
         }
 
+        List<IOException> ioExceptions = new ArrayList<>(2);
+        DnsMessage dnsMessage = null;
+
         if (doUdpFirst) {
             try {
                 dnsMessage = queryUdp(message, address, port);
@@ -58,8 +62,9 @@ public class NetworkDataSource extends DNSDataSource {
                 ioExceptions.add(e);
             }
 
+            // TODO: This null check could probably be removed by now.
             if (dnsMessage != null && !dnsMessage.truncated) {
-                return dnsMessage;
+                return new StandardDnsQueryResult(address, port, QueryMethod.udp, message, dnsMessage);
             }
 
             assert (dnsMessage == null || dnsMessage.truncated || ioExceptions.size() == 1);
@@ -74,10 +79,10 @@ public class NetworkDataSource extends DNSDataSource {
             MultipleIoException.throwIfRequired(ioExceptions);
         }
 
-        return dnsMessage;
+        return new StandardDnsQueryResult(address, port, QueryMethod.tcp, message, dnsMessage);
     }
 
-    protected DNSMessage queryUdp(DNSMessage message, InetAddress address, int port) throws IOException {
+    protected DnsMessage queryUdp(DnsMessage message, InetAddress address, int port) throws IOException {
         // TODO Use a try-with-resource statement here once miniDNS minimum
         // required Android API level is >= 19
         DatagramSocket socket = null;
@@ -89,9 +94,9 @@ public class NetworkDataSource extends DNSDataSource {
             socket.send(packet);
             packet = new DatagramPacket(buffer, buffer.length);
             socket.receive(packet);
-            DNSMessage dnsMessage = new DNSMessage(packet.getData());
+            DnsMessage dnsMessage = new DnsMessage(packet.getData());
             if (dnsMessage.id != message.id) {
-                throw new MiniDNSException.IdMismatch(message, dnsMessage);
+                throw new MiniDnsException.IdMismatch(message, dnsMessage);
             }
             return dnsMessage;
         } finally {
@@ -101,7 +106,7 @@ public class NetworkDataSource extends DNSDataSource {
         }
     }
 
-    protected DNSMessage queryTcp(DNSMessage message, InetAddress address, int port) throws IOException {
+    protected DnsMessage queryTcp(DnsMessage message, InetAddress address, int port) throws IOException {
         // TODO Use a try-with-resource statement here once miniDNS minimum
         // required Android API level is >= 19
         Socket socket = null;
@@ -120,9 +125,9 @@ public class NetworkDataSource extends DNSDataSource {
             while (read < length) {
                 read += dis.read(data, read, length-read);
             }
-            DNSMessage dnsMessage = new DNSMessage(data);
+            DnsMessage dnsMessage = new DnsMessage(data);
             if (dnsMessage.id != message.id) {
-                throw new MiniDNSException.IdMismatch(message, dnsMessage);
+                throw new MiniDnsException.IdMismatch(message, dnsMessage);
             }
             return dnsMessage;
         } finally {

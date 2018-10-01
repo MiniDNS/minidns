@@ -8,7 +8,7 @@ dependencies {
     compile project(':minidns-dnssec')
     compile project(':minidns-integration-test')
     compile project(':minidns-hla')
-    compile "com.lihaoyi:ammonite_$scalaVersion:1.1.0"
+    compile "com.lihaoyi:ammonite_$scalaVersion:1.1.2"
     testCompile project(path: ":minidns-client", configuration: "testRuntime")
     testCompile project(path: ":minidns-client", configuration: "archives")
 
@@ -18,4 +18,10 @@ task printClasspath(dependsOn: assemble) {
 	doLast {
 		println sourceSets.main.runtimeClasspath.asPath
 	}
+}
+
+animalsniffer {
+	// Disable AnimalSniffer for minidns-repl.
+	// Unfortunately I found no better way to disable it besided making the sourceSets set an empty set.
+	sourceSets = []
 }

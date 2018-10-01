@@ -10,38 +10,40 @@
  */
 package org.minidns.minidnsrepl;
 
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.lang.reflect.Field;
 
-import org.minidns.AbstractDNSClient;
-import org.minidns.DNSClient;
-import org.minidns.cache.LRUCache;
-import org.minidns.dnssec.DNSSECClient;
+import org.minidns.AbstractDnsClient;
+import org.minidns.DnsClient;
+import org.minidns.cache.LruCache;
+import org.minidns.dnsmessage.DnsMessage;
+import org.minidns.dnssec.DnssecClient;
 import org.minidns.hla.DnssecResolverApi;
 import org.minidns.hla.ResolverResult;
-import org.minidns.iterative.IterativeDNSClient;
+import org.minidns.iterative.IterativeDnsClient;
 import org.minidns.jul.MiniDnsJul;
 import org.minidns.record.A;
 
 public class MiniDnsRepl {
 
-    public static final DNSClient DNSCLIENT = new DNSClient();
-    public static final IterativeDNSClient ITERATIVEDNSCLIENT = new IterativeDNSClient();
-    public static final DNSSECClient DNSSECCLIENT = new DNSSECClient();
+    public static final DnsClient DNSCLIENT = new DnsClient();
+    public static final IterativeDnsClient ITERATIVEDNSCLIENT = new IterativeDnsClient();
+    public static final DnssecClient DNSSECCLIENT = new DnssecClient();
 
     static {
-        LRUCache cache = null;
+        LruCache cache = null;
         try {
-            Field defaultCacheField = AbstractDNSClient.class.getDeclaredField("DEFAULT_CACHE");
+            Field defaultCacheField = AbstractDnsClient.class.getDeclaredField("DEFAULT_CACHE");
             defaultCacheField.setAccessible(true);
-            cache = (LRUCache) defaultCacheField.get(null);
+            cache = (LruCache) defaultCacheField.get(null);
         } catch (IllegalAccessException | NoSuchFieldException | SecurityException e) {
             throw new IllegalStateException(e);
         }
         DEFAULT_CACHE = cache;
     }
 
-    public static final LRUCache DEFAULT_CACHE;
+    public static final LruCache DEFAULT_CACHE;
 
     public static void init() {
         // CHECKSTYLE:OFF
@@ -58,15 +60,15 @@ public class MiniDnsRepl {
 
         ResolverResult<A> res = DnssecResolverApi.INSTANCE.resolveDnssecReliable("verteiltesysteme.net", A.class);
         /*
-        DNSSECStats.iterativeDnssecLookupNormalVsExtendedCache();
-        DNSSECClient client = new DNSSECClient(new LRUCache(1024));
-        DNSSECMessage secRes = client.queryDnssec("verteiltesysteme.net", TYPE.A);
+        DnssecStats.iterativeDnssecLookupNormalVsExtendedCache();
+        DnssecClient client = new DNSSECClient(new LRUCache(1024));
+        DnssecMessage secRes = client.queryDnssec("verteiltesysteme.net", TYPE.A);
         */
 
         /*
-        DNSSECStats.iterativeDnssecLookupNormalVsExtendedCache();
-        NSID nsid = NSIDTest.testNsidLRoot();
-        DNSMessage res = RECURSIVEDNSCLIENT.query("mate.geekplace.eu", TYPE.A);
+        DnssecStats.iterativeDnssecLookupNormalVsExtendedCache();
+        Nsid nsid = NSIDTest.testNsidLRoot();
+        DnsMessage res = RECURSIVEDNSCLIENT.query("mate.geekplace.eu", TYPE.A);
         */
         // CHECKSTYLE:OFF
         System.out.println(res);
@@ -76,4 +78,9 @@ public class MiniDnsRepl {
         // CHCECKSTYLE:ON
     }
 
+    public static void writeToFile(DnsMessage dnsMessage, String path) throws IOException {
+        try (FileOutputStream fos = new FileOutputStream(path)) {
+            dnsMessage.writeTo(fos, true);
+        }
+    }
 }

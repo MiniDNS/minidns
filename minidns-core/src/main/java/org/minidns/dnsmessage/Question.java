@@ -16,7 +16,7 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.util.Arrays;
 
-import org.minidns.dnsname.DNSName;
+import org.minidns.dnsname.DnsName;
 import org.minidns.record.Record.CLASS;
 import org.minidns.record.Record.TYPE;
 
@@ -28,7 +28,7 @@ public class Question {
     /**
      * The question string (e.g. "measite.de").
      */
-    public final DNSName name;
+    public final DnsName name;
 
     /**
      * The question type (e.g. A).
@@ -58,10 +58,10 @@ public class Question {
      * @param unicastQuery True if this is a unicast query.
      */
     public Question(CharSequence name, TYPE type, CLASS clazz, boolean unicastQuery) {
-        this(DNSName.from(name), type, clazz, unicastQuery);
+        this(DnsName.from(name), type, clazz, unicastQuery);
     }
 
-    public Question(DNSName name, TYPE type, CLASS clazz, boolean unicastQuery) {
+    public Question(DnsName name, TYPE type, CLASS clazz, boolean unicastQuery) {
         assert (name != null);
         assert (type != null);
         assert (clazz != null);
@@ -77,7 +77,7 @@ public class Question {
      * @param type The type, e.g. A.
      * @param clazz The class, usually IN (internet).
      */
-    public Question(DNSName name, TYPE type, CLASS clazz) {
+    public Question(DnsName name, TYPE type, CLASS clazz) {
         this(name, type, clazz, false);
     }
 
@@ -86,7 +86,7 @@ public class Question {
      * @param name The name e.g. "measite.de".
      * @param type The type, e.g. A.
      */
-    public Question(DNSName name, TYPE type) {
+    public Question(DnsName name, TYPE type) {
         this(name, type, CLASS.IN);
     }
 
@@ -97,7 +97,7 @@ public class Question {
      * @param clazz The class, usually IN (internet).
      */
     public Question(CharSequence name, TYPE type, CLASS clazz) {
-        this(DNSName.from(name), type, clazz);
+        this(DnsName.from(name), type, clazz);
     }
 
     /**
@@ -106,7 +106,7 @@ public class Question {
      * @param type The type, e.g. A.
      */
     public Question(CharSequence name, TYPE type) {
-        this(DNSName.from(name), type);
+        this(DnsName.from(name), type);
     }
 
     /**
@@ -116,7 +116,7 @@ public class Question {
      * @throws IOException On errors (read outside of packet).
      */
     public Question(DataInputStream dis, byte[] data) throws IOException {
-        name = DNSName.parse(dis, data);
+        name = DnsName.parse(dis, data);
         type = TYPE.getType(dis.readUnsignedShort());
         clazz = CLASS.getClass(dis.readUnsignedShort());
         unicastQuery = false;
@@ -168,13 +168,13 @@ public class Question {
         return name.getRawAce() + ".\t" + clazz + '\t' + type;
     }
 
-    public DNSMessage.Builder asMessageBuilder() {
-        DNSMessage.Builder builder = DNSMessage.builder();
+    public DnsMessage.Builder asMessageBuilder() {
+        DnsMessage.Builder builder = DnsMessage.builder();
         builder.setQuestion(this);
         return builder;
     }
 
-    public DNSMessage asQueryMessage() {
+    public DnsMessage asQueryMessage() {
         return asMessageBuilder().build();
     }
 }

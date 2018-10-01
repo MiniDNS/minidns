@@ -45,7 +45,7 @@ public class OPENPGPKEY extends Data {
         return getPublicKeyPacketBase64();
     }
 
-    private String publicKeyPacketBase64Cache;
+    private transient String publicKeyPacketBase64Cache;
 
     public String getPublicKeyPacketBase64() {
         if (publicKeyPacketBase64Cache == null) {

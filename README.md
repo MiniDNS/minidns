@@ -13,6 +13,8 @@ If you find the project useful and if you are able to provide the resources for 
 If you are looking for a DNSSEC-enabled resolver in C (and/or Lua) then hava a look at the [Knot Resolver](https://www.knot-resolver.cz/). Also this library is not intended to be used as a DNS server. You might want to
 look into [dnsjava](http://dnsjava.org/) for such functionality.
 
+**MiniDNS release resources** (javadoc, …) an be found at https://minidns.org/releases
+
 Quickstart
 ----------
 
@@ -45,7 +47,7 @@ for (A a : answers) {
 }
 ```
 
-MiniDNS also provides full support for SRV resource reocrds and their handling.
+MiniDNS also provides full support for SRV resource records and their handling.
 
 ```java
 SrvResolverResult result = DnssecResolverApi.INSTANCE.resolveSrv(SrvType.xmpp_client, "example.org")
@@ -84,7 +86,7 @@ MiniDNS comes with a REPL which can be used to perform DNS lookups and to test t
 minidns $ ./repl
 ...
 scala> c query ("measite.de", TYPE.A)
-res4: org.minidns.DNSMessage = DNSMessage@54653(QUERY NO_ERROR qr rd ra) { \
+res0: dnsqueryresult.DnsQueryResult = DnsMessage@54653(QUERY NO_ERROR qr rd ra) { \
   [Q: measite.de.	IN	A] \
   [A: measite.de.	3599	IN	A	85.10.226.249] \
   [X: EDNS: version: 0, flags:; udp: 512]

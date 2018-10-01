@@ -10,7 +10,7 @@
  */
 package org.minidns.record;
 
-import org.minidns.dnsname.DNSName;
+import org.minidns.dnsname.DnsName;
 import org.minidns.record.Record.TYPE;
 
 import java.io.DataInputStream;
@@ -24,15 +24,15 @@ import java.io.IOException;
 public class DNAME extends RRWithTarget {
 
     public static DNAME parse(DataInputStream dis, byte[] data) throws IOException {
-        DNSName target = DNSName.parse(dis, data);
+        DnsName target = DnsName.parse(dis, data);
         return new DNAME(target);
     }
 
     public DNAME(String target) {
-        this(DNSName.from(target));
+        this(DnsName.from(target));
     }
 
-    public DNAME(DNSName target) {
+    public DNAME(DnsName target) {
         super(target);
     }
 

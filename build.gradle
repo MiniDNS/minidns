@@ -9,7 +9,6 @@ buildscript {
     }
 
     dependencies {
-        classpath 'com.bmuschko:gradle-nexus-plugin:2.3.1'
 		classpath "org.kt3k.gradle.plugin:coveralls-gradle-plugin:2.3.1"
     }
 }
@@ -19,54 +18,6 @@ plugins {
 }
 
 apply from: 'version.gradle'
-
-subprojects {
-	apply plugin: 'com.bmuschko.nexus'
-
-	nexus {
-		sign = true
-	}
-
-	extraArchive {
-		tests = true
-	}
-
-	modifyPom {
-		project {
-			name 'minidns'
-			description 'A DNS library for Java and Android systems'
-			url 'https://github.com/minidns/minidns'
-			inceptionYear '2014'
-
-			scm {
-				url 'https://github.com/minidns/minidns'
-				connection 'scm:https://github.com/minidns/minidns'
-				developerConnection 'scm:git://github.com/minidns/minidns.git'
-			}
-
-			licenses {
-				license {
-					name 'The Apache Software License, Version 2.0'
-					url 'http://www.apache.org/licenses/LICENSE-2.0.txt'
-					distribution 'repo'
-				}
-			}
-
-			developers {
-				developer {
-					id 'rtreffer'
-					name 'Rene Treffer'
-					email 'treffer@measite.de'
-				}
-				developer {
-					id 'flow'
-					name 'Florian Schmaus'
-					email 'flow@geekplace.eu'
-				}
-			}
-		}
-	}
-}
 
 allprojects {
 	apply plugin: 'java'
@@ -86,6 +37,11 @@ allprojects {
 		rootConfigDir = new File(rootDir, 'config')
 		gitCommit = getGitCommit()
 		builtDate = (new java.text.SimpleDateFormat("yyyy-MM-dd")).format(new Date())
+		isReleaseVersion = !isSnapshot
+		signingRequired = isReleaseVersion
+		sonatypeCredentialsAvailable = project.hasProperty('sonatypeUsername') && project.hasProperty('sonatypePassword')
+		sonatypeSnapshotUrl = 'https://oss.sonatype.org/content/repositories/snapshots'
+		sonatypeStagingUrl = 'https://oss.sonatype.org/service/local/staging/deploy/maven2'
 	}
 
 	if (isSnapshot) {
@@ -169,6 +125,89 @@ allprojects {
 
 }
 
+subprojects {
+	apply plugin: 'maven'
+	apply plugin: 'signing'
+
+	task sourcesJar(type: Jar, dependsOn: classes) {
+		classifier = 'sources'
+		from sourceSets.main.allSource
+	}
+	task javadocJar(type: Jar, dependsOn: javadoc) {
+		classifier = 'javadoc'
+		from javadoc.destinationDir
+	}
+	task testJar(type: Jar, dependsOn: testClasses) {
+		classifier = 'tests'
+		from sourceSets.test.output
+	}
+
+	artifacts {
+		archives sourcesJar
+		archives javadocJar
+		archives testJar
+	}
+
+	uploadArchives {
+		repositories {
+			mavenDeployer {
+				if (signingRequired) {
+					beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
+				}
+				repository(url: project.sonatypeStagingUrl) {
+					if (sonatypeCredentialsAvailable) {
+						authentication(userName: sonatypeUsername, password: sonatypePassword)
+					}
+				}
+				snapshotRepository(url: project.sonatypeSnapshotUrl) {
+					if (sonatypeCredentialsAvailable) {
+						authentication(userName: sonatypeUsername, password: sonatypePassword)
+					}
+				}
+
+				pom.project {
+					name 'minidns'
+					description 'A DNS library for Java and Android systems'
+					url 'https://github.com/minidns/minidns'
+					inceptionYear '2014'
+
+					scm {
+						url 'https://github.com/minidns/minidns'
+						connection 'scm:https://github.com/minidns/minidns'
+						developerConnection 'scm:git://github.com/minidns/minidns.git'
+					}
+
+					licenses {
+						license {
+							name 'The Apache Software License, Version 2.0'
+							url 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+							distribution 'repo'
+						}
+					}
+
+					developers {
+						developer {
+							id 'rtreffer'
+							name 'Rene Treffer'
+							email 'treffer@measite.de'
+						}
+						developer {
+							id 'flow'
+							name 'Florian Schmaus'
+							email 'flow@geekplace.eu'
+						}
+					}
+				}
+			}
+		}
+	}
+
+	signing {
+		required { signingRequired }
+		sign configurations.archives
+	}
+}
+
 configure(subprojects.findAll{!it.name.endsWith('-java7') && !it.name.endsWith('-android21')}) {
    apply plugin: 'ru.vyarus.animalsniffer'
    dependencies {
@@ -177,6 +216,23 @@ configure(subprojects.findAll{!it.name.endsWith('-java7') && !it.name.endsWith('
    animalsniffer {
        sourceSets = [sourceSets.main]
    }
+}
+
+gradle.taskGraph.whenReady { taskGraph ->
+	if (signingRequired
+		&& taskGraph.allTasks.any { it instanceof Sign }) {
+		// Use Java 6's console to read from the console (no good for a CI environment)
+		def console = System.console()
+		if (console == null) {
+			throw new Exception("Could not obtain system console (Console is 'null'). Did you build with gradle daemon? Try the same Gradle command with \"--no-daemon\".")
+		}
+		console.printf '\n\nWe have to sign some things in this build.\n\nPlease enter your signing details.\n\n'
+		def password = console.readPassword('GnuPG Private Key Password: ')
+
+		allprojects { ext.'signing.password' = password }
+
+		console.printf '\nThanks.\n\n'
+	}
 }
 
 jar {
@@ -268,4 +324,18 @@ def getGitCommit() {
     }
 
     gitCommit
+}
+
+task javadocAll(type: Javadoc) {
+	source subprojects.collect {project ->
+		project.sourceSets.main.allJava }
+	destinationDir = new File(buildDir, 'javadoc')
+	// Might need a classpath
+	classpath = files(subprojects.collect {project ->
+		project.sourceSets.main.compileClasspath})
+	options.linkSource = true
+	options.use = true
+	options.links = [
+		"https://docs.oracle.com/javase/${sourceCompatibility.getMajorVersion()}/docs/api/",
+		] as String[]
 }

@@ -15,8 +15,9 @@ import java.net.InetAddress;
 import java.util.Locale;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import org.minidns.AbstractDNSClient;
-import org.minidns.dnsmessage.DNSMessage;
+import org.minidns.AbstractDnsClient;
+import org.minidns.dnsmessage.DnsMessage;
+import org.minidns.dnsqueryresult.StandardDnsQueryResult;
 
 public class NetworkDataSourceWithAccounting extends NetworkDataSource {
 
@@ -33,8 +34,8 @@ public class NetworkDataSourceWithAccounting extends NetworkDataSource {
     private final AtomicInteger failedTcpQueries = new AtomicInteger();
 
     @Override
-    public DNSMessage query(DNSMessage message, InetAddress address, int port) throws IOException {
-        DNSMessage response;
+    public StandardDnsQueryResult query(DnsMessage message, InetAddress address, int port) throws IOException {
+        StandardDnsQueryResult response;
         try {
             response = super.query(message, address, port);
         } catch (IOException e) {
@@ -43,14 +44,14 @@ public class NetworkDataSourceWithAccounting extends NetworkDataSource {
         }
 
         successfulQueries.incrementAndGet();
-        responseSize.addAndGet(response.toArray().length);
+        responseSize.addAndGet(response.response.toArray().length);
 
         return response;
     }
 
     @Override
-    protected DNSMessage queryUdp(DNSMessage message, InetAddress address, int port) throws IOException {
-        DNSMessage response;
+    protected DnsMessage queryUdp(DnsMessage message, InetAddress address, int port) throws IOException {
+        DnsMessage response;
         try {
             response = super.queryUdp(message, address, port);
         } catch (IOException e) {
@@ -65,8 +66,8 @@ public class NetworkDataSourceWithAccounting extends NetworkDataSource {
     }
 
     @Override
-    protected DNSMessage queryTcp(DNSMessage message, InetAddress address, int port) throws IOException {
-        DNSMessage response;
+    protected DnsMessage queryTcp(DnsMessage message, InetAddress address, int port) throws IOException {
+        DnsMessage response;
         try {
             response = super.queryTcp(message, address, port);
         } catch (IOException e) {
@@ -84,8 +85,8 @@ public class NetworkDataSourceWithAccounting extends NetworkDataSource {
         return new Stats(this);
     }
 
-    public static NetworkDataSourceWithAccounting from(AbstractDNSClient client) {
-        DNSDataSource ds = client.getDataSource();
+    public static NetworkDataSourceWithAccounting from(AbstractDnsClient client) {
+        DnsDataSource ds = client.getDataSource();
         if (ds instanceof NetworkDataSourceWithAccounting) {
             return (NetworkDataSourceWithAccounting) ds;
         }

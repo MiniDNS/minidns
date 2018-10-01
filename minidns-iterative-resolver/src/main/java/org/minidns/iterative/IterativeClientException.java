@@ -10,9 +10,15 @@
  */
 package org.minidns.iterative;
 
-import org.minidns.MiniDNSException;
+import java.net.InetAddress;
 
-public abstract class IterativeClientException extends MiniDNSException {
+import org.minidns.MiniDnsException;
+import org.minidns.dnsmessage.DnsMessage;
+import org.minidns.dnsmessage.Question;
+import org.minidns.dnsname.DnsName;
+import org.minidns.dnsqueryresult.DnsQueryResult;
+
+public abstract class IterativeClientException extends MiniDnsException {
 
     /**
      * 
@@ -30,8 +36,13 @@ public abstract class IterativeClientException extends MiniDNSException {
          */
         private static final long serialVersionUID = 1L;
 
-        public LoopDetected() {
-            super("Resolution loop detected");
+        public final InetAddress address;
+        public final Question question;
+
+        public LoopDetected(InetAddress address, Question question) {
+            super("Resolution loop detected: We already asked " + address + " about " + question);
+            this.address = address;
+            this.question = question;
         }
 
     }
@@ -47,5 +58,36 @@ public abstract class IterativeClientException extends MiniDNSException {
             super("Maxmimum steps reached");
         }
 
+    }
+
+    public static class NotAuthoritativeNorGlueRrFound extends IterativeClientException {
+
+        /**
+         * 
+         */
+        private static final long serialVersionUID = 1L;
+
+        private final DnsMessage request;
+        private final DnsQueryResult result;
+        private final DnsName authoritativeZone;
+
+        public NotAuthoritativeNorGlueRrFound(DnsMessage request, DnsQueryResult result, DnsName authoritativeZone) {
+            super("Did not receive an authoritative answer, nor did the result contain any glue records");
+            this.request = request;
+            this.result = result;
+            this.authoritativeZone = authoritativeZone;
+        }
+
+        public DnsMessage getRequest() {
+            return request;
+        }
+
+        public DnsQueryResult getResult() {
+            return result;
+        }
+
+        public DnsName getAuthoritativeZone() {
+            return authoritativeZone;
+        }
     }
 }

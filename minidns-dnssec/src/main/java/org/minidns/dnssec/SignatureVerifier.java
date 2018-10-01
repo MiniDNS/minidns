@@ -10,6 +10,9 @@
  */
 package org.minidns.dnssec;
 
+import org.minidns.record.DNSKEY;
+import org.minidns.record.RRSIG;
+
 public interface SignatureVerifier {
-    boolean verify(byte[] content, byte[] rrsigData, byte[] key);
+    boolean verify(byte[] content, RRSIG rrsig, DNSKEY key) throws DnssecValidationFailedException;
 }

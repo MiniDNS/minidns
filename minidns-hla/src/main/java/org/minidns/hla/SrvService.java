@@ -10,7 +10,7 @@
  */
 package org.minidns.hla;
 
-import org.minidns.dnsname.DNSName;
+import org.minidns.dnsname.DnsName;
 
 public enum SrvService {
 
@@ -20,10 +20,10 @@ public enum SrvService {
     ;
     // @formatter:on
 
-    public final DNSName dnsName;
+    public final DnsName dnsName;
 
     SrvService() {
         String enumName = name().replaceAll("_", "-");
-        dnsName = DNSName.from('_' + enumName);
+        dnsName = DnsName.from('_' + enumName);
     }
 }

@@ -10,8 +10,8 @@
  */
 package org.minidns.record;
 
-import org.minidns.constants.DNSSECConstants.DigestAlgorithm;
-import org.minidns.constants.DNSSECConstants.SignatureAlgorithm;
+import org.minidns.constants.DnssecConstants.DigestAlgorithm;
+import org.minidns.constants.DnssecConstants.SignatureAlgorithm;
 import org.minidns.record.Record.TYPE;
 
 import java.io.DataInputStream;

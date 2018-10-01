@@ -13,7 +13,7 @@ package org.minidns.record;
 import java.io.DataInputStream;
 import java.io.IOException;
 
-import org.minidns.dnsname.DNSName;
+import org.minidns.dnsname.DnsName;
 import org.minidns.record.Record.TYPE;
 
 /**
@@ -22,15 +22,15 @@ import org.minidns.record.Record.TYPE;
 public class PTR extends RRWithTarget {
 
     public static PTR parse(DataInputStream dis, byte[] data) throws IOException {
-        DNSName target = DNSName.parse(dis, data);
+        DnsName target = DnsName.parse(dis, data);
         return new PTR(target);
     }
 
     PTR(String name) {
-        this(DNSName.from(name));
+        this(DnsName.from(name));
     }
 
-    PTR(DNSName name) {
+    PTR(DnsName name) {
         super(name);
     }
 

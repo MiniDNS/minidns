@@ -13,16 +13,16 @@ package org.minidns.hla;
 import java.io.IOException;
 import java.util.Set;
 
-import org.minidns.DNSCache;
-import org.minidns.MiniDNSException.NullResultException;
-import org.minidns.cache.LRUCache;
+import org.minidns.DnsCache;
+import org.minidns.MiniDnsException.NullResultException;
+import org.minidns.cache.LruCache;
 import org.minidns.cache.MiniDnsCacheFactory;
 import org.minidns.dnsmessage.Question;
-import org.minidns.dnsname.DNSName;
-import org.minidns.dnssec.DNSSECClient;
-import org.minidns.dnssec.DNSSECMessage;
-import org.minidns.dnssec.UnverifiedReason;
-import org.minidns.iterative.ReliableDNSClient.Mode;
+import org.minidns.dnsname.DnsName;
+import org.minidns.dnssec.DnssecClient;
+import org.minidns.dnssec.DnssecQueryResult;
+import org.minidns.dnssec.DnssecUnverifiedReason;
+import org.minidns.iterative.ReliableDnsClient.Mode;
 import org.minidns.record.Data;
 import org.minidns.record.Record.TYPE;
 
@@ -30,39 +30,39 @@ public class DnssecResolverApi extends ResolverApi {
 
     public static final DnssecResolverApi INSTANCE = new DnssecResolverApi();
 
-    private final DNSSECClient dnssecClient;
-    private final DNSSECClient iterativeOnlyDnssecClient;
-    private final DNSSECClient recursiveOnlyDnssecClient;
+    private final DnssecClient dnssecClient;
+    private final DnssecClient iterativeOnlyDnssecClient;
+    private final DnssecClient recursiveOnlyDnssecClient;
 
     public DnssecResolverApi() {
         this(new MiniDnsCacheFactory() {
             @Override
-            public DNSCache newCache() {
-                return new LRUCache();
+            public DnsCache newCache() {
+                return new LruCache();
             }
         });
     }
 
     public DnssecResolverApi(MiniDnsCacheFactory cacheFactory) {
-        this(new DNSSECClient(cacheFactory.newCache()), cacheFactory);
+        this(new DnssecClient(cacheFactory.newCache()), cacheFactory);
     }
 
-    private DnssecResolverApi(DNSSECClient dnssecClient, MiniDnsCacheFactory cacheFactory) {
+    private DnssecResolverApi(DnssecClient dnssecClient, MiniDnsCacheFactory cacheFactory) {
         super(dnssecClient);
         this.dnssecClient = dnssecClient;
 
         // Set the *_ONLY_DNSSEC ResolverApi. It is important that the two do *not* share the same cache, since we
         // probably fall back to iterativeOnly and in that case do not want the cached results of the recursive result.
-        iterativeOnlyDnssecClient = new DNSSECClient(cacheFactory.newCache());
+        iterativeOnlyDnssecClient = new DnssecClient(cacheFactory.newCache());
         iterativeOnlyDnssecClient.setMode(Mode.iterativeOnly);
 
-        recursiveOnlyDnssecClient = new DNSSECClient(cacheFactory.newCache());
+        recursiveOnlyDnssecClient = new DnssecClient(cacheFactory.newCache());
         recursiveOnlyDnssecClient.setMode(Mode.recursiveOnly);
     }
 
     @Override
     public <D extends Data> ResolverResult<D> resolve(Question question) throws IOException {
-        DNSSECMessage dnssecMessage = dnssecClient.queryDnssec(question);
+        DnssecQueryResult dnssecMessage = dnssecClient.queryDnssec(question);
         return toResolverResult(question, dnssecMessage);
     }
 
@@ -77,7 +77,7 @@ public class DnssecResolverApi extends ResolverApi {
      * @see #resolveDnssecReliable(Question)
      */
     public <D extends Data> ResolverResult<D> resolveDnssecReliable(String name, Class<D> type) throws IOException {
-        return resolveDnssecReliable(DNSName.from(name), type);
+        return resolveDnssecReliable(DnsName.from(name), type);
     }
 
     /**
@@ -90,7 +90,7 @@ public class DnssecResolverApi extends ResolverApi {
      * @throws IOException in case an exception happens while resolving.
      * @see #resolveDnssecReliable(Question)
      */
-    public <D extends Data> ResolverResult<D> resolveDnssecReliable(DNSName name, Class<D> type) throws IOException {
+    public <D extends Data> ResolverResult<D> resolveDnssecReliable(DnsName name, Class<D> type) throws IOException {
         TYPE t = TYPE.getType(type);
         Question q = new Question(name, t);
         return resolveDnssecReliable(q);
@@ -105,20 +105,20 @@ public class DnssecResolverApi extends ResolverApi {
      * @throws IOException in case an exception happens while resolving.
      */
     public <D extends Data> ResolverResult<D> resolveDnssecReliable(Question question) throws IOException {
-        DNSSECMessage dnssecMessage = recursiveOnlyDnssecClient.queryDnssec(question);
-        if (dnssecMessage == null || !dnssecMessage.authenticData) {
+        DnssecQueryResult dnssecMessage = recursiveOnlyDnssecClient.queryDnssec(question);
+        if (dnssecMessage == null || !dnssecMessage.isAuthenticData()) {
             dnssecMessage = iterativeOnlyDnssecClient.queryDnssec(question);
         }
         return toResolverResult(question, dnssecMessage);
     }
 
-    public DNSSECClient getDnssecClient() {
+    public DnssecClient getDnssecClient() {
         return dnssecClient;
     }
 
-    private static <D extends Data> ResolverResult<D> toResolverResult(Question question, DNSSECMessage dnssecMessage) throws NullResultException {
-        Set<UnverifiedReason> unverifiedReasons = dnssecMessage.getUnverifiedReasons();
+    private static <D extends Data> ResolverResult<D> toResolverResult(Question question, DnssecQueryResult dnssecMessage) throws NullResultException {
+        Set<DnssecUnverifiedReason> unverifiedReasons = dnssecMessage.getUnverifiedReasons();
 
-        return new ResolverResult<D>(question, dnssecMessage, unverifiedReasons);
+        return new ResolverResult<D>(question, dnssecMessage.dnsQueryResult, unverifiedReasons);
     }
 }

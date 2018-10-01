@@ -14,15 +14,16 @@ import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.minidns.dnsmessage.DNSMessage;
+import org.minidns.dnsmessage.DnsMessage;
 import org.minidns.dnsmessage.Question;
-import org.minidns.dnsname.DNSName;
+import org.minidns.dnsname.DnsName;
 
 /**
  * A generic DNS record.
@@ -282,7 +283,7 @@ public final class Record<D extends Data> {
     /**
      * The generic name of this record.
      */
-    public final DNSName name;
+    public final DnsName name;
 
     /**
      * The type (and payload type) of this record.
@@ -327,7 +328,7 @@ public final class Record<D extends Data> {
      * @throws IOException In case of malformed replies.
      */
     public static Record<Data> parse(DataInputStream dis, byte[] data) throws IOException {
-        DNSName name = DNSName.parse(dis, data);
+        DnsName name = DnsName.parse(dis, data);
         int typeValue = dis.readUnsignedShort();
         TYPE type = TYPE.getType(typeValue);
         int clazzValue = dis.readUnsignedShort();
@@ -406,23 +407,23 @@ public final class Record<D extends Data> {
         return new Record<>(name, type, clazz, clazzValue, ttl, payloadData, unicastQuery);
     }
 
-    public Record(DNSName name, TYPE type, CLASS clazz, long ttl, D payloadData, boolean unicastQuery) {
+    public Record(DnsName name, TYPE type, CLASS clazz, long ttl, D payloadData, boolean unicastQuery) {
         this(name, type, clazz, clazz.getValue() + (unicastQuery ? 0x8000 : 0), ttl, payloadData, unicastQuery);
     }
 
     public Record(String name, TYPE type, CLASS clazz, long ttl, D payloadData, boolean unicastQuery) {
-        this(DNSName.from(name), type, clazz, ttl, payloadData, unicastQuery);
+        this(DnsName.from(name), type, clazz, ttl, payloadData, unicastQuery);
     }
 
     public Record(String name, TYPE type, int clazzValue, long ttl, D payloadData) {
-        this(DNSName.from(name), type, CLASS.NONE, clazzValue, ttl, payloadData, false);
+        this(DnsName.from(name), type, CLASS.NONE, clazzValue, ttl, payloadData, false);
     }
 
-    public Record(DNSName name, TYPE type, int clazzValue, long ttl, D payloadData) {
+    public Record(DnsName name, TYPE type, int clazzValue, long ttl, D payloadData) {
         this(name, type, CLASS.NONE, clazzValue, ttl, payloadData, false);
     }
 
-    private Record(DNSName name, TYPE type, CLASS clazz, int clazzValue, long ttl, D payloadData, boolean unicastQuery) {
+    private Record(DnsName name, TYPE type, CLASS clazz, int clazzValue, long ttl, D payloadData, boolean unicastQuery) {
         this.name = name;
         this.type = type;
         this.clazz = clazz;
@@ -432,10 +433,12 @@ public final class Record<D extends Data> {
         this.unicastQuery = unicastQuery;
     }
 
-    public void toOutputStream(DataOutputStream dos) throws IOException {
+    public void toOutputStream(OutputStream outputStream) throws IOException {
         if (payloadData == null) {
             throw new IllegalStateException("Empty Record has no byte representation");
         }
+
+        DataOutputStream dos = new DataOutputStream(outputStream);
 
         name.writeToStream(dos);
         dos.writeShort(type.getValue());
@@ -446,11 +449,14 @@ public final class Record<D extends Data> {
         payloadData.toOutputStream(dos);
     }
 
-    private byte[] bytes;
+    private transient byte[] bytes;
 
     public byte[] toByteArray() {
         if (bytes == null) {
-            ByteArrayOutputStream baos = new ByteArrayOutputStream(name.size() + 8 + payloadData.length());
+            int totalSize = name.size()
+                    + 10 // 2 byte short type + 2 byte short classValue + 4 byte int ttl + 2 byte short payload length.
+                    + payloadData.length();
+            ByteArrayOutputStream baos = new ByteArrayOutputStream(totalSize);
             DataOutputStream dos = new DataOutputStream(baos);
             try {
                 toOutputStream(dos);
@@ -526,7 +532,7 @@ public final class Record<D extends Data> {
         }
     }
 
-    public DNSMessage.Builder getQuestionMessage() {
+    public DnsMessage.Builder getQuestionMessage() {
         Question question = getQuestion();
         if (question == null) {
             return null;
@@ -575,6 +581,7 @@ public final class Record<D extends Data> {
      * @param dataClass a class of the {@link Data} type.
      * @param <E> a subtype of {@link Data}.
      * @return the record with a specialized payload type or {@code null}.
+     * @see #as(Class)
      */
     @SuppressWarnings("unchecked")
     public <E extends Data> Record<E> ifPossibleAs(Class<E> dataClass) {
@@ -582,6 +589,23 @@ public final class Record<D extends Data> {
             return (Record<E>) this;
         }
         return null;
+    }
+
+    /**
+     * Return the record as record with the given {@link Data} class. If the record does not hold payload of
+     * the given data class type, then a {@link IllegalArgumentException} will be thrown.
+     *
+     * @param dataClass a class of the {@link Data} type.
+     * @param <E> a subtype of {@link Data}.
+     * @return the record with a specialized payload type.
+     * @see #ifPossibleAs(Class)
+     */
+    public <E extends Data> Record<E> as(Class<E> dataClass) {
+        Record<E> eRecord = ifPossibleAs(dataClass);
+        if (eRecord == null) {
+            throw new IllegalArgumentException("The instance " + this + " can not be cast to a Record with" + dataClass);
+        }
+        return eRecord;
     }
 
     public static <E extends Data> void filter(Collection<Record<E>> result, Class<E> dataClass,

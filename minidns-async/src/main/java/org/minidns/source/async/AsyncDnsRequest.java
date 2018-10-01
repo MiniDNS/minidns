@@ -13,7 +13,6 @@ package org.minidns.source.async;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
-import java.net.SocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.ClosedChannelException;
 import java.nio.channels.DatagramChannel;
@@ -26,19 +25,22 @@ import java.util.concurrent.Future;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.minidns.MiniDNSException;
+import org.minidns.MiniDnsException;
 import org.minidns.MiniDnsFuture;
 import org.minidns.MiniDnsFuture.InternalMiniDnsFuture;
-import org.minidns.dnsmessage.DNSMessage;
-import org.minidns.source.DNSDataSource.OnResponseCallback;
-import org.minidns.source.DNSDataSource.QueryMode;
+import org.minidns.dnsmessage.DnsMessage;
+import org.minidns.dnsqueryresult.DnsQueryResult;
+import org.minidns.dnsqueryresult.DnsQueryResult.QueryMethod;
+import org.minidns.dnsqueryresult.StandardDnsQueryResult;
+import org.minidns.source.DnsDataSource.OnResponseCallback;
+import org.minidns.source.AbstractDnsDataSource.QueryMode;
 import org.minidns.util.MultipleIoException;
 
 public class AsyncDnsRequest {
 
     private static final Logger LOGGER = Logger.getLogger(AsyncDnsRequest.class.getName());
 
-    private final InternalMiniDnsFuture<DNSMessage, IOException> future = new InternalMiniDnsFuture<DNSMessage, IOException>() {
+    private final InternalMiniDnsFuture<DnsQueryResult, IOException> future = new InternalMiniDnsFuture<DnsQueryResult, IOException>() {
         @Override
         public boolean cancel(boolean mayInterruptIfRunning) {
             boolean res = super.cancel(mayInterruptIfRunning);
@@ -47,11 +49,11 @@ public class AsyncDnsRequest {
         }
     };
 
-    private final DNSMessage request;
+    private final DnsMessage request;
 
     private final int udpPayloadSize;
 
-    private final SocketAddress socketAddress;
+    private final InetSocketAddress socketAddress;
 
     private final AsyncNetworkDataSource asyncNds;
 
@@ -77,7 +79,7 @@ public class AsyncDnsRequest {
      * @param asyncNds A reference to the {@link AsyncNetworkDataSource} instance manageing the requests.
      * @param onResponseCallback the optional callback when a response was received.
      */
-    AsyncDnsRequest(DNSMessage request, InetAddress inetAddress, int port, int udpPayloadSize, AsyncNetworkDataSource asyncNds, OnResponseCallback onResponseCallback) {
+    AsyncDnsRequest(DnsMessage request, InetAddress inetAddress, int port, int udpPayloadSize, AsyncNetworkDataSource asyncNds, OnResponseCallback onResponseCallback) {
         this.request = request;
         this.udpPayloadSize = udpPayloadSize;
         this.asyncNds = asyncNds;
@@ -132,7 +134,7 @@ public class AsyncDnsRequest {
         exceptions.add(e);
     }
 
-    private final void gotResult(DNSMessage result) {
+    private final void gotResult(DnsQueryResult result) {
         if (onResponseCallback != null) {
             onResponseCallback.onResponse(request, result);
         }
@@ -140,7 +142,7 @@ public class AsyncDnsRequest {
         future.setResult(result);
     }
 
-    MiniDnsFuture<DNSMessage, IOException> getFuture() {
+    MiniDnsFuture<DnsQueryResult, IOException> getFuture() {
         return future;
     }
 
@@ -281,16 +283,16 @@ public class AsyncDnsRequest {
                 addException(e);
             }
 
-            DNSMessage response;
+            DnsMessage response;
             try {
-                response = new DNSMessage(byteBuffer.array());
+                response = new DnsMessage(byteBuffer.array());
             } catch (IOException e) {
                 abortUdpRequestAndCleanup(datagramChannel, "Exception constructing dns message from datagram channel", e);
                 return;
             }
 
             if (response.id != request.id) {
-                addException(new MiniDNSException.IdMismatch(request, response));
+                addException(new MiniDnsException.IdMismatch(request, response));
                 startTcpRequest();
                 return;
             }
@@ -300,7 +302,9 @@ public class AsyncDnsRequest {
                 return;
             }
 
-            gotResult(response);
+            DnsQueryResult result = new StandardDnsQueryResult(socketAddress.getAddress(), socketAddress.getPort(),
+                    QueryMethod.asyncUdp, request, response);
+            gotResult(result);
         }
     }
 
@@ -521,22 +525,24 @@ public class AsyncDnsRequest {
                 addException(e);
             }
 
-            DNSMessage response;
+            DnsMessage response;
             try {
-                response = new DNSMessage(byteBuffer.array());
+                response = new DnsMessage(byteBuffer.array());
             } catch (IOException e) {
                 abortTcpRequestAndCleanup(socketChannel, "Exception creating DNS message form socket channel bytes", e);
                 return;
             }
 
             if (request.id != response.id) {
-                MiniDNSException idMismatchException = new MiniDNSException.IdMismatch(request, response);
+                MiniDnsException idMismatchException = new MiniDnsException.IdMismatch(request, response);
                 addException(idMismatchException);
                 AsyncDnsRequest.this.future.setException(MultipleIoException.toIOException(exceptions));
                 return;
             }
 
-            gotResult(response);
+            DnsQueryResult result = new StandardDnsQueryResult(socketAddress.getAddress(), socketAddress.getPort(),
+                    QueryMethod.asyncTcp, request, response);
+            gotResult(result);
         }
 
     }

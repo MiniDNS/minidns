@@ -13,6 +13,7 @@ package org.minidns.record;
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.util.Arrays;
 
 import org.minidns.record.Record.TYPE;
@@ -21,9 +22,6 @@ import org.minidns.record.Record.TYPE;
  * Generic payload class.
  */
 public abstract class Data {
-
-    Data() {
-    }
 
     /**
      * The payload type.
@@ -60,13 +58,18 @@ public abstract class Data {
         return bytes.length;
     }
 
+    public final void toOutputStream(OutputStream outputStream) throws IOException {
+        DataOutputStream dataOutputStream = new DataOutputStream(outputStream);
+        toOutputStream(dataOutputStream);
+    }
+
     /**
      * Write the binary representation of this payload to the given {@link DataOutputStream}.
      *
      * @param dos the DataOutputStream to write to.
      * @throws IOException if an I/O error occurs.
      */
-    public void toOutputStream(DataOutputStream dos) throws IOException {
+    public final void toOutputStream(DataOutputStream dos) throws IOException {
         setBytes();
         dos.write(bytes);
     }

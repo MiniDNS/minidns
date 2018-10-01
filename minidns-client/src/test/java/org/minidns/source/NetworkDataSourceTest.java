@@ -11,40 +11,44 @@
 package org.minidns.source;
 
 import org.junit.Test;
-import org.minidns.dnsmessage.DNSMessage;
+import org.minidns.dnsmessage.DnsMessage;
+import org.minidns.dnsqueryresult.DnsQueryResult;
 
 import java.io.IOException;
 import java.net.InetAddress;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 public class NetworkDataSourceTest {
 
     @Test
     public void udpTruncatedTcpFallbackTest() throws IOException {
+        final int tcpResponseId = 42;
         class TestNetworkDataSource extends NetworkDataSource {
             boolean lastQueryUdp = false;
 
             @Override
-            protected DNSMessage queryUdp(DNSMessage message, InetAddress address, int port) throws IOException {
+            protected DnsMessage queryUdp(DnsMessage message, InetAddress address, int port) throws IOException {
                 assertFalse(lastQueryUdp);
                 lastQueryUdp = true;
-                DNSMessage.Builder msg = DNSMessage.builder();
+                DnsMessage.Builder msg = DnsMessage.builder();
                 msg.setTruncated(true);
                 return msg.build();
             }
 
             @Override
-            protected DNSMessage queryTcp(DNSMessage message, InetAddress address, int port) throws IOException {
+            protected DnsMessage queryTcp(DnsMessage message, InetAddress address, int port) throws IOException {
                 assertTrue(lastQueryUdp);
                 lastQueryUdp = false;
-                return null;
+                return DnsMessage.builder().setId(tcpResponseId).build();
             }
         }
+
         TestNetworkDataSource world = new TestNetworkDataSource();
-        assertNull(world.query(DNSMessage.builder().build(), null, 53));
+        DnsQueryResult result = world.query(DnsMessage.builder().build(), null, 53);
+        assertEquals(tcpResponseId, result.response.id);
         assertFalse(world.lastQueryUdp);
     }
 }

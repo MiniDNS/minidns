@@ -10,8 +10,12 @@
  */
 package org.minidns.dnssec.algorithms;
 
-import org.minidns.dnssec.DNSSECValidationFailedException;
+import org.minidns.dnssec.DnssecValidationFailedException;
+import org.minidns.dnssec.DnssecValidationFailedException.DataMalformedException;
+import org.minidns.dnssec.DnssecValidationFailedException.DnssecInvalidKeySpecException;
 import org.minidns.dnssec.SignatureVerifier;
+import org.minidns.record.DNSKEY;
+import org.minidns.record.RRSIG;
 
 import java.security.InvalidKeyException;
 import java.security.KeyFactory;
@@ -37,22 +41,22 @@ public abstract class JavaSecSignatureVerifier implements SignatureVerifier {
     }
 
     @Override
-    public boolean verify(byte[] content, byte[] rrsigData, byte[] key) {
+    public boolean verify(byte[] content, RRSIG rrsig, DNSKEY key) throws DnssecValidationFailedException {
         try {
             PublicKey publicKey = getPublicKey(key);
             Signature signature = Signature.getInstance(signatureAlgorithm);
             signature.initVerify(publicKey);
             signature.update(content);
-            return signature.verify(getSignature(rrsigData));
+            return signature.verify(getSignature(rrsig));
         } catch (NoSuchAlgorithmException e) {
             // We checked against this before, it should never happen!
-            throw new IllegalStateException();
+            throw new AssertionError(e);
         } catch (InvalidKeyException | SignatureException | ArithmeticException e) {
-            throw new DNSSECValidationFailedException("Validating signature failed", e);
+            throw new DnssecValidationFailedException("Validating signature failed", e);
         }
     }
 
-    protected abstract byte[] getSignature(byte[] rrsigData);
+    protected abstract byte[] getSignature(RRSIG rrsig) throws DataMalformedException;
 
-    protected abstract PublicKey getPublicKey(byte[] key);
+    protected abstract PublicKey getPublicKey(DNSKEY key) throws DataMalformedException, DnssecInvalidKeySpecException;
 }

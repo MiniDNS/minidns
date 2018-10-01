@@ -10,13 +10,15 @@
  */
 package org.minidns.record;
 
-import org.minidns.constants.DNSSECConstants.SignatureAlgorithm;
+import org.minidns.constants.DnssecConstants.SignatureAlgorithm;
 import org.minidns.record.Record.TYPE;
 import org.minidns.util.Base64;
 
+import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.math.BigInteger;
 import java.util.Arrays;
 
 /**
@@ -77,7 +79,7 @@ public class DNSKEY extends Data {
     /**
      * This DNSKEY's key tag. Calculated just-in-time when using {@link #getKeyTag()}
      */
-    private Integer keyTag;
+    private transient Integer keyTag;
 
     public static DNSKEY parse(DataInputStream dis, int length) throws IOException {
         short flags = dis.readShort();
@@ -160,13 +162,26 @@ public class DNSKEY extends Data {
         return key.clone();
     }
 
-    private String keyBase64Cache;
+    public DataInputStream getKeyAsDataInputStream() {
+        return new DataInputStream(new ByteArrayInputStream(key));
+    }
+
+    private transient String keyBase64Cache;
 
     public String getKeyBase64() {
         if (keyBase64Cache == null) {
             keyBase64Cache = Base64.encodeToString(key);
         }
         return keyBase64Cache;
+    }
+
+    private transient BigInteger keyBigIntegerCache;
+
+    public BigInteger getKeyBigInteger() {
+        if (keyBigIntegerCache == null) {
+            keyBigIntegerCache = new BigInteger(key);
+        }
+        return keyBigIntegerCache;
     }
 
     public boolean keyEquals(byte[] otherKey) {

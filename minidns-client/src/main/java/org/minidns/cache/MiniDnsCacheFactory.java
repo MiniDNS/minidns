@@ -10,10 +10,10 @@
  */
 package org.minidns.cache;
 
-import org.minidns.DNSCache;
+import org.minidns.DnsCache;
 
 public interface MiniDnsCacheFactory {
 
-    DNSCache newCache();
+    DnsCache newCache();
 
 }

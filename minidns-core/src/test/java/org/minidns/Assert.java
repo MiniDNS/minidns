@@ -11,6 +11,12 @@
 package org.minidns;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.List;
 
 public class Assert {
 
@@ -26,4 +32,12 @@ public class Assert {
         }
     }
 
+    public static <T> void assertArrayContentEquals(T[] expect, Collection<? extends T> value) {
+        assertEquals(expect.length, value.size());
+        List<T> list = new ArrayList<>(Arrays.asList(expect));
+        for (Object type : value) {
+            assertTrue(list.remove(type));
+        }
+        assertTrue(list.isEmpty());
+    }
 }

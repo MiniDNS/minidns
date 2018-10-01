@@ -21,13 +21,13 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.junit.Ignore;
-import org.minidns.dnsname.DNSName;
+import org.minidns.dnsname.DnsName;
 import org.minidns.jul.MiniDnsJul;
 import org.minidns.record.Record.TYPE;
 
 public class IntegrationTestHelper {
 
-    public static final DNSName DNSSEC_DOMAIN = DNSName.from("verteiltesysteme.net");
+    public static final DnsName DNSSEC_DOMAIN = DnsName.from("verteiltesysteme.net");
     public static final TYPE RR_TYPE = TYPE.A;
 
     private static Set<Class<?>> testClasses = new HashSet<>();
@@ -41,11 +41,11 @@ public class IntegrationTestHelper {
 
     static {
         testClasses.add(CoreTest.class);
-        testClasses.add(DNSSECTest.class);
+        testClasses.add(DnssecTest.class);
         testClasses.add(DaneTest.class);
         testClasses.add(HlaTest.class);
-        testClasses.add(NSIDTest.class);
-        testClasses.add(IterativeDNSSECTest.class);
+        testClasses.add(NsidTest.class);
+        testClasses.add(IterativeDnssecTest.class);
     }
 
     private static final String MINTTEST = "minttest.";

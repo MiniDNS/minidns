@@ -29,7 +29,7 @@ public abstract class InternetAddressRR extends Data {
     /**
      * Cache for the {@link InetAddress} this record presents.
      */
-    private InetAddress inetAddress;
+    private transient InetAddress inetAddress;
 
     protected InternetAddressRR(byte[] ip) {
         this.ip = ip;

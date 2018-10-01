@@ -13,7 +13,7 @@ package org.minidns.record;
 import java.io.DataInputStream;
 import java.io.IOException;
 
-import org.minidns.dnsname.DNSName;
+import org.minidns.dnsname.DnsName;
 import org.minidns.record.Record.TYPE;
 
 /**
@@ -22,11 +22,11 @@ import org.minidns.record.Record.TYPE;
 public class NS extends RRWithTarget {
 
     public static NS parse(DataInputStream dis, byte[] data) throws IOException {
-        DNSName target = DNSName.parse(dis, data);
+        DnsName target = DnsName.parse(dis, data);
         return new NS(target);
     }
 
-    public NS(DNSName name) {
+    public NS(DnsName name) {
         super(name);
     }
 

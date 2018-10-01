@@ -10,6 +10,7 @@
  */
 package org.minidns.record;
 
+import org.minidns.dnslabel.DnsLabel;
 import org.minidns.record.Record.TYPE;
 import org.minidns.util.Base32;
 
@@ -17,7 +18,9 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.math.BigInteger;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -89,19 +92,19 @@ public class NSEC3 extends Data {
     /**
      * The salt appended to the next owner name before hashing.
      */
-    public final byte[] salt;
+    private final byte[] salt;
 
     /**
      * The next hashed owner name in hash order.
      */
-    public final byte[] nextHashed;
+    private final byte[] nextHashed;
 
     private final byte[] typeBitmap;
 
     /**
      * The RR types existing at the original owner name.
      */
-    public final TYPE[] types;
+    public final List<TYPE> types;
 
     public static NSEC3 parse(DataInputStream dis, int length) throws IOException {
         byte hashAlgorithm = dis.readByte();
@@ -115,11 +118,11 @@ public class NSEC3 extends Data {
         if (dis.read(nextHashed) != nextHashed.length) throw new IOException();
         byte[] typeBitmap = new byte[length - (6 + saltLength + hashLength)];
         if (dis.read(typeBitmap) != typeBitmap.length) throw new IOException();
-        TYPE[] types = NSEC.readTypeBitMap(typeBitmap);
+        List<TYPE> types = NSEC.readTypeBitMap(typeBitmap);
         return new NSEC3(hashAlgorithm, flags, iterations, salt, nextHashed, types);
     }
 
-    private NSEC3(HashAlgorithm hashAlgorithm, byte hashAlgorithmByte, byte flags, int iterations, byte[] salt, byte[] nextHashed, TYPE[] types) {
+    private NSEC3(HashAlgorithm hashAlgorithm, byte hashAlgorithmByte, byte flags, int iterations, byte[] salt, byte[] nextHashed, List<TYPE> types) {
         assert hashAlgorithmByte == (hashAlgorithm != null ? hashAlgorithm.value : hashAlgorithmByte);
         this.hashAlgorithmByte = hashAlgorithmByte;
         this.hashAlgorithm = hashAlgorithm != null ? hashAlgorithm : HashAlgorithm.forByte(hashAlgorithmByte);
@@ -132,8 +135,12 @@ public class NSEC3 extends Data {
         this.typeBitmap = NSEC.createTypeBitMap(types);
     }
 
-    public NSEC3(byte hashAlgorithm, byte flags, int iterations, byte[] salt, byte[] nextHashed, TYPE[] types) {
+    public NSEC3(byte hashAlgorithm, byte flags, int iterations, byte[] salt, byte[] nextHashed, List<TYPE> types) {
         this(null, hashAlgorithm, flags, iterations, salt, nextHashed, types);
+    }
+
+    public NSEC3(byte hashAlgorithm, byte flags, int iterations, byte[] salt, byte[] nextHashed, TYPE... types) {
+        this(null, hashAlgorithm, flags, iterations, salt, nextHashed, Arrays.asList(types));
     }
 
     @Override
@@ -165,5 +172,40 @@ public class NSEC3 extends Data {
             sb.append(' ').append(type);
         }
         return sb.toString();
+    }
+
+    public byte[] getSalt() {
+        return salt.clone();
+    }
+
+    public int getSaltLength() {
+        return salt.length;
+    }
+
+    public byte[] getNextHashed() {
+        return nextHashed.clone();
+    }
+
+    private String nextHashedBase32Cache;
+
+    public String getNextHashedBase32() {
+        if (nextHashedBase32Cache == null) {
+            nextHashedBase32Cache = Base32.encodeToString(nextHashed);
+        }
+        return nextHashedBase32Cache;
+    }
+
+    private DnsLabel nextHashedDnsLabelCache;
+
+    public DnsLabel getNextHashedDnsLabel() {
+        if (nextHashedDnsLabelCache == null) {
+            String nextHashedBase32 = getNextHashedBase32();
+            nextHashedDnsLabelCache = DnsLabel.from(nextHashedBase32);
+        }
+        return nextHashedDnsLabelCache;
+    }
+
+    public void copySaltInto(byte[] dest, int destPos) {
+        System.arraycopy(salt, 0, dest, destPos, salt.length);
     }
 }

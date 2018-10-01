@@ -16,9 +16,9 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
-import org.minidns.AbstractDNSClient.IpVersionSetting;
-import org.minidns.MiniDNSException.NullResultException;
-import org.minidns.dnsname.DNSName;
+import org.minidns.AbstractDnsClient.IpVersionSetting;
+import org.minidns.MiniDnsException.NullResultException;
+import org.minidns.dnsname.DnsName;
 import org.minidns.record.A;
 import org.minidns.record.AAAA;
 import org.minidns.record.InternetAddressRR;
@@ -33,7 +33,7 @@ public class SrvResolverResult extends ResolverResult<SRV> {
     private List<ResolvedSrvRecord> sortedSrvResolvedAddresses;
 
     SrvResolverResult(ResolverResult<SRV> srvResult, ResolverApi resolver) throws NullResultException {
-        super(srvResult.question, srvResult.answer, srvResult.unverifiedReasons);
+        super(srvResult.question, srvResult.result, srvResult.unverifiedReasons);
         this.resolver = resolver;
         this.ipVersion = resolver.getClient().getPreferedIpVersion();
     }
@@ -107,7 +107,7 @@ public class SrvResolverResult extends ResolverResult<SRV> {
     }
 
     public static class ResolvedSrvRecord {
-        public final DNSName name;
+        public final DnsName name;
         public final SRV srv;
         public final List<InternetAddressRR> addresses;
         public final ResolverResult<A> aRecordsResult;
@@ -118,7 +118,7 @@ public class SrvResolverResult extends ResolverResult<SRV> {
          */
         public final int port;
 
-        private ResolvedSrvRecord(DNSName name, SRV srv, List<InternetAddressRR> addresses, ResolverResult<A> aRecordsResult, ResolverResult<AAAA> aaaaRecordsResult) {
+        private ResolvedSrvRecord(DnsName name, SRV srv, List<InternetAddressRR> addresses, ResolverResult<A> aRecordsResult, ResolverResult<AAAA> aaaaRecordsResult) {
             this.name = name;
             this.srv = srv;
             this.addresses = Collections.unmodifiableList(addresses);

@@ -10,7 +10,7 @@
  */
 package org.minidns.hla;
 
-import org.minidns.dnsname.DNSName;
+import org.minidns.dnsname.DnsName;
 
 public enum SrvProto {
 
@@ -20,9 +20,9 @@ public enum SrvProto {
     ;
     // @formatter:on
 
-    public final DNSName dnsName;
+    public final DnsName dnsName;
 
     SrvProto() {
-        dnsName = DNSName.from('_' + name());
+        dnsName = DnsName.from('_' + name());
     }
 }
