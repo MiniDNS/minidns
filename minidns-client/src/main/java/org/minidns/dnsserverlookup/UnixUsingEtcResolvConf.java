@@ -42,7 +42,7 @@ public class UnixUsingEtcResolvConf extends AbstractDnsServerLookupMechanism {
     }
 
     @Override
-    public List<IPPortPair> getDnsServerAddressesWithPorts() {
+    public List<IPPortPair> getDnsServerAddresses() {
         File file = new File(RESOLV_CONF_FILE);
         if (!file.exists()) {
             // Not very unixoid systems

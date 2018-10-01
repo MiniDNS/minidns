@@ -12,15 +12,6 @@ package org.minidns.dnsserverlookup;
 
 import java.io.Serializable;
 
-/**
- * Copyright Daniel Wolf 2018
- * All rights reserved.
- * Code may NOT be used without proper permission, neither in binary nor in source form.
- * All redistributions of this software in source code must retain this copyright header
- * All redistributions of this software in binary form must visibly inform users about usage of this software
- * <p>
- * development@frostnerd.com
- */
 public class IPPortPair implements Serializable {
     private static final long serialVersionUID = 7354713072355023750L;
     public static final int DEFAULT_PORT = 53;

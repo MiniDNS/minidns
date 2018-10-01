@@ -70,7 +70,7 @@ public class DnsClientTest {
             return true;
         }
         @Override
-        public List<IPPortPair> getDnsServerAddressesWithPorts() {
+        public List<IPPortPair> getDnsServerAddresses() {
             return null;
         }
     }

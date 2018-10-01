@@ -276,7 +276,7 @@ public class DnsClient extends AbstractDnsClient {
     public static List<IPPortPair> findDNS() {
         List<IPPortPair> res = null;
         for (DnsServerLookupMechanism mechanism : LOOKUP_MECHANISMS) {
-            res = mechanism.getDnsServerAddressesWithPorts();
+            res = mechanism.getDnsServerAddresses();
             if (res == null) {
                 continue;
             }

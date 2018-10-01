@@ -38,7 +38,7 @@ public class AndroidUsingExec extends AbstractDnsServerLookupMechanism {
     }
 
     @Override
-    public List<IPPortPair> getDnsServerAddressesWithPorts() {
+    public List<IPPortPair> getDnsServerAddresses() {
         try {
             Process process = Runtime.getRuntime().exec("getprop");
             InputStream inputStream = process.getInputStream();

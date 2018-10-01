@@ -62,7 +62,7 @@ public class AndroidUsingLinkProperties extends AbstractDnsServerLookupMechanism
 
     @Override
     @TargetApi(21)
-    public List<IPPortPair> getDnsServerAddressesWithPorts() {
+    public List<IPPortPair> getDnsServerAddresses() {
         Network[] networks = connectivityManager.getAllNetworks();
         if (networks == null) {
             return null;
