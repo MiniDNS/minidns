@@ -47,7 +47,7 @@ for (A a : answers) {
 }
 ```
 
-MiniDNS also provides full support for SRV resource reocrds and their handling.
+MiniDNS also provides full support for SRV resource records and their handling.
 
 ```java
 SrvResolverResult result = DnssecResolverApi.INSTANCE.resolveSrv(SrvType.xmpp_client, "example.org")
