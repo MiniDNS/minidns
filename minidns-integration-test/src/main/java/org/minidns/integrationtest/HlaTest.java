@@ -12,6 +12,7 @@ package org.minidns.integrationtest;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
@@ -19,6 +20,7 @@ import java.util.Set;
 
 import org.minidns.hla.ResolverApi;
 import org.minidns.hla.ResolverResult;
+import org.minidns.hla.SrvResolverResult;
 import org.minidns.record.A;
 import org.minidns.record.SRV;
 
@@ -44,5 +46,12 @@ public class HlaTest {
         ResolverResult<A> aRes = ResolverApi.INSTANCE.resolve(srv.target, A.class);
 
         assertTrue(aRes.wasSuccessful());
+    }
+
+    @IntegrationTest
+    public static void resolveSrvTest() throws IOException {
+        SrvResolverResult resolverResult = ResolverApi.INSTANCE.resolveSrv("_xmpp-client._tcp.jabber.org");
+        Set<SRV> answers = resolverResult.getAnswers();
+        assertFalse(answers.isEmpty());
     }
 }
