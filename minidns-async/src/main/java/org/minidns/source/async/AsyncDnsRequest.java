@@ -14,6 +14,7 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
+import java.nio.channels.Channel;
 import java.nio.channels.ClosedChannelException;
 import java.nio.channels.DatagramChannel;
 import java.nio.channels.SelectableChannel;
@@ -163,21 +164,31 @@ public class AsyncDnsRequest {
         }
     }
 
-    private void abortUdpRequestAndCleanup(DatagramChannel datagramChannel, String errorMessage, IOException exception) {
-        LOGGER.log(Level.SEVERE, errorMessage, exception);
+    private void abortRequestAndCleanup(Channel channel, String errorMessage, IOException exception) {
+        if (exception == null) {
+            // TODO: Can this case be removed? Is 'exception' ever null?
+            LOGGER.info("Exception was null in abortRequestAndCleanup()");
+            exception = new IOException(errorMessage);
+        }
+        LOGGER.log(Level.SEVERE, "Error connecting " + channel + ": " + errorMessage, exception);
         addException(exception);
 
         if (selectionKey != null) {
             selectionKey.cancel();
         }
 
-        try {
-            datagramChannel.close();
-        } catch (IOException e) {
-            LOGGER.log(Level.SEVERE, "Exception closing datagram channel", e);
-            addException(e);
+        if (channel != null && channel.isOpen()) {
+            try {
+                channel.close();
+            } catch (IOException e) {
+                LOGGER.log(Level.SEVERE, "Exception closing socket channel", e);
+                addException(e);
+            }
         }
+    }
 
+    private void abortUdpRequestAndCleanup(DatagramChannel datagramChannel, String errorMessage, IOException exception) {
+        abortRequestAndCleanup(datagramChannel, errorMessage, exception);
         startTcpRequest();
     }
 
@@ -309,25 +320,7 @@ public class AsyncDnsRequest {
     }
 
     private void abortTcpRequestAndCleanup(SocketChannel socketChannel, String errorMessage, IOException exception) {
-        if (exception == null) {
-            exception = new IOException(errorMessage);
-        }
-        LOGGER.log(Level.SEVERE, errorMessage, exception);
-        addException(exception);
-
-        if (selectionKey != null) {
-            selectionKey.cancel();
-        }
-
-        if (socketChannel != null && socketChannel.isOpen()) {
-            try {
-                socketChannel.close();
-            } catch (IOException e) {
-                LOGGER.log(Level.SEVERE, "Exception closing socket channel", e);
-                addException(e);
-            }
-        }
-
+        abortRequestAndCleanup(socketChannel, errorMessage, exception);
         future.setException(MultipleIoException.toIOException(exceptions));
     }
 
