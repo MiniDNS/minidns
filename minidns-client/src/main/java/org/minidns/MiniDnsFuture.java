@@ -60,7 +60,7 @@ public abstract class MiniDnsFuture<V, E extends Exception> implements Future<V>
 
     @Override
     public synchronized final boolean isDone() {
-        return result != null;
+        return result != null || exception != null;
     }
 
     @Override
@@ -193,6 +193,10 @@ public abstract class MiniDnsFuture<V, E extends Exception> implements Future<V>
 
     public static class InternalMiniDnsFuture<V, E extends Exception> extends MiniDnsFuture<V, E> {
         public final synchronized void setResult(V result) {
+            if (isDone()) {
+                return;
+            }
+
             this.result = result;
             this.notifyAll();
 
@@ -200,6 +204,10 @@ public abstract class MiniDnsFuture<V, E extends Exception> implements Future<V>
         }
 
         public final synchronized void setException(E exception) {
+            if (isDone()) {
+                return;
+            }
+
             this.exception = exception;
             this.notifyAll();
 
