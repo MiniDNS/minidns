@@ -206,7 +206,7 @@ public class AsyncDnsRequest {
         try {
             datagramChannel.connect(socketAddress);
         } catch (IOException e) {
-            abortUdpRequestAndCleanup(datagramChannel, "Exception connecting datagram channel", e);
+            abortUdpRequestAndCleanup(datagramChannel, "Exception connecting datagram channel to " + socketAddress, e);
             return;
         }
 
@@ -357,7 +357,7 @@ public class AsyncDnsRequest {
         try {
             socketChannel.connect(socketAddress);
         } catch (IOException e) {
-            abortTcpRequestAndCleanup(socketChannel, "Exception connecting socket channel", e);
+            abortTcpRequestAndCleanup(socketChannel, "Exception connecting socket channel to " + socketAddress, e);
             return;
         }
     }
