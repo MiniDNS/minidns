@@ -31,7 +31,7 @@ public class AndroidUsingReflection extends AbstractDnsServerLookupMechanism {
     }
 
     @Override
-    public List<String> getDnsServerAddresses() {
+    public List<IPPortPair> getDnsServerAddresses() {
         try {
             Class<?> SystemProperties =
                     Class.forName("android.os.SystemProperties");
@@ -63,7 +63,7 @@ public class AndroidUsingReflection extends AbstractDnsServerLookupMechanism {
             }
 
             if (servers.size() > 0) {
-                return servers;
+                return stringCollectionToListOfIPPortPairs(servers);
             }
         } catch (Exception e) {
             // we might trigger some problems this way

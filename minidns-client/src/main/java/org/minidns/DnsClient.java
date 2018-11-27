@@ -18,6 +18,7 @@ import org.minidns.dnsqueryresult.DnsQueryResult;
 import org.minidns.dnsserverlookup.AndroidUsingExec;
 import org.minidns.dnsserverlookup.AndroidUsingReflection;
 import org.minidns.dnsserverlookup.DnsServerLookupMechanism;
+import org.minidns.dnsserverlookup.IPPortPair;
 import org.minidns.dnsserverlookup.UnixUsingEtcResolvConf;
 import org.minidns.util.CollectionsUtil;
 import org.minidns.util.ExceptionCallback;
@@ -99,8 +100,8 @@ public class DnsClient extends AbstractDnsClient {
         return message;
     }
 
-    private List<InetAddress> getServerAddresses() {
-        List<InetAddress> dnsServerAddresses = findDnsAddresses();
+    private List<UpstreamDNSServer> getServerAddresses() {
+        List<UpstreamDNSServer> dnsServerAddresses = findDnsAddresses();
 
         InetAddress[] selectedHardcodedDnsServerAddresses = new InetAddress[2];
         if (useHardcodedDnsServers) {
@@ -126,7 +127,7 @@ public class DnsClient extends AbstractDnsClient {
         }
         for (InetAddress selectedHardcodedDnsServerAddress : selectedHardcodedDnsServerAddresses) {
             if (selectedHardcodedDnsServerAddress == null) continue;
-            dnsServerAddresses.add(selectedHardcodedDnsServerAddress);
+            dnsServerAddresses.add(new UpstreamDNSServer(selectedHardcodedDnsServerAddress, IPPortPair.DEFAULT_PORT));
         }
 
         return dnsServerAddresses;
@@ -145,17 +146,17 @@ public class DnsClient extends AbstractDnsClient {
             return dnsQueryResult;
         }
 
-        List<InetAddress> dnsServerAddresses = getServerAddresses();
+        List<UpstreamDNSServer> dnsServerAddresses = getServerAddresses();
 
         List<IOException> ioExceptions = new ArrayList<>(dnsServerAddresses.size());
-        for (InetAddress dns : dnsServerAddresses) {
-            if (nonRaServers.contains(dns)) {
+        for (UpstreamDNSServer dns : dnsServerAddresses) {
+            if (nonRaServers.contains(dns.getServer())) {
                 LOGGER.finer("Skipping " + dns + " because it was marked as \"recursion not available\"");
                 continue;
             }
 
             try {
-                dnsQueryResult = query(q, dns);
+                dnsQueryResult = query(q, dns.getServer(), dns.getPort());
             } catch (IOException ioe) {
                 ioExceptions.add(ioe);
                 continue;
@@ -163,7 +164,7 @@ public class DnsClient extends AbstractDnsClient {
 
             DnsMessage responseMessage = dnsQueryResult.response;
             if (!responseMessage.recursionAvailable) {
-                boolean newRaServer = nonRaServers.add(dns);
+                boolean newRaServer = nonRaServers.add(dns.getServer());
                 if (newRaServer) {
                     LOGGER.warning("The DNS server " + dns
                             + " returned a response without the \"recursion available\" (RA) flag set. This likely indicates a misconfiguration because the server is not suitable for DNS resolution");
@@ -215,16 +216,16 @@ public class DnsClient extends AbstractDnsClient {
             return MiniDnsFuture.from(responseMessage);
         }
 
-        final List<InetAddress> dnsServerAddresses = getServerAddresses();
+        final List<UpstreamDNSServer> dnsServerAddresses = getServerAddresses();
 
         final InternalMiniDnsFuture<DnsQueryResult, IOException> future = new InternalMiniDnsFuture<>();
         final List<IOException> exceptions = Collections.synchronizedList(new ArrayList<IOException>(dnsServerAddresses.size()));
 
         // Filter loop.
-        Iterator<InetAddress> it = dnsServerAddresses.iterator();
+        Iterator<UpstreamDNSServer> it = dnsServerAddresses.iterator();
         while (it.hasNext()) {
-            InetAddress dns = it.next();
-            if (nonRaServers.contains(dns)) {
+            UpstreamDNSServer dns = it.next();
+            if (nonRaServers.contains(dns.getServer())) {
                 it.remove();
                 LOGGER.finer("Skipping " + dns + " because it was marked as \"recursion not available\"");
                 continue;
@@ -233,7 +234,7 @@ public class DnsClient extends AbstractDnsClient {
 
         List<MiniDnsFuture<DnsQueryResult, IOException>> futures = new ArrayList<>(dnsServerAddresses.size());
         // "Main" loop.
-        for (InetAddress dns : dnsServerAddresses) {
+        for (UpstreamDNSServer dns : dnsServerAddresses) {
             if (future.isDone()) {
                 for (MiniDnsFuture<DnsQueryResult, IOException> futureToCancel : futures) {
                     futureToCancel.cancel(true);
@@ -241,7 +242,7 @@ public class DnsClient extends AbstractDnsClient {
                 break;
             }
 
-            MiniDnsFuture<DnsQueryResult, IOException> f = queryAsync(q, dns);
+            MiniDnsFuture<DnsQueryResult, IOException> f = queryAsync(q, dns.getServer(), dns.getPort());
             f.onSuccess(new SuccessCallback<DnsQueryResult>() {
                 @Override
                 public void onSuccess(DnsQueryResult result) {
@@ -272,8 +273,8 @@ public class DnsClient extends AbstractDnsClient {
      *
      * @return A list of DNS server IP addresses configured for this system.
      */
-    public static List<String> findDNS() {
-        List<String> res = null;
+    public static List<IPPortPair> findDNS() {
+        List<IPPortPair> res = null;
         for (DnsServerLookupMechanism mechanism : LOOKUP_MECHANISMS) {
             res = mechanism.getDnsServerAddresses();
             if (res == null) {
@@ -289,14 +290,14 @@ public class DnsClient extends AbstractDnsClient {
             // especially a valid DNS name is returned, as this would cause the following String to InetAddress conversation using
             // getByName(String) to cause a DNS lookup, which would be performed outside of the realm of MiniDNS and therefore also outside
             // of its DNSSEC guarantees.
-            Iterator<String> it = res.iterator();
+            Iterator<IPPortPair> it = res.iterator();
             while (it.hasNext()) {
-                String potentialDnsServer = it.next();
-                if (!InetAddressUtil.isIpAddress(potentialDnsServer)) {
+                IPPortPair potentialDnsServer = it.next();
+                if (!InetAddressUtil.isIpAddress(potentialDnsServer.getIp())) {
                     LOGGER.warning("The DNS server lookup mechanism '" + mechanism.getName()
                             + "' returned an invalid non-IP address result: '" + potentialDnsServer + "'");
                     it.remove();
-                } else if (blacklistedDnsServers.contains(potentialDnsServer)) {
+                } else if (blacklistedDnsServers.contains(potentialDnsServer.getIp())) {
                     LOGGER.fine("The DNS server lookup mechanism '" + mechanism.getName()
                     + "' returned a blacklisted result: '" + potentialDnsServer + "'");
                     it.remove();
@@ -325,9 +326,9 @@ public class DnsClient extends AbstractDnsClient {
      * @return A list of DNS server addresses.
      * @see #findDNS()
      */
-    public static List<InetAddress> findDnsAddresses() {
+    public static List<UpstreamDNSServer> findDnsAddresses() {
         // The findDNS() method contract guarantees that only IP addresses will be returned.
-        List<String> res = findDNS();
+        List<IPPortPair> res = findDNS();
 
         if (res == null) {
             return new ArrayList<>();
@@ -335,8 +336,8 @@ public class DnsClient extends AbstractDnsClient {
 
         final IpVersionSetting setting = DEFAULT_IP_VERSION_SETTING;
 
-        List<Inet4Address> ipv4DnsServer = null;
-        List<Inet6Address> ipv6DnsServer = null;
+        List<UpstreamDNSServer> ipv4DnsServer = null;
+        List<UpstreamDNSServer> ipv6DnsServer = null;
         if (setting.v4) {
             ipv4DnsServer = new ArrayList<>(res.size());
         }
@@ -344,17 +345,18 @@ public class DnsClient extends AbstractDnsClient {
             ipv6DnsServer = new ArrayList<>(res.size());
         }
 
-        for (String dnsServerString : res) {
+        for (IPPortPair dnsServer : res) {
             // The following invariant must hold: "dnsServerString is a IP address". Therefore findDNS() must only return a List of Strings
             // representing IP addresses. Otherwise the following call of getByName(String) may perform a DNS lookup without MiniDNS being
             // involved. Something we want to avoid.
-            assert (InetAddressUtil.isIpAddress(dnsServerString));
+            assert (InetAddressUtil.isIpAddress(dnsServer.getIp()));
+            assert (dnsServer.getPort() >= 1 && dnsServer.getPort() <= 65535);
 
             InetAddress dnsServerAddress;
             try {
-                dnsServerAddress = InetAddress.getByName(dnsServerString);
+                dnsServerAddress = InetAddress.getByName(dnsServer.getIp());
             } catch (UnknownHostException e) {
-                LOGGER.log(Level.SEVERE, "Could not transform '" + dnsServerString + "' to InetAddress", e);
+                LOGGER.log(Level.SEVERE, "Could not transform '" + dnsServer + "' to InetAddress", e);
                 continue;
             }
             if (dnsServerAddress instanceof Inet4Address) {
@@ -362,19 +364,19 @@ public class DnsClient extends AbstractDnsClient {
                     continue;
                 }
                 Inet4Address ipv4DnsServerAddress = (Inet4Address) dnsServerAddress;
-                ipv4DnsServer.add(ipv4DnsServerAddress);
+                ipv4DnsServer.add(new UpstreamDNSServer(ipv4DnsServerAddress, dnsServer.getPort()));
             } else if (dnsServerAddress instanceof Inet6Address) {
                 if (!setting.v6) {
                     continue;
                 }
                 Inet6Address ipv6DnsServerAddress = (Inet6Address) dnsServerAddress;
-                ipv6DnsServer.add(ipv6DnsServerAddress);
+                ipv6DnsServer.add(new UpstreamDNSServer(ipv6DnsServerAddress, dnsServer.getPort()));
             } else {
                 throw new AssertionError("The address '" + dnsServerAddress + "' is neither of type Inet(4|6)Address");
             }
         }
 
-        List<InetAddress> dnsServers = new LinkedList<>();
+        List<UpstreamDNSServer> dnsServers = new LinkedList<>();
 
         switch (setting) {
         case v4v6:
@@ -461,5 +463,23 @@ public class DnsClient extends AbstractDnsClient {
 
     public InetAddress getRandomHarcodedIpv6DnsServer() {
         return CollectionsUtil.getRandomFrom(STATIC_IPV6_DNS_SERVERS, insecureRandom);
+    }
+
+    public static class UpstreamDNSServer {
+        private InetAddress server;
+        private int port;
+
+        public UpstreamDNSServer(InetAddress server, int port) {
+            this.server = server;
+            this.port = port;
+        }
+
+        public InetAddress getServer() {
+            return server;
+        }
+
+        public int getPort() {
+            return port;
+        }
     }
 }

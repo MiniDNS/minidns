@@ -44,13 +44,30 @@ public abstract class AbstractDnsServerLookupMechanism implements DnsServerLooku
     }
 
     @Override
-    public abstract List<String> getDnsServerAddresses();
+    public abstract List<IPPortPair> getDnsServerAddresses();
 
     protected static List<String> toListOfStrings(Collection<? extends InetAddress> inetAddresses) {
         List<String> result = new ArrayList<>(inetAddresses.size());
         for (InetAddress inetAddress : inetAddresses) {
             String address = inetAddress.getHostAddress();
             result.add(address);
+        }
+        return result;
+    }
+
+    protected static List<IPPortPair> inetAddressCollectionToListOfIPPortPairs(Collection<? extends InetAddress> inetAddresses){
+        List<IPPortPair> result = new ArrayList<>(inetAddresses.size());
+        for (InetAddress inetAddress : inetAddresses) {
+            String address = inetAddress.getHostAddress();
+            result.add(new IPPortPair(address, IPPortPair.DEFAULT_PORT));
+        }
+        return result;
+    }
+
+    protected static List<IPPortPair> stringCollectionToListOfIPPortPairs(Collection<String> serverAddresses){
+        List<IPPortPair> result = new ArrayList<>(serverAddresses.size());
+        for (String address : serverAddresses) {
+            result.add(new IPPortPair(address, IPPortPair.DEFAULT_PORT));
         }
         return result;
     }

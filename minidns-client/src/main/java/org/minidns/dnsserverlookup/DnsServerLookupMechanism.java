@@ -27,8 +27,8 @@ public interface DnsServerLookupMechanism extends Comparable<DnsServerLookupMech
      * when using {@link org.minidns.DnsClient#findDNS()}.
      * </p>
      *
-     * @return a List of Strings presenting hopefully IP addresses.
+     * @return a List of IPPortPairs presenting hopefully IP addresses with their respective ports.
      */
-    public List<String> getDnsServerAddresses();
+    public List<IPPortPair> getDnsServerAddresses();
 
 }
