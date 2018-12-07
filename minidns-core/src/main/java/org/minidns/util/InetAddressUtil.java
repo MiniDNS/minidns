@@ -73,6 +73,20 @@ public class InetAddressUtil {
         return isIpV6Address(address) || isIpV4Address(address);
     }
 
+    public static InetAddress convertToInetAddressIfPossible(CharSequence address) {
+        if (!isIpAddress(address)) {
+            return null;
+        }
+
+        String addressString = address.toString();
+        try {
+            return InetAddress.getByName(addressString);
+        } catch (UnknownHostException e) {
+            // Should never happen.
+            throw new AssertionError(e);
+        }
+    }
+
     public static DnsName reverseIpAddressOf(Inet6Address inet6Address) {
         final String ipAddress = inet6Address.getHostAddress();
         final String[] ipAddressParts = ipAddress.split(":");
