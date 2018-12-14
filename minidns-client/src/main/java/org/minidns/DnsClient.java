@@ -234,6 +234,8 @@ public class DnsClient extends AbstractDnsClient {
         List<MiniDnsFuture<DnsQueryResult, IOException>> futures = new ArrayList<>(dnsServerAddresses.size());
         // "Main" loop.
         for (InetAddress dns : dnsServerAddresses) {
+            // Note that we deliberatly use Future.isDone(), since a few lines below, we only set a negative exception
+            // result, if all sub-futures signaled an exception.
             if (future.isDone()) {
                 for (MiniDnsFuture<DnsQueryResult, IOException> futureToCancel : futures) {
                     futureToCancel.cancel(true);
@@ -252,6 +254,7 @@ public class DnsClient extends AbstractDnsClient {
                 @Override
                 public void processException(IOException exception) {
                     exceptions.add(exception);
+                    // Signal the main future about the exceptions, but only if all sub-futures returned an exception.
                     if (exceptions.size() == dnsServerAddresses.size()) {
                         future.setException(MultipleIoException.toIOException(exceptions));
                     }
