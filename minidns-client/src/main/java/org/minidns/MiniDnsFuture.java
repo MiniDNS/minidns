@@ -60,7 +60,15 @@ public abstract class MiniDnsFuture<V, E extends Exception> implements Future<V>
 
     @Override
     public synchronized final boolean isDone() {
-        return result != null || exception != null;
+        return hasResult() || hasException();
+    }
+
+    public synchronized final boolean hasResult() {
+        return result != null;
+    }
+
+    public synchronized final boolean hasException() {
+        return exception != null;
     }
 
     @Override
