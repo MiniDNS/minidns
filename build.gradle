@@ -14,7 +14,7 @@ buildscript {
 }
 
 plugins {
-    id 'ru.vyarus.animalsniffer' version '1.4.3'
+    id 'ru.vyarus.animalsniffer' version '1.5.0'
 }
 
 apply from: 'version.gradle'
