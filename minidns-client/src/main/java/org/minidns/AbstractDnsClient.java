@@ -417,6 +417,9 @@ public abstract class AbstractDnsClient {
     }
 
     private <D extends Data> Set<D> getCachedRecordsFor(DnsName dnsName, TYPE type) {
+        if (cache == null)
+            return Collections.emptySet();
+
         Question dnsNameNs = new Question(dnsName, type);
         DnsMessage queryDnsNameNs = getQueryFor(dnsNameNs);
         DnsQueryResult cachedResult = cache.get(queryDnsNameNs);
