@@ -82,7 +82,6 @@ allprojects {
 	}
 
 	checkstyle {
-		configFile = new File(rootConfigDir, 'checkstyle.xml')
 	}
 
 	jacoco {
