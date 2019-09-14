@@ -82,6 +82,7 @@ allprojects {
 	}
 
 	checkstyle {
+		toolVersion = '8.24'
 	}
 
 	jacoco {
