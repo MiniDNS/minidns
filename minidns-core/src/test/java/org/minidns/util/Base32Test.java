@@ -17,9 +17,9 @@ import static org.junit.Assert.assertEquals;
 public class Base32Test {
     @Test
     public void testEncodeToString() {
-        assertEquals("", Base32.encodeToString(new byte[]{}));
-        assertEquals("0410====", Base32.encodeToString(new byte[]{1, 2}));
-        assertEquals("891K8HA6", Base32.encodeToString(new byte[]{0x42, 0x43, 0x44, 0x45, 0x46}));
-        assertEquals("VS0FU07V03VG0===", Base32.encodeToString(new byte[]{-1, 0, -1, 0, -1, 0, -1, 0}));
+        assertEquals("", Base32.encodeToString(new byte[] {}));
+        assertEquals("0410====", Base32.encodeToString(new byte[] {1, 2}));
+        assertEquals("891K8HA6", Base32.encodeToString(new byte[] {0x42, 0x43, 0x44, 0x45, 0x46}));
+        assertEquals("VS0FU07V03VG0===", Base32.encodeToString(new byte[] {-1, 0, -1, 0, -1, 0, -1, 0}));
     }
 }

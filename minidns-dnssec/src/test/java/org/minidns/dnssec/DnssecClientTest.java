@@ -101,7 +101,7 @@ public class DnssecClientTest {
         List<Record<? extends Data>> answers = message.answerSection;
         assertEquals(1, answers.size());
         assertEquals(Record.TYPE.A, answers.get(0).type);
-        assertArrayEquals(new byte[]{1, 1, 1, 2}, ((A) answers.get(0).payloadData).getIp());
+        assertArrayEquals(new byte[] {1, 1, 1, 2}, ((A) answers.get(0).payloadData).getIp());
     }
 
     @SuppressWarnings("unchecked")
@@ -542,7 +542,7 @@ public class DnssecClientTest {
                                         record("example.com", soa("sns.dns.icann.org", "noc.dns.icann.org", 2015081265, 7200, 3600, 1209600, 3600))));
         nsecMessage.setNameserverRecords(records);
         nsecMessage.setAuthoritativeAnswer(true);
-        world.addPreparedResponse(new DnssecWorld.AddressedNsecResponse(InetAddress.getByAddress("ns.com", new byte[]{1, 1, 1, 1}), nsecMessage.build()));
+        world.addPreparedResponse(new DnssecWorld.AddressedNsecResponse(InetAddress.getByAddress("ns.com", new byte[] {1, 1, 1, 1}), nsecMessage.build()));
         DnssecQueryResult result = client.queryDnssec("nsec.example.com", Record.TYPE.A);
         // TODO: The setSripSignatureRecords() call could probably be removed. It does not appear to server any purpose here.
         client.setStripSignatureRecords(false);

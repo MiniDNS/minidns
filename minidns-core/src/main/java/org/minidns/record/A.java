@@ -29,7 +29,7 @@ public class A extends InternetAddressRR {
 
     public A(Inet4Address inet4Address) {
         super(inet4Address.getAddress());
-        assert(ip.length == 4);
+        assert ip.length == 4;
     }
 
     public A(int q1, int q2, int q3, int q4) {

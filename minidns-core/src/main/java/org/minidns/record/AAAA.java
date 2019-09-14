@@ -29,7 +29,7 @@ public class AAAA extends InternetAddressRR {
 
     public AAAA(Inet6Address inet6address) {
         super(inet6address.getAddress());
-        assert(ip.length == 16);
+        assert ip.length == 16;
     }
 
     public AAAA(byte[] ip) {

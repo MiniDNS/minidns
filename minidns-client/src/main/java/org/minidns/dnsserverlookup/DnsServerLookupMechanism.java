@@ -14,11 +14,11 @@ import java.util.List;
 
 public interface DnsServerLookupMechanism extends Comparable<DnsServerLookupMechanism> {
 
-    public String getName();
+    String getName();
 
-    public int getPriority();
+    int getPriority();
 
-    public boolean isAvailable();
+    boolean isAvailable();
 
     /**
      * Returns a List of String representing ideally IP addresses. The list must be modifiable.
@@ -29,6 +29,6 @@ public interface DnsServerLookupMechanism extends Comparable<DnsServerLookupMech
      *
      * @return a List of Strings presenting hopefully IP addresses.
      */
-    public List<String> getDnsServerAddresses();
+    List<String> getDnsServerAddresses();
 
 }

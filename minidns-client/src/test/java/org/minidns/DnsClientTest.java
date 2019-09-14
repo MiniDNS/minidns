@@ -84,7 +84,7 @@ public class DnsClientTest {
         assertNotNull(response);
         assertEquals(1, response.answerSection.size());
         assertEquals(TYPE.A, response.answerSection.get(0).type);
-        assertArrayEquals(new byte[]{127, 0, 0, 1}, ((A) response.answerSection.get(0).payloadData).getIp());
+        assertArrayEquals(new byte[] {127, 0, 0, 1}, ((A) response.answerSection.get(0).payloadData).getIp());
 
         result = client.query("www2.example.com", TYPE.A);
         assertEquals(RESPONSE_CODE.NX_DOMAIN, result.response.responseCode);

@@ -19,7 +19,7 @@ import org.minidns.dnsqueryresult.DnsQueryResult;
 
 public interface DnsDataSource {
 
-    abstract DnsQueryResult query(DnsMessage message, InetAddress address, int port) throws IOException;
+    DnsQueryResult query(DnsMessage message, InetAddress address, int port) throws IOException;
 
     MiniDnsFuture<DnsQueryResult, IOException> queryAsync(DnsMessage message, InetAddress address, int port, OnResponseCallback onResponseCallback);
 

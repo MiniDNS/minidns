@@ -43,7 +43,7 @@ public class ResolutionState {
         }
 
         boolean isNew = map.get(address).add(question);
-        assert(isNew);
+        assert isNew;
     }
 
     void decrementSteps() {

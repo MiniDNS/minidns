@@ -32,7 +32,7 @@ public class TLSA extends Data {
 
         public final byte byteValue;
 
-        private CertUsage(byte byteValue) {
+        CertUsage(byte byteValue) {
             this.byteValue = byteValue;
             CERT_USAGE_LUT.put(byteValue, this);
         }
@@ -47,7 +47,7 @@ public class TLSA extends Data {
 
         public final byte byteValue;
 
-        private Selector(byte byteValue) {
+         Selector(byte byteValue) {
             this.byteValue = byteValue;
             SELECTOR_LUT.put(byteValue, this);
         }
@@ -63,7 +63,7 @@ public class TLSA extends Data {
 
         public final byte byteValue;
 
-        private MatchingType(byte byteValue) {
+        MatchingType(byte byteValue) {
             this.byteValue = byteValue;
             MATCHING_TYPE_LUT.put(byteValue, this);
         }

@@ -37,7 +37,7 @@ public abstract class MiniDnsException extends IOException {
 
         public IdMismatch(DnsMessage request, DnsMessage response) {
             super(getString(request, response));
-            assert (request.id != response.id);
+            assert request.id != response.id;
             this.request = request;
             this.response = response;
         }

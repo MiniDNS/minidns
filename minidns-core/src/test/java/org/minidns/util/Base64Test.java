@@ -17,9 +17,9 @@ import static org.junit.Assert.assertEquals;
 public class Base64Test {
     @Test
     public void testEncodeToString() {
-        assertEquals("", Base64.encodeToString(new byte[]{}));
-        assertEquals("Qg==", Base64.encodeToString(new byte[]{0x42}));
-        assertEquals("AQID", Base64.encodeToString(new byte[]{1, 2, 3}));
-        assertEquals("CAIGAP8B/wA=", Base64.encodeToString(new byte[]{8, 2, 6, 0, -1, 1, -1, 0}));
+        assertEquals("", Base64.encodeToString(new byte[] {}));
+        assertEquals("Qg==", Base64.encodeToString(new byte[] {0x42}));
+        assertEquals("AQID", Base64.encodeToString(new byte[] {1, 2, 3}));
+        assertEquals("CAIGAP8B/wA=", Base64.encodeToString(new byte[] {8, 2, 6, 0, -1, 1, -1, 0}));
     }
 }

@@ -49,7 +49,7 @@ public class SrvUtilTest {
         assertTrue(weight50 > 400 && weight50 < 600);
         assertTrue(weight20one > 100 && weight20one < 300);
         assertTrue(weight20two > 100 && weight20two < 300);
-        assertTrue(weight10 > 0&& weight10 < 200);
+        assertTrue(weight10 > 0 && weight10 < 200);
     }
 
     @Test

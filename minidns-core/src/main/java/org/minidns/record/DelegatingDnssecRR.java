@@ -73,7 +73,7 @@ public abstract class DelegatingDnssecRR extends Data {
         return new SharedData(keyTag, algorithm, digestType, digest);
     }
 
-    protected static class SharedData {
+    protected static final class SharedData {
         protected final int keyTag;
         protected final byte algorithm;
         protected final byte digestType;

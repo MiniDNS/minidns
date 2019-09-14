@@ -191,7 +191,7 @@ public class ResolverApi {
             throw new IllegalArgumentException();
         }
 
-        DnsLabel service = srvDnsName.getLabel(labelCount- 1);
+        DnsLabel service = srvDnsName.getLabel(labelCount - 1);
         DnsLabel proto = srvDnsName.getLabel(labelCount - 2);
         DnsName name = srvDnsName.stripToLabels(labelCount - 2);
 

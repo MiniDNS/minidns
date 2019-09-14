@@ -41,8 +41,7 @@ public class MX extends Data {
     public final DnsName name;
 
     public static MX parse(DataInputStream dis, byte[] data)
-        throws IOException
-    {
+        throws IOException {
         int priority = dis.readUnsignedShort();
         DnsName name = DnsName.parse(dis, data);
         return new MX(priority, name);

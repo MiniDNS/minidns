@@ -103,13 +103,13 @@ public class NSEC extends Data {
             for (Integer type : typeList) {
                 if (windowBlock == -1 || (type >> 8) != windowBlock) {
                     if (windowBlock != -1) writeOutBlock(bitmap, dos);
-                    windowBlock = (type >> 8);
+                    windowBlock = type >> 8;
                     dos.writeByte(windowBlock);
                     bitmap = new byte[32];
                 }
                 int a = (type >> 3) % 32;
                 int b = type % 8;
-                bitmap[a] |= (128 >> b);
+                bitmap[a] |= 128 >> b;
             }
             if (windowBlock != -1) writeOutBlock(bitmap, dos);
         } catch (IOException e) {

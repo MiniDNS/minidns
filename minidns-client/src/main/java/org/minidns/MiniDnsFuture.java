@@ -54,20 +54,20 @@ public abstract class MiniDnsFuture<V, E extends Exception> implements Future<V>
     }
 
     @Override
-    public synchronized final boolean isCancelled() {
+    public final synchronized boolean isCancelled() {
         return cancelled;
     }
 
     @Override
-    public synchronized final boolean isDone() {
+    public final synchronized boolean isDone() {
         return hasResult() || hasException();
     }
 
-    public synchronized final boolean hasResult() {
+    public final synchronized boolean hasResult() {
         return result != null;
     }
 
-    public synchronized final boolean hasException() {
+    public final synchronized boolean hasException() {
         return exception != null;
     }
 
@@ -85,8 +85,8 @@ public abstract class MiniDnsFuture<V, E extends Exception> implements Future<V>
         return this;
     }
 
-    private final V getOrThrowExecutionException() throws ExecutionException {
-        assert (result != null || exception != null || cancelled);
+    private V getOrThrowExecutionException() throws ExecutionException {
+        assert result != null || exception != null || cancelled;
         if (result != null) {
             return result;
         }
@@ -94,12 +94,12 @@ public abstract class MiniDnsFuture<V, E extends Exception> implements Future<V>
             throw new ExecutionException(exception);
         }
 
-        assert (cancelled);
+        assert cancelled;
         throw new CancellationException();
     }
 
     @Override
-    public synchronized final V get() throws InterruptedException, ExecutionException {
+    public final synchronized V get() throws InterruptedException, ExecutionException {
         while (result == null && exception == null && !cancelled) {
             wait();
         }
@@ -107,7 +107,7 @@ public abstract class MiniDnsFuture<V, E extends Exception> implements Future<V>
         return getOrThrowExecutionException();
     }
 
-    public synchronized final V getOrThrow() throws E {
+    public final synchronized V getOrThrow() throws E {
         while (result == null && exception == null && !cancelled) {
             try {
                 wait();
@@ -129,7 +129,7 @@ public abstract class MiniDnsFuture<V, E extends Exception> implements Future<V>
     }
 
     @Override
-    public synchronized final V get(long timeout, TimeUnit unit)
+    public final synchronized V get(long timeout, TimeUnit unit)
                     throws InterruptedException, ExecutionException, TimeoutException {
         final long deadline = System.currentTimeMillis() + unit.toMillis(timeout);
         while (result != null && exception != null && !cancelled) {

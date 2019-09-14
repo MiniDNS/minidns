@@ -62,9 +62,9 @@ public class Question {
     }
 
     public Question(DnsName name, TYPE type, CLASS clazz, boolean unicastQuery) {
-        assert (name != null);
-        assert (type != null);
-        assert (clazz != null);
+        assert name != null;
+        assert type != null;
+        assert clazz != null;
         this.name = name;
         this.type = type;
         this.clazz = clazz;
@@ -158,8 +158,8 @@ public class Question {
         if (!(other instanceof Question)) {
             return false;
         }
-        byte t[] = toByteArray();
-        byte o[] = ((Question)other).toByteArray();
+        byte[] t = toByteArray();
+        byte[] o = ((Question) other).toByteArray();
         return Arrays.equals(t, o);
     }
 

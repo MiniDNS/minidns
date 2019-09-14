@@ -24,7 +24,7 @@ public abstract class XnLabel extends ReservedLdhLabel {
     }
 
     protected static LdhLabel fromInternal(String label) {
-        assert(isIdnAcePrefixed(label));
+        assert isIdnAcePrefixed(label);
 
         String uLabel = MiniDnsIdna.toUnicode(label);
         if (label.equals(uLabel)) {

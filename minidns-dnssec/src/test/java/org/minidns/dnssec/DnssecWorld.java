@@ -60,7 +60,7 @@ public class DnssecWorld extends DnsWorld {
 
     private static final Map<DnsName, DnssecData> DNSSEC_DATA = new HashMap<>();
 
-    public static class DnssecData {
+    public static final class DnssecData {
         public final DnsName zone;
         public final DNSKEY ksk;
         public final PrivateKey privateKsk;
@@ -224,7 +224,7 @@ public class DnssecWorld extends DnsWorld {
         return ds(DnsName.from(zone));
     }
 
-    public static Record<DS> ds(DnsName zone){
+    public static Record<DS> ds(DnsName zone) {
         DnssecData dnssecData = getDnssecDataFor(zone);
         return record(zone, ds(zone, DEFAULT_DIGEST_ALGORITHM, dnssecData.ksk));
     }

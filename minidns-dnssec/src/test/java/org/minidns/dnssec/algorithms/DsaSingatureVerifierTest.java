@@ -35,12 +35,12 @@ public class DsaSingatureVerifierTest extends SignatureVerifierTest {
 
     @Test(expected = DataMalformedException.class)
     public void testDSAIllegalSignature() throws DnssecValidationFailedException {
-        assertSignatureValid(publicKey(ALGORITHM, generatePrivateKey(ALGORITHM, 1024)), ALGORITHM, new byte[]{0x0});
+        assertSignatureValid(publicKey(ALGORITHM, generatePrivateKey(ALGORITHM, 1024)), ALGORITHM, new byte[] {0x0});
     }
 
     @Test(expected = DataMalformedException.class)
     public void testDSAIllegalPublicKey() throws DnssecValidationFailedException {
-        assertSignatureValid(new byte[]{0x0}, ALGORITHM, sign(generatePrivateKey(ALGORITHM, 1024), ALGORITHM, sample));
+        assertSignatureValid(new byte[] {0x0}, ALGORITHM, sign(generatePrivateKey(ALGORITHM, 1024), ALGORITHM, sample));
     }
 
     @Test

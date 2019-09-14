@@ -20,7 +20,7 @@ import org.minidns.record.Record;
 import org.minidns.record.Record.CLASS;
 import org.minidns.record.Record.TYPE;
 
-public class RrSet {
+public final class RrSet {
 
     public final DnsName name;
     public final TYPE type;
@@ -35,7 +35,7 @@ public class RrSet {
     }
 
     @Override
-    public final String toString() {
+    public String toString() {
         StringBuilder sb = new StringBuilder();
         sb.append(name).append('\t').append(clazz).append('\t').append(type).append('\n');
         for (Record<?> record : records) {
@@ -48,7 +48,7 @@ public class RrSet {
         return new Builder();
     }
 
-    public static class Builder {
+    public static final class Builder {
         private DnsName name;
         private TYPE type;
         private CLASS clazz;
@@ -68,7 +68,7 @@ public class RrSet {
             }
 
             boolean didNotExist = records.add(record);
-            assert (didNotExist);
+            assert didNotExist;
 
             return this;
         }

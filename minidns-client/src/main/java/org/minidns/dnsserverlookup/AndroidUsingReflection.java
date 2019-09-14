@@ -43,7 +43,7 @@ public class AndroidUsingReflection extends AbstractDnsServerLookupMechanism {
             for (String propKey : new String[] {
                     "net.dns1", "net.dns2", "net.dns3", "net.dns4"}) {
 
-                String value = (String)method.invoke(null, propKey);
+                String value = (String) method.invoke(null, propKey);
 
                 if (value == null) continue;
                 if (value.length() == 0) continue;

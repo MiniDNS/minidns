@@ -35,12 +35,12 @@ public class RsaSignatureVerifierTest extends SignatureVerifierTest {
 
     @Test(expected = DnssecValidationFailedException.class)
     public void testSHA1RSAIllegalSignature() throws DnssecValidationFailedException {
-        assertSignatureValid(publicKey(SignatureAlgorithm.RSASHA1, generatePrivateKey(SignatureAlgorithm.RSASHA1, 1024)), SignatureAlgorithm.RSASHA1, new byte[]{0x0});
+        assertSignatureValid(publicKey(SignatureAlgorithm.RSASHA1, generatePrivateKey(SignatureAlgorithm.RSASHA1, 1024)), SignatureAlgorithm.RSASHA1, new byte[] {0x0});
     }
 
     @Test(expected = DataMalformedException.class)
     public void testSHA1RSAIllegalPublicKey() throws DnssecValidationFailedException {
-        assertSignatureValid(new byte[]{0x0}, SignatureAlgorithm.RSASHA1, sign(generatePrivateKey(SignatureAlgorithm.RSASHA1, 1024), SignatureAlgorithm.RSASHA1, sample));
+        assertSignatureValid(new byte[] {0x0}, SignatureAlgorithm.RSASHA1, sign(generatePrivateKey(SignatureAlgorithm.RSASHA1, 1024), SignatureAlgorithm.RSASHA1, sample));
     }
 
     @Test

@@ -135,7 +135,7 @@ public class AsyncDnsRequest {
         exceptions.add(e);
     }
 
-    private final void gotResult(DnsQueryResult result) {
+    private void gotResult(DnsQueryResult result) {
         if (onResponseCallback != null) {
             onResponseCallback.onResponse(request, result);
         }

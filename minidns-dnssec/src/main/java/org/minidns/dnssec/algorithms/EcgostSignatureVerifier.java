@@ -40,7 +40,7 @@ class EcgostSignatureVerifier extends JavaSecSignatureVerifier {
             1
     );
 
-    public EcgostSignatureVerifier() throws NoSuchAlgorithmException {
+    EcgostSignatureVerifier() throws NoSuchAlgorithmException {
         super("ECGOST3410", "GOST3411withECGOST3410");
     }
 

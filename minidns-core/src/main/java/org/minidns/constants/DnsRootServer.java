@@ -72,7 +72,7 @@ public class DnsRootServer {
             Inet6Address inetAddress;
             String name = rootServerId + ".root-servers.net";
                 try {
-                    inetAddress = (Inet6Address) InetAddress.getByAddress(name, new byte[]{
+                    inetAddress = (Inet6Address) InetAddress.getByAddress(name, new byte[] {
                             // @formatter:off
                             (byte) (addr0 >> 8), (byte) addr0, (byte) (addr1 >> 8), (byte) addr1,
                             (byte) (addr2 >> 8), (byte) addr2, (byte) (addr3 >> 8), (byte) addr3,

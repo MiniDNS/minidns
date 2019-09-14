@@ -33,11 +33,11 @@ abstract class EcdsaSignatureVerifier extends JavaSecSignatureVerifier {
     private final ECParameterSpec spec;
     private final int length;
 
-    public EcdsaSignatureVerifier(BigInteger[] spec, int length, String algorithm) throws NoSuchAlgorithmException {
+    EcdsaSignatureVerifier(BigInteger[] spec, int length, String algorithm) throws NoSuchAlgorithmException {
         this(new ECParameterSpec(new EllipticCurve(new ECFieldFp(spec[0]), spec[1], spec[2]), new ECPoint(spec[3], spec[4]), spec[5], 1), length, algorithm);
     }
 
-    public EcdsaSignatureVerifier(ECParameterSpec spec, int length, String algorithm) throws NoSuchAlgorithmException {
+    EcdsaSignatureVerifier(ECParameterSpec spec, int length, String algorithm) throws NoSuchAlgorithmException {
         super("EC", algorithm);
         this.length = length;
         this.spec = spec;
@@ -111,7 +111,7 @@ abstract class EcdsaSignatureVerifier extends JavaSecSignatureVerifier {
                 new BigInteger("FFFFFFFF00000000FFFFFFFFFFFFFFFFBCE6FAADA7179E84F3B9CAC2FC632551", 16)
         };
 
-        public P256SHA256() throws NoSuchAlgorithmException {
+        P256SHA256() throws NoSuchAlgorithmException {
             super(SPEC, 32, "SHA256withECDSA");
         }
     }
@@ -126,7 +126,7 @@ abstract class EcdsaSignatureVerifier extends JavaSecSignatureVerifier {
                 new BigInteger("FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFC7634D81F4372DDF581A0DB248B0A77AECEC196ACCC52973", 16)
         };
 
-        public P384SHA284() throws NoSuchAlgorithmException {
+        P384SHA284() throws NoSuchAlgorithmException {
             super(SPEC, 48, "SHA384withECDSA");
         }
     }

@@ -24,7 +24,7 @@ import java.security.spec.InvalidKeySpecException;
 import java.security.spec.RSAPublicKeySpec;
 
 class RsaSignatureVerifier extends JavaSecSignatureVerifier {
-    public RsaSignatureVerifier(String algorithm) throws NoSuchAlgorithmException {
+    RsaSignatureVerifier(String algorithm) throws NoSuchAlgorithmException {
         super("RSA", algorithm);
     }
 

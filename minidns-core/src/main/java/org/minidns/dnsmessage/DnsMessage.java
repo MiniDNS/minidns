@@ -59,7 +59,7 @@ public class DnsMessage {
      *      IANA Domain Name System (DNS) Paramters - DNS RCODEs</a>
      * @see <a href="http://tools.ietf.org/html/rfc6895#section-2.3">RFC 6895 § 2.3</a>
      */
-    public static enum RESPONSE_CODE {
+    public enum RESPONSE_CODE {
         NO_ERROR(0),
         FORMAT_ERR(1),
         SERVER_FAIL(2),
@@ -84,7 +84,7 @@ public class DnsMessage {
         /**
          * Reverse lookup table for response codes.
          */
-        private final static Map<Integer, RESPONSE_CODE> INVERSE_LUT = new HashMap<>(RESPONSE_CODE.values().length);
+        private static final Map<Integer, RESPONSE_CODE> INVERSE_LUT = new HashMap<>(RESPONSE_CODE.values().length);
 
         static {
             for (RESPONSE_CODE responseCode : RESPONSE_CODE.values()) {
@@ -102,7 +102,7 @@ public class DnsMessage {
          *
          * @param value The response code value.
          */
-        private RESPONSE_CODE(int value) {
+        RESPONSE_CODE(int value) {
             this.value = (byte) value;
         }
 
@@ -138,7 +138,7 @@ public class DnsMessage {
      *      "http://www.iana.org/assignments/dns-parameters/dns-parameters.xhtml#dns-parameters-5">
      *      IANA Domain Name System (DNS) Paramters - DNS OpCodes</a>
      */
-    public static enum OPCODE {
+    public enum OPCODE {
         QUERY,
         INVERSE_QUERY,
         STATUS,
@@ -150,7 +150,7 @@ public class DnsMessage {
         /**
          * Lookup table for for opcode resolution.
          */
-        private final static OPCODE INVERSE_LUT[] = new OPCODE[OPCODE.values().length];
+        private static final OPCODE[] INVERSE_LUT = new OPCODE[OPCODE.values().length];
 
         static {
             for (OPCODE opcode : OPCODE.values()) {
@@ -170,7 +170,7 @@ public class DnsMessage {
          * Create a new opcode for a given byte value.
          *
          */
-        private OPCODE() {
+        OPCODE() {
             this.value = (byte) this.ordinal();
         }
 
@@ -386,7 +386,7 @@ public class DnsMessage {
      * @param data The DNS message data.
      * @throws IOException On read errors.
      */
-    public DnsMessage(byte data[]) throws IOException {
+    public DnsMessage(byte[] data) throws IOException {
         ByteArrayInputStream bis = new ByteArrayInputStream(data);
         DataInputStream dis = new DataInputStream(bis);
         id = dis.readUnsignedShort();
@@ -820,7 +820,6 @@ public class DnsMessage {
         answer,
         authority,
         additional,
-        ;
     }
 
     private <D extends Data> List<Record<D>> filterSectionByType(boolean stopOnFirst, SectionName sectionName, Class<D> type) {
@@ -909,7 +908,7 @@ public class DnsMessage {
         return new DnsMessage.Builder();
     }
 
-    public static class Builder {
+    public static final class Builder {
 
         private Builder() {
         }

@@ -30,7 +30,7 @@ import java.security.cert.X509Certificate;
 import java.util.logging.Logger;
 
 public class DaneExtendedTrustManager extends X509ExtendedTrustManager {
-    private final static Logger LOGGER = Logger.getLogger(DaneExtendedTrustManager.class.getName());
+    private static final Logger LOGGER = Logger.getLogger(DaneExtendedTrustManager.class.getName());
 
     private final X509TrustManager base;
     private final DaneVerifier verifier;
@@ -42,7 +42,7 @@ public class DaneExtendedTrustManager extends X509ExtendedTrustManager {
     public static void inject(DaneExtendedTrustManager trustManager) {
         try {
             SSLContext sslContext = SSLContext.getInstance("TLS");
-            sslContext.init(null, new TrustManager[]{trustManager}, null);
+            sslContext.init(null, new TrustManager[] {trustManager}, null);
             SSLContext.setDefault(sslContext);
         } catch (NoSuchAlgorithmException | KeyManagementException e) {
             throw new RuntimeException(e);

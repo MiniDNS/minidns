@@ -37,7 +37,7 @@ public final class Record<D extends Data> {
      *      "http://www.iana.org/assignments/dns-parameters/dns-parameters.xhtml#dns-parameters-4">
      *      IANA DNS Parameters - Resource Record (RR) TYPEs</a>
      */
-    public static enum TYPE {
+    public enum TYPE {
         UNKNOWN(-1),
         A(1, A.class),
         NS(2, NS.class),
@@ -133,13 +133,13 @@ public final class Record<D extends Data> {
         /**
          * Internal lookup table to map values to types.
          */
-        private final static Map<Integer, TYPE> INVERSE_LUT = new HashMap<>();
+        private static final Map<Integer, TYPE> INVERSE_LUT = new HashMap<>();
 
-        private final static Map<Class<?>, TYPE> DATA_LUT = new HashMap<>();
+        private static final Map<Class<?>, TYPE> DATA_LUT = new HashMap<>();
 
         static {
             // Initialize the reverse lookup table.
-            for(TYPE t: TYPE.values()) {
+            for (TYPE t : TYPE.values()) {
                 INVERSE_LUT.put(t.getValue(), t);
                 if (t.dataClass != null) {
                     DATA_LUT.put(t.dataClass, t);
@@ -152,7 +152,7 @@ public final class Record<D extends Data> {
          * 
          * @param value The binary value of this type.
          */
-        private TYPE(int value) {
+        TYPE(int value) {
             this(value, null);
         }
 
@@ -163,7 +163,7 @@ public final class Record<D extends Data> {
          * @param dataClass The class for this type.
          * @param value The binary value of this type.
          */
-        private <D extends Data> TYPE(int value, Class<D> dataClass) {
+        <D extends Data> TYPE(int value, Class<D> dataClass) {
             this.value = value;
             this.dataClass = dataClass;
         }
@@ -215,7 +215,7 @@ public final class Record<D extends Data> {
      *
      * @see <a href="http://www.iana.org/assignments/dns-parameters/dns-parameters.xhtml#dns-parameters-2">IANA Domain Name System (DNS) Parameters - DNS CLASSes</a>
      */
-    public static enum CLASS {
+    public enum CLASS {
 
         /**
          * The Internet class. This is the most common class used by todays DNS systems.
@@ -238,12 +238,12 @@ public final class Record<D extends Data> {
          * Internal reverse lookup table to map binary class values to symbolic
          * names.
          */
-        private final static HashMap<Integer, CLASS> INVERSE_LUT =
+        private static final HashMap<Integer, CLASS> INVERSE_LUT =
                                             new HashMap<Integer, CLASS>();
 
         static {
             // Initialize the interal reverse lookup table.
-            for(CLASS c: CLASS.values()) {
+            for (CLASS c : CLASS.values()) {
                 INVERSE_LUT.put(c.getValue(), c);
             }
         }
@@ -257,7 +257,7 @@ public final class Record<D extends Data> {
          * Create a new DNS class based on a binary value.
          * @param value The binary value of this DNS class.
          */
-        private CLASS(int value) {
+        CLASS(int value) {
             this.value = value;
         }
 
@@ -334,7 +334,7 @@ public final class Record<D extends Data> {
         int clazzValue = dis.readUnsignedShort();
         CLASS clazz = CLASS.getClass(clazzValue & 0x7fff);
         boolean unicastQuery = (clazzValue & 0x8000) > 0;
-        long ttl = (((long)dis.readUnsignedShort()) << 16) +
+        long ttl = (((long) dis.readUnsignedShort()) << 16) +
                    dis.readUnsignedShort();
         int payloadLength = dis.readUnsignedShort();
         Data payloadData;

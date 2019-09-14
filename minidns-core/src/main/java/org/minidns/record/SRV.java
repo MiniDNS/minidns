@@ -52,8 +52,7 @@ public class SRV extends Data implements Comparable<SRV> {
     public final DnsName name;
 
     public static SRV parse(DataInputStream dis, byte[] data)
-        throws IOException
-    {
+        throws IOException {
         int priority = dis.readUnsignedShort();
         int weight = dis.readUnsignedShort();
         int port = dis.readUnsignedShort();

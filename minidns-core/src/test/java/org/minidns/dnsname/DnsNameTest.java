@@ -34,17 +34,17 @@ public class DnsNameTest {
 
     @Test
     public void toByteArrayTest() {
-        assertArrayEquals(new byte[]{0}, DnsName.from("").getBytes());
-        assertArrayEquals(new byte[]{7, 'e', 'x', 'a', 'm', 'p', 'l', 'e', 0}, DnsName.from("example").getBytes());
-        assertArrayEquals(new byte[]{7, 'e', 'x', 'a', 'm', 'p', 'l', 'e', 3, 'c', 'o', 'm', 0}, DnsName.from("example.com").getBytes());
-        assertArrayEquals(new byte[]{14, 'x', 'n', '-', '-', 'd', 'm', 'i', 'n', '-', 'm', 'o', 'a', '0', 'i', 0}, DnsName.from("dömäin").getBytes());
+        assertArrayEquals(new byte[] {0}, DnsName.from("").getBytes());
+        assertArrayEquals(new byte[] {7, 'e', 'x', 'a', 'm', 'p', 'l', 'e', 0}, DnsName.from("example").getBytes());
+        assertArrayEquals(new byte[] {7, 'e', 'x', 'a', 'm', 'p', 'l', 'e', 3, 'c', 'o', 'm', 0}, DnsName.from("example.com").getBytes());
+        assertArrayEquals(new byte[] {14, 'x', 'n', '-', '-', 'd', 'm', 'i', 'n', '-', 'm', 'o', 'a', '0', 'i', 0}, DnsName.from("dömäin").getBytes());
     }
 
     @Test
     public void parseTest() throws IOException {
-        byte[] test = new byte[]{7, 'e', 'x', 'a', 'm', 'p', 'l', 'e', 0};
+        byte[] test = new byte[] {7, 'e', 'x', 'a', 'm', 'p', 'l', 'e', 0};
         assertCsEquals("example", DnsName.parse(new DataInputStream(new ByteArrayInputStream(test)), test));
-        test = new byte[]{7, 'e', 'x', 'a', 'm', 'p', 'l', 'e', 3, 'c', 'o', 'm', 0};
+        test = new byte[] {7, 'e', 'x', 'a', 'm', 'p', 'l', 'e', 3, 'c', 'o', 'm', 0};
         assertCsEquals("example.com", DnsName.parse(new DataInputStream(new ByteArrayInputStream(test)), test));
     }
 

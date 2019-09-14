@@ -49,9 +49,9 @@ public class OPT extends Data {
                 dis.read(optionData);
                 EdnsOption ednsOption = EdnsOption.parse(optionCode, optionData);
                 variablePart.add(ednsOption);
-                payloadLeft -= (2 + 2 + optionLength);
+                payloadLeft -= 2 + 2 + optionLength;
                 // Assert that payloadLeft never becomes negative
-                assert(payloadLeft >= 0);
+                assert payloadLeft >= 0;
             }
         }
         return new OPT(variablePart);

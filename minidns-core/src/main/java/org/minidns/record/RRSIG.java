@@ -124,13 +124,15 @@ public class RRSIG extends Data {
     public RRSIG(TYPE typeCovered, SignatureAlgorithm algorithm, byte labels,
             long originalTtl, Date signatureExpiration, Date signatureInception,
             int keyTag, DnsName signerName, byte[] signature) {
-        this(typeCovered,algorithm.number, labels, originalTtl, signatureExpiration, signatureInception, keyTag, signerName, signature);
+        this(typeCovered, algorithm.number, labels, originalTtl, signatureExpiration, signatureInception,
+                keyTag, signerName, signature);
     }
 
     public RRSIG(TYPE typeCovered, SignatureAlgorithm algorithm, byte labels,
             long originalTtl, Date signatureExpiration, Date signatureInception,
             int keyTag, String signerName, byte[] signature) {
-        this(typeCovered,algorithm.number, labels, originalTtl, signatureExpiration, signatureInception, keyTag, DnsName.from(signerName), signature);
+        this(typeCovered, algorithm.number, labels, originalTtl, signatureExpiration, signatureInception,
+                keyTag, DnsName.from(signerName), signature);
     }
 
     public byte[] getSignature() {
@@ -170,8 +172,8 @@ public class RRSIG extends Data {
         dos.writeByte(algorithmByte);
         dos.writeByte(labels);
         dos.writeInt((int) originalTtl);
-        dos.writeInt((int) (signatureExpiration.getTime()/1000));
-        dos.writeInt((int) (signatureInception.getTime()/1000));
+        dos.writeInt((int) (signatureExpiration.getTime() / 1000));
+        dos.writeInt((int) (signatureInception.getTime() / 1000));
         dos.writeShort(keyTag);
         signerName.writeToStream(dos);
     }

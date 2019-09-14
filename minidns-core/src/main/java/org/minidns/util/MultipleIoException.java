@@ -16,7 +16,7 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
-public class MultipleIoException extends IOException {
+public final class MultipleIoException extends IOException {
 
     /**
      * 
@@ -27,7 +27,7 @@ public class MultipleIoException extends IOException {
 
     private MultipleIoException(List<? extends IOException> ioExceptions) {
         super(getMessage(ioExceptions));
-        assert(!ioExceptions.isEmpty());
+        assert !ioExceptions.isEmpty();
         this.ioExceptions = Collections.unmodifiableList(ioExceptions);
     }
 

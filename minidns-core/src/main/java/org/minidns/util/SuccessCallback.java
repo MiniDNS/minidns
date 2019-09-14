@@ -12,6 +12,6 @@ package org.minidns.util;
 
 public interface SuccessCallback<T> {
 
-    public void onSuccess(T result);
+    void onSuccess(T result);
 
 }

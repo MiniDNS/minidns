@@ -93,7 +93,7 @@ public class NetworkDataSourceWithAccounting extends NetworkDataSource {
         return null;
     }
 
-    public static class Stats {
+    public static final class Stats {
         public final int successfulQueries;
         public final int responseSize;
         public final int averageResponseSize;

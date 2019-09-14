@@ -87,7 +87,7 @@ public class DnsMessageTest {
         assertTrue(cname.getPayload() instanceof RRWithTarget);
         assertEquals(TYPE.CNAME, cname.getPayload().getType());
         assertCsEquals("legacy-sun.oraclegha.com",
-                     ((RRWithTarget)(cname.getPayload())).target);
+                     ((RRWithTarget) (cname.getPayload())).target);
 
         assertCsEquals("legacy-sun.oraclegha.com", a.name);
         assertTrue(a.getPayload() instanceof A);
@@ -117,12 +117,12 @@ public class DnsMessageTest {
         List<Record<? extends Data>> answers = m.answerSection;
         assertEquals(5, answers.size());
         Map<Integer, DnsName> mxes = new TreeMap<>();
-        for(Record<? extends Data> r : answers) {
+        for (Record<? extends Data> r : answers) {
             assertCsEquals("gmail.com", r.name);
             Data d = r.getPayload();
             assertTrue(d instanceof MX);
             assertEquals(TYPE.MX, d.getType());
-            mxes.put(((MX)d).priority, ((MX)d).target);
+            mxes.put(((MX) d).priority, ((MX) d).target);
         }
         assertCsEquals("gmail-smtp-in.l.google.com", mxes.get(5));
         assertCsEquals("alt1.gmail-smtp-in.l.google.com", mxes.get(10));
@@ -141,7 +141,7 @@ public class DnsMessageTest {
         Record<? extends Data> answer = answers.get(0);
         assertTrue(answer.getPayload() instanceof SRV);
         assertEquals(TYPE.SRV, answer.getPayload().getType());
-        SRV r = (SRV)(answer.getPayload());
+        SRV r = (SRV) (answer.getPayload());
         assertCsEquals("raven.toroid.org", r.target);
         assertEquals(5222, r.port);
         assertEquals(0, r.priority);
@@ -155,12 +155,12 @@ public class DnsMessageTest {
         txtToBeFound.add("keybase-site-verification=dKxf6T30x5EbNIUpeJcbWxUABJEnVWzQ3Z3hCumnk10");
         txtToBeFound.add("v=spf1 include:spf.mandrillapp.com ~all");
         List<Record<? extends Data>> answers = m.answerSection;
-        for(Record<? extends Data> r : answers) {
+        for (Record<? extends Data> r : answers) {
             assertCsEquals("codinghorror.com", r.name);
             Data d = r.getPayload();
             assertTrue(d instanceof TXT);
             assertEquals(TYPE.TXT, d.getType());
-            TXT txt = (TXT)d;
+            TXT txt = (TXT) d;
             assertTrue(txtToBeFound.contains(txt.getText()));
             txtToBeFound.remove(txt.getText());
         }
@@ -360,15 +360,15 @@ public class DnsMessageTest {
                 switch (record.name.ace) {
                     case "CK0POJMG874LJREF7EFN8430QVIT8BSM.com":
                         assertCsEquals("CK0QFMDQRCSRU0651QLVA1JQB21IF7UR", nsec3.getNextHashedBase32());
-                        assertArrayContentEquals(new TYPE[]{TYPE.NS, TYPE.SOA, TYPE.RRSIG, TYPE.DNSKEY, TYPE.NSEC3PARAM}, nsec3.types);
+                        assertArrayContentEquals(new TYPE[] {TYPE.NS, TYPE.SOA, TYPE.RRSIG, TYPE.DNSKEY, TYPE.NSEC3PARAM}, nsec3.types);
                         break;
                     case "V2I33UBTHNVNSP9NS85CURCLSTFPTE24.com":
                         assertCsEquals("V2I4KPUS7NGDML5EEJU3MVHO26GKB6PA", nsec3.getNextHashedBase32());
-                        assertArrayContentEquals(new TYPE[]{TYPE.NS, TYPE.DS, TYPE.RRSIG}, nsec3.types);
+                        assertArrayContentEquals(new TYPE[] {TYPE.NS, TYPE.DS, TYPE.RRSIG}, nsec3.types);
                         break;
                     case "3RL20VCNK6KV8OT9TDIJPI0JU1SS6ONS.com":
                         assertCsEquals("3RL3UFVFRUE94PV5888AIC2TPS0JA9V2", nsec3.getNextHashedBase32());
-                        assertArrayContentEquals(new TYPE[]{TYPE.NS, TYPE.DS, TYPE.RRSIG}, nsec3.types);
+                        assertArrayContentEquals(new TYPE[] {TYPE.NS, TYPE.DS, TYPE.RRSIG}, nsec3.types);
                         break;
                 }
             }

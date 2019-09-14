@@ -47,7 +47,7 @@ import java.util.logging.Logger;
  * A helper class to validate the usage of TLSA records.
  */
 public class DaneVerifier {
-    private final static Logger LOGGER = Logger.getLogger(DaneVerifier.class.getName());
+    private static final Logger LOGGER = Logger.getLogger(DaneVerifier.class.getName());
 
     private final DnssecClient client;
 
@@ -249,7 +249,7 @@ public class DaneVerifier {
         try {
             SSLContext context = SSLContext.getInstance("TLS");
             ExpectingTrustManager expectingTrustManager = new ExpectingTrustManager(trustManager);
-            context.init(null, new TrustManager[]{expectingTrustManager}, null);
+            context.init(null, new TrustManager[] {expectingTrustManager}, null);
             conn.setSSLSocketFactory(context.getSocketFactory());
             conn.connect();
             boolean fullyVerified = verifyCertificateChain(convert(conn.getServerCertificates()), conn.getURL().getHost(),

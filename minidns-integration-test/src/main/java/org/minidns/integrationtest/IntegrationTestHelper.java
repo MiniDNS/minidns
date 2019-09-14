@@ -36,7 +36,6 @@ public class IntegrationTestHelper {
     enum TestResult {
         Success,
         Failure,
-        ;
     }
 
     static {

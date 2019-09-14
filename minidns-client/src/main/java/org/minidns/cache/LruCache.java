@@ -65,8 +65,7 @@ public class LruCache extends DnsCache {
         this.capacity = capacity;
         this.maxTTL = maxTTL;
         backend = new LinkedHashMap<DnsMessage, CachedDnsQueryResult>(
-                Math.min(capacity + (capacity + 3) / 4 + 2, 11), 0.75f, true)
-            {
+                Math.min(capacity + (capacity + 3) / 4 + 2, 11), 0.75f, true) {
                 @Override
                 protected boolean removeEldestEntry(
                         Entry<DnsMessage, CachedDnsQueryResult> eldest) {

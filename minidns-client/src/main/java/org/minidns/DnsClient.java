@@ -283,7 +283,7 @@ public class DnsClient extends AbstractDnsClient {
                 continue;
             }
 
-            assert(!res.isEmpty());
+            assert !res.isEmpty();
 
             // We could cache if res only contains IP addresses and avoid the verification in case. Not sure if its really that beneficial
             // though, because the list returned by the server mechanism is rather short.
@@ -351,7 +351,7 @@ public class DnsClient extends AbstractDnsClient {
             // The following invariant must hold: "dnsServerString is a IP address". Therefore findDNS() must only return a List of Strings
             // representing IP addresses. Otherwise the following call of getByName(String) may perform a DNS lookup without MiniDNS being
             // involved. Something we want to avoid.
-            assert (InetAddressUtil.isIpAddress(dnsServerString));
+            assert InetAddressUtil.isIpAddress(dnsServerString);
 
             InetAddress dnsServerAddress;
             try {

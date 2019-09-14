@@ -45,7 +45,7 @@ public abstract class LdhLabel extends DnsLabel {
     }
 
     protected static LdhLabel fromInternal(String label) {
-        assert (isLdhLabel(label));
+        assert isLdhLabel(label);
 
         if (ReservedLdhLabel.isReservedLdhLabel(label)) {
             // Label starts with '??--'. Now let us see if it is a XN-Label, starting with 'xn--', but be aware that the

@@ -16,7 +16,7 @@ import java.io.IOException;
 
 import org.minidns.record.Record.TYPE;
 
-public class UNKNOWN extends Data {
+public final class UNKNOWN extends Data {
 
     private final TYPE type;
     private final byte[] data;

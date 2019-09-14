@@ -15,7 +15,7 @@ import java.util.Set;
 
 import org.minidns.MiniDnsException;
 
-public class DnssecResultNotAuthenticException extends MiniDnsException {
+public final class DnssecResultNotAuthenticException extends MiniDnsException {
 
     /**
      * 

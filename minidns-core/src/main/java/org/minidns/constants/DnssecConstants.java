@@ -47,7 +47,7 @@ public final class DnssecConstants {
         PRIVATEOID(254, "private algorithm oid"),
         ;
 
-        private SignatureAlgorithm(int number, String description) {
+        SignatureAlgorithm(int number, String description) {
             if (number < 0 || number > 255) {
                 throw new IllegalArgumentException();
             }
@@ -80,7 +80,7 @@ public final class DnssecConstants {
         SHA384(4, "SHA-384"),
         ;
 
-        private DigestAlgorithm(int value, String description) {
+        DigestAlgorithm(int value, String description) {
             if (value < 0 || value > 255) {
                 throw new IllegalArgumentException();
             }

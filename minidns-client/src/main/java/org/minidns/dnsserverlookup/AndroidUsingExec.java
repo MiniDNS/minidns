@@ -28,7 +28,7 @@ import java.util.logging.Level;
 /**
  * Try to retrieve the list of DNS server by executing getprop.
  */
-public class AndroidUsingExec extends AbstractDnsServerLookupMechanism {
+public final class AndroidUsingExec extends AbstractDnsServerLookupMechanism {
 
     public static final DnsServerLookupMechanism INSTANCE = new AndroidUsingExec();
     public static final int PRIORITY = AndroidUsingReflection.PRIORITY - 1;

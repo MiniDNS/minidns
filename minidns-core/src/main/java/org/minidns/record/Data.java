@@ -39,7 +39,7 @@ public abstract class Data {
 
     private byte[] bytes;
 
-    private final void setBytes() {
+    private void setBytes() {
         if (bytes != null) return;
 
         ByteArrayOutputStream baos = new ByteArrayOutputStream();

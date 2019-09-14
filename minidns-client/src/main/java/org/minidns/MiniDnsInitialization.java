@@ -30,7 +30,7 @@ public class MiniDnsInitialization {
             InputStream is = MiniDnsInitialization.class.getClassLoader().getResourceAsStream("org.minidns/version");
             reader = new BufferedReader(new InputStreamReader(is));
             miniDnsVersion = reader.readLine();
-        } catch(Exception e) {
+        } catch (Exception e) {
             LOGGER.log(Level.SEVERE, "Could not determine MiniDNS version", e);
             miniDnsVersion = "unkown";
         } finally {

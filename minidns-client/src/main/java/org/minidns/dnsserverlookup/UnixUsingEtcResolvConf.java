@@ -24,7 +24,7 @@ import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class UnixUsingEtcResolvConf extends AbstractDnsServerLookupMechanism {
+public final class UnixUsingEtcResolvConf extends AbstractDnsServerLookupMechanism {
 
     public static final DnsServerLookupMechanism INSTANCE = new UnixUsingEtcResolvConf();
     public static final int PRIORITY = 2000;

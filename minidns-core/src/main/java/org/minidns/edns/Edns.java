@@ -49,7 +49,7 @@ public class Edns {
         private static Map<Integer, OptionCode> INVERSE_LUT = new HashMap<>(OptionCode.values().length);
 
         static {
-            for (OptionCode optionCode: OptionCode.values()) {
+            for (OptionCode optionCode : OptionCode.values()) {
                 INVERSE_LUT.put(optionCode.asInt, optionCode);
             }
         }
@@ -99,7 +99,7 @@ public class Edns {
     private Record<OPT> optRecord;
 
     public Edns(Record<OPT> optRecord) {
-        assert (optRecord.type == TYPE.OPT);
+        assert optRecord.type == TYPE.OPT;
         udpPayloadSize = optRecord.clazzValue;
         extendedRcode = (int) ((optRecord.ttl >> 8) & 0xff);
         version = (int) ((optRecord.ttl >> 16) & 0xff);
@@ -142,8 +142,8 @@ public class Edns {
     public Record<OPT> asRecord() {
         if (optRecord == null) {
             long optFlags = flags;
-            optFlags |= (extendedRcode << 8);
-            optFlags |= (version << 16);
+            optFlags |= extendedRcode << 8;
+            optFlags |= version << 16;
             optRecord = new Record<OPT>(DnsName.ROOT, Record.TYPE.OPT, udpPayloadSize, optFlags, new OPT(variablePart));
         }
         return optRecord;
@@ -192,7 +192,7 @@ public class Edns {
         return new Builder();
     }
 
-    public static class Builder {
+    public static final class Builder {
         private int udpPayloadSize;
         private int extendedRcode;
         private int version;

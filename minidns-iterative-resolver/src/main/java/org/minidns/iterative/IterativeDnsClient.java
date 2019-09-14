@@ -337,10 +337,10 @@ public class IterativeDnsClient extends AbstractDnsClient {
             }
             switch (record.type) {
             case A:
-                res.ipv4Addresses.add(inetAddressFromRecord(name.ace, ((A) record.payloadData)));
+                res.ipv4Addresses.add(inetAddressFromRecord(name.ace, (A) record.payloadData));
                 break;
             case AAAA:
-                res.ipv6Addresses.add(inetAddressFromRecord(name.ace, ((AAAA) record.payloadData)));
+                res.ipv6Addresses.add(inetAddressFromRecord(name.ace, (AAAA) record.payloadData));
                 break;
             }
         }
@@ -420,7 +420,7 @@ public class IterativeDnsClient extends AbstractDnsClient {
         return new IpResultSet.Builder(this.insecureRandom);
     }
 
-    private static class IpResultSet {
+    private static final class IpResultSet {
 
         final List<InetAddress> addresses;
 
@@ -477,7 +477,7 @@ public class IterativeDnsClient extends AbstractDnsClient {
             }
         }
 
-        private static class Builder {
+        private static final class Builder {
             private final Random random;
             private final List<InetAddress> ipv4Addresses = new ArrayList<>(8);
             private final List<InetAddress> ipv6Addresses = new ArrayList<>(8);

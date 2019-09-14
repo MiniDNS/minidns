@@ -23,7 +23,7 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-public class AlgorithmMap {
+public final class AlgorithmMap {
     private Logger LOGGER = Logger.getLogger(AlgorithmMap.class.getName());
 
     public static final AlgorithmMap INSTANCE = new AlgorithmMap();

@@ -134,7 +134,7 @@ public class SrvResolverResult extends ResolverResult<SRV> {
         return !singleAnswer.isServiceAvailable();
     }
 
-    public static class ResolvedSrvRecord {
+    public static final class ResolvedSrvRecord {
         public final DnsName name;
         public final SrvServiceProto srvServiceProto;
         public final SRV srv;
@@ -191,7 +191,7 @@ public class SrvResolverResult extends ResolverResult<SRV> {
         }
 
         List<SRV> sortedSrvs = SrvUtil.sortSrvRecords(srvToSort);
-        assert(sortedSrvs.size() == srvRecordsCount);
+        assert sortedSrvs.size() == srvRecordsCount;
 
         List<ResolvedSrvRecord> res = new ArrayList<>(srvRecordsCount);
         for (SRV sortedSrv : sortedSrvs) {

@@ -64,7 +64,7 @@ public class SrvUtil {
             // value in the 'total' array. This ensures that its weight is taken into account.
             int bucketSize;
             while ((bucketSize = bucket.size()) > 0) {
-                int totals[] = new int[bucketSize];
+                int[] totals = new int[bucketSize];
 
                 int zeroWeight = 1;
                 for (SRV srv : bucket) {
@@ -76,7 +76,7 @@ public class SrvUtil {
 
                 int bucketWeightSum = 0, count = 0;
                 for (SRV srv : bucket) {
-                    bucketWeightSum += (srv.weight + zeroWeight);
+                    bucketWeightSum += srv.weight + zeroWeight;
                     totals[count++] = bucketWeightSum;
                 }
 

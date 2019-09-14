@@ -61,7 +61,7 @@ public class VerifierTest {
 
     @Test
     public void testVerifyNsec3() {
-        byte[] bytes = new byte[]{0x3f, (byte) 0xb1, (byte) 0xd0, (byte) 0xaa, 0x27, (byte) 0xe2, 0x5f, (byte) 0xda, 0x40, 0x75, (byte) 0x92, (byte) 0x95, 0x5a, 0x1c, 0x7f, (byte) 0x98, (byte) 0xdb, 0x5b, 0x79, (byte) 0x91};
+        byte[] bytes = new byte[] {0x3f, (byte) 0xb1, (byte) 0xd0, (byte) 0xaa, 0x27, (byte) 0xe2, 0x5f, (byte) 0xda, 0x40, 0x75, (byte) 0x92, (byte) 0x95, 0x5a, 0x1c, 0x7f, (byte) 0x98, (byte) 0xdb, 0x5b, 0x79, (byte) 0x91};
         Record<NSEC3> nsec3Record = record("7UO4LIHALHHLNGLJAFT7TBIQ6H1SL1CN.net", nsec3((byte) 1, (byte) 1, 0, new byte[0], bytes, TYPE.NS, TYPE.SOA, TYPE.RRSIG, TYPE.DNSKEY, TYPE.NSEC3PARAM)).as(NSEC3.class);
         DnsName zone = DnsName.from("net");
         assertNull(Verifier.verifyNsec3(zone, nsec3Record, new Question("x.net", TYPE.A)));
@@ -71,6 +71,6 @@ public class VerifierTest {
     @Test
     public void testNsec3hash() throws Exception {
         JavaSecDigestCalculator digestCalculator = new JavaSecDigestCalculator("SHA-1");
-        assertEquals("6e8777855bcd60d7b45fc51893776dde75bf6cd4", new BigInteger(1, Verifier.nsec3hash(digestCalculator, new byte[]{42}, new byte[]{88}, 5)).toString(16));
+        assertEquals("6e8777855bcd60d7b45fc51893776dde75bf6cd4", new BigInteger(1, Verifier.nsec3hash(digestCalculator, new byte[] {42}, new byte[] {88}, 5)).toString(16));
     }
 }

@@ -59,7 +59,7 @@ public class ExtendedLruCache extends LruCache {
     public void offer(DnsMessage query, DnsQueryResult result, DnsName authoritativeZone) {
         DnsMessage reply = result.response;
         // The reply shouldn't be an authoritative answers when offer() is used. That would be a case for put().
-        assert(!reply.authoritativeAnswer);
+        assert !reply.authoritativeAnswer;
 
         Map<DnsMessage, List<Record<? extends Data>>> extraCaches = new HashMap<>(reply.additionalSection.size());
 
@@ -70,7 +70,7 @@ public class ExtendedLruCache extends LruCache {
         putExtraCaches(result, extraCaches);
     }
 
-    private final void gather(Map<DnsMessage, List<Record<?extends Data>>> extraCaches, DnsMessage q, List<Record<? extends Data>> records, DnsName authoritativeZone) {
+    private void gather(Map<DnsMessage, List<Record<?extends Data>>> extraCaches, DnsMessage q, List<Record<? extends Data>> records, DnsName authoritativeZone) {
         for (Record<? extends Data> extraRecord : records) {
             if (!shouldGather(extraRecord, q.getQuestion(), authoritativeZone))
                 continue;
@@ -98,7 +98,7 @@ public class ExtendedLruCache extends LruCache {
         }
     }
 
-    private final void putExtraCaches(DnsQueryResult synthesynthesizationSource, Map<DnsMessage, List<Record<? extends Data>>> extraCaches) {
+    private void putExtraCaches(DnsQueryResult synthesynthesizationSource, Map<DnsMessage, List<Record<? extends Data>>> extraCaches) {
         DnsMessage reply = synthesynthesizationSource.response;
         for (Entry<DnsMessage, List<Record<? extends Data>>> entry : extraCaches.entrySet()) {
             DnsMessage question = entry.getKey();

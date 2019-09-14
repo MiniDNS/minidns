@@ -28,7 +28,7 @@ import java.security.spec.InvalidKeySpecException;
 class DsaSignatureVerifier extends JavaSecSignatureVerifier {
     private static final int LENGTH = 20;
 
-    public DsaSignatureVerifier(String algorithm) throws NoSuchAlgorithmException {
+    DsaSignatureVerifier(String algorithm) throws NoSuchAlgorithmException {
         super("DSA", algorithm);
     }
 

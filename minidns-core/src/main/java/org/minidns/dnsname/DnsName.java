@@ -40,7 +40,7 @@ import org.minidns.idna.MiniDnsIdna;
  * @author Florian Schmaus
  *
  */
-public class DnsName implements CharSequence, Serializable, Comparable<DnsName> {
+public final class DnsName implements CharSequence, Serializable, Comparable<DnsName> {
 
     /**
      * 
@@ -216,7 +216,7 @@ public class DnsName implements CharSequence, Serializable, Comparable<DnsName> 
 
         baos.write(0);
 
-        assert (baos.size() <= MAX_DNSNAME_LENGTH_IN_OCTETS);
+        assert baos.size() <= MAX_DNSNAME_LENGTH_IN_OCTETS;
 
         return baos.toByteArray();
     }
@@ -413,7 +413,7 @@ public class DnsName implements CharSequence, Serializable, Comparable<DnsName> 
      * @return The domain name string.
      * @throws IOException Should never happen.
      */
-    public static DnsName parse(DataInputStream dis, byte data[])
+    public static DnsName parse(DataInputStream dis, byte[] data)
             throws IOException {
         int c = dis.readUnsignedByte();
         if ((c & 0xc0) == 0xc0) {
@@ -425,7 +425,7 @@ public class DnsName implements CharSequence, Serializable, Comparable<DnsName> 
         if (c == 0) {
             return DnsName.ROOT;
         }
-        byte b[] = new byte[c];
+        byte[] b = new byte[c];
         dis.readFully(b);
 
         String childLabelString = new String(b);
@@ -444,7 +444,7 @@ public class DnsName implements CharSequence, Serializable, Comparable<DnsName> 
      * @return The parsed domain name.
      * @throws IllegalStateException on cycles.
      */
-    private static DnsName parse(byte data[], int offset, HashSet<Integer> jumps)
+    private static DnsName parse(byte[] data, int offset, HashSet<Integer> jumps)
             throws IllegalStateException {
         int c = data[offset] & 0xff;
         if ((c & 0xc0) == 0xc0) {

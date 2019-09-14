@@ -54,7 +54,7 @@ public class IterativeDnsClientTest {
         List<Record<? extends Data>> answers = message.answerSection;
         assertEquals(1, answers.size());
         assertEquals(TYPE.A, answers.get(0).type);
-        assertArrayEquals(new byte[]{1, 1, 1, 3}, ((A) answers.get(0).payloadData).getIp());
+        assertArrayEquals(new byte[] {1, 1, 1, 3}, ((A) answers.get(0).payloadData).getIp());
     }
 
     @SuppressWarnings("unchecked")
@@ -99,6 +99,6 @@ public class IterativeDnsClientTest {
         List<Record<? extends Data>> answers = message.answerSection;
         assertEquals(1, answers.size());
         assertEquals(TYPE.A, answers.get(0).type);
-        assertArrayEquals(new byte[]{1, 1, 1, 3}, ((A) answers.get(0).payloadData).getIp());
+        assertArrayEquals(new byte[] {1, 1, 1, 3}, ((A) answers.get(0).payloadData).getIp());
     }
 }

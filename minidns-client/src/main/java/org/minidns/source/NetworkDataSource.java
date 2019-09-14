@@ -67,7 +67,7 @@ public class NetworkDataSource extends AbstractDnsDataSource {
                 return new StandardDnsQueryResult(address, port, QueryMethod.udp, message, dnsMessage);
             }
 
-            assert (dnsMessage == null || dnsMessage.truncated || ioExceptions.size() == 1);
+            assert dnsMessage == null || dnsMessage.truncated || ioExceptions.size() == 1;
             LOGGER.log(Level.FINE, "Fallback to TCP because {0}",
                     new Object[] { dnsMessage != null ? "response is truncated" : ioExceptions.get(0) });
         }
@@ -123,7 +123,7 @@ public class NetworkDataSource extends AbstractDnsDataSource {
             byte[] data = new byte[length];
             int read = 0;
             while (read < length) {
-                read += dis.read(data, read, length-read);
+                read += dis.read(data, read, length - read);
             }
             DnsMessage dnsMessage = new DnsMessage(data);
             if (dnsMessage.id != message.id) {

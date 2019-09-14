@@ -18,7 +18,7 @@ public class ReservedLdhLabel extends LdhLabel {
 
     protected ReservedLdhLabel(String label) {
         super(label);
-        assert(isReservedLdhLabelInternal(label));
+        assert isReservedLdhLabelInternal(label);
     }
 
     public static boolean isReservedLdhLabel(String label) {

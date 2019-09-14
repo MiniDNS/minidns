@@ -18,7 +18,7 @@ import java.util.logging.Logger;
 
 public abstract class AbstractDnsServerLookupMechanism implements DnsServerLookupMechanism {
 
-    protected final static Logger LOGGER = Logger.getLogger(AbstractDnsServerLookupMechanism.class.getName());
+    protected static final Logger LOGGER = Logger.getLogger(AbstractDnsServerLookupMechanism.class.getName());
 
     private final String name;
     private final int priority;

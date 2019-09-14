@@ -12,8 +12,8 @@ package org.minidns.idna;
 
 public interface IdnaTransformator {
 
-    public String toASCII(String input);
+    String toASCII(String input);
 
-    public String toUnicode(String input);
+    String toUnicode(String input);
 
 }
