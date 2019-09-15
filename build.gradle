@@ -194,14 +194,24 @@ subprojects {
 		repositories {
 			maven {
 				url isSnapshot ? sonatypeSnapshotUrl : sonatypeStagingUrl
-				credentials {
-					username = sonatypeUsername
-					password = sonatypePassword
+				if (sonatypeCredentialsAvailable) {
+					credentials {
+						username = sonatypeUsername
+						password = sonatypePassword
+					}
 				}
 			}
 		}
 	}
 
+	// Workaround for gpg signatory not supporting the 'required' option
+	// See https://github.com/gradle/gradle/issues/5064#issuecomment-381924984
+	// Note what we use 'signing.gnupg.keyName' instead of 'signing.keyId'.
+	tasks.withType(Sign) {
+		onlyIf {
+			project.hasProperty('signing.gnupg.keyName')
+		}
+	}
 	signing {
 		required { signingRequired }
 		useGpgCmd()
