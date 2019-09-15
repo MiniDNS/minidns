@@ -38,7 +38,8 @@ allprojects {
 		gitCommit = getGitCommit()
 		builtDate = (new java.text.SimpleDateFormat("yyyy-MM-dd")).format(new Date())
 		isReleaseVersion = !isSnapshot
-		signingRequired = isReleaseVersion
+		isContinuousIntegrationEnvironment = Boolean.parseBoolean(System.getenv('CI'))
+		signingRequired = !(isSnapshot || isContinuousIntegrationEnvironment)
 		sonatypeCredentialsAvailable = project.hasProperty('sonatypeUsername') && project.hasProperty('sonatypePassword')
 		sonatypeSnapshotUrl = 'https://oss.sonatype.org/content/repositories/snapshots'
 		sonatypeStagingUrl = 'https://oss.sonatype.org/service/local/staging/deploy/maven2'
@@ -126,7 +127,7 @@ allprojects {
 }
 
 subprojects {
-	apply plugin: 'maven'
+	apply plugin: 'maven-publish'
 	apply plugin: 'signing'
 
 	task sourcesJar(type: Jar, dependsOn: classes) {
@@ -148,55 +149,54 @@ subprojects {
 		archives testJar
 	}
 
-	uploadArchives {
-		repositories {
-			mavenDeployer {
-				if (signingRequired) {
-					beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
-				}
-				repository(url: project.sonatypeStagingUrl) {
-					if (sonatypeCredentialsAvailable) {
-						authentication(userName: sonatypeUsername, password: sonatypePassword)
-					}
-				}
-				snapshotRepository(url: project.sonatypeSnapshotUrl) {
-					if (sonatypeCredentialsAvailable) {
-						authentication(userName: sonatypeUsername, password: sonatypePassword)
-					}
-				}
-
-				pom.project {
-					name 'minidns'
-					description 'A DNS library for Java and Android systems'
-					url 'https://github.com/minidns/minidns'
-					inceptionYear '2014'
+	publishing {
+		publications {
+			mavenJava(MavenPublication) {
+				from components.java
+				artifact sourcesJar
+				artifact javadocJar
+				artifact testJar
+				pom {
+					name = 'minidns'
+					description = 'A DNS library for Java and Android systems'
+					url = 'https://github.com/minidns/minidns'
+					inceptionYear = '2014'
 
 					scm {
-						url 'https://github.com/minidns/minidns'
-						connection 'scm:https://github.com/minidns/minidns'
-						developerConnection 'scm:git://github.com/minidns/minidns.git'
+						url = 'https://github.com/minidns/minidns'
+						connection = 'scm:https://github.com/minidns/minidns'
+						developerConnection = 'scm:git://github.com/minidns/minidns.git'
 					}
 
 					licenses {
 						license {
-							name 'The Apache Software License, Version 2.0'
-							url 'http://www.apache.org/licenses/LICENSE-2.0.txt'
-							distribution 'repo'
+							name = 'The Apache Software License, Version 2.0'
+							url = 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+							distribution = 'repo'
 						}
 					}
 
 					developers {
 						developer {
-							id 'rtreffer'
-							name 'Rene Treffer'
-							email 'treffer@measite.de'
+							id = 'rtreffer'
+							name = 'Rene Treffer'
+							email = 'treffer@measite.de'
 						}
 						developer {
-							id 'flow'
-							name 'Florian Schmaus'
-							email 'flow@geekplace.eu'
+							id = 'flow'
+							name = 'Florian Schmaus'
+							email = 'flow@geekplace.eu'
 						}
 					}
+				}
+			}
+		}
+		repositories {
+			maven {
+				url isSnapshot ? sonatypeSnapshotUrl : sonatypeStagingUrl
+				credentials {
+					username = sonatypeUsername
+					password = sonatypePassword
 				}
 			}
 		}
@@ -204,7 +204,8 @@ subprojects {
 
 	signing {
 		required { signingRequired }
-		sign configurations.archives
+		useGpgCmd()
+		sign publishing.publications.mavenJava
 	}
 }
 
@@ -216,23 +217,6 @@ configure(subprojects.findAll{!it.name.endsWith('-java7') && !it.name.endsWith('
    animalsniffer {
        sourceSets = [sourceSets.main]
    }
-}
-
-gradle.taskGraph.whenReady { taskGraph ->
-	if (signingRequired
-		&& taskGraph.allTasks.any { it instanceof Sign }) {
-		// Use Java 6's console to read from the console (no good for a CI environment)
-		def console = System.console()
-		if (console == null) {
-			throw new Exception("Could not obtain system console (Console is 'null'). Did you build with gradle daemon? Try the same Gradle command with \"--no-daemon\".")
-		}
-		console.printf '\n\nWe have to sign some things in this build.\n\nPlease enter your signing details.\n\n'
-		def password = console.readPassword('GnuPG Private Key Password: ')
-
-		allprojects { ext.'signing.password' = password }
-
-		console.printf '\nThanks.\n\n'
-	}
 }
 
 jar {
