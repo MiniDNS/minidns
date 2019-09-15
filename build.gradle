@@ -138,7 +138,7 @@ subprojects {
 		classifier = 'javadoc'
 		from javadoc.destinationDir
 	}
-	task testJar(type: Jar, dependsOn: testClasses) {
+	task testsJar(type: Jar, dependsOn: testClasses) {
 		classifier = 'tests'
 		from sourceSets.test.output
 	}
@@ -146,7 +146,7 @@ subprojects {
 	artifacts {
 		archives sourcesJar
 		archives javadocJar
-		archives testJar
+		archives testsJar
 	}
 
 	publishing {
@@ -155,7 +155,7 @@ subprojects {
 				from components.java
 				artifact sourcesJar
 				artifact javadocJar
-				artifact testJar
+				artifact testsJar
 				pom {
 					name = 'minidns'
 					description = 'A DNS library for Java and Android systems'
