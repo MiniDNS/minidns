@@ -7,7 +7,6 @@ ext {
 dependencies {
     compile project(':minidns-client')
     testCompile project(path: ":minidns-client", configuration: "testRuntime")
-    testCompile project(path: ":minidns-client", configuration: "archives")
 
 	// Add the Android jar to the Eclipse .classpath.
 	compile files(android21BootClasspath)

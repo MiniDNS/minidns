@@ -147,6 +147,8 @@ subprojects {
 		archives sourcesJar
 		archives javadocJar
 		archives testsJar
+		// See http://stackoverflow.com/a/21946676/194894
+		testRuntime testsJar
 	}
 
 	publishing {

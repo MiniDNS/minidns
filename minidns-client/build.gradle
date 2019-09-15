@@ -1,5 +1,4 @@
 dependencies {
 	compile project(':minidns-core')
     testCompile project(path: ":minidns-core", configuration: "testRuntime")
-    testCompile project(path: ":minidns-core", configuration: "archives")
 }
