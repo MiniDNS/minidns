@@ -6,9 +6,11 @@ android:
     - android-21
 jdk:
   - oraclejdk8
+  - openjdk9
+  - openjdk11
 
-install: gradle assemble
-script: gradle check
+install: gradle assemble --stacktrace
+script: gradle check publishToMavenLocal --stacktrace
 after_success:
   gradle jacocoRootReport coveralls
 before_cache:
@@ -17,6 +19,7 @@ cache:
   directories:
     - $HOME/.gradle/caches/
     - $HOME/.gradle/wrapper/
+    - $HOME/.m2
 
 before_install:
   - export GRADLE_VERSION=5.6.1
