@@ -26,21 +26,17 @@ import javax.net.ssl.SSLSession;
 import javax.net.ssl.SSLSocket;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
-import javax.security.cert.CertificateEncodingException;
 
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.security.KeyManagementException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.cert.Certificate;
 import java.security.cert.CertificateException;
-import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
@@ -84,7 +80,7 @@ public class DaneVerifier {
      */
     public boolean verify(SSLSession session) throws CertificateException {
         try {
-            return verifyCertificateChain(convert(session.getPeerCertificateChain()), session.getPeerHost(), session.getPeerPort());
+            return verifyCertificateChain(convert(session.getPeerCertificates()), session.getPeerHost(), session.getPeerPort());
         } catch (SSLPeerUnverifiedException e) {
             throw new CertificateException("Peer not verified", e);
         }
@@ -273,17 +269,5 @@ public class DaneVerifier {
             }
         }
         return certs.toArray(new X509Certificate[certs.size()]);
-    }
-
-    private static X509Certificate[] convert(javax.security.cert.X509Certificate[] certificates) {
-        X509Certificate[] certs = new X509Certificate[certificates.length];
-        for (int i = 0; i < certificates.length; i++) {
-            try {
-                certs[i] = (X509Certificate) CertificateFactory.getInstance("X.509").generateCertificate(new ByteArrayInputStream(certificates[i].getEncoded()));
-            } catch (CertificateException | CertificateEncodingException e) {
-                LOGGER.log(Level.WARNING, "Could not convert", e);
-            }
-        }
-        return certs;
     }
 }
