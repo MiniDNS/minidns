@@ -17,6 +17,7 @@ import org.minidns.record.NSEC3.HashAlgorithm;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigInteger;
+import java.nio.charset.StandardCharsets;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -47,6 +48,6 @@ public class DigestTest extends AlgorithmTest {
     }
 
     private static String digestHexString(DigestCalculator digestCalculator, String in) {
-        return new BigInteger(1, digestCalculator.digest(in.getBytes())).toString(16);
+        return new BigInteger(1, digestCalculator.digest(in.getBytes(StandardCharsets.UTF_8))).toString(16);
     }
 }

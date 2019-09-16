@@ -10,6 +10,8 @@
  */
 package org.minidns.edns;
 
+import java.nio.charset.StandardCharsets;
+
 import org.minidns.edns.Edns.OptionCode;
 import org.minidns.util.Hex;
 
@@ -33,7 +35,7 @@ public class Nsid extends EdnsOption {
     @Override
     protected CharSequence toStringInternal() {
         String res = OptionCode.NSID + ": ";
-        res += new String(optionData);
+        res += new String(optionData, StandardCharsets.US_ASCII);
         return res;
     }
 

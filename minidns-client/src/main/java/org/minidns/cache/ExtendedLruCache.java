@@ -42,6 +42,7 @@ public class ExtendedLruCache extends LruCache {
         super(capacity, maxTTL);
     }
 
+    @SuppressWarnings("UnsynchronizedOverridesSynchronized")
     @Override
     protected void putNormalized(DnsMessage q, DnsQueryResult result) {
         super.putNormalized(q, result);

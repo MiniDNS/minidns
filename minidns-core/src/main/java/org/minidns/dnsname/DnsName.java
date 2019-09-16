@@ -15,6 +15,7 @@ import java.io.DataInputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.Serializable;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Locale;
@@ -428,7 +429,7 @@ public final class DnsName implements CharSequence, Serializable, Comparable<Dns
         byte[] b = new byte[c];
         dis.readFully(b);
 
-        String childLabelString = new String(b);
+        String childLabelString = new String(b, StandardCharsets.US_ASCII);
         DnsName child = new DnsName(childLabelString);
 
         DnsName parent = parse(dis, data);
@@ -459,7 +460,7 @@ public final class DnsName implements CharSequence, Serializable, Comparable<Dns
             return DnsName.ROOT;
         }
 
-        String childLabelString = new String(data, offset + 1, c);
+        String childLabelString = new String(data, offset + 1, c, StandardCharsets.US_ASCII);
         DnsName child = new DnsName(childLabelString);
 
         DnsName parent = parse(data, offset + 1 + c, jumps);

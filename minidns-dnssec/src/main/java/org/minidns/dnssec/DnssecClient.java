@@ -102,11 +102,11 @@ public class DnssecClient extends ReliableDnsClient {
 
     public DnssecQueryResult queryDnssec(Question q) throws IOException {
         DnsQueryResult dnsQueryResult = super.query(q);
-        DnssecQueryResult dnssecQueryResult = performVerification(q, dnsQueryResult);
+        DnssecQueryResult dnssecQueryResult = performVerification(dnsQueryResult);
         return dnssecQueryResult;
     }
 
-    private DnssecQueryResult performVerification(Question q, DnsQueryResult dnsQueryResult) throws IOException {
+    private DnssecQueryResult performVerification(DnsQueryResult dnsQueryResult) throws IOException {
         if (dnsQueryResult == null) return null;
 
         DnsMessage dnsMessage = dnsQueryResult.response;
@@ -172,7 +172,7 @@ public class DnssecClient extends ReliableDnsClient {
             }
 
             // Verify all DNSKEYs as if it was a SEP. If we find a single SEP we are safe.
-            Set<DnssecUnverifiedReason> reasons = verifySecureEntryPoint(q, record);
+            Set<DnssecUnverifiedReason> reasons = verifySecureEntryPoint(record);
             if (reasons.isEmpty()) {
                 sepSignatureValid = true;
             } else {
@@ -272,7 +272,7 @@ public class DnssecClient extends ReliableDnsClient {
         return result;
     }
 
-    private class VerifySignaturesResult {
+    private static class VerifySignaturesResult {
         boolean sepSignatureRequired = false;
         boolean sepSignaturePresent = false;
         Set<DnssecUnverifiedReason> reasons = new HashSet<>();
@@ -401,7 +401,7 @@ public class DnssecClient extends ReliableDnsClient {
         return result;
     }
 
-    private Set<DnssecUnverifiedReason> verifySecureEntryPoint(Question q, final Record<DNSKEY> sepRecord) throws IOException {
+    private Set<DnssecUnverifiedReason> verifySecureEntryPoint(final Record<DNSKEY> sepRecord) throws IOException {
         final DNSKEY dnskey = sepRecord.payloadData;
 
         Set<DnssecUnverifiedReason> unverifiedReasons = new HashSet<>();

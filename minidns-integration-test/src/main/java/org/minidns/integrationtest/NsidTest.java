@@ -16,7 +16,7 @@ import java.net.InetAddress;
 import org.minidns.DnsClient;
 import org.minidns.dnsmessage.Question;
 import org.minidns.dnsqueryresult.DnsQueryResult;
-import org.minidns.dnsmessage.DnsMessage.Builder;
+import org.minidns.dnsmessage.DnsMessage;
 import org.minidns.edns.Nsid;
 import org.minidns.edns.Edns.OptionCode;
 import org.minidns.iterative.IterativeDnsClient;
@@ -30,7 +30,7 @@ public class NsidTest {
     public static Nsid testNsidLRoot() {
         DnsClient client = new DnsClient(null) {
             @Override
-            protected Builder newQuestion(Builder message) {
+            protected DnsMessage.Builder newQuestion(DnsMessage.Builder message) {
                 message.getEdnsBuilder().addEdnsOption(Nsid.REQUEST);
                 return super.newQuestion(message);
             }

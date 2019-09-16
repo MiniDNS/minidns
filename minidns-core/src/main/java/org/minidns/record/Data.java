@@ -85,7 +85,7 @@ public abstract class Data {
     public final int hashCode() {
         if (hashCodeCache == null) {
             setBytes();
-            hashCodeCache = bytes.hashCode();
+            hashCodeCache = Arrays.hashCode(bytes);
         }
         return hashCodeCache;
     }

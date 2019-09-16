@@ -87,7 +87,7 @@ public class DnsMessageTest {
         assertTrue(cname.getPayload() instanceof RRWithTarget);
         assertEquals(TYPE.CNAME, cname.getPayload().getType());
         assertCsEquals("legacy-sun.oraclegha.com",
-                     ((RRWithTarget) (cname.getPayload())).target);
+                     ((RRWithTarget) cname.getPayload()).target);
 
         assertCsEquals("legacy-sun.oraclegha.com", a.name);
         assertTrue(a.getPayload() instanceof A);
@@ -141,7 +141,7 @@ public class DnsMessageTest {
         Record<? extends Data> answer = answers.get(0);
         assertTrue(answer.getPayload() instanceof SRV);
         assertEquals(TYPE.SRV, answer.getPayload().getType());
-        SRV r = (SRV) (answer.getPayload());
+        SRV r = (SRV) answer.getPayload();
         assertCsEquals("raven.toroid.org", r.target);
         assertEquals(5222, r.port);
         assertEquals(0, r.priority);

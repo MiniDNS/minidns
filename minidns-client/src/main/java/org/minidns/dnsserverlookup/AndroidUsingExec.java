@@ -19,6 +19,7 @@ import java.io.InputStreamReader;
 import java.io.LineNumberReader;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -43,7 +44,7 @@ public final class AndroidUsingExec extends AbstractDnsServerLookupMechanism {
             Process process = Runtime.getRuntime().exec("getprop");
             InputStream inputStream = process.getInputStream();
             LineNumberReader lnr = new LineNumberReader(
-                new InputStreamReader(inputStream));
+                new InputStreamReader(inputStream, StandardCharsets.UTF_8));
             Set<String> server = parseProps(lnr, true);
             if (server.size() > 0) {
                 List<String> res = new ArrayList<>(server.size());

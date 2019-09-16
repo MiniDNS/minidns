@@ -42,6 +42,7 @@ public class AsyncDnsRequest {
     private static final Logger LOGGER = Logger.getLogger(AsyncDnsRequest.class.getName());
 
     private final InternalMiniDnsFuture<DnsQueryResult, IOException> future = new InternalMiniDnsFuture<DnsQueryResult, IOException>() {
+        @SuppressWarnings("UnsynchronizedOverridesSynchronized")
         @Override
         public boolean cancel(boolean mayInterruptIfRunning) {
             boolean res = super.cancel(mayInterruptIfRunning);

@@ -27,10 +27,10 @@ public class DnsNameTest {
 
     @Test
     public void sizeTest() {
-        assertEquals(1, (DnsName.from("")).size());
-        assertEquals(13, (DnsName.from("example.com")).size());
-        assertEquals(16, (DnsName.from("dömäin")).size());
-        assertEquals(24, (DnsName.from("dömäin.example")).size());
+        assertEquals(1, DnsName.from("").size());
+        assertEquals(13, DnsName.from("example.com").size());
+        assertEquals(16, DnsName.from("dömäin").size());
+        assertEquals(24, DnsName.from("dömäin.example").size());
     }
 
     @Test

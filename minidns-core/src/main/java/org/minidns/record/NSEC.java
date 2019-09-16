@@ -87,6 +87,7 @@ public class NSEC extends Data {
         return sb.toString();
     }
 
+    @SuppressWarnings("NarrowingCompoundAssignment")
     static byte[] createTypeBitMap(List<TYPE> types) {
         List<Integer> typeList = new ArrayList<Integer>(types.size());
         for (TYPE type : types) {

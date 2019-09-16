@@ -15,6 +15,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.logging.ConsoleHandler;
@@ -25,6 +26,7 @@ import java.util.logging.LogManager;
 import java.util.logging.LogRecord;
 import java.util.logging.Logger;
 
+@SuppressWarnings("DateFormatConstant")
 public class MiniDnsJul {
 
     private static final Logger LOGGER = Logger.getLogger(MiniDnsJul.class.getName());
@@ -32,7 +34,7 @@ public class MiniDnsJul {
     private static final InputStream LOG_MANAGER_CONFIG = new ByteArrayInputStream((
 // @formatter:off
 "org.minidns.level=FINEST" + '\n'
-).getBytes()
+).getBytes(StandardCharsets.UTF_8)
 );
 // @formatter:on
 

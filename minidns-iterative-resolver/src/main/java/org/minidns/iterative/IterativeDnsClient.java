@@ -342,6 +342,8 @@ public class IterativeDnsClient extends AbstractDnsClient {
             case AAAA:
                 res.ipv6Addresses.add(inetAddressFromRecord(name.ace, (AAAA) record.payloadData));
                 break;
+            default:
+                break;
             }
         }
         return res.build();

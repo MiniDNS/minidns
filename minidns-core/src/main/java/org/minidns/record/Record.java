@@ -486,7 +486,7 @@ public final class Record<D extends Data> {
     public boolean isAnswer(Question q) {
         return ((q.type == type) || (q.type == TYPE.ANY)) &&
                ((q.clazz == clazz) || (q.clazz == CLASS.ANY)) &&
-               (q.name.equals(name));
+               q.name.equals(name);
     }
 
     /**

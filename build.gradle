@@ -15,6 +15,7 @@ buildscript {
 
 plugins {
     id 'ru.vyarus.animalsniffer' version '1.5.0'
+	id 'net.ltgt.errorprone' version '0.8.1'
 }
 
 apply from: 'version.gradle'
@@ -25,6 +26,7 @@ allprojects {
 	apply plugin: 'osgi'
 	apply plugin: 'checkstyle'
 	apply plugin: 'jacoco'
+	apply plugin: 'net.ltgt.errorprone'
 
 	group = 'org.minidns'
 	description = "A minimal DNS client library with support for A, AAAA, NS and SRV records"
@@ -93,6 +95,25 @@ allprojects {
 			'-Xlint:-options',
 			'-Werror',
 		]
+		options.errorprone {
+			error(
+				"UnusedVariable",
+				"UnusedMethod",
+				"MethodCanBeStatic",
+			)
+			errorproneArgs = [
+				// Disable errorprone checks
+				'-Xep:TypeParameterUnusedInFormals:OFF',
+				// Disable errorpone StringSplitter check, as it
+				// recommends using Splitter from Guava, which we don't
+				// have (nor want to use in Smack).
+				'-Xep:StringSplitter:OFF',
+				'-Xep:JdkObsolete:OFF',
+				'-Xep:MixedMutabilityReturnType:OFF',
+				'-Xep:ImmutableEnumChecker:OFF',
+			]
+		}
+
 	}
 
 	checkstyle {
@@ -141,6 +162,9 @@ allprojects {
 		testImplementation "org.junit.jupiter:junit-jupiter-api:$junitVersion"
 		testImplementation "org.junit.jupiter:junit-jupiter-params:$junitVersion"
 		testRuntimeOnly "org.junit.jupiter:junit-jupiter-engine:$junitVersion"
+
+		errorprone 'com.google.errorprone:error_prone_core:2.3.3'
+		errorproneJavac('com.google.errorprone:javac:9+181-r4173-1')
 	}
 
 }
@@ -243,7 +267,7 @@ subprojects {
 configure(subprojects.findAll{!it.name.endsWith('-java7') && !it.name.endsWith('-android21')}) {
    apply plugin: 'ru.vyarus.animalsniffer'
    dependencies {
-       signature "net.sf.androidscents.signature:android-api-level-${minidnsMinAndroidSdk}:2.3.1_r2@signature"
+       signature "net.sf.androidscents.signature:android-api-level-${minidnsMinAndroidSdk}:4.4.2_r4@signature"
    }
    animalsniffer {
        sourceSets = [sourceSets.main]

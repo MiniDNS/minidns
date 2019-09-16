@@ -25,6 +25,7 @@ public final class NameUtil {
      * @param name2 The second domain name.
      * @return True if both domain names are the same.
      */
+    @SuppressWarnings("ReferenceEquality")
     public static boolean idnEquals(String name1, String name2) {
         if (name1 == name2) return true; // catches null, null
         if (name1 == null) return false;

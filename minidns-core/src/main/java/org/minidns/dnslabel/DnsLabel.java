@@ -11,6 +11,7 @@
 package org.minidns.dnslabel;
 
 import java.io.ByteArrayOutputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.Locale;
 
 /**
@@ -120,7 +121,7 @@ public abstract class DnsLabel implements CharSequence, Comparable<DnsLabel> {
 
     private void setBytesIfRequired() {
         if (byteCache == null) {
-            byteCache = label.getBytes();
+            byteCache = label.getBytes(StandardCharsets.US_ASCII);
         }
     }
 
