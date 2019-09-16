@@ -28,7 +28,7 @@ allprojects {
 
 	group = 'org.minidns'
 	description = "A minimal DNS client library with support for A, AAAA, NS and SRV records"
-	sourceCompatibility = 1.7
+	sourceCompatibility = 1.8
 	version = shortVersion
 
 	ext {
