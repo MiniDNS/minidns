@@ -19,7 +19,7 @@ dependencies {
 	compile project(':minidns-iterative-resolver')
     compile project(':minidns-dnssec')
     compile project(':minidns-hla')
-    compile "junit:junit:$junitVersion"
+    implementation "org.junit.vintage:junit-vintage-engine:$junitVersion"
     testCompile project(path: ":minidns-client", configuration: "testRuntime")
 }
 

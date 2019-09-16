@@ -32,7 +32,7 @@ allprojects {
 	version = shortVersion
 
 	ext {
-		junitVersion = 4.11
+		junitVersion = '5.5.2'
 		androidBootClasspath = getAndroidRuntimeJar(minidnsMinAndroidSdk)
 		rootConfigDir = new File(rootDir, 'config')
 		gitCommit = getGitCommit()
@@ -56,6 +56,19 @@ allprojects {
 		throw new org.gradle.api.InvalidUserDataException(
 			'Tag mismatch detected, version is ' + version + ' but should be ' +
 			'git tag --points-at HEAD'.execute().text.trim())
+	}
+
+	test {
+		useJUnitPlatform()
+
+		maxParallelForks = Runtime.runtime.availableProcessors().intdiv(2) ?: 1
+
+		// Enable full stacktraces of failed tests. Especially handy
+		// for environments like Travis.
+		testLogging {
+			events "failed"
+			exceptionFormat "full"
+		}
 	}
 
 	repositories {
@@ -122,6 +135,13 @@ allprojects {
 			// for information about the -Xwerror option.
 			options.addStringOption('Xwerror', '-quiet')
 		}
+	}
+
+	dependencies {
+		testImplementation "org.junit.jupiter:junit-jupiter-api:$junitVersion"
+		testImplementation "org.junit.jupiter:junit-jupiter-params:$junitVersion"
+		testImplementation "org.junit.vintage:junit-vintage-engine:$junitVersion"
+		testRuntimeOnly "org.junit.jupiter:junit-jupiter-engine:$junitVersion"
 	}
 
 }
