@@ -10,8 +10,7 @@
  */
 package org.minidns;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import org.minidns.cache.LruCache;
 import org.minidns.dnsmessage.DnsMessage;
@@ -22,21 +21,16 @@ import org.minidns.record.Record;
 import static org.minidns.DnsWorld.a;
 import static org.minidns.DnsWorld.ns;
 import static org.minidns.DnsWorld.record;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 public class LruCacheTest {
 
-    private LruCache lruCache;
-
-    @Before
-    public void setUp() throws Exception {
-        lruCache = new LruCache(5);
-    }
-
     @Test
     public void testOutdatedCacheEntry() {
+        LruCache lruCache = new LruCache(5);
+
         Question q = new Question("", Record.TYPE.A);
         TestWorldDnsQueryResult result = createSampleMessage(q, 1);
         DnsMessage question = q.asQueryMessage();
@@ -50,6 +44,8 @@ public class LruCacheTest {
 
     @Test
     public void testOverfilledCache() {
+        LruCache lruCache = new LruCache(5);
+
         Question firstQuestion = new Question("", Record.TYPE.A);
         lruCache.put(firstQuestion.asQueryMessage(), createSampleMessage(firstQuestion));
         assertNotNull(lruCache.get(firstQuestion.asQueryMessage()));

@@ -14,11 +14,11 @@ import org.minidns.constants.DnssecConstants.DigestAlgorithm;
 import org.minidns.dnssec.DigestCalculator;
 import org.minidns.record.NSEC3.HashAlgorithm;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.math.BigInteger;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class DigestTest extends AlgorithmTest {
 

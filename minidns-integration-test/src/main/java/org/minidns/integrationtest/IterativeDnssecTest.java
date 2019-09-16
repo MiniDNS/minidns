@@ -10,7 +10,7 @@
  */
 package org.minidns.integrationtest;
 
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.IOException;
 
@@ -42,9 +42,9 @@ public class IterativeDnssecTest {
         final int normalCacheSuccessfulQueries = normalCacheNdswa.getStats().successfulQueries;
         final int extendedCacheSuccessfulQueries = extendedCacheNdswa.getStats().successfulQueries;
         assertTrue(
+                normalCacheSuccessfulQueries > extendedCacheSuccessfulQueries,
                 "Extend cache successful query count " + extendedCacheSuccessfulQueries
-                        + " is not less than normal cache successful query count " + normalCacheSuccessfulQueries,
-                normalCacheSuccessfulQueries > extendedCacheSuccessfulQueries);
+                + " is not less than normal cache successful query count " + normalCacheSuccessfulQueries);
     }
 
     private static DnssecClient getClient(CacheConfig cacheConfig) {

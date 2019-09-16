@@ -13,8 +13,9 @@ package org.minidns.dnssec.algorithms;
 import org.minidns.constants.DnssecConstants.SignatureAlgorithm;
 import org.minidns.dnssec.DnssecValidationFailedException;
 import org.minidns.dnssec.DnssecValidationFailedException.DataMalformedException;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.minidns.dnssec.DnssecWorld.generatePrivateKey;
 import static org.minidns.dnssec.DnssecWorld.publicKey;
 import static org.minidns.dnssec.DnssecWorld.sign;
@@ -32,20 +33,28 @@ public class DsaSingatureVerifierTest extends SignatureVerifierTest {
         verifierTest(512, ALGORITHM);
     }
 
-
-    @Test(expected = DataMalformedException.class)
-    public void testDSAIllegalSignature() throws DnssecValidationFailedException {
-        assertSignatureValid(publicKey(ALGORITHM, generatePrivateKey(ALGORITHM, 1024)), ALGORITHM, new byte[] {0x0});
+    @Test
+    public void testDSAIllegalSignature() {
+        byte[] sample = new byte[] { 0x0 };
+        assertThrows(DataMalformedException.class, () ->
+            assertSignatureValid(publicKey(ALGORITHM, generatePrivateKey(ALGORITHM, 1024)), ALGORITHM, sample, sample)
+        );
     }
 
-    @Test(expected = DataMalformedException.class)
-    public void testDSAIllegalPublicKey() throws DnssecValidationFailedException {
-        assertSignatureValid(new byte[] {0x0}, ALGORITHM, sign(generatePrivateKey(ALGORITHM, 1024), ALGORITHM, sample));
+    @Test
+    public void testDSAIllegalPublicKey() {
+        byte[] sample = getRandomBytes();
+
+        assertThrows(DataMalformedException.class, () ->
+            assertSignatureValid(new byte[] {0x0}, ALGORITHM, sign(generatePrivateKey(ALGORITHM, 1024), ALGORITHM, sample), sample)
+        );
     }
 
     @Test
     public void testDSAWrongSignature() throws DnssecValidationFailedException {
-        assertSignatureInvalid(publicKey(ALGORITHM, generatePrivateKey(ALGORITHM, 1024)), ALGORITHM, sign(generatePrivateKey(ALGORITHM, 1024), ALGORITHM, sample));
+        byte[] sample = getRandomBytes();
+        assertSignatureInvalid(publicKey(ALGORITHM, generatePrivateKey(ALGORITHM, 1024)), ALGORITHM,
+                sign(generatePrivateKey(ALGORITHM, 1024), ALGORITHM, sample), sample);
     }
 
 }

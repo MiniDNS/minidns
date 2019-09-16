@@ -22,7 +22,7 @@ import org.minidns.edns.Edns.OptionCode;
 import org.minidns.iterative.IterativeDnsClient;
 import org.minidns.record.Record.TYPE;
 
-import static org.junit.Assert.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 public class NsidTest {
 

@@ -21,7 +21,7 @@ import org.minidns.dnssec.DnssecUnverifiedReason;
 import org.minidns.dnssec.DnssecValidationFailedException;
 import org.minidns.record.Record;
 
-import static org.junit.Assert.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 
 public class DnssecTest {
 

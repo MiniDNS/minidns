@@ -14,8 +14,7 @@ import org.minidns.constants.DnssecConstants.DigestAlgorithm;
 import org.minidns.constants.DnssecConstants.SignatureAlgorithm;
 import org.minidns.record.NSEC3.HashAlgorithm;
 import org.minidns.record.Record.TYPE;
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
@@ -27,8 +26,9 @@ import java.util.List;
 import static org.minidns.Assert.assertCsEquals;
 import static org.minidns.Assert.assertArrayContentEquals;
 
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 /**
  * These are some tests for all records.
@@ -42,15 +42,17 @@ public class RecordsTest {
     public void testARecord() throws Exception {
         A a = new A(new byte[] {127, 0, 0, 1});
         assertEquals("127.0.0.1", a.toString());
-        Assert.assertEquals(TYPE.A, a.getType());
+        assertEquals(TYPE.A, a.getType());
         byte[] ab = a.toByteArray();
         a = A.parse(new DataInputStream(new ByteArrayInputStream(ab)));
         assertArrayEquals(new byte[] {127, 0, 0, 1}, a.getIp());
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void testARecordInvalidIp() throws Exception {
-        new A(new byte[42]);
+        assertThrows(IllegalArgumentException.class, () -> 
+            new A(new byte[42])
+        );
     }
 
     @Test
@@ -58,15 +60,17 @@ public class RecordsTest {
         AAAA aaaa = new AAAA(new byte[] {0x20, 0x01, 0x0d, (byte) 0xb8, (byte) 0x85, (byte) 0xa3, 0x08, (byte) 0xd3, 0x13, 0x19, (byte) 0x8a, 0x2e, 0x03, 0x70, 0x73, 0x44});
         // Note: there are multiple valid representations of the IPv6 address due to optional reductions.
         assertEquals("2001:db8:85a3:8d3:1319:8a2e:370:7344", aaaa.toString());
-        Assert.assertEquals(TYPE.AAAA, aaaa.getType());
+        assertEquals(TYPE.AAAA, aaaa.getType());
         byte[] aaaab  = aaaa.toByteArray();
         aaaa = AAAA.parse(new DataInputStream(new ByteArrayInputStream(aaaab)));
         assertArrayEquals(new byte[] {0x20, 0x01, 0x0d, (byte) 0xb8, (byte) 0x85, (byte) 0xa3, 0x08, (byte) 0xd3, 0x13, 0x19, (byte) 0x8a, 0x2e, 0x03, 0x70, 0x73, 0x44}, aaaa.getIp());
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void testAAAARecordInvalidIp() throws Exception {
-        new AAAA(new byte[42]);
+        assertThrows(IllegalArgumentException.class, () -> 
+            new AAAA(new byte[42])
+        );
     }
 
     @Test

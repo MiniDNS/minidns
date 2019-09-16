@@ -10,7 +10,7 @@
  */
 package org.minidns.dane.java7;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 public class DaneJava7Test {
     /**

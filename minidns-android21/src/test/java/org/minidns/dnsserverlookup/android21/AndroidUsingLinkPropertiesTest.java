@@ -10,7 +10,7 @@
  */
 package org.minidns.dnsserverlookup.android21;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 public class AndroidUsingLinkPropertiesTest {
 

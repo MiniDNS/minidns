@@ -10,12 +10,12 @@
  */
 package org.minidns.util;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.net.Inet4Address;
 import java.net.Inet6Address;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.minidns.dnsname.DnsName;
 
 public class InetAddressUtilTest {

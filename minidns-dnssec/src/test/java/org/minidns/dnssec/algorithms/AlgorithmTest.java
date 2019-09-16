@@ -10,13 +10,10 @@
  */
 package org.minidns.dnssec.algorithms;
 
-import org.junit.Before;
-
 public class AlgorithmTest {
-    protected AlgorithmMap algorithmMap;
+    protected static AlgorithmMap algorithmMap;
 
-    @Before
-    public void setUp() throws Exception {
+    static {
         algorithmMap = AlgorithmMap.INSTANCE;
     }
 }

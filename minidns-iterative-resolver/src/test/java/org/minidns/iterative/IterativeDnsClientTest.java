@@ -20,7 +20,7 @@ import org.minidns.record.A;
 import org.minidns.record.Data;
 import org.minidns.record.Record;
 import org.minidns.record.Record.TYPE;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import static org.minidns.DnsWorld.a;
 import static org.minidns.DnsWorld.applyZones;
@@ -28,9 +28,9 @@ import static org.minidns.DnsWorld.ns;
 import static org.minidns.DnsWorld.record;
 import static org.minidns.DnsWorld.rootZone;
 import static org.minidns.DnsWorld.zone;
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class IterativeDnsClientTest {
 
@@ -58,7 +58,7 @@ public class IterativeDnsClientTest {
     }
 
     @SuppressWarnings("unchecked")
-    @Test(expected = IterativeClientException.LoopDetected.class)
+    @Test
     public void loopIterativeTest() throws IOException {
         IterativeDnsClient client = new IterativeDnsClient(new LruCache(0));
         applyZones(client,
@@ -73,7 +73,10 @@ public class IterativeDnsClientTest {
                         record("test.b", ns("b.test.a"))
                 )
         );
-        assertNull(client.query("www.test.a", TYPE.A));
+
+        assertThrows(IterativeClientException.LoopDetected.class, () ->
+            client.query("www.test.a", TYPE.A)
+        );
     }
 
     @SuppressWarnings("unchecked")

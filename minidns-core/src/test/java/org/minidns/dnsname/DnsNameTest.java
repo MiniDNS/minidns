@@ -11,14 +11,15 @@
 package org.minidns.dnsname;
 
 import static org.minidns.Assert.assertCsEquals;
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
 import java.io.IOException;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import org.minidns.dnslabel.DnsLabel;
 
@@ -61,14 +62,18 @@ public class DnsNameTest {
         assertCsEquals(DnsName.from("."), DnsName.from("www.example.com").stripToLabels(0));
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void testStripToPartsIllegal() {
-        DnsName.from("").stripToLabels(1);
+        assertThrows(IllegalArgumentException.class, () ->
+            DnsName.from("").stripToLabels(1)
+        );
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void testStripToPartsIllegalLong() {
-       DnsName.from("example.com").stripToLabels(3);
+        assertThrows(IllegalArgumentException.class, () ->
+            DnsName.from("example.com").stripToLabels(3)
+       );
     }
 
     @Test

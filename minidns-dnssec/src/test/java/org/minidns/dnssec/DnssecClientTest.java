@@ -25,9 +25,7 @@ import org.minidns.record.Data;
 import org.minidns.record.RRSIG;
 import org.minidns.record.Record;
 import org.minidns.record.Record.TYPE;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 import java.lang.reflect.Field;
@@ -55,10 +53,11 @@ import static org.minidns.dnssec.DnssecWorld.selfSignDnskeyRrSet;
 import static org.minidns.dnssec.DnssecWorld.sign;
 import static org.minidns.dnssec.DnssecWorld.signedRootZone;
 import static org.minidns.dnssec.DnssecWorld.signedZone;
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 // TODO: Make selfSignDnskeyRrset() part of signedZone() and remove it from all tests
 
@@ -73,10 +72,8 @@ public class DnssecClientTest {
     private static DNSKEY comZSK;
     private static PrivateKey comPrivateZSK;
     private static PrivateKey comPrivateKSK;
-    private DnssecClient client;
 
-    @BeforeClass
-    public static void generateKeys() {
+    static {
         DnssecData rootDnssecData = DnssecWorld.getDnssecDataFor("");
         rootPrivateKSK = rootDnssecData.privateKsk;
         rootKSK = rootDnssecData.ksk;
@@ -90,11 +87,11 @@ public class DnssecClientTest {
         comZSK = comDnssecData.zsk;
     }
 
-    @Before
-    public void setUp() throws Exception {
-        client = new DnssecClient(new LruCache(0));
+    public static DnssecClient constructDnssecClient() {
+        DnssecClient client = new DnssecClient(new LruCache(0));
         client.addSecureEntryPoint(DnsName.ROOT, rootKSK.getKey());
         client.setMode(Mode.iterativeOnly);
+        return client;
     }
 
     void checkCorrectExampleMessage(DnsMessage message) {
@@ -107,6 +104,7 @@ public class DnssecClientTest {
     @SuppressWarnings("unchecked")
     @Test
     public void testBasicValid() throws IOException {
+        DnssecClient client = constructDnssecClient();
         applyZones(client,
                 signedRootZone(
                         sign(rootKSK, "", rootPrivateKSK, algorithm,
@@ -135,6 +133,7 @@ public class DnssecClientTest {
     @SuppressWarnings("unchecked")
     @Test
     public void testNoSEPAtKSK() throws IOException {
+        DnssecClient client = constructDnssecClient();
         DNSKEY comKSK = dnskey(DNSKEY.FLAG_ZONE, algorithm, publicKey(algorithm, comPrivateKSK));
         applyZones(client,
                 signedRootZone(
@@ -164,6 +163,7 @@ public class DnssecClientTest {
     @SuppressWarnings("unchecked")
     @Test
     public void testSingleZSK() throws IOException {
+        DnssecClient client = constructDnssecClient();
         applyZones(client,
                 signedRootZone(
                         sign(rootKSK, "", rootPrivateKSK, algorithm,
@@ -189,8 +189,9 @@ public class DnssecClientTest {
     }
 
     @SuppressWarnings("unchecked")
-    @Test(expected = AuthorityDoesNotContainSoa.class)
+    @Test
     public void testMissingDelegation() throws IOException {
+        DnssecClient client = constructDnssecClient();
         applyZones(client,
                 signedRootZone(
                         sign(rootKSK, "", rootPrivateKSK, algorithm,
@@ -208,12 +209,16 @@ public class DnssecClientTest {
                                 record("example.com", a("1.1.1.2")))
                 )
         );
-        client.queryDnssec("example.com", Record.TYPE.A);
+
+        assertThrows(AuthorityDoesNotContainSoa.class, () ->
+            client.queryDnssec("example.com", Record.TYPE.A)
+        );
     }
 
     @SuppressWarnings("unchecked")
     @Test
     public void testUnsignedRoot() throws IOException {
+        DnssecClient client = constructDnssecClient();
         applyZones(client,
                 rootZone(
                         record("com", ds("com", digestType, comKSK)),
@@ -236,6 +241,7 @@ public class DnssecClientTest {
     @SuppressWarnings("unchecked")
     @Test
     public void testNoRootSecureEntryPoint() throws IOException {
+        DnssecClient client = constructDnssecClient();
         client.clearSecureEntryPoints();
         applyZones(client,
                 signedRootZone(
@@ -267,6 +273,7 @@ public class DnssecClientTest {
     @SuppressWarnings("unchecked")
     @Test
     public void testUnsignedZone() throws IOException {
+        DnssecClient client = constructDnssecClient();
         applyZones(client,
                 signedRootZone(
                         sign(rootKSK, "", rootPrivateKSK, algorithm,
@@ -289,8 +296,9 @@ public class DnssecClientTest {
     }
 
     @SuppressWarnings("unchecked")
-    @Test(expected = DnssecValidationFailedException.class)
+    @Test
     public void testInvalidDNSKEY() throws IOException {
+        DnssecClient client = constructDnssecClient();
         applyZones(client,
                 signedRootZone(
                         sign(rootKSK, "", rootPrivateKSK, algorithm,
@@ -309,12 +317,16 @@ public class DnssecClientTest {
                                 record("example.com", a("1.1.1.2")))
                 )
         );
-        client.query("example.com", Record.TYPE.A);
+
+        assertThrows(DnssecValidationFailedException.class, () ->
+            client.query("example.com", Record.TYPE.A)
+        );
     }
 
     @SuppressWarnings("unchecked")
-    @Test(expected = DnssecValidationFailedException.class)
+    @Test
     public void testNoDNSKEY() throws IOException {
+        DnssecClient client = constructDnssecClient();
         applyZones(client,
                 signedRootZone(
                         sign(rootKSK, "", rootPrivateKSK, algorithm,
@@ -331,12 +343,16 @@ public class DnssecClientTest {
                                 record("example.com", a("1.1.1.2")))
                 )
         );
-        client.query("example.com", Record.TYPE.A);
+
+        assertThrows(DnssecValidationFailedException.class, () ->
+            client.query("example.com", Record.TYPE.A)
+        );
     }
 
     @SuppressWarnings("unchecked")
-    @Test(expected = DnssecValidationFailedException.class)
+    @Test
     public void testInvalidRRSIG() throws IOException, NoSuchFieldException, SecurityException, IllegalArgumentException, IllegalAccessException {
+        DnssecClient client = constructDnssecClient();
         Record<RRSIG> invalidRrSig = rrsigRecord(comZSK, "com", comPrivateZSK, algorithm, record("example.com", a("1.1.1.2")));
         RRSIG soonToBeInvalidRrSig = invalidRrSig.payloadData;
         Field signature = soonToBeInvalidRrSig.getClass().getDeclaredField("signature");
@@ -364,12 +380,16 @@ public class DnssecClientTest {
                         invalidRrSig
                 )
         );
-        client.query("example.com", Record.TYPE.A);
+
+        assertThrows(DnssecValidationFailedException.class, () ->
+            client.query("example.com", Record.TYPE.A)
+        );
     }
 
     @SuppressWarnings("unchecked")
     @Test
     public void testUnknownAlgorithm() throws IOException {
+        DnssecClient client = constructDnssecClient();
         Date signatureExpiration = new Date(System.currentTimeMillis() + 14 * 24 * 60 * 60 * 1000);
         Date signatureInception = new Date(System.currentTimeMillis() - 14 * 24 * 60 * 60 * 1000);
         RRSIG unknownRrsig = rrsig(Record.TYPE.A, 213, 2, 3600, signatureExpiration, signatureInception, comZSK.getKeyTag(), "com", new byte[0]);
@@ -398,8 +418,9 @@ public class DnssecClientTest {
     }
 
     @SuppressWarnings("unchecked")
-    @Test(expected = DnssecValidationFailedException.class)
+    @Test
     public void testInvalidDelegation() throws IOException {
+        DnssecClient client = constructDnssecClient();
         applyZones(client,
                 signedRootZone(
                         sign(rootKSK, "", rootPrivateKSK, algorithm,
@@ -419,12 +440,16 @@ public class DnssecClientTest {
                                 record("example.com", a("1.1.1.2")))
                 )
         );
-        client.query("example.com", Record.TYPE.A);
+
+        assertThrows(DnssecValidationFailedException.class, () ->
+            client.query("example.com", Record.TYPE.A)
+        );
     }
 
     @SuppressWarnings("unchecked")
     @Test
     public void testUnknownDelegationDigestType() throws IOException {
+        DnssecClient client = constructDnssecClient();
         applyZones(client,
                 signedRootZone(
                         sign(rootKSK, "", rootPrivateKSK, algorithm,
@@ -453,6 +478,7 @@ public class DnssecClientTest {
     @SuppressWarnings("unchecked")
     @Test
     public void testSignatureOutOfDate() throws IOException {
+        DnssecClient client = constructDnssecClient();
         Date signatureExpiration = new Date(System.currentTimeMillis() - 14 * 24 * 60 * 60 * 1000);
         Date signatureInception = new Date(System.currentTimeMillis() - 28L * 24L * 60L * 60L * 1000L);
         RRSIG outOfDateSig = rrsig(Record.TYPE.A, algorithm, 2, 3600, signatureExpiration, signatureInception, comZSK.getKeyTag(), "com", new byte[0]);
@@ -484,6 +510,7 @@ public class DnssecClientTest {
     @SuppressWarnings("unchecked")
     @Test
     public void testSignatureInFuture() throws IOException {
+        DnssecClient client = constructDnssecClient();
         Date signatureExpiration = new Date(System.currentTimeMillis() + 28L * 24L * 60L * 60L * 1000L);
         Date signatureInception = new Date(System.currentTimeMillis() + 14 * 24 * 60 * 60 * 1000);
         RRSIG outOfDateSig = rrsig(Record.TYPE.A, algorithm, 2, 3600, signatureExpiration, signatureInception, comZSK.getKeyTag(), "com", new byte[0]);
@@ -515,6 +542,7 @@ public class DnssecClientTest {
     @SuppressWarnings("unchecked")
     @Test
     public void testValidNSEC() throws Exception {
+        DnssecClient client = constructDnssecClient();
         DnsWorld world = applyZones(client,
                 signedRootZone(
                         sign(rootKSK, "", rootPrivateKSK, algorithm,
@@ -559,6 +587,7 @@ public class DnssecClientTest {
      */
     @Test
     public void testValidDLV() throws IOException {
+        DnssecClient client = constructDnssecClient();
         DnsWorld dnsWorld = applyZones(client,
                 signedRootZone(
                         selfSignDnskeyRrSet(""),

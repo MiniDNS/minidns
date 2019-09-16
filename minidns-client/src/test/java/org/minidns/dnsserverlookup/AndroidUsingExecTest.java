@@ -10,7 +10,7 @@
  */
 package org.minidns.dnsserverlookup;
 
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -19,7 +19,7 @@ import java.io.StringReader;
 import java.net.UnknownHostException;
 import java.util.Set;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 public class AndroidUsingExecTest {
 

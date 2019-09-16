@@ -17,18 +17,18 @@ import org.minidns.record.NSEC;
 import org.minidns.record.NSEC3;
 import org.minidns.record.Record;
 import org.minidns.record.Record.TYPE;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.math.BigInteger;
 
 import static org.minidns.DnsWorld.nsec;
 import static org.minidns.DnsWorld.nsec3;
 import static org.minidns.DnsWorld.record;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class VerifierTest {
 

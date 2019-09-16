@@ -23,7 +23,7 @@ import org.minidns.record.A;
 import org.minidns.record.Record.TYPE;
 import org.minidns.source.AbstractDnsDataSource;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 import java.net.InetAddress;
@@ -33,10 +33,10 @@ import java.util.List;
 import static org.minidns.DnsWorld.a;
 import static org.minidns.DnsWorld.applyStubRecords;
 import static org.minidns.DnsWorld.record;
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class DnsClientTest {
 

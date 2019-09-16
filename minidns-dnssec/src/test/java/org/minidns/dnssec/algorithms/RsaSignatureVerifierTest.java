@@ -13,10 +13,11 @@ package org.minidns.dnssec.algorithms;
 import org.minidns.constants.DnssecConstants.SignatureAlgorithm;
 import org.minidns.dnssec.DnssecValidationFailedException;
 import org.minidns.dnssec.DnssecValidationFailedException.DataMalformedException;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.math.BigInteger;
 
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.minidns.dnssec.DnssecWorld.generatePrivateKey;
 import static org.minidns.dnssec.DnssecWorld.generateRSAPrivateKey;
 import static org.minidns.dnssec.DnssecWorld.publicKey;
@@ -33,19 +34,35 @@ public class RsaSignatureVerifierTest extends SignatureVerifierTest {
         verifierTest(generateRSAPrivateKey(3072, BigInteger.valueOf(256).pow(256).add(BigInteger.ONE)), SignatureAlgorithm.RSASHA1);
     }
 
-    @Test(expected = DnssecValidationFailedException.class)
+    @Test
     public void testSHA1RSAIllegalSignature() throws DnssecValidationFailedException {
-        assertSignatureValid(publicKey(SignatureAlgorithm.RSASHA1, generatePrivateKey(SignatureAlgorithm.RSASHA1, 1024)), SignatureAlgorithm.RSASHA1, new byte[] {0x0});
+        byte[] sample = new byte[] { 0x0 };
+        assertThrows(DnssecValidationFailedException.class, () ->
+            assertSignatureValid(
+                publicKey(SignatureAlgorithm.RSASHA1, generatePrivateKey(SignatureAlgorithm.RSASHA1, 1024)),
+                SignatureAlgorithm.RSASHA1, sample, sample) 
+        );
     }
 
-    @Test(expected = DataMalformedException.class)
+    @Test
     public void testSHA1RSAIllegalPublicKey() throws DnssecValidationFailedException {
-        assertSignatureValid(new byte[] {0x0}, SignatureAlgorithm.RSASHA1, sign(generatePrivateKey(SignatureAlgorithm.RSASHA1, 1024), SignatureAlgorithm.RSASHA1, sample));
+        byte[] sample = getRandomBytes();
+
+        assertThrows(DataMalformedException.class, () ->
+            assertSignatureValid(new byte[] { 0x0 }, SignatureAlgorithm.RSASHA1,
+                sign(generatePrivateKey(SignatureAlgorithm.RSASHA1, 1024), SignatureAlgorithm.RSASHA1, sample), sample)
+        );
     }
 
     @Test
     public void testSHA1RSAWrongSignature() throws DnssecValidationFailedException {
-        assertSignatureInvalid(publicKey(SignatureAlgorithm.RSASHA1, generatePrivateKey(SignatureAlgorithm.RSASHA1, 1024)), SignatureAlgorithm.RSASHA1, sign(generatePrivateKey(SignatureAlgorithm.RSASHA1, 1024), SignatureAlgorithm.RSASHA1, sample));
+        byte[] sample = getRandomBytes();
+
+        assertSignatureInvalid(
+                publicKey(SignatureAlgorithm.RSASHA1, generatePrivateKey(SignatureAlgorithm.RSASHA1, 1024)),
+                SignatureAlgorithm.RSASHA1,
+                sign(generatePrivateKey(SignatureAlgorithm.RSASHA1, 1024), SignatureAlgorithm.RSASHA1, sample),
+                sample);
     }
 
     @SuppressWarnings("deprecation")

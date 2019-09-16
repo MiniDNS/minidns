@@ -10,8 +10,8 @@
  */
 package org.minidns;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -26,9 +26,9 @@ public class Assert {
 
     public static void assertCsEquals(String message, CharSequence expected, CharSequence actual) {
         if (expected != null && actual != null) {
-            assertEquals(message, expected.toString(), actual.toString());
+            assertEquals(expected.toString(), actual.toString(), message);
         } else {
-            assertEquals(message, expected, actual);
+            assertEquals(expected, actual, message);
         }
     }
 
