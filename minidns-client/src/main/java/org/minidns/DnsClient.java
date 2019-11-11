@@ -278,7 +278,11 @@ public class DnsClient extends AbstractDnsClient {
     public static List<String> findDNS() {
         List<String> res = null;
         for (DnsServerLookupMechanism mechanism : LOOKUP_MECHANISMS) {
-            res = mechanism.getDnsServerAddresses();
+            try {
+                res = mechanism.getDnsServerAddresses();
+            } catch (SecurityException exception) {
+                LOGGER.log(Level.WARNING, "Could not lookup DNS server", exception);
+            }
             if (res == null) {
                 continue;
             }
@@ -308,10 +312,11 @@ public class DnsClient extends AbstractDnsClient {
 
             if (!res.isEmpty()) {
                 break;
-            } else {
-                LOGGER.warning("The DNS server lookup mechanism '" + mechanism.getName()
-                        + "' returned not a single valid IP address after sanitazion");
             }
+
+            LOGGER.warning("The DNS server lookup mechanism '" + mechanism.getName()
+                        + "' returned not a single valid IP address after sanitazion");
+            res = null;
         }
 
         return res;
