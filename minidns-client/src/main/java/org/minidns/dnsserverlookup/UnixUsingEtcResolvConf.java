@@ -96,11 +96,15 @@ public final class UnixUsingEtcResolvConf extends AbstractDnsServerLookupMechani
         }
 
         File file = new File(RESOLV_CONF_FILE);
-        if (!file.exists()) {
-            // Not very unixoid systems
+
+        boolean resolvConfFileExists;
+        try {
+            resolvConfFileExists = file.exists();
+        } catch (SecurityException securityException) {
+            LOGGER.log(Level.FINE, "Access to /etc/resolv.conf not possible", securityException);
             return false;
         }
-        return true;
+        return resolvConfFileExists;
     }
 
 }
