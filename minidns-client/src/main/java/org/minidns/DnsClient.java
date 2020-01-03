@@ -12,7 +12,6 @@ package org.minidns;
 
 import org.minidns.MiniDnsException.ErrorResponseException;
 import org.minidns.MiniDnsException.NoQueryPossibleException;
-import org.minidns.MiniDnsFuture.InternalMiniDnsFuture;
 import org.minidns.dnsmessage.DnsMessage;
 import org.minidns.dnsqueryresult.DnsQueryResult;
 import org.minidns.dnsserverlookup.AndroidUsingExec;
@@ -20,9 +19,7 @@ import org.minidns.dnsserverlookup.AndroidUsingReflection;
 import org.minidns.dnsserverlookup.DnsServerLookupMechanism;
 import org.minidns.dnsserverlookup.UnixUsingEtcResolvConf;
 import org.minidns.util.CollectionsUtil;
-import org.minidns.util.ExceptionCallback;
 import org.minidns.util.InetAddressUtil;
-import org.minidns.util.SuccessCallback;
 import org.minidns.util.MultipleIoException;
 
 import java.io.IOException;
@@ -217,9 +214,6 @@ public class DnsClient extends AbstractDnsClient {
 
         final List<InetAddress> dnsServerAddresses = getServerAddresses();
 
-        final InternalMiniDnsFuture<DnsQueryResult, IOException> future = new InternalMiniDnsFuture<>();
-        final List<IOException> exceptions = Collections.synchronizedList(new ArrayList<IOException>(dnsServerAddresses.size()));
-
         // Filter loop.
         Iterator<InetAddress> it = dnsServerAddresses.iterator();
         while (it.hasNext()) {
@@ -234,36 +228,11 @@ public class DnsClient extends AbstractDnsClient {
         List<MiniDnsFuture<DnsQueryResult, IOException>> futures = new ArrayList<>(dnsServerAddresses.size());
         // "Main" loop.
         for (InetAddress dns : dnsServerAddresses) {
-            // Note that we deliberatly use Future.isDone(), since a few lines below, we only set a negative exception
-            // result, if all sub-futures signaled an exception.
-            if (future.isDone()) {
-                for (MiniDnsFuture<DnsQueryResult, IOException> futureToCancel : futures) {
-                    futureToCancel.cancel(true);
-                }
-                break;
-            }
-
             MiniDnsFuture<DnsQueryResult, IOException> f = queryAsync(q, dns);
-            f.onSuccess(new SuccessCallback<DnsQueryResult>() {
-                @Override
-                public void onSuccess(DnsQueryResult result) {
-                    future.setResult(result);
-                }
-            });
-            f.onError(new ExceptionCallback<IOException>() {
-                @Override
-                public void processException(IOException exception) {
-                    exceptions.add(exception);
-                    // Signal the main future about the exceptions, but only if all sub-futures returned an exception.
-                    if (exceptions.size() == dnsServerAddresses.size()) {
-                        future.setException(MultipleIoException.toIOException(exceptions));
-                    }
-                }
-            });
             futures.add(f);
         }
 
-        return future;
+        return MiniDnsFuture.anySuccessfulOf(futures);
     }
 
     /**

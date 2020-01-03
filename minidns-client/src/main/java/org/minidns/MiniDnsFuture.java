@@ -10,6 +10,11 @@
  */
 package org.minidns;
 
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CancellationException;
@@ -24,6 +29,7 @@ import java.util.concurrent.TimeoutException;
 
 import org.minidns.util.CallbackRecipient;
 import org.minidns.util.ExceptionCallback;
+import org.minidns.util.MultipleIoException;
 import org.minidns.util.SuccessCallback;
 
 public abstract class MiniDnsFuture<V, E extends Exception> implements Future<V>, CallbackRecipient<V, E> {
@@ -230,4 +236,47 @@ public abstract class MiniDnsFuture<V, E extends Exception> implements Future<V>
         return future;
     }
 
+    public static <V> MiniDnsFuture<V, IOException> anySuccessfulOf(Collection<MiniDnsFuture<V, IOException>> futures) {
+        return anySuccessfulOf(futures, exceptions -> MultipleIoException.toIOException(exceptions));
+    }
+
+    public interface ExceptionsWrapper<EI extends Exception, EO extends Exception> {
+        EO wrap(List<EI> exceptions);
+    }
+
+    public static <V, EI extends Exception, EO extends Exception> MiniDnsFuture<V, EO> anySuccessfulOf(
+            Collection<MiniDnsFuture<V, EI>> futures,
+            ExceptionsWrapper<EI, EO> exceptionsWrapper) {
+        InternalMiniDnsFuture<V, EO> returnedFuture = new InternalMiniDnsFuture<>();
+
+        final List<EI> exceptions = Collections.synchronizedList(new ArrayList<>(futures.size()));
+
+        for (MiniDnsFuture<V, EI> future : futures) {
+            future.onSuccess(new SuccessCallback<V>() {
+                @Override
+                public void onSuccess(V result) {
+                    // Cancel all futures. Yes, this includes the future which just returned the
+                    // result and futures which already failed with an exception, but then cancel
+                    // will be a no-op.
+                    for (MiniDnsFuture<V, EI> futureToCancel : futures) {
+                        futureToCancel.cancel(true);
+                    }
+                    returnedFuture.setResult(result);
+                }
+            });
+            future.onError(new ExceptionCallback<EI>() {
+                @Override
+                public void processException(EI exception) {
+                    exceptions.add(exception);
+                    // Signal the main future about the exceptions, but only if all sub-futures returned an exception.
+                    if (exceptions.size() == futures.size()) {
+                        EO returnedException = exceptionsWrapper.wrap(exceptions);
+                        returnedFuture.setException(returnedException);
+                    }
+                }
+            });
+        }
+
+        return returnedFuture;
+    }
 }
