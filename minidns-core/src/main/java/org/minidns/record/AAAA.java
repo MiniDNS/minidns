@@ -20,7 +20,7 @@ import org.minidns.util.InetAddressUtil;
 /**
  * AAAA payload (an ipv6 pointer).
  */
-public class AAAA extends InternetAddressRR {
+public class AAAA extends InternetAddressRR<Inet6Address> {
 
     @Override
     public TYPE getType() {
@@ -28,7 +28,7 @@ public class AAAA extends InternetAddressRR {
     }
 
     public AAAA(Inet6Address inet6address) {
-        super(inet6address.getAddress());
+        super(inet6address);
         assert ip.length == 16;
     }
 

@@ -82,11 +82,11 @@ public class IterativeDnsClient extends AbstractDnsClient {
         return result;
     }
 
-    private static InetAddress[] getTargets(Collection<? extends InternetAddressRR> primaryTargets,
-            Collection<? extends InternetAddressRR> secondaryTargets) {
+    private static InetAddress[] getTargets(Collection<? extends InternetAddressRR<? extends InetAddress>> primaryTargets,
+            Collection<? extends InternetAddressRR<? extends InetAddress>> secondaryTargets) {
         InetAddress[] res = new InetAddress[2];
 
-        for (InternetAddressRR arr : primaryTargets) {
+        for (InternetAddressRR<? extends InetAddress> arr : primaryTargets) {
             if (res[0] == null) {
                 res[0] = arr.getInetAddress();
                 // If secondaryTargets is empty, then try to get the second target out of the set of primaryTargets.
@@ -100,7 +100,7 @@ public class IterativeDnsClient extends AbstractDnsClient {
             break;
         }
 
-        for (InternetAddressRR arr : secondaryTargets) {
+        for (InternetAddressRR<? extends InetAddress> arr : secondaryTargets) {
             if (res[0] == null) {
                 res[0] = arr.getInetAddress();
                 continue;

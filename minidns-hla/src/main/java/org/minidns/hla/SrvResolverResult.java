@@ -11,6 +11,7 @@
 package org.minidns.hla;
 
 import java.io.IOException;
+import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -96,7 +97,7 @@ public class SrvResolverResult extends ResolverResult<SRV> {
                 continue;
             }
 
-            List<InternetAddressRR> srvAddresses = new ArrayList<>(aRecords.size() + aaaaRecords.size());
+            List<InternetAddressRR<? extends InetAddress>> srvAddresses = new ArrayList<>(aRecords.size() + aaaaRecords.size());
             switch (ipVersion) {
             case v4only:
                 srvAddresses.addAll(aRecords);
@@ -138,7 +139,7 @@ public class SrvResolverResult extends ResolverResult<SRV> {
         public final DnsName name;
         public final SrvServiceProto srvServiceProto;
         public final SRV srv;
-        public final List<InternetAddressRR> addresses;
+        public final List<InternetAddressRR<? extends InetAddress>> addresses;
         public final ResolverResult<A> aRecordsResult;
         public final ResolverResult<AAAA> aaaaRecordsResult;
 
@@ -148,7 +149,7 @@ public class SrvResolverResult extends ResolverResult<SRV> {
         public final int port;
 
         private ResolvedSrvRecord(DnsName name, SrvServiceProto srvServiceProto, SRV srv,
-                List<InternetAddressRR> addresses, ResolverResult<A> aRecordsResult,
+                List<InternetAddressRR<? extends InetAddress>> addresses, ResolverResult<A> aRecordsResult,
                 ResolverResult<AAAA> aaaaRecordsResult) {
             this.name = name;
             this.srvServiceProto = srvServiceProto;

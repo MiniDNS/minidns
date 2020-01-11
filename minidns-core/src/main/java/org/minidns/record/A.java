@@ -20,7 +20,7 @@ import org.minidns.util.InetAddressUtil;
 /**
  * A record payload (ip pointer).
  */
-public class A extends InternetAddressRR {
+public class A extends InternetAddressRR<Inet4Address> {
 
     @Override
     public TYPE getType() {
@@ -28,7 +28,7 @@ public class A extends InternetAddressRR {
     }
 
     public A(Inet4Address inet4Address) {
-        super(inet4Address.getAddress());
+        super(inet4Address);
         assert ip.length == 4;
     }
 

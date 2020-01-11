@@ -18,7 +18,7 @@ import java.net.UnknownHostException;
 /**
  * A resource record representing a internet address. Provides {@link #getInetAddress()}.
  */
-public abstract class InternetAddressRR extends Data {
+public abstract class InternetAddressRR<IA extends InetAddress> extends Data {
 
 
     /**
@@ -29,10 +29,15 @@ public abstract class InternetAddressRR extends Data {
     /**
      * Cache for the {@link InetAddress} this record presents.
      */
-    private transient InetAddress inetAddress;
+    private transient IA inetAddress;
 
     protected InternetAddressRR(byte[] ip) {
         this.ip = ip;
+    }
+
+    protected InternetAddressRR(IA inetAddress) {
+        this(inetAddress.getAddress());
+        this.inetAddress = inetAddress;
     }
 
     @Override
@@ -49,17 +54,16 @@ public abstract class InternetAddressRR extends Data {
         return ip.clone();
     }
 
-    public final InetAddress getInetAddress() {
-        InetAddress i = this.inetAddress;
-        if (i == null) {
+    @SuppressWarnings("unchecked")
+    public final IA getInetAddress() {
+        if (inetAddress == null) {
             try {
-                i = InetAddress.getByAddress(ip);
+                inetAddress = (IA) InetAddress.getByAddress(ip);
             } catch (UnknownHostException e) {
                 throw new IllegalStateException(e);
             }
-            this.inetAddress = i;
         }
-        return i;
+        return inetAddress;
     }
 
 }
