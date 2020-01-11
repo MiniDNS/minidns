@@ -12,6 +12,8 @@ package org.minidns.record;
 
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.net.Inet4Address;
+import java.net.Inet6Address;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 
@@ -66,4 +68,11 @@ public abstract class InternetAddressRR<IA extends InetAddress> extends Data {
         return inetAddress;
     }
 
+    public static InternetAddressRR<? extends InetAddress> from(InetAddress inetAddress) {
+        if (inetAddress instanceof Inet4Address) {
+            return new A((Inet4Address) inetAddress);
+        }
+
+        return new AAAA((Inet6Address) inetAddress);
+    }
 }
