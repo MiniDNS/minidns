@@ -100,7 +100,7 @@ public class DnsClient extends AbstractDnsClient {
         List<InetAddress> dnsServerAddresses = findDnsAddresses();
 
         if (useHardcodedDnsServers) {
-            InetAddress primaryHardcodedDnsServer = null, secondaryHardcodedDnsServer = null;
+            InetAddress primaryHardcodedDnsServer, secondaryHardcodedDnsServer = null;
             switch (ipVersionSetting) {
             case v4v6:
                 primaryHardcodedDnsServer = getRandomHardcodedIpv4DnsServer();
@@ -116,6 +116,9 @@ public class DnsClient extends AbstractDnsClient {
             case v6only:
                 primaryHardcodedDnsServer = getRandomHarcodedIpv6DnsServer();
                 break;
+            default:
+                throw new AssertionError("Unknown ipVersionSetting: " + ipVersionSetting);
+            }
 
             dnsServerAddresses.add(primaryHardcodedDnsServer);
             if (secondaryHardcodedDnsServer != null) {
