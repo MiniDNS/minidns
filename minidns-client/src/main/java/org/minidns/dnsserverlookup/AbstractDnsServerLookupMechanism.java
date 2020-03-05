@@ -40,7 +40,10 @@ public abstract class AbstractDnsServerLookupMechanism implements DnsServerLooku
 
     @Override
     public final int compareTo(DnsServerLookupMechanism other) {
-        return getPriority() - other.getPriority();
+        int myPriority = getPriority();
+        int otherPriority = other.getPriority();
+
+        return Integer.compare(myPriority, otherPriority);
     }
 
     @Override
