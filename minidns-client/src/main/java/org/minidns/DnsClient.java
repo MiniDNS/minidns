@@ -30,7 +30,6 @@ import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -321,6 +320,7 @@ public class DnsClient extends AbstractDnsClient {
             ipv6DnsServer = new ArrayList<>(res.size());
         }
 
+        int validServerAddresses = 0;
         for (String dnsServerString : res) {
             // The following invariant must hold: "dnsServerString is a IP address". Therefore findDNS() must only return a List of Strings
             // representing IP addresses. Otherwise the following call of getByName(String) may perform a DNS lookup without MiniDNS being
@@ -349,9 +349,11 @@ public class DnsClient extends AbstractDnsClient {
             } else {
                 throw new AssertionError("The address '" + dnsServerAddress + "' is neither of type Inet(4|6)Address");
             }
+
+            validServerAddresses++;
         }
 
-        List<InetAddress> dnsServers = new LinkedList<>();
+        List<InetAddress> dnsServers = new ArrayList<>(validServerAddresses);
 
         switch (setting) {
         case v4v6:
