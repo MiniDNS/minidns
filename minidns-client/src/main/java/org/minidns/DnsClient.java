@@ -99,7 +99,6 @@ public class DnsClient extends AbstractDnsClient {
     private List<InetAddress> getServerAddresses() {
         List<InetAddress> dnsServerAddresses = findDnsAddresses();
 
-        InetAddress[] selectedHardcodedDnsServerAddresses = new InetAddress[2];
         if (useHardcodedDnsServers) {
             InetAddress primaryHardcodedDnsServer = null, secondaryHardcodedDnsServer = null;
             switch (ipVersionSetting) {
@@ -117,13 +116,11 @@ public class DnsClient extends AbstractDnsClient {
             case v6only:
                 primaryHardcodedDnsServer = getRandomHarcodedIpv6DnsServer();
                 break;
+
+            dnsServerAddresses.add(primaryHardcodedDnsServer);
+            if (secondaryHardcodedDnsServer != null) {
+                dnsServerAddresses.add(secondaryHardcodedDnsServer);
             }
-            selectedHardcodedDnsServerAddresses[0] = primaryHardcodedDnsServer;
-            selectedHardcodedDnsServerAddresses[1] = secondaryHardcodedDnsServer;
-        }
-        for (InetAddress selectedHardcodedDnsServerAddress : selectedHardcodedDnsServerAddresses) {
-            if (selectedHardcodedDnsServerAddress == null) continue;
-            dnsServerAddresses.add(selectedHardcodedDnsServerAddress);
         }
 
         return dnsServerAddresses;
