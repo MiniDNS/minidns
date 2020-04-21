@@ -20,6 +20,10 @@ import java.util.Locale;
  * This class implements {@link Comparable} which compares DNS labels according to the Canonical DNS Name Order as
  * specified in <a href="https://tools.ietf.org/html/rfc4034#section-6.1">RFC 4034 § 6.1</a>.
  * </p>
+ * <p>
+ * Note that as per <a href="https://tools.ietf.org/html/rfc2181#section-11">RFC 2181 § 11</a> DNS labels may contain
+ * any byte.
+ * </p>
  * 
  * @see <a href="https://tools.ietf.org/html/rfc5890#section-2.2">RFC 5890 § 2.2. DNS-Related Terminology</a>
  * @author Florian Schmaus
