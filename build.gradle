@@ -29,7 +29,6 @@ allprojects {
 
 	group = 'org.minidns'
 	description = "A minimal DNS client library with support for A, AAAA, NS and SRV records"
-	sourceCompatibility = 1.8
 	version = shortVersion
 
 	ext {
@@ -44,7 +43,11 @@ allprojects {
 		sonatypeCredentialsAvailable = project.hasProperty('sonatypeUsername') && project.hasProperty('sonatypePassword')
 		sonatypeSnapshotUrl = 'https://oss.sonatype.org/content/repositories/snapshots'
 		sonatypeStagingUrl = 'https://oss.sonatype.org/service/local/staging/deploy/maven2'
+		javaCompatilibity = JavaVersion.VERSION_1_8
+		javaMajor = javaCompatilibity.getMajorVersion()
 	}
+
+	sourceCompatibility = javaCompatilibity
 
 	if (isSnapshot) {
 		version = version + '-SNAPSHOT'
@@ -154,6 +157,17 @@ allprojects {
 			// See JDK-8200363 (https://bugs.openjdk.java.net/browse/JDK-8200363)
 			// for information about the -Xwerror option.
 			options.addStringOption('Xwerror', '-quiet')
+		}
+	}
+
+	if (JavaVersion.current().isJava9Compatible()) {
+		tasks.withType(Javadoc) {
+			options.addStringOption('-release', javaMajor)
+		}
+		tasks.withType(JavaCompile) {
+			options.compilerArgs.addAll([
+				'--release', javaMajor,
+			])
 		}
 	}
 
@@ -369,6 +383,6 @@ task javadocAll(type: Javadoc) {
 	options.linkSource = true
 	options.use = true
 	options.links = [
-		"https://docs.oracle.com/javase/${sourceCompatibility.getMajorVersion()}/docs/api/",
+		"https://docs.oracle.com/javase/${javaMajor}/docs/api/",
 		] as String[]
 }

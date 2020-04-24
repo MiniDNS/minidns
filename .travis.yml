@@ -4,8 +4,7 @@ android:
     - android-19
     - android-21
 jdk:
-  - oraclejdk8
-  - openjdk9
+  - openjdk8
   - openjdk11
 
 install: gradle assemble --stacktrace
