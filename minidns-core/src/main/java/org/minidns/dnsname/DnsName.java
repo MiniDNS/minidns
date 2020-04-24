@@ -36,6 +36,11 @@ import org.minidns.idna.MiniDnsIdna;
  * that was received, which possibly includes upper case characters. The IDN (Internationalized Domain Name), that is
  * the DNS name as it should be shown to the user, can be retrieved using {@link #asIdn()}.
  * </p>
+ * More information about Internationalized Domain Names can be found at:
+ * <ul>
+ * <li><a href="https://unicode.org/reports/tr46/">UTS #46 - Unicode IDNA Compatibility Processing</a>
+ * <li><a href="https://tools.ietf.org/html/rfc8753">RFC 8753 - Internationalized Domain Names for Applications (IDNA) Review for New Unicode Versions</a>
+ * </ul>
  *
  * @see <a href="https://tools.ietf.org/html/rfc3696">RFC 3696</a>
  * @author Florian Schmaus
