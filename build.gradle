@@ -18,8 +18,6 @@ plugins {
 	id 'net.ltgt.errorprone' version '0.8.1'
 }
 
-apply from: 'version.gradle'
-
 allprojects {
 	apply plugin: 'java'
 	apply plugin: 'eclipse'
@@ -29,9 +27,11 @@ allprojects {
 
 	group = 'org.minidns'
 	description = "A minimal DNS client library with support for A, AAAA, NS and SRV records"
-	version = shortVersion
+	version readVersionFile()
 
 	ext {
+		isSnapshot = version.endsWith('-SNAPSHOT')
+		minidnsMinAndroidSdk = 19
 		junitVersion = '5.5.2'
 		androidBootClasspath = getAndroidRuntimeJar(minidnsMinAndroidSdk)
 		rootConfigDir = new File(rootDir, 'config')
@@ -49,11 +49,7 @@ allprojects {
 
 	sourceCompatibility = javaCompatilibity
 
-	if (isSnapshot) {
-		version = version + '-SNAPSHOT'
-	}
-
-	if (!ext.isSnapshot && !'git describe --exact-match HEAD'.execute().text.trim().equals(ext.shortVersion)) {
+	if (!ext.isSnapshot && !'git describe --exact-match HEAD'.execute().text.trim().equals(version)) {
 		throw new org.gradle.api.InvalidUserDataException('Untagged version detected! Please tag every release.')
 	}
 	if (!version.endsWith('-SNAPSHOT') && version != 'git tag --points-at HEAD'.execute().text.trim()) {
@@ -385,4 +381,15 @@ task javadocAll(type: Javadoc) {
 	options.links = [
 		"https://docs.oracle.com/javase/${javaMajor}/docs/api/",
 		] as String[]
+}
+
+def readVersionFile() {
+	def versionFile = new File(rootDir, 'version')
+	if (!versionFile.isFile()) {
+		throw new Exception("Could not find version file")
+	}
+	if (versionFile.text.isEmpty()) {
+		throw new Exception("Version file does not contain a version")
+	}
+	versionFile.text.trim()
 }
