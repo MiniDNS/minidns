@@ -11,19 +11,17 @@
 package org.minidns.dane.java7;
 
 import org.minidns.dane.DaneVerifier;
+import org.minidns.dane.X509TrustManagerUtil;
 import org.minidns.dnssec.DnssecClient;
 
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLEngine;
 import javax.net.ssl.TrustManager;
-import javax.net.ssl.TrustManagerFactory;
 import javax.net.ssl.X509ExtendedTrustManager;
 import javax.net.ssl.X509TrustManager;
 
 import java.net.Socket;
 import java.security.KeyManagementException;
-import java.security.KeyStore;
-import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
@@ -50,25 +48,11 @@ public class DaneExtendedTrustManager extends X509ExtendedTrustManager {
     }
 
     public DaneExtendedTrustManager() {
-        this(getDefaultTrustManager());
+        this(X509TrustManagerUtil.getDefault());
     }
 
     public DaneExtendedTrustManager(DnssecClient client) {
-        this(client, getDefaultTrustManager());
-    }
-
-    private static X509TrustManager getDefaultTrustManager() {
-        try {
-            TrustManagerFactory tmf = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
-            tmf.init((KeyStore) null);
-            for (TrustManager trustManager : tmf.getTrustManagers()) {
-                if (trustManager instanceof X509TrustManager)
-                    return (X509TrustManager) trustManager;
-            }
-        } catch (NoSuchAlgorithmException | KeyStoreException e) {
-            throw new RuntimeException("X.509 not supported.", e);
-        }
-        return null;
+        this(client, X509TrustManagerUtil.getDefault());
     }
 
     public DaneExtendedTrustManager(X509TrustManager base) {

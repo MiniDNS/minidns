@@ -10,12 +10,7 @@
  */
 package org.minidns.dane;
 
-import javax.net.ssl.TrustManager;
-import javax.net.ssl.TrustManagerFactory;
 import javax.net.ssl.X509TrustManager;
-import java.security.KeyStore;
-import java.security.KeyStoreException;
-import java.security.NoSuchAlgorithmException;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 
@@ -30,7 +25,7 @@ public class ExpectingTrustManager implements X509TrustManager {
      *                     {@code null} to use the system default.
      */
     public ExpectingTrustManager(X509TrustManager trustManager) {
-        this.trustManager = trustManager == null ? getDefaultTrustManager() : trustManager;
+        this.trustManager = trustManager == null ? X509TrustManagerUtil.getDefault() : trustManager;
     }
 
     public boolean hasException() {
@@ -64,19 +59,5 @@ public class ExpectingTrustManager implements X509TrustManager {
     @Override
     public X509Certificate[] getAcceptedIssuers() {
         return trustManager.getAcceptedIssuers();
-    }
-
-    private static X509TrustManager getDefaultTrustManager() {
-        try {
-            TrustManagerFactory tmf = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
-            tmf.init((KeyStore) null);
-            for (TrustManager trustManager : tmf.getTrustManagers()) {
-                if (trustManager instanceof X509TrustManager)
-                    return (X509TrustManager) trustManager;
-            }
-        } catch (NoSuchAlgorithmException | KeyStoreException e) {
-            throw new RuntimeException("X.509 not supported.", e);
-        }
-        return null;
     }
 }
