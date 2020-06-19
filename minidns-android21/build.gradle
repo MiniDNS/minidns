@@ -1,7 +1,7 @@
 apply plugin: 'ru.vyarus.animalsniffer'
 
 ext {
-	android21BootClasspath = getAndroidRuntimeJar(21)
+	androidBootClasspath = getAndroidRuntimeJar(23)
 }
 
 dependencies {
@@ -9,10 +9,10 @@ dependencies {
     testCompile project(path: ":minidns-client", configuration: "testRuntime")
 
 	// Add the Android jar to the Eclipse .classpath.
-	compile files(android21BootClasspath)
+	compile files(androidBootClasspath)
 
 	// For AnimalSniffer
-	signature "net.sf.androidscents.signature:android-api-level-21:5.0.1_r2@signature"
+	signature "net.sf.androidscents.signature:android-api-level-23:6.0_r3@signature"
 }
 
 animalsniffer {

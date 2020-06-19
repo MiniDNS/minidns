@@ -18,6 +18,7 @@ import android.net.Network;
 import android.net.RouteInfo;
 import android.os.Build;
 
+import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -59,15 +60,42 @@ public class AndroidUsingLinkProperties extends AbstractDnsServerLookupMechanism
         return Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP;
     }
 
+    @TargetApi(Build.VERSION_CODES.M)
+    private List<String> getDnsServerAddressesOfActiveNetwork() {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
+            return null;
+        }
+
+        // ConnectivityManager.getActiveNetwork() is API 23.
+        Network activeNetwork = connectivityManager.getActiveNetwork();
+        if (activeNetwork == null) {
+            return null;
+        }
+
+        LinkProperties linkProperties = connectivityManager.getLinkProperties(activeNetwork);
+        if (linkProperties == null) {
+            return null;
+        }
+
+        List<InetAddress> dnsServers = linkProperties.getDnsServers();
+        return toListOfStrings(dnsServers);
+    }
+
     @Override
     @TargetApi(21)
     public List<String> getDnsServerAddresses() {
+        // First, try the API 23 approach using ConnectivityManager.getActiveNetwork().
+        List<String> servers = getDnsServerAddressesOfActiveNetwork();
+        if (servers != null) {
+            return servers;
+        }
+
         Network[] networks = connectivityManager.getAllNetworks();
         if (networks == null) {
             return null;
         }
 
-        List<String> servers = new ArrayList<>(networks.length * 2);
+        servers = new ArrayList<>(networks.length * 2);
         for (Network network : networks) {
             LinkProperties linkProperties = connectivityManager.getLinkProperties(network);
             if (linkProperties == null) {
