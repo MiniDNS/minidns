@@ -3,9 +3,9 @@ MiniDNS - A DNSSEC enabled DNS library
 
 [![Build Status](https://travis-ci.org/MiniDNS/minidns.svg)](https://travis-ci.org/MiniDNS/minidns)  [![Coverage Status](https://coveralls.io/repos/MiniDNS/minidns/badge.svg)](https://coveralls.io/r/MiniDNS/minidns)
 
-MiniDNS is a minimal DNS client client library for Android and Java SE. It can parse resource records (A, AAAA, NS, SRV, …) and is easy to use and extend. MiniDNS aims to be secure, modular, leightweight and as simple as possible. It also provides support for **DNSSEC** and **DANE**, and is thus the ideal resolver if you want to bring DNSSEC close to your application.
+MiniDNS ("**M**odular **I**nternet **N**ame **I**nformer for **DNS**") is a DNS library for Android and Java SE. It can parse resource records (A, AAAA, NS, SRV, …) and is easy to use and extend. MiniDNS aims to be secure, modular, efficient and as simple as possible. It also provides support for **DNSSEC** and **DANE**, and is thus the ideal resolver if you want to bring DNSSEC close to your application.
 
-It comes with a pluggable cache mechanism, a pre-configured cache and an easy to use high-level API (minidns-hla) for those who just want to perform a reliable lookup of a domain name.
+It comes with a pluggable cache mechanism, a pre-configured cache and an easy to use high-level API (`minidns-hla`) for those who just want to perform a reliable lookup of a domain name.
 
 **Notice:** DNSSEC/DANE support has not yet undergo a security audit.
 If you find the project useful and if you are able to provide the resources for a security audit, then please contact us.
