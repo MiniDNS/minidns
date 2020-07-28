@@ -110,7 +110,7 @@ public class DaneExtendedTrustManager extends X509ExtendedTrustManager {
             if (base instanceof X509ExtendedTrustManager) {
                 ((X509ExtendedTrustManager) base).checkServerTrusted(chain, authType, socket);
             } else {
-                base.checkClientTrusted(chain, authType);
+                base.checkServerTrusted(chain, authType);
             }
         }
     }
@@ -135,7 +135,7 @@ public class DaneExtendedTrustManager extends X509ExtendedTrustManager {
             if (base instanceof X509ExtendedTrustManager) {
                 ((X509ExtendedTrustManager) base).checkServerTrusted(chain, authType, engine);
             } else {
-                base.checkClientTrusted(chain, authType);
+                base.checkServerTrusted(chain, authType);
             }
         }
     }
