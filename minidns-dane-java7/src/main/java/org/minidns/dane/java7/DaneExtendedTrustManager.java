@@ -13,9 +13,11 @@ package org.minidns.dane.java7;
 import org.minidns.dane.DaneVerifier;
 import org.minidns.dane.X509TrustManagerUtil;
 import org.minidns.dnssec.DnssecClient;
+import org.minidns.util.InetAddressUtil;
 
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLEngine;
+import javax.net.ssl.SSLSocket;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509ExtendedTrustManager;
 import javax.net.ssl.X509TrustManager;
@@ -84,7 +86,27 @@ public class DaneExtendedTrustManager extends X509ExtendedTrustManager {
 
     @Override
     public void checkServerTrusted(X509Certificate[] chain, String authType, Socket socket) throws CertificateException {
-        if (!verifier.verifyCertificateChain(chain, socket.getInetAddress().getHostName(), socket.getPort())) {
+        boolean verificationSuccessful = false;
+
+        if (socket instanceof SSLSocket) {
+            final SSLSocket sslSocket = (SSLSocket) socket;
+            final String hostname = sslSocket.getHandshakeSession().getPeerHost();
+
+            if (hostname == null) {
+                LOGGER.warning("Hostname returned by sslSocket.getHandshakeSession().getPeerHost() is null");
+            } else if (InetAddressUtil.isIpAddress(hostname)) {
+                LOGGER.warning(
+                        "Hostname returned by sslSocket.getHandshakeSession().getPeerHost() '" + hostname
+                                + "' is an IP address");
+            } else {
+                final int port = socket.getPort();
+                verificationSuccessful = verifier.verifyCertificateChain(chain, hostname, port);
+            }
+        } else {
+            throw new IllegalStateException("The provided socket '" + socket + "' is not of type SSLSocket");
+        }
+
+        if (!verificationSuccessful) {
             if (base instanceof X509ExtendedTrustManager) {
                 ((X509ExtendedTrustManager) base).checkServerTrusted(chain, authType, socket);
             } else {
