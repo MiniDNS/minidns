@@ -13,11 +13,14 @@ package org.minidns;
 import org.minidns.MiniDnsException.ErrorResponseException;
 import org.minidns.MiniDnsException.NoQueryPossibleException;
 import org.minidns.dnsmessage.DnsMessage;
+import org.minidns.dnsmessage.Question;
+import org.minidns.dnsname.DnsName;
 import org.minidns.dnsqueryresult.DnsQueryResult;
 import org.minidns.dnsserverlookup.AndroidUsingExec;
 import org.minidns.dnsserverlookup.AndroidUsingReflection;
 import org.minidns.dnsserverlookup.DnsServerLookupMechanism;
 import org.minidns.dnsserverlookup.UnixUsingEtcResolvConf;
+import org.minidns.record.Record.TYPE;
 import org.minidns.util.CollectionsUtil;
 import org.minidns.util.InetAddressUtil;
 import org.minidns.util.MultipleIoException;
@@ -441,4 +444,32 @@ public class DnsClient extends AbstractDnsClient {
     public InetAddress getRandomHarcodedIpv6DnsServer() {
         return CollectionsUtil.getRandomFrom(STATIC_IPV6_DNS_SERVERS, insecureRandom);
     }
+
+    private static Question getReverseIpLookupQuestionFor(DnsName dnsName) {
+        return new Question(dnsName, TYPE.PTR);
+    }
+
+    public static Question getReverseIpLookupQuestionFor(Inet4Address inet4Address) {
+        DnsName reversedIpAddress = InetAddressUtil.reverseIpAddressOf(inet4Address);
+        DnsName dnsName = DnsName.from(reversedIpAddress, DnsName.IN_ADDR_ARPA);
+        return getReverseIpLookupQuestionFor(dnsName);
+    }
+
+    public static Question getReverseIpLookupQuestionFor(Inet6Address inet6Address) {
+        DnsName reversedIpAddress = InetAddressUtil.reverseIpAddressOf(inet6Address);
+        DnsName dnsName = DnsName.from(reversedIpAddress, DnsName.IP6_ARPA);
+        return getReverseIpLookupQuestionFor(dnsName);
+    }
+
+    public static Question getReverseIpLookupQuestionFor(InetAddress inetAddress) {
+        if (inetAddress instanceof Inet4Address) {
+            return getReverseIpLookupQuestionFor((Inet4Address) inetAddress);
+        } else if (inetAddress instanceof Inet6Address) {
+            return getReverseIpLookupQuestionFor((Inet6Address) inetAddress);
+        } else {
+            throw new IllegalArgumentException("The provided inetAddress '" + inetAddress
+                    + "' is neither of type Inet4Address nor Inet6Address");
+        }
+     }
+
 }
