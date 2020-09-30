@@ -12,6 +12,7 @@ package org.minidns.record;
 
 import org.minidns.constants.DnssecConstants.DigestAlgorithm;
 import org.minidns.constants.DnssecConstants.SignatureAlgorithm;
+import org.minidns.dnsname.DnsName;
 import org.minidns.record.NSEC3.HashAlgorithm;
 import org.minidns.record.Record.TYPE;
 import org.junit.jupiter.api.Test;
@@ -21,7 +22,10 @@ import java.io.DataInputStream;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 import static org.minidns.Assert.assertCsEquals;
 import static org.minidns.Assert.assertArrayContentEquals;
@@ -46,6 +50,21 @@ public class RecordsTest {
         byte[] ab = a.toByteArray();
         a = A.parse(new DataInputStream(new ByteArrayInputStream(ab)));
         assertArrayEquals(new byte[] {127, 0, 0, 1}, a.getIp());
+    }
+
+    @Test
+    public void testSVCBRecord() throws Exception {
+        Map<String, String> values = new LinkedHashMap<>();
+        values.put("just", "testing");
+        values.put("lookma", "nopläintêxt");
+        values.put("even", "numbers like 1 and very long text with spaces in it.");
+        SVCB svcb = new SVCB(1, DnsName.from("example.com"), values);
+
+        String expectedString = "1 example.com just=\"testing\" lookma=\"nopläintêxt\" even=\"numbers like 1 and very long text with spaces in it.\"";
+        assertEquals(expectedString, svcb.toString());
+        byte[] svcbb = svcb.toByteArray();
+        svcb = SVCB.parse(new DataInputStream(new ByteArrayInputStream(svcbb)), svcb.length(), svcbb);
+        assertEquals(expectedString, svcb.toString());
     }
 
     @Test
