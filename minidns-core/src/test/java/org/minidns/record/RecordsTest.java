@@ -60,6 +60,8 @@ public class RecordsTest {
         values.put("even", "numbers like 1 and very long text with spaces in it.");
         SVCB svcb = new SVCB(1, DnsName.from("example.com"), values);
 
+        assertEquals(TYPE.SVCB, svcb.getType());
+
         String expectedString = "1 example.com just=\"testing\" lookma=\"nopläintêxt\" even=\"numbers like 1 and very long text with spaces in it.\"";
         assertEquals(expectedString, svcb.toString());
         byte[] svcbb = svcb.toByteArray();
