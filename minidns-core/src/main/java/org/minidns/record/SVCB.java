@@ -5,7 +5,6 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.regex.Matcher;
@@ -14,26 +13,30 @@ import java.util.regex.Pattern;
 /**
  * SVCB Record Type (Service binding)
  *
- * https://tools.ietf.org/html/draft-ietf-dnsop-svcb-httpssvc-01
+ * @see <a href="https://tools.ietf.org/html/draft-ietf-dnsop-svcb-https-01">draft-ietf-dnsop-svcb-https-01: Service binding and parameter specification via the DNS (DNS SVCB and HTTPS RRs)</a>
  */
 class SVCB extends RRWithTarget {
 
     /**
-     * The priority indicates the SvcRecordType.
-     * https://tools.ietf.org/html/draft-ietf-dnsop-svcb-httpssvc-01#section-2.4
+     * The priority indicates the SvcPriority.
+     * A SvcPriority of 0 puts this RR in AliasMode (otherwise ServiceMode).
+     *
+     * @see <a href="https://tools.ietf.org/html/draft-ietf-dnsop-svcb-https-01#page-12>SvcPriority</a>
      */
     public final int priority;
 
     /**
      * SvcFieldValue
      * A set of key=value pairs.
-     * https://tools.ietf.org/html/draft-ietf-dnsop-svcb-httpssvc-01#section-2.1
+     * The key is an ID for the parameter.
+     *
+     * @see <a href="https://tools.ietf.org/html/draft-ietf-dnsop-svcb-https-01#section-12.3.2">Possible parameter IDs</a>
      */
     public final Map<String, String> values;
 
     // The first group is the key. They key can only be a-z, 0-9 or "-"
     // The second group is the value. It can be a lot of things (see https://tools.ietf.org/html/draft-ietf-dnsop-svcb-httpssvc-01#section-2.1.1)
-    //    except for DQUOTE (hence it can be excluded from the regex-group)
+    // except for DQUOTE (hence it can be excluded from the regex-group)
     private static final Pattern valuesPattern = Pattern.compile("([a-z0-9\\-]+)=\"([^\"]*)\"");
 
     /**
@@ -57,9 +60,6 @@ class SVCB extends RRWithTarget {
         return new SVCB(priority, target, parseValuesBlob(valuesBlob));
     }
 
-    /**
-     * Parses pairs according to format from https://tools.ietf.org/html/draft-ietf-dnsop-svcb-httpssvc-01#section-2.1.1
-     */
     private static Map<String, String> parseValuesBlob(byte[] blob) {
         Map<String, String> values = new LinkedHashMap<>();
         String blobAsString = new String(blob, StandardCharsets.UTF_8);
