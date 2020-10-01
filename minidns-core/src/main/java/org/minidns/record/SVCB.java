@@ -1,16 +1,15 @@
 package org.minidns.record;
 
 import org.minidns.constants.SVCBConstants;
+import org.minidns.constants.svcbservicekeys.ServiceKeySpecification;
 import org.minidns.dnsname.DnsName;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.util.Collections;
-import java.util.Comparator;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.TreeMap;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.TreeSet;
 
 /**
  * SVCB Record Type (Service binding)
@@ -35,24 +34,18 @@ class SVCB extends RRWithTarget {
      *
      * @see <a href="https://tools.ietf.org/html/draft-ietf-dnsop-svcb-https-01#section-12.3.2">Possible parameter IDs</a>
      */
-    public final Map<SVCBConstants.ServiceKeySpecification, String> params;
+    public final Set<ServiceKeySpecification<?>> params;
 
     /**
      * @param priority SvcPriority
      * @param target TargetName
      * @param params SvcParams
      */
-    public SVCB(int priority, DnsName target, Map<SVCBConstants.ServiceKeySpecification, String> params) {
+    public SVCB(int priority, DnsName target, Set<ServiceKeySpecification<?>> params) {
         super(target);
         this.priority = priority;
-        TreeMap<SVCBConstants.ServiceKeySpecification, String> sorted = new TreeMap<>(new Comparator<SVCBConstants.ServiceKeySpecification>() {
-            @Override
-            public int compare(SVCBConstants.ServiceKeySpecification first, SVCBConstants.ServiceKeySpecification other) {
-                return first.getNumber() - other.getNumber(); //Ascending order
-            }
-        });
-        sorted.putAll(params);
-        this.params = Collections.unmodifiableSortedMap(sorted);
+        TreeSet<ServiceKeySpecification<?>> sorted = new TreeSet<>(params);
+        this.params = Collections.unmodifiableSortedSet(sorted);
     }
 
     /**
@@ -64,52 +57,49 @@ class SVCB extends RRWithTarget {
             throws IOException {
         int priority = dis.readUnsignedShort();
         DnsName target = DnsName.parse(dis, data);
-        Map<SVCBConstants.ServiceKeySpecification, String> params;
+        Set<ServiceKeySpecification<?>> params;
 
         int paramBlobSize = length - 2 - target.getRawBytes().length;
         if(paramBlobSize == 0) {
-            params = Collections.emptyMap();
+            params = Collections.emptySet();
         } else {
-            params = parseParamsBlob(dis, paramBlobSize);
+            params = parseParamsBlob(dis, length);
         }
 
         return new SVCB(priority, target, params);
     }
 
-    private static Map<SVCBConstants.ServiceKeySpecification, String> parseParamsBlob(DataInputStream dis, int paramBlobSize) throws IOException {
+    private static Set<ServiceKeySpecification<?>> parseParamsBlob(DataInputStream dis, int paramBlobSize) throws IOException {
         int remainingBytes = paramBlobSize;
         int lastKey = Integer.MIN_VALUE;
-        Map<SVCBConstants.ServiceKeySpecification, String> params = new LinkedHashMap<>();
+        Set<ServiceKeySpecification<?>> params = new HashSet<>();
 
         while(remainingBytes > 0) {
             int key = dis.readUnsignedShort();
-            String value = null;
-            if(key < lastKey) throw new IllegalArgumentException("SVCB ServiceKeys must be in ascending order");
-            else if(key == lastKey) throw new IllegalArgumentException("SVCB ServiceKeys must not be duplicate");
+            if(key < lastKey) throw new IllegalArgumentException("SVCB ServiceKeys must be in ascending order (" + key + "<" + lastKey + ")");
+            else if(key == lastKey) throw new IllegalArgumentException("SVCB ServiceKeys must not be duplicate (" + key + "=" + lastKey + ")");
             lastKey = key;
 
             int valueLength = dis.readUnsignedShort();
+            byte[] valueBlob = new byte[valueLength];
             if(valueLength != 0) {
-                byte[] valueBlob = new byte[valueLength];
                 dis.readFully(valueBlob);
-                value = new String(valueBlob, StandardCharsets.UTF_8);
             }
 
-            params.put(SVCBConstants.ServiceKey.findFrom(key), value);
+            ServiceKeySpecification<?> detectedKey = SVCBConstants.findServiceKeyByNumber(key, valueBlob);
+            params.add(detectedKey);
             remainingBytes = remainingBytes - 4 - valueLength;
         }
-        return Collections.unmodifiableMap(params);
+        return params;
     }
 
     @Override
     public void serialize(DataOutputStream dos) throws IOException {
         dos.writeShort(priority);
         super.serialize(dos);
-        for (Map.Entry<SVCBConstants.ServiceKeySpecification, String> entry : params.entrySet()) {
-            dos.writeShort(entry.getKey().getNumber());
-            byte[] paramValueBlob = entry.getValue().getBytes(StandardCharsets.UTF_8);
-            dos.writeShort(paramValueBlob.length);
-            dos.write(paramValueBlob);
+        for (ServiceKeySpecification<?> param: params) {
+            dos.writeShort(param.blob.length);
+            dos.write(param.blob);
         }
     }
 
@@ -120,17 +110,21 @@ class SVCB extends RRWithTarget {
 
     @Override
     public String toString() {
-        return priority + " " + target + createValuesString();
+        try {
+            return priority + " " + target + createValuesString();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
-    private String createValuesString() {
+    private String createValuesString() throws IOException {
         StringBuilder builder = new StringBuilder();
-        for (Map.Entry<SVCBConstants.ServiceKeySpecification, String> entry : params.entrySet()) {
+        for (ServiceKeySpecification<?> param : params) {
             builder.append(" ");
-            builder.append(entry.getKey().getTextualRepresentation());
+            builder.append(param.getTextualRepresentation());
             builder.append("=");
             builder.append("\"");
-            builder.append(entry.getValue());
+            builder.append(param.valueAsString());
             builder.append("\"");
         }
         return builder.toString();

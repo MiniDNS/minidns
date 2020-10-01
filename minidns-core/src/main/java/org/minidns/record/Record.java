@@ -99,7 +99,7 @@ public final class Record<D extends Data> {
         CDNSKEY(60),
         OPENPGPKEY(61, OPENPGPKEY.class),
         CSYNC(62),
-        SVCB(64, SVCB.class),
+        SVCB(65, SVCB.class),
         SPF(99),
         UINFO(100),
         UID(101),
