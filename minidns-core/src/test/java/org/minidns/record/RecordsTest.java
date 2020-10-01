@@ -12,6 +12,7 @@ package org.minidns.record;
 
 import org.minidns.constants.DnssecConstants.DigestAlgorithm;
 import org.minidns.constants.DnssecConstants.SignatureAlgorithm;
+import org.minidns.constants.SVCBConstants;
 import org.minidns.dnsname.DnsName;
 import org.minidns.record.NSEC3.HashAlgorithm;
 import org.minidns.record.Record.TYPE;
@@ -54,15 +55,31 @@ public class RecordsTest {
 
     @Test
     public void testSVCBRecord() throws Exception {
-        Map<String, String> values = new LinkedHashMap<>();
-        values.put("just", "testing");
-        values.put("lookma", "nopläintêxt");
-        values.put("even", "numbers like 1 and very long text with spaces in it.");
+        Map<SVCBConstants.ServiceKeySpecification, String> values = new HashMap<>();
+        values.put(SVCBConstants.ServiceKey.IPV6HINT, "testing"); //Number = 6
+        values.put(SVCBConstants.ServiceKey.ALPN, "nopläintêxt"); // Number = 1
+        values.put(SVCBConstants.ServiceKey.PORT, "numbers like 1 and very, very long text with spaces in it."); // Number = 3
+        values.put(new SVCBConstants.UnrecognizedServiceKey(65281), "unknown"); // 65281 is in the private use block.
         SVCB svcb = new SVCB(1, DnsName.from("example.com"), values);
 
         assertEquals(TYPE.SVCB, svcb.getType());
 
-        String expectedString = "1 example.com just=\"testing\" lookma=\"nopläintêxt\" even=\"numbers like 1 and very long text with spaces in it.\"";
+        // The keys should be ordered ascending
+        String expectedString = "1 example.com alpn=\"nopläintêxt\" port=\"numbers like 1 and very, very long text with spaces in it.\" ipv6hint=\"testing\" 65281=\"unknown\"";
+        assertEquals(expectedString, svcb.toString());
+        byte[] svcbb = svcb.toByteArray();
+        svcb = SVCB.parse(new DataInputStream(new ByteArrayInputStream(svcbb)), svcb.length(), svcbb);
+        assertEquals(expectedString, svcb.toString());
+    }
+
+    @Test
+    public void testSVCBRecord_NoParams() throws Exception {
+        SVCB svcb = new SVCB(0, DnsName.from("example.com"), Collections.<SVCBConstants.ServiceKeySpecification, String>emptyMap());
+
+        assertEquals(TYPE.SVCB, svcb.getType());
+
+        // The keys should be ordered ascending
+        String expectedString = "1 example.com";
         assertEquals(expectedString, svcb.toString());
         byte[] svcbb = svcb.toByteArray();
         svcb = SVCB.parse(new DataInputStream(new ByteArrayInputStream(svcbb)), svcb.length(), svcbb);
