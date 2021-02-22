@@ -294,7 +294,7 @@ public class DnsWorld extends AbstractDnsDataSource {
                 // overriding it? Or does this not happen by construction?
                 zoneData.put(rrSet.type, rrSet);
 
-                DnsMessage.Builder req = client.buildMessage(new Question(rrSet.name, rrSet.type, rrSet.clazz, false));
+                DnsMessage.Builder req = client.buildMessage(new Question(rrSet.name, rrSet.type, rrSet.clazz));
                 DnsMessage.Builder resp = DnsMessage.builder();
                 resp.setAnswers(rrSet.records);
                 resp.setAuthoritativeAnswer(true);
