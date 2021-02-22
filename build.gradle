@@ -32,7 +32,7 @@ allprojects {
 	ext {
 		isSnapshot = version.endsWith('-SNAPSHOT')
 		minidnsMinAndroidSdk = 19
-		junitVersion = '5.5.2'
+		junitVersion = '5.7.1'
 		androidBootClasspath = getAndroidRuntimeJar(minidnsMinAndroidSdk)
 		rootConfigDir = new File(rootDir, 'config')
 		gitCommit = getGitCommit()
