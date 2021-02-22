@@ -128,7 +128,8 @@ public class DnssecWorld extends DnsWorld {
         return recordList;
     }
 
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings("varargs")
+    @SafeVarargs
     public static SignedRRSet sign(DNSKEY key, String signerName, PrivateKey privateKey, SignatureAlgorithm algorithm, Record<? extends Data>... records) {
         return new SignedRRSet(records, rrsigRecord(key, signerName, privateKey, algorithm, records));
     }
@@ -139,7 +140,8 @@ public class DnssecWorld extends DnsWorld {
         return new SignedRRSet(records, rrsigRecord(key, signerName, privateKey, algorithm, records));
     }
 
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings("varargs")
+    @SafeVarargs
     public static SignedRRSet sign(PrivateKey privateKey, RRSIG rrsig, Record<? extends Data>... records) {
         return new SignedRRSet(records, rrsigRecord(privateKey, rrsig, records));
     }

@@ -101,7 +101,6 @@ public class DnssecClientTest {
         assertArrayEquals(new byte[] {1, 1, 1, 2}, ((A) answers.get(0).payloadData).getIp());
     }
 
-    @SuppressWarnings("unchecked")
     @Test
     public void testBasicValid() throws IOException {
         DnssecClient client = constructDnssecClient();

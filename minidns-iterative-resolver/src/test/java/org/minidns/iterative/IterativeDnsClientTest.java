@@ -34,7 +34,6 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class IterativeDnsClientTest {
 
-    @SuppressWarnings("unchecked")
     @Test
     public void basicIterativeTest() throws IOException {
         IterativeDnsClient client = new IterativeDnsClient(new LruCache(0));
@@ -57,7 +56,6 @@ public class IterativeDnsClientTest {
         assertArrayEquals(new byte[] {1, 1, 1, 3}, ((A) answers.get(0).payloadData).getIp());
     }
 
-    @SuppressWarnings("unchecked")
     @Test
     public void loopIterativeTest() throws IOException {
         IterativeDnsClient client = new IterativeDnsClient(new LruCache(0));
@@ -79,7 +77,6 @@ public class IterativeDnsClientTest {
         );
     }
 
-    @SuppressWarnings("unchecked")
     @Test
     public void notGluedNsTest() throws IOException {
         IterativeDnsClient client = new IterativeDnsClient(new LruCache(0));

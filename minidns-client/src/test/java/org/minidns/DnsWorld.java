@@ -377,7 +377,7 @@ public class DnsWorld extends AbstractDnsDataSource {
         return glues;
     }
 
-    @SuppressWarnings("unchecked")
+    @SafeVarargs
     public static DnsWorld applyStubRecords(AbstractDnsClient client, Record<? extends Data>... records) {
         DnsWorld world = new DnsWorld();
         client.setDataSource(world);
@@ -392,7 +392,7 @@ public class DnsWorld extends AbstractDnsDataSource {
         return world;
     }
 
-    @SuppressWarnings("unchecked")
+    @SafeVarargs
     public static Zone rootZone(Record<? extends Data>... records) {
         List<Record<? extends Data>> listOfRecords = new ArrayList<>(records.length);
         for (Record<? extends Data> record : records) {
@@ -405,7 +405,7 @@ public class DnsWorld extends AbstractDnsDataSource {
         return new Zone("", null, records);
     }
 
-    @SuppressWarnings("unchecked")
+    @SafeVarargs
     public static Zone zone(String zoneName, String nsName, String nsIp, Record<? extends Data>... records) {
         List<Record<? extends Data>> listOfRecords = new ArrayList<>(records.length);
         for (Record<? extends Data> record : records) {
