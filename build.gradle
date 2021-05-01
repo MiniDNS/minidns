@@ -36,7 +36,6 @@ allprojects {
 		androidBootClasspath = getAndroidRuntimeJar(minidnsMinAndroidSdk)
 		rootConfigDir = new File(rootDir, 'config')
 		gitCommit = getGitCommit()
-		builtDate = (new java.text.SimpleDateFormat("yyyy-MM-dd")).format(new Date())
 		isReleaseVersion = !isSnapshot
 		isContinuousIntegrationEnvironment = Boolean.parseBoolean(System.getenv('CI'))
 		signingRequired = !(isSnapshot || isContinuousIntegrationEnvironment)
