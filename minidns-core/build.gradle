@@ -12,7 +12,7 @@ class CreateFileTask extends DefaultTask {
 }
 
 task createVersionResource(type: CreateFileTask) {
-	fileContent = version + ' (' + gitCommit + ' ' + builtDate + ')'
+	fileContent = version + ' (' + gitCommit + ')'
 	outputFile = new File(projectDir, 'src/main/resources/org.minidns/version')
 }
 
