@@ -43,6 +43,8 @@ public abstract class XnLabel extends ReservedLdhLabel {
     }
 
     static boolean isXnLabelInternal(String label) {
+        // Note that we already ensure the minimum label length here, since reserved LDH
+        // labels must start with "xn--".
         return label.substring(0, 2).toLowerCase(Locale.US).equals("xn");
     }
 }
