@@ -36,7 +36,7 @@ public abstract class XnLabel extends ReservedLdhLabel {
     }
 
     public static boolean isXnLabel(String label) {
-        if (!isLdhLabel(label)) {
+        if (!isReservedLdhLabel(label)) {
             return false;
         }
         return isXnLabelInternal(label);
