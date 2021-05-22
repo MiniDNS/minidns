@@ -24,7 +24,7 @@ import org.minidns.dnslabel.DnsLabel;
 import org.minidns.idna.MiniDnsIdna;
 
 /**
- * A DNS name, also called "domain name". A DNS name consists of multiple 'labels' and is subject to certain restrictions (see
+ * A DNS name, also called "domain name". A DNS name consists of multiple 'labels' (see {@link DnsLabel}) and is subject to certain restrictions (see
  * for example <a href="https://tools.ietf.org/html/rfc3696#section-2">RFC 3696 § 2.</a>).
  * <p>
  * Instances of this class can be created by using {@link #from(String)}.
@@ -43,6 +43,7 @@ import org.minidns.idna.MiniDnsIdna;
  * </ul>
  *
  * @see <a href="https://tools.ietf.org/html/rfc3696">RFC 3696</a>
+ * @see DnsLabel
  * @author Florian Schmaus
  *
  */
