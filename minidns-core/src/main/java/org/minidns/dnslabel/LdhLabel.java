@@ -61,17 +61,7 @@ public abstract class LdhLabel extends DnsLabel {
             return false;
         }
 
-        for (int i = 0; i < label.length(); i++) {
-            char c = label.charAt(i);
-            if ((c >= 'a' && c <= 'z')
-                    || (c >= 'A' && c <= 'Z')
-                    || (c >= '0' && c <= '9')
-                    || c == '-') {
-                continue;
-            }
-            return false;
-        }
-        return true;
+        return consistsOnlyOfLettersDigitsAndHypen(label);
     }
 
     protected static LdhLabel fromInternal(String label) {

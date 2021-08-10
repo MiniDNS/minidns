@@ -50,6 +50,30 @@ public class DnsNameTest {
     }
 
     @Test
+    public void parseLabelWillNullByteTest() throws IOException {
+        byte[] test = new byte[] {6, 'v', 'i', 'c', 't', 'i', 'm', 4, 'o', 'r', 'g', 0, 7, 'e', 'x', 'a', 'm', 'p', 'l', 'e', 3, 'o', 'r', 'g', 0};
+
+        DnsName dnsName = parse(test);
+        assertCsEquals("victim.org␀.example.org", dnsName);
+
+        DnsLabel orgWithoutNullByte = dnsName.getLabel(0);
+        assertArrayEquals(new char[] { 'o', 'r', 'g'}, orgWithoutNullByte.getRawLabel().toCharArray());
+
+        DnsLabel orgWithNullByte = dnsName.getLabel(2);
+        assertArrayEquals(new char[] { 'o', 'r', 'g', '\0'}, orgWithNullByte.getRawLabel().toCharArray());
+        assertArrayEquals(new char[] { 'o', 'r', 'g', '␀'}, orgWithNullByte.toString().toCharArray());
+    }
+
+    private static DnsName parse(byte[] bytes) throws IOException {
+        return DnsName.parse(new DataInputStream(new ByteArrayInputStream(bytes)), bytes);
+    }
+
+    @Test
+    public void constructInvalid() throws IOException {
+        DnsName.from("foo\\0nullbar");
+    }
+
+    @Test
     public void equalsTest() {
         assertEquals(DnsName.from(""), DnsName.from("."));
     }

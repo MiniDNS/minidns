@@ -92,8 +92,27 @@ public abstract class DnsLabel implements CharSequence, Comparable<DnsLabel> {
         return label.subSequence(start, end);
     }
 
+    private transient String safeToStringRepresentation;
+
     @Override
     public final String toString() {
+        if (safeToStringRepresentation == null) {
+            safeToStringRepresentation = toSafeRepesentation(label);
+        }
+
+        return safeToStringRepresentation;
+    }
+
+    /**
+     * Get the raw label. Note that this may return a String containing null bytes.
+     * Those Strings are notoriously difficult to handle from a security
+     * perspective. Therefore it is recommended to use {@link #toString()} instead,
+     * which will return a sanitized String.
+     *
+     * @return the raw label.
+     * @since 1.1.0
+     */
+    public final String getRawLabel() {
         return label;
     }
 
@@ -168,6 +187,76 @@ public abstract class DnsLabel implements CharSequence, Comparable<DnsLabel> {
 
     public static boolean isIdnAcePrefixed(String string) {
         return string.toLowerCase(Locale.US).startsWith("xn--");
+    }
+
+    public static String toSafeRepesentation(String dnsLabel) {
+        if (consistsOnlyOfLettersDigitsHypenAndUnderscore(dnsLabel)) {
+            // This label is safe, nothing to do.
+            return dnsLabel;
+        }
+
+        StringBuilder sb = new StringBuilder(2 * dnsLabel.length());
+        for (int i = 0; i < dnsLabel.length(); i++) {
+            char c = dnsLabel.charAt(i);
+            if (isLdhOrMaybeUnderscore(c, true)) {
+                sb.append(c);
+                continue;
+            }
+
+            // Let's see if we found and unsafe char we want to replace.
+            switch (c) {
+            case '\0':
+                sb.append("␀"); // U+2400
+                break;
+            case '*':
+            case '_':
+            case '@':
+            case '\\':
+                sb.append(c);
+                break;
+            default:
+                if (c > 255) {
+                    throw new IllegalArgumentException("The string '" + dnsLabel
+                            + "' contains characters outside the 8-bit range: " + c + " at position " + i);
+                }
+                sb.append("〚"); // U+301A
+                // Transform the char to hex notation. Note that we have ensure that c is <= 255
+                // here, hence only two hexadecimal places are ok.
+                String hex = String.format("%02X", (int) c);
+                sb.append(hex);
+                sb.append("〛"); // U+301B
+            }
+        }
+
+        return sb.toString();
+    }
+
+    private static boolean isLdhOrMaybeUnderscore(char c, boolean underscore) {
+            return (c >= 'a' && c <= 'z')
+                    || (c >= 'A' && c <= 'Z')
+                    || (c >= '0' && c <= '9')
+                    || c == '-'
+                    || (underscore && c == '_')
+                    ;
+    }
+
+    private static boolean consistsOnlyOfLdhAndMaybeUnderscore(String string, boolean underscore) {
+        for (int i = 0; i < string.length(); i++) {
+            char c = string.charAt(i);
+            if (isLdhOrMaybeUnderscore(c, underscore)) {
+                continue;
+            }
+            return false;
+        }
+        return true;
+    }
+
+    public static boolean consistsOnlyOfLettersDigitsAndHypen(String string) {
+        return consistsOnlyOfLdhAndMaybeUnderscore(string, false);
+    }
+
+    public static boolean consistsOnlyOfLettersDigitsHypenAndUnderscore(String string) {
+        return consistsOnlyOfLdhAndMaybeUnderscore(string, true);
     }
 
     public static class LabelToLongException extends IllegalArgumentException {

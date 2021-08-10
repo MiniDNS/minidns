@@ -10,6 +10,7 @@
  */
 package org.minidns.dnslabel;
 
+import static org.minidns.Assert.assertCsEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -94,5 +95,10 @@ public class DnsLabelTest {
     @Test
     public void dnsLabelWildcardStringTest() {
         assertEquals("*", DnsLabel.WILDCARD_LABEL.toString());
+    }
+
+    @Test
+    public void escapeUnsafeCharactersTest() {
+        assertCsEquals("foo〚2E〛bar", DnsLabel.from("foo.bar"));
     }
 }
