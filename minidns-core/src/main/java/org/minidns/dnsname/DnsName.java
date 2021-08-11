@@ -258,6 +258,31 @@ public final class DnsName implements CharSequence, Serializable, Comparable<Dns
         }
     }
 
+    /**
+     * Return the ACE (ASCII Compatible Encoding) version of this DNS name. Note
+     * that this method may return a String containing null bytes. Those Strings are
+     * notoriously difficult to handle from a security perspective. Therefore it is
+     * recommended to use {@link #toString()} instead, which will return a sanitized
+     * String.
+     *
+     * @return the ACE version of this DNS name.
+     * @since 1.1.0
+     */
+    public String getAce() {
+        return ace;
+    }
+
+    /**
+     * Returns the raw ACE version of this DNS name. That is, the version as it was
+     * received over the wire. Most notably, this version may include uppercase
+     * letters.
+     *
+     * <b>Please refer to {@link #getAce()} for a discussion of the security
+     * implications when working with the ACE representation of a DNS name.</b>
+     *
+     * @return the raw ACE version of this DNS name.
+     * @see #getAce()
+     */
     public String getRawAce() {
         return rawAce;
     }
@@ -333,9 +358,31 @@ public final class DnsName implements CharSequence, Serializable, Comparable<Dns
         return ace.subSequence(start, end);
     }
 
+    private transient String safeToStringRepresentation;
+
     @Override
     public String toString() {
-        return ace;
+        if (safeToStringRepresentation == null) {
+            setLabelsIfRequired();
+            if (labels.length == 0) {
+                return ".";
+            }
+
+            StringBuilder sb = new StringBuilder();
+            for (int i = labels.length - 1; i >= 0; i--) {
+                // Note that it is important that we append the result of DnsLabel.toString() to
+                // the StringBuilder. As only the result of toString() is the safe label
+                // representation.
+                String safeLabelRepresentation = labels[i].toString();
+                sb.append(safeLabelRepresentation);
+                if (i != 0) {
+                    sb.append('.');
+                }
+            }
+            safeToStringRepresentation = sb.toString();
+        }
+
+        return safeToStringRepresentation;
     }
 
     public static DnsName from(CharSequence name) {
