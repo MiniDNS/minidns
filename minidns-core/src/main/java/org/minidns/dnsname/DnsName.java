@@ -22,6 +22,7 @@ import java.util.Locale;
 
 import org.minidns.dnslabel.DnsLabel;
 import org.minidns.idna.MiniDnsIdna;
+import org.minidns.util.SafeCharSequence;
 
 /**
  * A DNS name, also called "domain name". A DNS name consists of multiple 'labels' (see {@link DnsLabel}) and is subject to certain restrictions (see
@@ -47,7 +48,7 @@ import org.minidns.idna.MiniDnsIdna;
  * @author Florian Schmaus
  *
  */
-public final class DnsName implements CharSequence, Serializable, Comparable<DnsName> {
+public final class DnsName extends SafeCharSequence implements Serializable, Comparable<DnsName> {
 
     /**
      * 
@@ -341,21 +342,6 @@ public final class DnsName implements CharSequence, Serializable, Comparable<Dns
             }
         }
         return size;
-    }
-
-    @Override
-    public int length() {
-        return ace.length();
-    }
-
-    @Override
-    public char charAt(int index) {
-        return ace.charAt(index);
-    }
-
-    @Override
-    public CharSequence subSequence(int start, int end) {
-        return ace.subSequence(start, end);
     }
 
     private transient String safeToStringRepresentation;
