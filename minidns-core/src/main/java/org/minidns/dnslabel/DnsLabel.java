@@ -14,6 +14,8 @@ import java.io.ByteArrayOutputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.Locale;
 
+import org.minidns.util.SafeCharSequence;
+
 /**
  * A DNS label is an individual component of a DNS name. Labels are usually shown separated by dots.
  * <p>
@@ -29,7 +31,7 @@ import java.util.Locale;
  * @author Florian Schmaus
  *
  */
-public abstract class DnsLabel implements CharSequence, Comparable<DnsLabel> {
+public abstract class DnsLabel extends SafeCharSequence implements Comparable<DnsLabel> {
 
     /**
      * The maximum length of a DNS label in octets.
@@ -75,21 +77,6 @@ public abstract class DnsLabel implements CharSequence, Comparable<DnsLabel> {
 
     public final String getLabelType() {
         return getClass().getSimpleName();
-    }
-
-    @Override
-    public final int length() {
-        return label.length();
-    }
-
-    @Override
-    public final char charAt(int index) {
-        return label.charAt(index);
-    }
-
-    @Override
-    public final CharSequence subSequence(int start, int end) {
-        return label.subSequence(start, end);
     }
 
     private transient String safeToStringRepresentation;
