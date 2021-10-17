@@ -22,11 +22,55 @@ public class TLSA extends Data {
 
     private static final Map<Byte, CertUsage> CERT_USAGE_LUT = new HashMap<>();
 
+    /**
+     * The certificate usage field.
+     *
+     * @see <a href="https://tools.ietf.org/html/rfc6698#section-2.1.1">RFC 6698 § 2.1.1</a>
+     *
+     */
     public enum CertUsage {
 
+        /**
+         * The given <b>CA</b> certificate (or its public key) MUST be found in at least
+         * one PKIX path to the end entity certificate.
+         *
+         * <p>
+         * PKIX-TA(0)
+         * </p>
+         */
         caConstraint((byte) 0),
+
+        /**
+         * The given certificate (or its public key) MUST match the end entity
+         * certificate and MUST pass PKIX validation. Note that the requirement to pass
+         * PKIX validation is what makes this different from
+         * {@link #domainIssuedCertificate}.
+         *
+         * <p>
+         * PKIX-EE(1)
+         * </p>
+         */
         serviceCertificateConstraint((byte) 1),
+
+        /**
+         * The given certificate (or its public key) MUST be used as trust anchor when
+         * validating the end entity certificate.
+         *
+         * <p>
+         * DANE-TA(2)
+         * </p>
+         */
         trustAnchorAssertion((byte) 2),
+
+        /**
+         * The given certificate (or its public key) MUST match the end entity
+         * certificate. Unlike {@link #serviceCertificateConstraint}, this does not
+         * require PKIX validation.
+         *
+         * <p>
+         * DANE-EE(3)
+         * </p>
+         */
         domainIssuedCertificate((byte) 3),
         ;
 

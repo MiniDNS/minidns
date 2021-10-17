@@ -148,11 +148,11 @@ public class DaneVerifier {
         }
 
         switch (tlsa.certUsage) {
-        case serviceCertificateConstraint:
-        case domainIssuedCertificate:
+        case serviceCertificateConstraint: // PKIX-EE
+        case domainIssuedCertificate: // DANE-EE
             break;
-        case caConstraint:
-        case trustAnchorAssertion:
+        case caConstraint: // PKIX-TA
+        case trustAnchorAssertion: // DANE-TA
         default:
             LOGGER.warning("TLSA certificate usage " + tlsa.certUsage + " (" + tlsa.certUsageByte + ") not supported while verifying " + hostName);
             return false;

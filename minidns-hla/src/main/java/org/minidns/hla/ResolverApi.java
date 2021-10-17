@@ -16,6 +16,7 @@ import java.net.Inet6Address;
 import java.net.InetAddress;
 
 import org.minidns.AbstractDnsClient;
+import org.minidns.DnsClient;
 import org.minidns.dnslabel.DnsLabel;
 import org.minidns.dnsmessage.Question;
 import org.minidns.dnsname.DnsName;
@@ -29,7 +30,6 @@ import org.minidns.record.Data;
 import org.minidns.record.PTR;
 import org.minidns.record.SRV;
 import org.minidns.record.Record.TYPE;
-import org.minidns.util.InetAddressUtil;
 
 /**
  * The high-level MiniDNS resolving API. It is designed to be easy to use.
@@ -161,15 +161,13 @@ public class ResolverApi {
     }
 
     public ResolverResult<PTR> reverseLookup(Inet4Address inet4Address) throws IOException {
-        DnsName reversedIpAddress = InetAddressUtil.reverseIpAddressOf(inet4Address);
-        DnsName dnsName = DnsName.from(reversedIpAddress, DnsName.IN_ADDR_ARPA);
-        return resolve(dnsName, PTR.class);
+        Question question = DnsClient.getReverseIpLookupQuestionFor(inet4Address);
+        return resolve(question);
     }
 
     public ResolverResult<PTR> reverseLookup(Inet6Address inet6Address) throws IOException {
-        DnsName reversedIpAddress = InetAddressUtil.reverseIpAddressOf(inet6Address);
-        DnsName dnsName = DnsName.from(reversedIpAddress, DnsName.IP6_ARPA);
-        return resolve(dnsName, PTR.class);
+        Question question = DnsClient.getReverseIpLookupQuestionFor(inet6Address);
+        return resolve(question);
     }
 
     /**
