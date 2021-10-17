@@ -203,7 +203,7 @@ public class DnsMessageTest {
         assertEquals(TYPE.SOA, answer.getPayload().getType());
         SOA soa = (SOA) answer.getPayload();
         assertCsEquals("orcldns1.ultradns.com", soa.mname);
-        assertCsEquals("hostmaster\\@oracle.com", soa.rname);
+        assertCsEquals("hostmaster⧷@oracle.com", soa.rname);
         assertEquals(2015032404L, soa.serial);
         assertEquals(10800, soa.refresh);
         assertEquals(3600, soa.retry);

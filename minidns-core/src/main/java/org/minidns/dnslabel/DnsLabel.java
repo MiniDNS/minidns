@@ -190,28 +190,44 @@ public abstract class DnsLabel extends SafeCharSequence implements Comparable<Dn
                 continue;
             }
 
+
             // Let's see if we found and unsafe char we want to replace.
             switch (c) {
-            case '\0':
-                sb.append("␀"); // U+2400
+            case '.':
+                sb.append('●'); // U+25CF BLACK CIRCLE;
                 break;
-            case '*':
-            case '_':
-            case '@':
             case '\\':
-                sb.append(c);
+                sb.append('⧷'); // U+29F7 REVERSE SOLIDUS WITH HORIZONTAL STROKE
+                break;
+            case '\u007f':
+                // Convert DEL to U+2421 SYMBOL FOR DELETE
+                sb.append('␡');
+                break;
+            case ' ':
+                sb.append('␣'); // U+2423 OPEN BOX
                 break;
             default:
-                if (c > 255) {
+                if (c < 32) {
+                    // First convert the ASCI control codes to the Unicode Control Pictures
+                    int substituteAsInt = c + '\u2400';
+                    assert substituteAsInt <= Character.MAX_CODE_POINT;
+                    char substitute = (char) substituteAsInt;
+                    sb.append(substitute);
+                } else if (c < 127) {
+                    // Everything smaller than 127 is now safe to directly append.
+                    sb.append(c);
+                } else if (c > 255) {
                     throw new IllegalArgumentException("The string '" + dnsLabel
                             + "' contains characters outside the 8-bit range: " + c + " at position " + i);
+                } else {
+                    // Everything that did not match the previous conditions is explicitly escaped.
+                    sb.append("〚"); // U+301A
+                    // Transform the char to hex notation. Note that we have ensure that c is <= 255
+                    // here, hence only two hexadecimal places are ok.
+                    String hex = String.format("%02X", (int) c);
+                    sb.append(hex);
+                    sb.append("〛"); // U+301B
                 }
-                sb.append("〚"); // U+301A
-                // Transform the char to hex notation. Note that we have ensure that c is <= 255
-                // here, hence only two hexadecimal places are ok.
-                String hex = String.format("%02X", (int) c);
-                sb.append(hex);
-                sb.append("〛"); // U+301B
             }
         }
 

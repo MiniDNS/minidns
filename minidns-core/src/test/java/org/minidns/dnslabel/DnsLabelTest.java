@@ -99,6 +99,6 @@ public class DnsLabelTest {
 
     @Test
     public void escapeUnsafeCharactersTest() {
-        assertCsEquals("foo〚2E〛bar", DnsLabel.from("foo.bar"));
+        assertCsEquals("foo●bar", DnsLabel.from("foo.bar"));
     }
 }
