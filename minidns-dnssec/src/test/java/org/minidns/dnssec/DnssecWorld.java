@@ -402,20 +402,27 @@ public class DnssecWorld extends DnsWorld {
     }
 
     private static byte[] getDSAPublicKey(DSAPrivateKey privateKey) {
+        final DSAParams params = privateKey.getParams();
+        final BigInteger g = params.getG();
+        final BigInteger p = params.getP();
+        final BigInteger q = params.getQ();
+        final BigInteger x = privateKey.getX();
+        final BigInteger y = g.modPow(x, p);
+        final int t = p.bitLength() / 64 - 8;
+
+        final ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        final DataOutputStream dos = new DataOutputStream(baos);
         try {
-            BigInteger y = privateKey.getParams().getG().modPow(privateKey.getX(), privateKey.getParams().getP());
-            ByteArrayOutputStream baos = new ByteArrayOutputStream();
-            DataOutputStream dos = new DataOutputStream(baos);
-            int t = privateKey.getParams().getP().bitLength() / 64 - 8;
             dos.writeByte(t);
-            dos.write(toUnsignedByteArray(privateKey.getParams().getQ(), 20));
-            dos.write(toUnsignedByteArray(privateKey.getParams().getP(), t * 8 + 64));
-            dos.write(toUnsignedByteArray(privateKey.getParams().getG(), t * 8 + 64));
+            dos.write(toUnsignedByteArray(q, 20));
+            dos.write(toUnsignedByteArray(p, t * 8 + 64));
+            dos.write(toUnsignedByteArray(g, t * 8 + 64));
             dos.write(toUnsignedByteArray(y, t * 8 + 64));
-            return baos.toByteArray();
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+
+        return baos.toByteArray();
     }
 
     public static byte[] getRSAPublicKey(RSAPrivateCrtKey privateKey) {
