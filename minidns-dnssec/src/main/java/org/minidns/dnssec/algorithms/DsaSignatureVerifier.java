@@ -43,28 +43,26 @@ class DsaSignatureVerifier extends JavaSecSignatureVerifier {
         @SuppressWarnings("unused")
         byte t = dis.readByte();
 
-        byte[] r = new byte[LENGTH];
-        dis.readFully(r);
-        int rlen = (r[0] < 0) ? LENGTH + 1 : LENGTH;
+        byte[] r = new byte[LENGTH + 1];
+        dis.readFully(r, 1, LENGTH);
+        int roff = 0;
+        while(roff < LENGTH && r[roff] == 0 && r[roff + 1] < 0) roff++;
 
-        byte[] s = new byte[LENGTH];
-        dis.readFully(s);
-        int slen = (s[0] < 0) ? LENGTH + 1 : LENGTH;
+        byte[] s = new byte[LENGTH + 1];
+        dis.readFully(s, 1, LENGTH);
+        int soff = 0;
+        while(soff < LENGTH && s[soff] == 0 && r[soff + 1] < 0) soff++;
 
         dos.writeByte(0x30);
-        dos.writeByte(rlen + slen + 4);
+        dos.writeByte(r.length - roff + s.length - soff + 4);
 
         dos.writeByte(0x2);
-        dos.writeByte(rlen);
-        if (rlen > LENGTH)
-            dos.writeByte(0);
-        dos.write(r);
+        dos.writeByte(r.length - roff);
+        dos.write(r, roff, r.length - roff);
 
         dos.writeByte(0x2);
-        dos.writeByte(slen);
-        if (slen > LENGTH)
-            dos.writeByte(0);
-        dos.write(s);
+        dos.writeByte(s.length - soff);
+        dos.write(s, soff, s.length - soff);
         } catch (IOException e) {
             throw new DataMalformedException(e, rrsig.getSignature());
         }
