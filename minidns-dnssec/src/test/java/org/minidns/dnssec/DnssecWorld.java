@@ -43,6 +43,7 @@ import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
 import java.security.Signature;
 import java.security.SignatureException;
+import java.security.interfaces.DSAParams;
 import java.security.interfaces.DSAPrivateKey;
 import java.security.interfaces.RSAPrivateCrtKey;
 import java.security.spec.RSAKeyGenParameterSpec;
@@ -324,8 +325,8 @@ public class DnssecWorld extends DnsWorld {
     }
 
     public static void streamAsn1Int(DataInputStream dis, DataOutputStream dos, int targetLength) throws IOException {
-        byte[] buf;
         dis.skipBytes(1);
+
         byte s_pad = (byte) (dis.readByte() - targetLength);
         if (s_pad >= 0) {
             dis.skipBytes(s_pad);
@@ -335,8 +336,12 @@ public class DnssecWorld extends DnsWorld {
                 dos.writeByte(0);
             }
         }
-        buf = new byte[targetLength + s_pad];
-        if (dis.read(buf) != buf.length) throw new IOException();
+
+        byte[] buf = new byte[targetLength + s_pad];
+
+        int bytesRead = dis.read(buf);
+        if (bytesRead != buf.length) throw new IOException();
+
         dos.write(buf);
     }
 
