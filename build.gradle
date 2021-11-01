@@ -10,6 +10,7 @@ buildscript {
 
     dependencies {
 		classpath "org.kt3k.gradle.plugin:coveralls-gradle-plugin:2.3.1"
+		classpath "biz.aQute.bnd:biz.aQute.bnd.gradle:6.0.0"
     }
 }
 
@@ -180,6 +181,17 @@ allprojects {
 subprojects {
 	apply plugin: 'maven-publish'
 	apply plugin: 'signing'
+	apply plugin: "biz.aQute.bnd.builder"
+
+	jar {
+		bundle {
+			bnd(
+					'-removeheaders': 'Tool, Bnd-*',
+					'-exportcontents': 'org.minidns.*',
+					'Import-Package': '!android,*'
+			)
+		}
+	}
 
 	task sourcesJar(type: Jar, dependsOn: classes) {
 		classifier = 'sources'
