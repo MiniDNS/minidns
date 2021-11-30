@@ -2,3 +2,15 @@ dependencies {
 	compile project(':minidns-core')
     testCompile project(path: ":minidns-core", configuration: "testRuntime")
 }
+
+jar {
+	bundle {
+		bnd(
+			// minidns-client invokes Class.forName("android.os.…")
+			// which causes OSGi to import android.os, because OSGi's
+			// bnd scans for `Class.forName` usages per default.
+			// See also https://github.com/openhab/openhab-addons/pull/11670#issuecomment-982539016
+			'-noclassforname': 'true',
+		)
+	}
+}
