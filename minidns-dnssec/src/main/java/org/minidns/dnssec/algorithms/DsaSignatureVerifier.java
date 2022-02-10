@@ -46,12 +46,12 @@ class DsaSignatureVerifier extends JavaSecSignatureVerifier {
         byte[] r = new byte[LENGTH + 1];
         dis.readFully(r, 1, LENGTH);
         int roff = 0;
-        while(roff < LENGTH && r[roff] == 0 && r[roff + 1] < 0) roff++;
+        while (roff < LENGTH && r[roff] == 0 && r[roff + 1] < 0) roff++;
 
         byte[] s = new byte[LENGTH + 1];
         dis.readFully(s, 1, LENGTH);
         int soff = 0;
-        while(soff < LENGTH && s[soff] == 0 && r[soff + 1] < 0) soff++;
+        while (soff < LENGTH && s[soff] == 0 && r[soff + 1] < 0) soff++;
 
         dos.writeByte(0x30);
         dos.writeByte(r.length - roff + s.length - soff + 4);
