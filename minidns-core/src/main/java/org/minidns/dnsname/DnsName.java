@@ -367,6 +367,11 @@ public final class DnsName implements CharSequence, Serializable, Comparable<Dns
         return new DnsName(rawLabels, true);
     }
 
+    public static DnsName from(CharSequence child, DnsName parent) {
+        DnsLabel childLabel = DnsLabel.from(child.toString());
+        return DnsName.from(childLabel, parent);
+    }
+
     public static DnsName from(DnsLabel child, DnsName parent) {
         parent.setLabelsIfRequired();
 
