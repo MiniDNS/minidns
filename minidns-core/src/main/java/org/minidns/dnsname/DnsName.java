@@ -372,7 +372,7 @@ public final class DnsName implements CharSequence, Serializable, Comparable<Dns
 
         DnsLabel[] rawLabels = new DnsLabel[parent.rawLabels.length + 1];
         System.arraycopy(parent.rawLabels, 0, rawLabels, 0, parent.rawLabels.length);
-        rawLabels[rawLabels.length] = child;
+        rawLabels[parent.rawLabels.length] = child;
         return new DnsName(rawLabels, true);
     }
 

@@ -143,4 +143,12 @@ public class DnsNameTest {
         assertEquals("foo.bar", dnsName.ace);
     }
 
+    @Test
+    public void fromWithChild() {
+        DnsName parent = DnsName.from("example.org");
+        String child = "foo";
+        DnsName dnsName = DnsName.from(child, parent);
+        assertEquals("foo.example.org", dnsName.ace);
+    }
+
 }
