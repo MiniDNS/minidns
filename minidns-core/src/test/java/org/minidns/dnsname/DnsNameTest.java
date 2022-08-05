@@ -160,4 +160,10 @@ public class DnsNameTest {
         assertEquals("foo.bar.example.org", dnsName.ace);
     }
 
+    @Test
+    public void getHostpartLabel() {
+        DnsName dnsName = DnsName.from("foo.example.org");
+        DnsLabel hostpart = dnsName.getHostpartLabel();
+        assertEquals("foo", hostpart.toString());
+    }
 }

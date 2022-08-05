@@ -291,7 +291,7 @@ public final class DnsName implements CharSequence, Serializable, Comparable<Dns
 
     public DnsLabel getHostpartLabel() {
         setLabelsIfRequired();
-        return labels[labels.length];
+        return labels[labels.length - 1];
     }
 
     private void setHostnameAndDomainpartIfRequired() {
