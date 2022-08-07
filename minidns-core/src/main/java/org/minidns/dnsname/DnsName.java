@@ -318,7 +318,7 @@ public final class DnsName extends SafeCharSequence implements Serializable, Com
 
     public DnsLabel getHostpartLabel() {
         setLabelsIfRequired();
-        return labels[labels.length];
+        return labels[labels.length - 1];
     }
 
     private void setHostnameAndDomainpartIfRequired() {
@@ -401,12 +401,17 @@ public final class DnsName extends SafeCharSequence implements Serializable, Com
         return new DnsName(rawLabels, true);
     }
 
+    public static DnsName from(CharSequence child, DnsName parent) {
+        DnsLabel childLabel = DnsLabel.from(child.toString());
+        return DnsName.from(childLabel, parent);
+    }
+
     public static DnsName from(DnsLabel child, DnsName parent) {
         parent.setLabelsIfRequired();
 
         DnsLabel[] rawLabels = new DnsLabel[parent.rawLabels.length + 1];
         System.arraycopy(parent.rawLabels, 0, rawLabels, 0, parent.rawLabels.length);
-        rawLabels[rawLabels.length] = child;
+        rawLabels[parent.rawLabels.length] = child;
         return new DnsName(rawLabels, true);
     }
 

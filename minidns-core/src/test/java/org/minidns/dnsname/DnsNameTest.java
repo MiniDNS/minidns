@@ -167,4 +167,27 @@ public class DnsNameTest {
         assertEquals("foo.bar", dnsName.ace);
     }
 
+    @Test
+    public void fromWithChild() {
+        DnsName parent = DnsName.from("example.org");
+        String child = "foo";
+        DnsName dnsName = DnsName.from(child, parent);
+        assertEquals("foo.example.org", dnsName.ace);
+    }
+
+    @Test
+    public void fromWithChildAndGrandchild() {
+        DnsName parent = DnsName.from("example.org");
+        DnsLabel grandChild = DnsLabel.from("foo");
+        DnsLabel child = DnsLabel.from("bar");
+        DnsName dnsName = DnsName.from(grandChild, child, parent);
+        assertEquals("foo.bar.example.org", dnsName.ace);
+    }
+
+    @Test
+    public void getHostpartLabel() {
+        DnsName dnsName = DnsName.from("foo.example.org");
+        DnsLabel hostpart = dnsName.getHostpartLabel();
+        assertEquals("foo", hostpart.toString());
+    }
 }
