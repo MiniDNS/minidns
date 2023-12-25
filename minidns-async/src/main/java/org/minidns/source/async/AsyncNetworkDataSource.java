@@ -274,6 +274,13 @@ public class AsyncNetworkDataSource extends AbstractDnsDataSource {
             }
 
             int myRequestsCount = incomingRequestsSize / REACTOR_THREAD_COUNT;
+            // The division could result in myRequestCount being zero despite pending incoming
+            // requests. Therefore, ensure this thread tries to get at least one incoming
+            // request by invoking poll(). Otherwise, we might end up in a busy loop
+            // where myRequestCount is zero, and this thread invokes a selector.wakeup() below
+            // because incomingRequestsSize is not empty, but the woken-up reactor thread
+            // will end up with myRequestCount being zero again, restarting the busy-loop cycle.
+            if (myRequestsCount == 0) myRequestsCount = 1;
             Collection<AsyncDnsRequest> requests = new ArrayList<>(myRequestsCount);
             for (int i = 0; i < myRequestsCount; i++) {
                 AsyncDnsRequest asyncDnsRequest = INCOMING_REQUESTS.poll();
