@@ -28,6 +28,7 @@ public abstract class EdnsOption {
         this.optionData = optionData;
     }
 
+    @SuppressWarnings("this-escape")
     protected EdnsOption(byte[] optionData) {
         this.optionCode = getOptionCode().asInt;
         this.optionLength = optionData.length;
