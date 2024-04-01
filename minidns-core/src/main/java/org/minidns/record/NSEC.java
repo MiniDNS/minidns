@@ -110,7 +110,7 @@ public class NSEC extends Data {
                 }
                 int a = (type >> 3) % 32;
                 int b = type % 8;
-                bitmap[a] |= (byte)(128 >> b);
+                bitmap[a] |= (byte) (128 >> b);
             }
             if (windowBlock != -1) writeOutBlock(bitmap, dos);
         } catch (IOException e) {
