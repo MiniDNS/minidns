@@ -28,6 +28,7 @@ import static org.minidns.Assert.assertArrayContentEquals;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 /**
@@ -109,6 +110,18 @@ public class RecordsTest {
         assertEquals(3, dnskey.protocol);
         assertEquals(SignatureAlgorithm.RSAMD5, dnskey.algorithm);
         assertArrayEquals(new byte[] {42}, dnskey.getKey());
+    }
+
+    @Test
+    public void testDnskeyRecordWithUnknownSignatureAlgorithm() throws Exception {
+        byte unknownSignatureAlgorithm = (byte) 255;
+        DNSKEY dnskey = new DNSKEY(DNSKEY.FLAG_ZONE, DNSKEY.PROTOCOL_RFC4034, unknownSignatureAlgorithm, new byte[] {42});
+        assertEquals(unknownSignatureAlgorithm, dnskey.algorithmByte);
+        assertNull(dnskey.algorithm);
+        byte[] dnskeyb = dnskey.toByteArray();
+        dnskey = DNSKEY.parse(new DataInputStream(new ByteArrayInputStream(dnskeyb)), dnskeyb.length);
+        assertEquals(unknownSignatureAlgorithm, dnskey.algorithmByte);
+        assertNull(dnskey.algorithm);
     }
 
     @Test

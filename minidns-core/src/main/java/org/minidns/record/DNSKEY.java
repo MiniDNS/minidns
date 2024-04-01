@@ -102,7 +102,7 @@ public class DNSKEY extends Data {
     }
 
     public DNSKEY(short flags, byte protocol, byte algorithm, byte[] key) {
-        this(flags, protocol, SignatureAlgorithm.forByte(algorithm), key);
+        this(flags, protocol, SignatureAlgorithm.forByte(algorithm), algorithm, key);
     }
 
     public DNSKEY(short flags, byte protocol, SignatureAlgorithm algorithm, byte[] key) {
@@ -140,7 +140,7 @@ public class DNSKEY extends Data {
     public void serialize(DataOutputStream dos) throws IOException {
         dos.writeShort(flags);
         dos.writeByte(protocol);
-        dos.writeByte(algorithm.number);
+        dos.writeByte(algorithmByte);
         dos.write(key);
     }
 
