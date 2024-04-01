@@ -504,7 +504,7 @@ public class DnssecClient extends ReliableDnsClient {
      *             the DNSKEY record for the domain and using the key with first flags bit set
      *             (also called key signing key)
      */
-    public void addSecureEntryPoint(DnsName name, byte[] key) {
+    public final void addSecureEntryPoint(DnsName name, byte[] key) {
         knownSeps.put(name, key);
     }
 
