@@ -64,6 +64,8 @@ public class AndroidUsingReflection extends AbstractDnsServerLookupMechanism {
             if (value.length() == 0) continue;
             if (servers.contains(value)) continue;
 
+            LOGGER.log(Level.FINE, "Found DNS server {0} by reflection", new Object[]{value});
+
             InetAddress ip;
             try {
                 ip = InetAddress.getByName(value);

@@ -100,6 +100,7 @@ public final class AndroidUsingExec extends AbstractDnsServerLookupMechanism {
                 InetAddress ip = InetAddress.getByName(value);
 
                 if (ip == null) continue;
+                LOGGER.log(Level.FINE, "Found DNS server {0} by exec", new Object[]{ip});
 
                 value = ip.getHostAddress();
 

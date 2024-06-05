@@ -63,6 +63,7 @@ public final class UnixUsingEtcResolvConf extends AbstractDnsServerLookupMechani
             while ((line = reader.readLine()) != null) {
                 Matcher matcher = NAMESERVER_PATTERN.matcher(line);
                 if (matcher.matches()) {
+                    LOGGER.log(Level.FINE, "Found DNS server {0} by resolv.conf", new Object[]{matcher.group(1).trim()}});
                     servers.add(matcher.group(1).trim());
                 }
             }
