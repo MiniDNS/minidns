@@ -248,6 +248,7 @@ public class DnsClient extends AbstractDnsClient {
      */
     public static List<String> findDNS() {
         List<String> res = null;
+        final Level TRACE_LOG_LEVEL = Level.FINE;
         for (DnsServerLookupMechanism mechanism : LOOKUP_MECHANISMS) {
             try {
                 res = mechanism.getDnsServerAddresses();
@@ -255,7 +256,23 @@ public class DnsClient extends AbstractDnsClient {
                 LOGGER.log(Level.WARNING, "Could not lookup DNS server", exception);
             }
             if (res == null) {
+                LOGGER.log(TRACE_LOG_LEVEL, "DnsServerLookupMechanism '" + mechanism.getName() + "' did not return any DNS server");
                 continue;
+            }
+
+            if (LOGGER.isLoggable(TRACE_LOG_LEVEL)) {
+                // TODO: Use String.join() once MiniDNS is Android API 26 (or higher).
+                StringBuilder sb = new StringBuilder();
+                for (Iterator<String> it = res.iterator(); it.hasNext();) {
+                    String s = it.next();
+                    sb.append(s);
+                    if (it.hasNext()) {
+                        sb.append(", ");
+                    }
+                }
+                String dnsServers = sb.toString();
+                LOGGER.log(TRACE_LOG_LEVEL, "DnsServerLookupMechanism '{0}' returned the following DNS servers: {1}",
+                        new Object[] { mechanism.getName(), dnsServers });
             }
 
             assert !res.isEmpty();
