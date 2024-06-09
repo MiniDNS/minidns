@@ -13,9 +13,11 @@ package org.minidns.dnssec;
 import org.minidns.dnsmessage.DnsMessage;
 import org.minidns.dnsmessage.Question;
 import org.minidns.record.Data;
+import org.minidns.record.DelegatingDnssecRR;
 import org.minidns.record.Record;
 
 import java.io.IOException;
+import java.math.BigInteger;
 import java.security.spec.InvalidKeySpecException;
 import java.util.List;
 
@@ -100,5 +102,51 @@ public class DnssecValidationFailedException extends IOException {
         public DnsMessage getResponse() {
             return response;
         }
+    }
+
+    public static final class DigestComparisonFailedException extends DnssecValidationFailedException {
+
+        /**
+        *
+        */
+       private static final long serialVersionUID = 1L;
+
+       private final Record<? extends Data> record;
+       private final DelegatingDnssecRR ds;
+       private final byte[] digest;
+       private final String digestHex;
+
+       private DigestComparisonFailedException(String message, Record<? extends Data> record, DelegatingDnssecRR ds, byte[] digest, String digestHex) {
+           super(message);
+           this.record = record;
+           this.ds = ds;
+           this.digest = digest;
+           this.digestHex = digestHex;
+       }
+
+       public Record<? extends Data> getRecord() {
+           return record;
+       }
+
+       public DelegatingDnssecRR getDelegaticDnssecRr() {
+           return ds;
+       }
+
+       public byte[] getDigest() {
+           return digest.clone();
+       }
+
+       public String getDigestHex() {
+           return digestHex;
+       }
+
+       public static DigestComparisonFailedException from(Record<? extends Data> record, DelegatingDnssecRR ds, byte[] digest) {
+           BigInteger digestBigInteger = new BigInteger(1, digest);
+           String digestHex = digestBigInteger.toString(16).toUpperCase();
+
+           String message = "Digest for " + record + " does not match. Digest of delegating DNSSEC RR " + ds + " is '"
+                   + ds.getDigestHex() + "' while we calculated '" + digestHex + "'";
+           return new DigestComparisonFailedException(message, record, ds, digest, digestHex);
+       }
     }
 }

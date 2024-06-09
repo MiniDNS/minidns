@@ -16,6 +16,7 @@ import org.minidns.dnsname.DnsName;
 import org.minidns.dnssec.DnssecUnverifiedReason.AlgorithmExceptionThrownReason;
 import org.minidns.dnssec.DnssecUnverifiedReason.AlgorithmNotSupportedReason;
 import org.minidns.dnssec.DnssecUnverifiedReason.NSECDoesNotMatchReason;
+import org.minidns.dnssec.DnssecValidationFailedException.DigestComparisonFailedException;
 import org.minidns.dnssec.algorithms.AlgorithmMap;
 import org.minidns.record.DNSKEY;
 import org.minidns.record.Data;
@@ -57,8 +58,7 @@ class Verifier {
         }
 
         if (!ds.digestEquals(digest)) {
-            // TODO: Add 'ds' and 'digest' to this exception, and rename the exception to "DigestComparisionFailedException".
-            throw new DnssecValidationFailedException(dnskeyRecord, "SEP is not properly signed by parent DS!");
+            throw DigestComparisonFailedException.from(dnskeyRecord, ds, digest);
         }
         return null;
     }
