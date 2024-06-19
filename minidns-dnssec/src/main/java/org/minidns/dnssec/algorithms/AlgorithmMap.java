@@ -49,6 +49,13 @@ public final class AlgorithmMap {
         }
 
         try {
+            dsDigestMap.put(DigestAlgorithm.SHA384, new JavaSecDigestCalculator("SHA-384"));
+        } catch (NoSuchAlgorithmException e) {
+            // SHA-384 is OPTIONAL
+            LOGGER.log(Level.FINE, "Platform does not support SHA-384", e);
+        }
+
+        try {
             signatureMap.put(SignatureAlgorithm.RSAMD5, new RsaSignatureVerifier("MD5withRSA"));
         } catch (NoSuchAlgorithmException e) {
             // RSA/MD5 is DEPRECATED
