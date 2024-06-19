@@ -437,7 +437,7 @@ public class DnssecClient extends ReliableDnsClient {
         }
 
         if (delegation == null) {
-            LOGGER.fine("There is no DS record for " + sepRecord.name + ", server gives empty result");
+            LOGGER.fine("There is no DS record for \'" + sepRecord.name + "\', server gives empty result");
         }
 
         if (delegation == null && dlv != null && !dlv.isChildOf(sepRecord.name)) {
