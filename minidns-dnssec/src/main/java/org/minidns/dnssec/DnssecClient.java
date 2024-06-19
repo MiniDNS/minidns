@@ -416,7 +416,7 @@ public class DnssecClient extends ReliableDnsClient {
         }
 
         // If we are looking for the SEP of the root zone at this point, then the client was not
-        // configured with one and we can abort stating the reason.
+        // configured with one. Hence we can abort and state the reason why we aborted.
         if (sepRecord.name.isRootLabel()) {
            unverifiedReasons.add(new DnssecUnverifiedReason.NoRootSecureEntryPointReason());
            return unverifiedReasons;
