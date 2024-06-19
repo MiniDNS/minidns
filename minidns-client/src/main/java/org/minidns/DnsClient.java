@@ -271,7 +271,7 @@ public class DnsClient extends AbstractDnsClient {
                     }
                 }
                 String dnsServers = sb.toString();
-                LOGGER.log(TRACE_LOG_LEVEL, "DnsServerLookupMechanism '{0}' returned the following DNS servers: {1}",
+                LOGGER.log(TRACE_LOG_LEVEL, "DnsServerLookupMechanism {0} returned the following DNS servers: {1}",
                         new Object[] { mechanism.getName(), dnsServers });
             }
 
