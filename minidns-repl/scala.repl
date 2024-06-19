@@ -16,6 +16,16 @@ import org.minidns.jul.MiniDnsJul._
 
 import java.net.InetAddress
 
+import java.util.logging._
+
+def debugLog() = {
+  val miniDnsLogger = Logger.getLogger("org.minidns")
+  miniDnsLogger.setLevel(Level.FINE)
+  val consoleHandler = new ConsoleHandler()
+  consoleHandler.setLevel(Level.FINE)
+  miniDnsLogger.addHandler(consoleHandler)
+}
+
 // Some standard values
 Predef.println("Set value 'c' to DNSClient")
 val c = org.minidns.minidnsrepl.MiniDnsRepl.DNSCLIENT
@@ -33,4 +43,5 @@ val dr = org.minidns.hla.DnssecResolverApi.INSTANCE
 Predef.println("Enjoy MiniDNS. Go ahead and try a query. For example:")
 Predef.println("c query (\"geekplace.eu\", TYPE.A)")
 Predef.println("dr resolveDnssecReliable (\"verteiltesysteme.net\", classOf[A])")
+Predef.println("NOTE: You can enable debug log output by calling 'debugLog'")
 
