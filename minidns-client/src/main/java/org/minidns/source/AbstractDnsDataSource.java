@@ -38,7 +38,7 @@ public abstract class AbstractDnsDataSource implements DnsDataSource {
         return future;
     }
 
-    protected int udpPayloadSize = 1024;
+    protected int udpPayloadSize = 1232;
 
     /**
      * DNS timeout.
