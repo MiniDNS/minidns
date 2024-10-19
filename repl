@@ -1,15 +1,28 @@
 #!/usr/bin/env bash
-set -e
-set -u
-set -o pipefail
+set -euo pipefail
 
-while getopts d OPTION "$@"; do
+JDWP=false
+JDWP_PORT=8000
+
+while getopts djp: OPTION "$@"; do
     case $OPTION in
 	d)
 	    set -x
 	    ;;
+	j)
+		JDWP=true
+		;;
+	p)
+		JDWP_PORT=$OPTARG
+		;;
     esac
 done
+
+EXTRA_JAVA_ARGS=()
+if $JDWP; then
+	EXTRA_JAVA_ARGS+=("-Xdebug")
+	EXTRA_JAVA_ARGS+=("-Xrunjdwp:server=y,transport=dt_socket,address=${JDWP_PORT},suspend=n")
+fi
 
 PROJECT_ROOT=$(dirname "${BASH_SOURCE[0]}")
 cd "${PROJECT_ROOT}"
@@ -17,13 +30,17 @@ cd "${PROJECT_ROOT}"
 echo "Compiling and computing classpath (May take a while)"
 # Sadly even with the --quiet option Gradle (or some component of)
 # will print the number of warnings/errors to stdout if there are
-# any.
-GRADLE_CLASSPATH="$(gradle :minidns-repl:printClasspath --quiet |\
+# any. So the result could look like
+# 52 warnings\n1 warning\n12 warnings\n
+# /smack/smack-repl/build/classes/main:/smack/smack-repl/build/
+# resources/main:/smack/smack-tcp/build/libs/smack-tcp-4.2.0-alpha4-SNAPSHOT.jar
+# So perform a "tail -n1" on the output of gradle
+GRADLE_CLASSPATH="$(${GRADLE_BIN:-./gradlew} :minidns-repl:printClasspath --quiet |\
 	tail -n1)"
-echo "Classpath computed, starting REPL"
+echo "Finished, starting REPL"
 
-java \
-	-ea \
+exec java \
+	"${EXTRA_JAVA_ARGS[@]}" \
 	-Dscala.usejavacp=true \
 	-classpath "${GRADLE_CLASSPATH}" \
 	ammonite.Main \
