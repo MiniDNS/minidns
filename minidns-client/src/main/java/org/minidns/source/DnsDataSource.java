@@ -40,7 +40,7 @@ public interface DnsDataSource {
      */
     void setTimeout(int timeout);
 
-    public interface OnResponseCallback {
+    interface OnResponseCallback {
         void onResponse(DnsMessage request, DnsQueryResult result);
     }
 

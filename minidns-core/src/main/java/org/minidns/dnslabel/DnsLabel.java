@@ -235,12 +235,14 @@ public abstract class DnsLabel extends SafeCharSequence implements Comparable<Dn
     }
 
     private static boolean isLdhOrMaybeUnderscore(char c, boolean underscore) {
+            // CHECKSTYLE:OFF
             return (c >= 'a' && c <= 'z')
                     || (c >= 'A' && c <= 'Z')
                     || (c >= '0' && c <= '9')
                     || c == '-'
                     || (underscore && c == '_')
                     ;
+            // CHECKSTYLE:ON
     }
 
     private static boolean consistsOnlyOfLdhAndMaybeUnderscore(String string, boolean underscore) {
@@ -265,7 +267,7 @@ public abstract class DnsLabel extends SafeCharSequence implements Comparable<Dn
     public static class LabelToLongException extends IllegalArgumentException {
 
         /**
-         * 
+         *
          */
         private static final long serialVersionUID = 1L;
 

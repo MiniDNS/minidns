@@ -271,7 +271,7 @@ public class DnssecClient extends ReliableDnsClient {
         return result;
     }
 
-    private static class VerifySignaturesResult {
+    private static final class VerifySignaturesResult {
         boolean sepSignatureRequired = false;
         boolean sepSignaturePresent = false;
         Set<DnssecUnverifiedReason> reasons = new HashSet<>();

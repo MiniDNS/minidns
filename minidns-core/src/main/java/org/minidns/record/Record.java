@@ -484,8 +484,8 @@ public final class Record<D extends Data> {
      * @return True if this record is a valid answer.
      */
     public boolean isAnswer(Question q) {
-        return ((q.type == type) || (q.type == TYPE.ANY)) &&
-               ((q.clazz == clazz) || (q.clazz == CLASS.ANY)) &&
+        return (q.type == type || q.type == TYPE.ANY) &&
+               (q.clazz == clazz || q.clazz == CLASS.ANY) &&
                q.name.equals(name);
     }
 

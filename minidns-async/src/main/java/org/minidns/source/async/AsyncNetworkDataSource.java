@@ -138,7 +138,7 @@ public class AsyncNetworkDataSource extends AbstractDnsDataSource {
         SELECTOR.wakeup();
     }
 
-    private static class Reactor implements Runnable {
+    private static final class Reactor implements Runnable {
         @Override
         public void run() {
             while (!Thread.interrupted()) {
