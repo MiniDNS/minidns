@@ -20,6 +20,7 @@ import java.io.IOException;
 import java.math.BigInteger;
 import java.security.spec.InvalidKeySpecException;
 import java.util.List;
+import java.util.Locale;
 
 public class DnssecValidationFailedException extends IOException {
     private static final long serialVersionUID = 5413184667629832742L;
@@ -142,7 +143,7 @@ public class DnssecValidationFailedException extends IOException {
 
        public static DigestComparisonFailedException from(Record<? extends Data> record, DelegatingDnssecRR ds, byte[] digest) {
            BigInteger digestBigInteger = new BigInteger(1, digest);
-           String digestHex = digestBigInteger.toString(16).toUpperCase();
+           String digestHex = digestBigInteger.toString(16).toUpperCase(Locale.ROOT);
 
            String message = "Digest for " + record + " does not match. Digest of delegating DNSSEC RR " + ds + " is '"
                    + ds.getDigestHex() + "' while we calculated '" + digestHex + "'";

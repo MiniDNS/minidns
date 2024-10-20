@@ -1,25 +1,35 @@
+plugins {
+	id 'org.minidns.java-conventions'
+	id "com.github.alisiikh.scalastyle" version "3.5.0"
+}
+
+apply plugin: 'scala'
+apply plugin: 'com.github.alisiikh.scalastyle'
+
 ext {
-    scalaVersion = '2.12.4'
+    scalaVersion = '2.13.13'
 }
 
 dependencies {
-    compile project(':minidns-client')
-    compile project(':minidns-iterative-resolver')
-    compile project(':minidns-dnssec')
-    compile project(':minidns-integration-test')
-    compile project(':minidns-hla')
-    compile "com.lihaoyi:ammonite_$scalaVersion:1.1.2"
-    testCompile project(path: ":minidns-client", configuration: "testRuntime")
+    api project(':minidns-client')
+    api project(':minidns-iterative-resolver')
+    api project(':minidns-dnssec')
+    api project(':minidns-integration-test')
+    api project(':minidns-hla')
+    implementation "com.lihaoyi:ammonite_$scalaVersion:3.0.0-M1"
+    testImplementation project(path: ":minidns-client", configuration: "testRuntime")
 }
+
+scalastyle {
+	config = new File(rootConfigDir, 'scalaStyle.xml')
+	verbose = true
+	failOnWarning = true
+}
+
+check.dependsOn(scalastyleCheck)
 
 task printClasspath(dependsOn: assemble) {
 	doLast {
 		println sourceSets.main.runtimeClasspath.asPath
 	}
-}
-
-animalsniffer {
-	// Disable AnimalSniffer for minidns-repl.
-	// Unfortunately I found no better way to disable it besided making the sourceSets set an empty set.
-	sourceSets = []
 }

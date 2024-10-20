@@ -159,7 +159,7 @@ public class AsyncNetworkDataSource extends AbstractDnsDataSource {
             }
         }
 
-        @SuppressWarnings("LockNotBeforeTry")
+        @SuppressWarnings({"LockNotBeforeTry", "MixedMutabilityReturnType"})
         private static Collection<SelectionKey> performSelect() {
             AsyncDnsRequest nearestDeadline = null;
             AsyncDnsRequest nextInQueue;

@@ -61,7 +61,7 @@ public final class DnsName extends SafeCharSequence implements Serializable, Com
     private static final String LABEL_SEP_REGEX = "[.\u3002\uFF0E\uFF61]";
 
     /**
-     * @see <a href="https://tools.ietf.org/html/rfc1035">RFC 1035 § 2.3.4.</a<
+     * See <a href="https://tools.ietf.org/html/rfc1035">RFC 1035 § 2.3.4.</a>
      */
     static final int MAX_DNSNAME_LENGTH_IN_OCTETS = 255;
 
@@ -489,6 +489,7 @@ public final class DnsName extends SafeCharSequence implements Serializable, Com
      * @return The parsed domain name.
      * @throws IllegalStateException on cycles.
      */
+     @SuppressWarnings("NonApiType")
     private static DnsName parse(byte[] data, int offset, HashSet<Integer> jumps)
             throws IllegalStateException {
         int c = data[offset] & 0xff;

@@ -1,0 +1,20 @@
+plugins {
+	id 'org.minidns.java-conventions'
+	id 'org.minidns.android-conventions'
+}
+
+ext {
+	myAndroidSdkApi = 23
+	androidBootClasspath = getAndroidRuntimeJar(myAndroidSdkApi)
+}
+
+dependencies {
+    api project(':minidns-client')
+    testImplementation project(path: ":minidns-client", configuration: "testRuntime")
+
+	// Add the Android jar to the Eclipse .classpath.
+	implementation files(androidBootClasspath)
+
+	// For AnimalSniffer
+	signature "net.sf.androidscents.signature:android-api-level-${myAndroidSdkApi}:6.0_r3@signature"
+}

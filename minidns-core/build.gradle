@@ -1,3 +1,8 @@
+plugins {
+	id 'org.minidns.java-conventions'
+	id 'org.minidns.android-conventions'
+}
+
 class CreateFileTask extends DefaultTask {
 	@Input
 	String fileContent
@@ -16,4 +21,4 @@ task createVersionResource(type: CreateFileTask) {
 	outputFile = new File(projectDir, 'src/main/resources/org.minidns/version')
 }
 
-compileJava.dependsOn(createVersionResource)
+processResources.dependsOn(createVersionResource)

@@ -10,8 +10,8 @@
  */
 package org.minidns.cache;
 
+import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -92,7 +92,7 @@ public class ExtendedLruCache extends LruCache {
 
             List<Record<? extends Data>> additionalRecords = extraCaches.get(additionalRecordQuestion);
             if (additionalRecords == null) {
-                 additionalRecords = new LinkedList<>();
+                 additionalRecords = new ArrayList<>();
                  extraCaches.put(additionalRecordQuestion, additionalRecords);
             }
             additionalRecords.add(extraRecord);

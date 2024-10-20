@@ -1,0 +1,36 @@
+ext {
+	javaVersion = JavaVersion.VERSION_11
+	javaMajor = javaVersion.getMajorVersion()
+	minAndroidSdk = 19
+
+	androidBootClasspath = getAndroidRuntimeJar(minAndroidSdk)
+
+	// Export the function by turning it into a closure.
+	// https://stackoverflow.com/a/23290820/194894
+	getAndroidRuntimeJar = this.&getAndroidRuntimeJar
+}
+
+repositories {
+	mavenLocal()
+	mavenCentral()
+}
+
+def getAndroidRuntimeJar(androidApiLevel) {
+	def androidHome = getAndroidHome()
+	def androidJar = new File("$androidHome/platforms/android-${androidApiLevel}/android.jar")
+	if (androidJar.isFile()) {
+		return androidJar
+	} else {
+		throw new Exception("Can't find android.jar for API level ${androidApiLevel}. Please install corresponding SDK platform package")
+	}
+}
+
+def getAndroidHome() {
+	def androidHomeEnv = System.getenv("ANDROID_HOME")
+	if (androidHomeEnv == null) {
+		throw new Exception("ANDROID_HOME environment variable is not set")
+	}
+	def androidHome = new File(androidHomeEnv)
+	if (!androidHome.isDirectory()) throw new Exception("Environment variable ANDROID_HOME is not pointing to a directory")
+	return androidHome
+}

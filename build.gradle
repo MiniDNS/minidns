@@ -1,406 +1,65 @@
-buildscript {
-    repositories {
-        maven {
-            url "https://plugins.gradle.org/m2/"
-        }
-        jcenter()
-        mavenLocal()
-        mavenCentral()
-    }
-
-    dependencies {
-		classpath "org.kt3k.gradle.plugin:coveralls-gradle-plugin:2.3.1"
-		classpath "biz.aQute.bnd:biz.aQute.bnd.gradle:6.1.0"
-    }
-}
-
 plugins {
-    id 'ru.vyarus.animalsniffer' version '1.5.1'
-	id 'net.ltgt.errorprone' version '0.8.1'
+	// The scalastyle plugin of smack-repl wants the root project to
+	// have a ideaProject task, so let's add one.
+	id 'idea'
+
+	id 'org.minidns.javadoc-conventions'
 }
 
-allprojects {
-	apply plugin: 'java'
-	apply plugin: 'eclipse'
-	apply plugin: 'checkstyle'
-	apply plugin: 'jacoco'
-	apply plugin: 'net.ltgt.errorprone'
-
-	group = 'org.minidns'
-	description = "A minimal DNS client library with support for A, AAAA, NS and SRV records"
-	version readVersionFile()
-
-	ext {
-		isSnapshot = version.endsWith('-SNAPSHOT')
-		minidnsMinAndroidSdk = 19
-		junitVersion = '5.7.1'
-		androidBootClasspath = getAndroidRuntimeJar(minidnsMinAndroidSdk)
-		rootConfigDir = new File(rootDir, 'config')
-		gitCommit = getGitCommit()
-		isReleaseVersion = !isSnapshot
-		isContinuousIntegrationEnvironment = Boolean.parseBoolean(System.getenv('CI'))
-		signingRequired = !(isSnapshot || isContinuousIntegrationEnvironment)
-		sonatypeCredentialsAvailable = project.hasProperty('sonatypeUsername') && project.hasProperty('sonatypePassword')
-		sonatypeSnapshotUrl = 'https://oss.sonatype.org/content/repositories/snapshots'
-		sonatypeStagingUrl = 'https://oss.sonatype.org/service/local/staging/deploy/maven2'
-		javaCompatilibity = JavaVersion.VERSION_1_8
-		javaMajor = javaCompatilibity.getMajorVersion()
-	}
-
-	sourceCompatibility = javaCompatilibity
-
-	if (!ext.isSnapshot && !'git describe --exact-match HEAD'.execute().text.trim().equals(version)) {
-		throw new org.gradle.api.InvalidUserDataException('Untagged version detected! Please tag every release.')
-	}
-	if (!version.endsWith('-SNAPSHOT') && version != 'git tag --points-at HEAD'.execute().text.trim()) {
-		throw new org.gradle.api.InvalidUserDataException(
-			'Tag mismatch detected, version is ' + version + ' but should be ' +
-			'git tag --points-at HEAD'.execute().text.trim())
-	}
-
-	test {
-		useJUnitPlatform()
-
-		maxParallelForks = Runtime.runtime.availableProcessors().intdiv(2) ?: 1
-
-		// Enable full stacktraces of failed tests. Especially handy
-		// for environments like Travis.
-		testLogging {
-			events "failed"
-			exceptionFormat "full"
-		}
-	}
-
-	repositories {
-		mavenLocal()
-		mavenCentral()
-	}
-
-	tasks.withType(JavaCompile) {
-		// Some systems may not have set their platform default
-		// converter to 'utf8', but we use unicode in our source
-		// files. Therefore ensure that javac uses unicode
-		options.encoding = "utf8"
-		options.compilerArgs = [
-			'-Xlint:all',
-			// Set '-options' because a non-java7 javac will emit a
-			// warning if source/traget is set to 1.7 and
-			// bootclasspath is *not* set.
-			// TODO implement a sound heuristic to determine a java7
-			// rt.jar on the build host. And if none is found,
-			// fallback to using a environment variable,
-			// e.g. JAVA7_HOME. See SMACK-651.
-			'-Xlint:-options',
-			'-Werror',
-		]
-		options.errorprone {
-			error(
-				"UnusedVariable",
-				"UnusedMethod",
-				"MethodCanBeStatic",
-			)
-			errorproneArgs = [
-				// Disable errorprone checks
-				'-Xep:TypeParameterUnusedInFormals:OFF',
-				// Disable errorpone StringSplitter check, as it
-				// recommends using Splitter from Guava, which we don't
-				// have (nor want to use in Smack).
-				'-Xep:StringSplitter:OFF',
-				'-Xep:JdkObsolete:OFF',
-				'-Xep:MixedMutabilityReturnType:OFF',
-				'-Xep:ImmutableEnumChecker:OFF',
-			]
-		}
-
-	}
-
-	checkstyle {
-		toolVersion = '8.24'
-	}
-
-	jacoco {
-		toolVersion = "0.8.6"
-	}
-
-	jacocoTestReport {
-		dependsOn test
-		getSourceDirectories().setFrom(project.files(sourceSets.main.allSource.srcDirs))
-		getClassDirectories().setFrom(project.files(sourceSets.main.output))
-		reports {
-			xml.enabled true
-		}
-	}
-
-	eclipse {
-		classpath {
-			downloadJavadoc = true
-		}
-	}
-
-	// Make all project's 'test' targets depend on javadoc, so that
-	// javadoc is also linted.
-	test.dependsOn javadoc
-
-	if (JavaVersion.current().isJava8Compatible()) {
-		tasks.withType(Javadoc) {
-			// The '-quiet' as second argument is actually a hack,
-			// since the one paramater addStringOption doesn't seem to
-			// work, we extra add '-quiet', which is added anyway by
-			// gradle.
-			// See https://github.com/gradle/gradle/issues/2354
-			options.addStringOption('Xdoclint:accessibility,html,reference,syntax', '-quiet')
-			// Abort on javadoc warnings.
-			// See JDK-8200363 (https://bugs.openjdk.java.net/browse/JDK-8200363)
-			// for information about the -Xwerror option.
-			options.addStringOption('Xwerror', '-quiet')
-		}
-	}
-
-	if (JavaVersion.current().isJava9Compatible()) {
-		tasks.withType(Javadoc) {
-			options.addStringOption('-release', javaMajor)
-		}
-		tasks.withType(JavaCompile) {
-			options.compilerArgs.addAll([
-				'--release', javaMajor,
-			])
-		}
-	}
-
-	dependencies {
-		testImplementation "org.junit.jupiter:junit-jupiter-api:$junitVersion"
-		testImplementation "org.junit.jupiter:junit-jupiter-params:$junitVersion"
-		testRuntimeOnly "org.junit.jupiter:junit-jupiter-engine:$junitVersion"
-
-		errorprone 'com.google.errorprone:error_prone_core:2.3.3'
-		errorproneJavac('com.google.errorprone:javac:9+181-r4173-1')
-	}
-
+ext {
+	javadocAllDir = new File(buildDir, 'javadoc')
+	nonJavadocAllProjects = [
+		':minidns-integration-test',
+		':minidns-repl',
+	].collect{ project(it) }
+	javadocAllProjects = subprojects - nonJavadocAllProjects
 }
 
-subprojects {
-	apply plugin: 'maven-publish'
-	apply plugin: 'signing'
-	apply plugin: "biz.aQute.bnd.builder"
-
-	jar {
-		bundle {
-			bnd(
-					'-removeheaders': 'Tool, Bnd-*',
-					'-exportcontents': 'org.minidns.*',
-					'Import-Package': '!android,*'
-			)
-		}
-	}
-
-	task sourcesJar(type: Jar, dependsOn: classes) {
-		classifier = 'sources'
-		from sourceSets.main.allSource
-	}
-	task javadocJar(type: Jar, dependsOn: javadoc) {
-		classifier = 'javadoc'
-		from javadoc.destinationDir
-	}
-	task testsJar(type: Jar, dependsOn: testClasses) {
-		classifier = 'tests'
-		from sourceSets.test.output
-	}
-
-	artifacts {
-		archives sourcesJar
-		archives javadocJar
-		archives testsJar
-		// See http://stackoverflow.com/a/21946676/194894
-		testRuntime testsJar
-	}
-
-	publishing {
-		publications {
-			mavenJava(MavenPublication) {
-				from components.java
-				artifact sourcesJar
-				artifact javadocJar
-				artifact testsJar
-				pom {
-					name = 'minidns'
-					description = 'A DNS library for Java and Android systems'
-					url = 'https://github.com/minidns/minidns'
-					inceptionYear = '2014'
-
-					scm {
-						url = 'https://github.com/minidns/minidns'
-						connection = 'scm:https://github.com/minidns/minidns'
-						developerConnection = 'scm:git://github.com/minidns/minidns.git'
-					}
-
-					licenses {
-						license {
-							name = 'The Apache Software License, Version 2.0'
-							url = 'http://www.apache.org/licenses/LICENSE-2.0.txt'
-							distribution = 'repo'
-						}
-					}
-
-					developers {
-						developer {
-							id = 'rtreffer'
-							name = 'Rene Treffer'
-							email = 'treffer@measite.de'
-						}
-						developer {
-							id = 'flow'
-							name = 'Florian Schmaus'
-							email = 'flow@geekplace.eu'
-						}
-					}
-				}
-			}
-		}
-		repositories {
-			maven {
-				url isSnapshot ? sonatypeSnapshotUrl : sonatypeStagingUrl
-				if (sonatypeCredentialsAvailable) {
-					credentials {
-						username = sonatypeUsername
-						password = sonatypePassword
-					}
-				}
-			}
-		}
-	}
-
-	// Workaround for gpg signatory not supporting the 'required' option
-	// See https://github.com/gradle/gradle/issues/5064#issuecomment-381924984
-	// Note what we use 'signing.gnupg.keyName' instead of 'signing.keyId'.
-	tasks.withType(Sign) {
-		onlyIf {
-			project.hasProperty('signing.gnupg.keyName')
-		}
-	}
-	signing {
-		required { signingRequired }
-		useGpgCmd()
-		sign publishing.publications.mavenJava
-	}
-}
-
-configure(subprojects.findAll{!it.name.endsWith('-java7') && !it.name.endsWith('-android21')}) {
-   apply plugin: 'ru.vyarus.animalsniffer'
-   dependencies {
-       signature "net.sf.androidscents.signature:android-api-level-${minidnsMinAndroidSdk}:4.4.2_r4@signature"
-   }
-   animalsniffer {
-       sourceSets = [sourceSets.main]
-   }
-}
-
-jar {
-	// Root project should not create empty jar artifact
-	enabled = false
-}
-
-apply plugin: "com.github.kt3k.coveralls"
-coveralls {
-	sourceDirs = files(subprojects.sourceSets.main.allSource.srcDirs).files.absolutePath
-}
-
-task jacocoRootReport(type: org.gradle.testing.jacoco.tasks.JacocoReport) {
-	dependsOn = subprojects.jacocoTestReport
-	getSourceDirectories().setFrom(files(subprojects.sourceSets.main.allSource.srcDirs))
-	getClassDirectories().setFrom(files(subprojects.sourceSets.main.output))
-	getExecutionData().setFrom(files(subprojects.jacocoTestReport.executionData))
-	reports {
-		xml.enabled true
-		xml.destination file("${buildDir}/reports/jacoco/test/jacocoTestReport.xml")
-	}
-	// We could remove the following setOnlyIf line, but then
-	// jacocoRootReport would silently be SKIPPED if something with
-	// the subprojects is wrong (e.g. a project is missing
-	// in there).
-	setOnlyIf { true }
-}
-
-task integrationTest {
-	// Depend on the integration test's 'run' task using a closure, as
-	// usually the subprojects are evaluated after the parent
-	// project. The closure defers the lookup, compared to
-	// dependsOn project(':minidns-integration-test').tasks.run
-	// which won't work. See also: https://discuss.gradle.org/t/4387/2
-	dependsOn { project(':minidns-integration-test').tasks.run }
-}
-
-task checkFull {
-	dependsOn = subprojects.tasks.check
-	dependsOn {
-		integrationTest
-	}
-}
-
-def getAndroidRuntimeJar(androidSdkApiLevel) {
-	def androidHome = getAndroidHome()
-	def androidJar = new File("$androidHome/platforms/android-$androidSdkApiLevel/android.jar")
-	if (androidJar.isFile()) {
-		return androidJar
-	} else {
-		throw new Exception("Can't find android.jar for $androidSdkApiLevel API. Please install corresponding SDK platform package")
-	}
-}
-
-def getAndroidHome() {
-	def androidHomeEnv = System.getenv("ANDROID_HOME")
-	if (androidHomeEnv == null) {
-		throw new Exception("ANDROID_HOME environment variable is not set")
-	}
-	def androidHome = new File(androidHomeEnv)
-	if (!androidHome.isDirectory()) throw new Exception("Environment variable ANDROID_HOME is not pointing to a directory")
-	return androidHome
-}
-
-def getGitCommit() {
-	def dotGit = new File("$projectDir/.git")
-	if (!dotGit.isDirectory()) return 'non-git build'
-
-	def cmd = 'git describe --always --tags --dirty=+'
-	def proc = cmd.execute()
-	def gitCommit = proc.text.trim()
-	assert !gitCommit.isEmpty()
-
-    def srCmd = 'git symbolic-ref --short HEAD'
-    def srProc = srCmd.execute()
-    srProc.waitForOrKill(10 * 1000)
-    if (srProc.exitValue() == 0) {
-        // Only add the information if the git command was
-        // successful. There may be no symbolic reference for HEAD if
-        // e.g. in detached mode.
-        def symbolicReference = srProc.text.trim()
-        assert !symbolicReference.isEmpty()
-        gitCommit += "-$symbolicReference"
-    }
-
-    gitCommit
-}
-
+evaluationDependsOnChildren()
 task javadocAll(type: Javadoc) {
-	source subprojects.collect {project ->
-		project.sourceSets.main.allJava }
-	destinationDir = new File(buildDir, 'javadoc')
+	source javadocAllProjects.collect {project ->
+		project.sourceSets.main.allJava.findAll {
+			// Filter out symbolic links to avoid
+			// "warning: a package-info.java file has already been seen for package"
+			// javadoc warnings.
+			!java.nio.file.Files.isSymbolicLink(it.toPath())
+		}
+	}
+	destinationDir = javadocAllDir
 	// Might need a classpath
 	classpath = files(subprojects.collect {project ->
 		project.sourceSets.main.compileClasspath})
-	options.linkSource = true
-	options.use = true
-	options.links = [
-		"https://docs.oracle.com/javase/${javaMajor}/docs/api/",
+	classpath += files(androidBootClasspath)
+	options {
+		linkSource = true
+		use = true
+		links = [
+		"https://docs.oracle.com/en/java/javase/${javaMajor}/docs/api/",
 		] as String[]
+		overview = "$projectDir/resources/javadoc-overview.html"
+	}
+
+	// Finally copy the javadoc doc-files from the subprojects, which
+	// are potentially generated, to the javadocAll directory. Note
+	// that we use a copy *method* and not a *task* because the inputs
+	// of copy tasks is determined within the configuration phase. And
+	// since some of the inputs are generated, they will not get
+	// picked up if we used a copy method. See also
+	// https://stackoverflow.com/a/40518516/194894
+	doLast {
+		copy {
+			javadocAllProjects.each {
+				from ("${it.projectDir}/src/javadoc") {
+					include '**/doc-files/*.*'
+				}
+			}
+
+			into javadocAllDir
+		}
+	}
 }
 
-def readVersionFile() {
-	def versionFile = new File(rootDir, 'version')
-	if (!versionFile.isFile()) {
-		throw new Exception("Could not find version file")
-	}
-	if (versionFile.text.isEmpty()) {
-		throw new Exception("Version file does not contain a version")
-	}
-	versionFile.text.trim()
+task inttest {
+	description 'Verify correct functionality by running some integration tests.'
+	dependsOn project(':minidns-integration-test').tasks.run
 }

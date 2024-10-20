@@ -42,7 +42,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Random;
 import java.util.logging.Level;
@@ -176,7 +175,7 @@ public class IterativeDnsClient extends AbstractDnsClient {
             }
         }
 
-        List<IOException> ioExceptions = new LinkedList<>();
+        List<IOException> ioExceptions = new ArrayList<>();
 
         try {
             return queryRecursive(resolutionState, q, primaryTarget, authoritativeZone);
@@ -213,7 +212,7 @@ public class IterativeDnsClient extends AbstractDnsClient {
 
         List<Record<? extends Data>> authorities = resMessage.copyAuthority();
 
-        List<IOException> ioExceptions = new LinkedList<>();
+        List<IOException> ioExceptions = new ArrayList<>();
 
         // Glued NS first
         for (Iterator<Record<? extends Data>> iterator = authorities.iterator(); iterator.hasNext(); ) {

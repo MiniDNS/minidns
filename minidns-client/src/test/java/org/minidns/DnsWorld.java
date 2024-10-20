@@ -48,7 +48,6 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
@@ -256,7 +255,7 @@ public class DnsWorld extends AbstractDnsDataSource {
         }
 
         public List<RrSet> getRRSets() {
-            List<RrSet.Builder> rrSetBuilders = new LinkedList<>();
+            List<RrSet.Builder> rrSetBuilders = new ArrayList<>();
             outerloop: for (Record<? extends Data> record : records) {
                 for (RrSet.Builder builder : rrSetBuilders) {
                     if (builder.addIfPossible(record)) {

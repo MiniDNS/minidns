@@ -219,6 +219,7 @@ public class RecordsTest {
     }
 
     @Test
+    @SuppressWarnings("JavaUtilDate")
     public void testRrsigRecord() throws Exception {
         RRSIG rrsig = new RRSIG(TYPE.A, (byte) 8, (byte) 2, 3600, new Date(1000), new Date(0), 42, "example.com", new byte[] {42});
         // TODO: Compare with real Base64 once done

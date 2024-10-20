@@ -203,7 +203,7 @@ public class DnssecWorld extends DnsWorld {
         return rrsigRecord(key, DnsName.from(signerName), privateKey, algorithm, records);
     }
 
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings({"unchecked", "JavaUtilDate"})
     public static Record<RRSIG> rrsigRecord(DNSKEY key, DnsName signerName, PrivateKey privateKey, SignatureAlgorithm algorithm, Record<? extends Data>... records) {
         Record.TYPE typeCovered = records[0].type;
         int labels = records[0].name.getLabelCount();

@@ -34,6 +34,7 @@ public enum SrvService {
     ;
     // @formatter:on
 
+    @SuppressWarnings("ImmutableEnumChecker")
     public final DnsLabel dnsLabel;
 
     SrvService() {

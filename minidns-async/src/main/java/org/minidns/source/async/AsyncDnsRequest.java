@@ -110,7 +110,7 @@ public class AsyncDnsRequest {
     private void ensureWriteBufferIsInitialized() {
         if (writeBuffer != null) {
             if (!writeBuffer.hasRemaining()) {
-                writeBuffer.rewind();
+                ((java.nio.Buffer) writeBuffer).rewind();
             }
             return;
         }
@@ -411,7 +411,7 @@ public class AsyncDnsRequest {
                 int messageLength = writeBuffer.capacity();
                 assert messageLength <= Short.MAX_VALUE;
                 messageLengthByteBuffer.putShort((short) (messageLength & 0xffff));
-                messageLengthByteBuffer.rewind();
+                ((java.nio.Buffer) messageLengthByteBuffer).rewind();
 
                 writeBuffers = new ByteBuffer[2];
                 writeBuffers[0] = messageLengthByteBuffer;
@@ -489,7 +489,7 @@ public class AsyncDnsRequest {
                     return;
                 }
 
-                messageLengthByteBuffer.rewind();
+                ((java.nio.Buffer) messageLengthByteBuffer).rewind();
                 short messageLengthSignedShort = messageLengthByteBuffer.getShort();
                 int messageLength = messageLengthSignedShort & 0xffff;
                 byteBuffer = ByteBuffer.allocate(messageLength);

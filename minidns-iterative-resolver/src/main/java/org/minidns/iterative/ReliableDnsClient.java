@@ -11,7 +11,7 @@
 package org.minidns.iterative;
 
 import java.io.IOException;
-import java.util.LinkedList;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
 
@@ -91,7 +91,7 @@ public class ReliableDnsClient extends AbstractDnsClient {
     protected DnsQueryResult query(DnsMessage.Builder q) throws IOException {
         DnsQueryResult dnsMessage = null;
         String unacceptableReason = null;
-        List<IOException> ioExceptions = new LinkedList<>();
+        List<IOException> ioExceptions = new ArrayList<>();
 
         if (mode != Mode.iterativeOnly) {
             // Try a recursive query.

@@ -16,7 +16,7 @@ package org.minidns.dnslabel;
  */
 public final class NonReservedLdhLabel extends LdhLabel {
 
-    protected NonReservedLdhLabel(String label) {
+    NonReservedLdhLabel(String label) {
         super(label);
         assert isNonReservedLdhLabelInternal(label);
     }

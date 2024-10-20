@@ -35,7 +35,6 @@ import java.security.cert.Certificate;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.logging.Logger;
 
@@ -117,7 +116,7 @@ public class DaneVerifier {
             return false;
         }
 
-        List<DaneCertificateException.CertificateMismatch> certificateMismatchExceptions = new LinkedList<>();
+        List<DaneCertificateException.CertificateMismatch> certificateMismatchExceptions = new ArrayList<>();
         boolean verified = false;
         for (Record<? extends Data> record : res.answerSection) {
             if (record.type == Record.TYPE.TLSA && record.name.equals(req)) {

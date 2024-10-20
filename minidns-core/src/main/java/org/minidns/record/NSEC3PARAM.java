@@ -17,6 +17,7 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.math.BigInteger;
+import java.util.Locale;
 
 /**
  * NSEC3PARAM record payload.
@@ -91,7 +92,7 @@ public class NSEC3PARAM extends Data {
                 .append(hashAlgorithm).append(' ')
                 .append(flags).append(' ')
                 .append(iterations).append(' ')
-                .append(salt.length == 0 ? "-" : new BigInteger(1, salt).toString(16).toUpperCase());
+                .append(salt.length == 0 ? "-" : new BigInteger(1, salt).toString(16).toUpperCase(Locale.ROOT));
         return sb.toString();
     }
 

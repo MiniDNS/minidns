@@ -1,0 +1,13 @@
+plugins {
+	id 'groovy-gradle-plugin'
+}
+
+repositories {
+	gradlePluginPortal()
+}
+
+dependencies {
+	implementation "biz.aQute.bnd:biz.aQute.bnd.gradle:7.0.0"
+	implementation "net.ltgt.gradle:gradle-errorprone-plugin:4.0.1"
+	implementation "ru.vyarus:gradle-animalsniffer-plugin:1.7.1"
+}

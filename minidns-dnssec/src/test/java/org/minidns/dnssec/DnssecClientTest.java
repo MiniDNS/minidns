@@ -385,7 +385,7 @@ public class DnssecClientTest {
         );
     }
 
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings({"unchecked", "JavaUtilDate"})
     @Test
     public void testUnknownAlgorithm() throws IOException {
         DnssecClient client = constructDnssecClient();
@@ -474,7 +474,7 @@ public class DnssecClientTest {
         checkCorrectExampleMessage(message);
     }
 
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings({"unchecked", "JavaUtilDate"})
     @Test
     public void testSignatureOutOfDate() throws IOException {
         DnssecClient client = constructDnssecClient();
@@ -506,7 +506,7 @@ public class DnssecClientTest {
         checkCorrectExampleMessage(message);
     }
 
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings({"unchecked", "JavaUtilDate"})
     @Test
     public void testSignatureInFuture() throws IOException {
         DnssecClient client = constructDnssecClient();

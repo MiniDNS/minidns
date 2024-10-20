@@ -1,3 +1,7 @@
+pluginManagement {
+    includeBuild('build-logic')
+}
+
 // The name of the root project.
 // If we would not set the name, then gradle would use the directory
 // name of the root directory
@@ -12,4 +16,4 @@ include 'minidns-dane-java7'
 include 'minidns-integration-test'
 include 'minidns-repl'
 include 'minidns-hla'
-include 'minidns-android21'
+include 'minidns-android23'

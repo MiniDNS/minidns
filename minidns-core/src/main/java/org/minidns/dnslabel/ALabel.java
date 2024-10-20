@@ -14,7 +14,7 @@ import org.minidns.idna.MiniDnsIdna;
 
 public final class ALabel extends XnLabel {
 
-    protected ALabel(String label) {
+    ALabel(String label) {
         super(label);
     }
 
