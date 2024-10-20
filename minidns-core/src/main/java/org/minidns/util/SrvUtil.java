@@ -34,6 +34,7 @@ public class SrvUtil {
      *            a collection of SRV records.
      * @return a sorted list of the given records.
      */
+    @SuppressWarnings({"MixedMutabilityReturnType", "JdkObsolete"})
     public static List<SRV> sortSrvRecords(Collection<SRV> srvRecords) {
         // RFC 2782, Usage rules: "If there is precisely one SRV RR, and its Target is "."
         // (the root domain), abort."

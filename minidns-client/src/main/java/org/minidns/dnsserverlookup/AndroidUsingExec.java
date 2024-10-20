@@ -63,7 +63,7 @@ public final class AndroidUsingExec extends AbstractDnsServerLookupMechanism {
     }
 
     private static final String PROP_DELIM = "]: [";
-    protected static Set<String> parseProps(BufferedReader lnr, boolean logWarning) throws UnknownHostException, IOException {
+    static Set<String> parseProps(BufferedReader lnr, boolean logWarning) throws UnknownHostException, IOException {
         String line = null;
         Set<String> server = new HashSet<String>(6);
 

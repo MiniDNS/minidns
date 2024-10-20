@@ -85,7 +85,6 @@
 		</module>
 		<module name="JavadocMethod">
 			<!-- TODO stricten those checks -->
-			<property name="allowMissingJavadoc" value="true"/>
 		</module>
 		<module name="JavadocStyle">
 			<property name="scope" value="public"/>

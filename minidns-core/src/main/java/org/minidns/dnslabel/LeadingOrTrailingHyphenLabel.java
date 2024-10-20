@@ -15,11 +15,11 @@ package org.minidns.dnslabel;
  */
 public final class LeadingOrTrailingHyphenLabel extends NonLdhLabel {
 
-    protected LeadingOrTrailingHyphenLabel(String label) {
+    LeadingOrTrailingHyphenLabel(String label) {
         super(label);
     }
 
-    protected static boolean isLeadingOrTrailingHypenLabelInternal(String label) {
+    static boolean isLeadingOrTrailingHypenLabelInternal(String label) {
         if (label.isEmpty()) {
             return false;
         }

@@ -8,20 +8,23 @@
  * upon the condition that you accept all of the terms of either
  * the Apache License 2.0, the LGPL 2.1+ or the WTFPL.
  */
-apply plugin: 'application'
+plugins {
+	id 'org.minidns.java-conventions'
+	id 'org.minidns.application-conventions'
+}
 
 mainClassName = 'org.minidns.integrationtest.IntegrationTestHelper'
 applicationDefaultJvmArgs = ["-enableassertions"]
 
 dependencies {
-    compile project(':minidns-client')
-    compile project(':minidns-async')
-	compile project(':minidns-iterative-resolver')
-    compile project(':minidns-dnssec')
-    compile project(':minidns-hla')
+    api project(':minidns-client')
+    api project(':minidns-async')
+	api project(':minidns-iterative-resolver')
+    api project(':minidns-dnssec')
+    api project(':minidns-hla')
     implementation "org.junit.vintage:junit-vintage-engine:$junitVersion"
 	implementation "org.junit.jupiter:junit-jupiter-api:$junitVersion"
-    testCompile project(path: ":minidns-client", configuration: "testRuntime")
+    testImplementation project(path: ":minidns-client", configuration: "testRuntime")
 }
 
 run {

@@ -129,7 +129,7 @@ public class Edns {
         }
     }
 
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings({"unchecked", "TypeParameterUnusedInFormals"})
     public <O extends EdnsOption> O getEdnsOption(OptionCode optionCode) {
         for (EdnsOption o : variablePart) {
             if (o.getOptionCode().equals(optionCode)) {

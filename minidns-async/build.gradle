@@ -1,4 +1,9 @@
+plugins {
+	id 'org.minidns.java-conventions'
+	id 'org.minidns.android-conventions'
+}
+
 dependencies {
-    compile project(':minidns-client')
-    testCompile project(path: ":minidns-client", configuration: "testRuntime")
+    api project(':minidns-client')
+    testImplementation project(path: ":minidns-client", configuration: "testRuntime")
 }

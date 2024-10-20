@@ -40,7 +40,6 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -278,9 +277,10 @@ public class DnssecClient extends ReliableDnsClient {
         Set<DnssecUnverifiedReason> reasons = new HashSet<>();
     }
 
+    @SuppressWarnings("JavaUtilDate")
     private VerifySignaturesResult verifySignatures(Question q, Collection<Record<? extends Data>> reference, List<Record<? extends Data>> toBeVerified) throws IOException {
         final Date now = new Date();
-        final List<RRSIG> outdatedRrSigs = new LinkedList<>();
+        final List<RRSIG> outdatedRrSigs = new ArrayList<>();
         VerifySignaturesResult result = new VerifySignaturesResult();
         final List<Record<RRSIG>> rrsigs = new ArrayList<>(toBeVerified.size());
 

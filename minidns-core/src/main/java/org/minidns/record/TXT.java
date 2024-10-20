@@ -13,7 +13,7 @@ package org.minidns.record;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -69,11 +69,7 @@ public class TXT extends Data {
             List<byte[]> extents = getExtents();
             List<String> characterStrings = new ArrayList<>(extents.size());
             for (byte[] extent : extents) {
-                try {
-                    characterStrings.add(new String(extent, "UTF-8"));
-                } catch (UnsupportedEncodingException e) {
-                    throw new AssertionError(e);
-                }
+                characterStrings.add(new String(extent, StandardCharsets.UTF_8));
             }
 
             characterStringsCache = Collections.unmodifiableList(characterStrings);

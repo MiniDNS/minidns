@@ -17,7 +17,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.IdentityHashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import org.minidns.AbstractDnsClient.IpVersionSetting;
@@ -180,7 +179,7 @@ public class SrvResolverResult extends ResolverResult<SRV> {
         }
 
         List<SRV> srvToSort = new ArrayList<>(srvRecordsCount);
-        Map<SRV, ResolvedSrvRecord> identityMap = new IdentityHashMap<>(srvRecordsCount);
+        IdentityHashMap<SRV, ResolvedSrvRecord> identityMap = new IdentityHashMap<>(srvRecordsCount);
         for (Collection<ResolvedSrvRecord> resolvedSrvRecords : resolvedSrvRecordCollections) {
             if (resolvedSrvRecords == null) {
                 continue;

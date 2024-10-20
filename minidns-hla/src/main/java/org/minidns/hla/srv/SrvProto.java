@@ -20,6 +20,7 @@ public enum SrvProto {
     ;
     // @formatter:on
 
+    @SuppressWarnings("ImmutableEnumChecker")
     public final DnsLabel dnsLabel;
 
     SrvProto() {

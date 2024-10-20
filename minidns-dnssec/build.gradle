@@ -1,5 +1,10 @@
+plugins {
+	id 'org.minidns.java-conventions'
+	id 'org.minidns.android-conventions'
+}
+
 dependencies {
-    compile project(':minidns-client')
-    compile project(':minidns-iterative-resolver')
-    testCompile project(path: ":minidns-client", configuration: "testRuntime")
+    api project(':minidns-client')
+    api project(':minidns-iterative-resolver')
+    testImplementation project(path: ":minidns-client", configuration: "testRuntime")
 }

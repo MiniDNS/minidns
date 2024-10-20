@@ -16,8 +16,8 @@ import java.io.InputStream;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.nio.charset.StandardCharsets;
-import java.text.SimpleDateFormat;
-import java.util.Date;
+import java.time.Instant;
+import java.time.format.DateTimeFormatter;
 import java.util.logging.ConsoleHandler;
 import java.util.logging.Formatter;
 import java.util.logging.Handler;
@@ -38,9 +38,9 @@ public class MiniDnsJul {
 );
 // @formatter:on
 
-    private static final SimpleDateFormat LONG_LOG_TIME_FORMAT = new SimpleDateFormat("hh:mm:ss.SSS");
+    private static final DateTimeFormatter LONG_LOG_TIME_FORMAT = DateTimeFormatter.ofPattern("hh:mm:ss.SSS");
 
-    private static final SimpleDateFormat SHORT_LOG_TIME_FORMAT = new SimpleDateFormat("mm:ss.SSS");
+    private static final DateTimeFormatter SHORT_LOG_TIME_FORMAT = DateTimeFormatter.ofPattern("mm:ss.SSS");
 
     private static final Handler CONSOLE_HANDLER = new ConsoleHandler();
 
@@ -59,16 +59,12 @@ public class MiniDnsJul {
             public String format(LogRecord logRecord) {
                 StringBuilder sb = new StringBuilder(256);
 
-                Date date = new Date(logRecord.getMillis());
+                Instant date = Instant.ofEpochMilli(logRecord.getMillis());
                 String dateString;
                 if (shortLog) {
-                    synchronized (SHORT_LOG_TIME_FORMAT) {
-                        dateString = SHORT_LOG_TIME_FORMAT.format(date);
-                    }
+					dateString = SHORT_LOG_TIME_FORMAT.format(date);
                 } else {
-                    synchronized (LONG_LOG_TIME_FORMAT) {
-                        dateString = LONG_LOG_TIME_FORMAT.format(date);
-                    }
+					dateString = LONG_LOG_TIME_FORMAT.format(date);
                 }
                 sb.append(dateString).append(' ');
 

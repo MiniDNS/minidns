@@ -184,6 +184,7 @@ public class TLSA extends Data {
     }
 
     @Override
+    @SuppressWarnings("UnnecessaryStringBuilder")
     public String toString() {
         return new StringBuilder()
                 .append(certUsageByte).append(' ')

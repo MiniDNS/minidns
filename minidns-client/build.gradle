@@ -1,6 +1,11 @@
+plugins {
+	id 'org.minidns.java-conventions'
+	id 'org.minidns.android-conventions'
+}
+
 dependencies {
-	compile project(':minidns-core')
-    testCompile project(path: ":minidns-core", configuration: "testRuntime")
+	api project(':minidns-core')
+    testImplementation project(path: ":minidns-core", configuration: "testRuntime")
 }
 
 jar {
