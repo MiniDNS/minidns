@@ -3,6 +3,8 @@ plugins {
 	id "com.github.alisiikh.scalastyle" version "3.5.0"
 }
 
+description = "A read-eval-print loop (REPL) for MiniDNS"
+
 apply plugin: 'scala'
 apply plugin: 'com.github.alisiikh.scalastyle'
 

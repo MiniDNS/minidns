@@ -13,6 +13,8 @@ plugins {
 	id 'org.minidns.application-conventions'
 }
 
+description = "MiniDNS' integration test suite"
+
 mainClassName = 'org.minidns.integrationtest.IntegrationTestHelper'
 applicationDefaultJvmArgs = ["-enableassertions"]
 

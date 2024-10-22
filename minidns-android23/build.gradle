@@ -8,6 +8,8 @@ ext {
 	androidBootClasspath = getAndroidRuntimeJar(myAndroidSdkApi)
 }
 
+description = "MiniDNS code that requires an Android SDK API of ${myAndroidSdkApi} or higher"
+
 dependencies {
     api project(':minidns-client')
     testImplementation project(path: ":minidns-client", configuration: "testRuntime")

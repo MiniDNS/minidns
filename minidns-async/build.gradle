@@ -3,6 +3,8 @@ plugins {
 	id 'org.minidns.android-conventions'
 }
 
+description = "Asynchronous DNS lookups using Java NIO"
+
 dependencies {
     api project(':minidns-client')
     testImplementation project(path: ":minidns-client", configuration: "testRuntime")

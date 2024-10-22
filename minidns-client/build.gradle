@@ -3,6 +3,8 @@ plugins {
 	id 'org.minidns.android-conventions'
 }
 
+description = "A small non-recursing DNS client"
+
 dependencies {
 	api project(':minidns-core')
     testImplementation project(path: ":minidns-core", configuration: "testRuntime")

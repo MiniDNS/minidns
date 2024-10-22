@@ -3,6 +3,8 @@ plugins {
 	id 'org.minidns.android-conventions'
 }
 
+description = "MiniDNS' core classes and functionality"
+
 class CreateFileTask extends DefaultTask {
 	@Input
 	String fileContent

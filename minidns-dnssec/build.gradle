@@ -3,6 +3,8 @@ plugins {
 	id 'org.minidns.android-conventions'
 }
 
+description = "MiniDNS' client with support for DNSSEC"
+
 dependencies {
     api project(':minidns-client')
     api project(':minidns-iterative-resolver')

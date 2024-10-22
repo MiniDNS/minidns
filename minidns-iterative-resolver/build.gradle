@@ -3,6 +3,8 @@ plugins {
 	id 'org.minidns.android-conventions'
 }
 
+description = "A DNS client that can iteratively resolve resource records"
+
 dependencies {
     api project(':minidns-client')
     testImplementation project(path: ":minidns-client", configuration: "testRuntime")

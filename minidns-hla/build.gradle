@@ -3,6 +3,8 @@ plugins {
 	id 'org.minidns.android-conventions'
 }
 
+description = "An easy to use high-level API (HLA) of MiniDNS' client"
+
 dependencies {
     api project(':minidns-dnssec')
     testImplementation project(path: ":minidns-client", configuration: "testRuntime")

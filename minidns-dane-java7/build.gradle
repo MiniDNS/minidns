@@ -2,6 +2,8 @@ plugins {
 	id 'org.minidns.java-conventions'
 }
 
+description = "Support for DANE using APIs of Java 7 (or higher)"
+
 dependencies {
     api project(':minidns-dnssec')
     testImplementation project(path: ":minidns-client", configuration: "testRuntime")
