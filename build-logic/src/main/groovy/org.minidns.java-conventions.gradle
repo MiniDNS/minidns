@@ -20,7 +20,6 @@ plugins {
 
 version readVersionFile()
 
-// TODO: verify settings done here
 ext {
 	isSnapshot = version.endsWith('-SNAPSHOT')
 	gitCommit = getGitCommit()
@@ -32,14 +31,8 @@ ext {
 	sonatypeSnapshotUrl = 'https://oss.sonatype.org/content/repositories/snapshots'
 	sonatypeStagingUrl = 'https://oss.sonatype.org/service/local/staging/deploy/maven2'
 	builtDate = (new java.text.SimpleDateFormat("yyyy-MM-dd")).format(new Date())
-	oneLineDesc = 'An Open Source XMPP (Jabber) client library'
 
 	junitVersion = '5.9.2'
-	commonsIoVersion = '2.6'
-	bouncyCastleVersion = '1.73'
-	guavaVersion = '30.1-jre'
-	mockitoVersion = '5.13.0'
-	orgReflectionsVersion = '0.9.11'
 
 	if (project.hasProperty("useSonatype")) {
 		useSonatype = project.getProperty("useSonatype").toBoolean()
@@ -47,12 +40,9 @@ ext {
 		// Default to true
 		useSonatype = true
 	}
-
-	gplLicensedProjects = [
-	].collect{ project(it) }
 }
 
-group = 'org.igniterealtime.smack'
+group = 'org.minidns'
 
 java {
 	sourceCompatibility = javaVersion
@@ -108,13 +98,6 @@ dependencies {
 	// https://stackoverflow.com/a/77274251/194894
 	testRuntimeOnly "org.junit.platform:junit-platform-launcher:1.11.0"
 
-	// The smack-extensions subproject uses mockito in its fest
-	// fixtures, and we want to have mockito also available in
-	// test, so we use API here.
-	testFixturesApi "org.mockito:mockito-core:${mockitoVersion}"
-
-	testImplementation 'com.jamesmurty.utils:java-xmlbuilder:1.2'
-
 	errorprone 'com.google.errorprone:error_prone_core:2.32.0'
 }
 
@@ -145,7 +128,8 @@ jar {
 	bundle {
 		bnd(
 				'-removeheaders': 'Tool, Bnd-*',
-				'-exportcontents': '*',
+				'-exportcontents': 'org.minidns.*',
+				'Import-Package': '!android,*'
 		)
 	}
 }
@@ -153,11 +137,7 @@ jar {
 checkstyle {
 	toolVersion = '10.18.2'
 
-	if (project in gplLicensedProjects) {
-		configProperties.checkstyleLicenseHeader = "${project.name}-gplv3-license-header"
-	} else {
-		configProperties.checkstyleLicenseHeader = "header"
-	}
+	configProperties.checkstyleLicenseHeader = "header"
 }
 task sourcesJar(type: Jar, dependsOn: classes) {
 	archiveClassifier = 'sources'
@@ -176,8 +156,8 @@ configurations {
 }
 artifacts {
 	// Add a 'testRuntime' configuration including the tests so that
-	// it can be consumed by other projects (smack-omemo-signal for
-	// example).  See http://stackoverflow.com/a/21946676/194894
+	// it can be consumed by other projects. See
+	// http://stackoverflow.com/a/21946676/194894
 	testRuntime testsJar
 }
 
@@ -189,46 +169,38 @@ publishing {
 			artifact javadocJar
 			artifact testsJar
 			pom {
-				name = 'Smack'
+				name = 'MiniDNS'
 				packaging = 'jar'
-				inceptionYear = '2003'
-				url = 'http://www.igniterealtime.org/projects/jxmpp/'
+				inceptionYear = '2014'
+				url = 'https://github.com/minidns/minidns'
 				afterEvaluate {
 					description = project.description
 				}
 
-				issueManagement {
-					system = 'JIRA'
-					url = 'http://issues.igniterealtime.org/browse/SMACK'
-				}
-
 				scm {
-					url = 'https://github.com/igniterealtime/Smack'
-					connection = 'scm:git:https://github.com/igniterealtime/Smack.git'
-					developerConnection = 'scm:git:https://github.com/igniterealtime/Smack.git'
+					url = 'https://github.com/minidns/minidns'
+					connection = 'scm:https://github.com/minidns/minidns'
+					developerConnection = 'scm:git://github.com/minidns/minidns.git'
 				}
 
 				licenses {
-					if (project in gplLicensedProjects) {
-						license {
-							name = 'GNU General Public License, version 3 or any later version'
-							url = 'https://www.gnu.org/licenses/gpl.txt'
-							distribution = 'repo'
-						}
-					} else {
-						license {
-							name = 'The Apache Software License, Version 2.0'
-							url = 'http://www.apache.org/licenses/LICENSE-2.0.txt'
-							distribution = 'repo'
-						}
+					license {
+						name = 'The Apache Software License, Version 2.0'
+						url = 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+						distribution = 'repo'
 					}
 				}
 
 				developers {
 					developer {
+						id = 'rtreffer'
+						name = 'Rene Treffer'
+						email = 'treffer@measite.de'
+					}
+					developer {
 						id = 'flow'
 						name = 'Florian Schmaus'
-						email = 'flow@igniterealtime.org'
+						email = 'flow@geekplace.eu'
 					}
 				}
 			}
