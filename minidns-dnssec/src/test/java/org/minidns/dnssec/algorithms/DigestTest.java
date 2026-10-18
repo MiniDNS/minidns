@@ -18,7 +18,15 @@ import org.junit.jupiter.api.Test;
 
 import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Random;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class DigestTest extends AlgorithmTest {
@@ -45,6 +53,50 @@ public class DigestTest extends AlgorithmTest {
         assertEquals("da39a3ee5e6b4b0d3255bfef95601890afd80709", digestHexString(nsecDigestCalculator, ""));
         assertEquals("a94a8fe5ccb19ba61c4c0873d391e987982fbbd3", digestHexString(nsecDigestCalculator, "test"));
         assertEquals("640ab2bae07bedc4c163f679a746f7ab7fb5d1fa", digestHexString(nsecDigestCalculator, "Test"));
+    }
+
+    @Test
+    public void testSha256DsDigestConcurrently() throws Exception {
+        assertConcurrentDigestsAreCorrect(algorithmMap.getDsDigestCalculator(DigestAlgorithm.SHA256));
+    }
+
+    @Test
+    public void testSha1nsec3DigestConcurrently() throws Exception {
+        assertConcurrentDigestsAreCorrect(algorithmMap.getNsecDigestCalculator(HashAlgorithm.SHA1));
+    }
+
+    // The digest calculators of AlgorithmMap.INSTANCE are shared, e.g. by multiple threads resolving concurrently, and
+    // hence must be thread-safe. See https://github.com/MiniDNS/minidns/issues/132
+    private static void assertConcurrentDigestsAreCorrect(DigestCalculator digestCalculator) throws Exception {
+        final int threadCount = 4;
+        final int iterations = 10_000;
+
+        final byte[] input = new byte[300];
+        new Random(42).nextBytes(input);
+        final byte[] expected = digestCalculator.digest(input);
+
+        ExecutorService executor = Executors.newFixedThreadPool(threadCount);
+        try {
+            CountDownLatch start = new CountDownLatch(1);
+            List<Future<Void>> futures = new ArrayList<>(threadCount);
+            for (int i = 0; i < threadCount; i++) {
+                futures.add(executor.submit(() -> {
+                    start.await();
+                    for (int j = 0; j < iterations; j++) {
+                        final int iteration = j;
+                        byte[] actual = digestCalculator.digest(input);
+                        assertArrayEquals(expected, actual, () -> "Wrong digest in iteration " + iteration);
+                    }
+                    return null;
+                }));
+            }
+            start.countDown();
+            for (Future<Void> future : futures) {
+                future.get();
+            }
+        } finally {
+            executor.shutdownNow();
+        }
     }
 
     private static String digestHexString(DigestCalculator digestCalculator, String in) {

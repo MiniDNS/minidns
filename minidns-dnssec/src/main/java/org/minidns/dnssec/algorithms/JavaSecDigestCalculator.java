@@ -15,15 +15,22 @@ import org.minidns.dnssec.DigestCalculator;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
+/**
+ * A {@link DigestCalculator} using {@link MessageDigest}.
+ * <p>
+ * Instances are shared, e.g. via {@link AlgorithmMap#INSTANCE}, and hence used concurrently. Since {@link MessageDigest}
+ * is not thread-safe, access to it is synchronized.
+ * </p>
+ */
 public class JavaSecDigestCalculator implements DigestCalculator {
-    private MessageDigest md;
+    private final MessageDigest md;
 
     public JavaSecDigestCalculator(String algorithm) throws NoSuchAlgorithmException {
         md = MessageDigest.getInstance(algorithm);
     }
 
     @Override
-    public byte[] digest(byte[] bytes) {
+    public synchronized byte[] digest(byte[] bytes) {
         return md.digest(bytes);
     }
 }
