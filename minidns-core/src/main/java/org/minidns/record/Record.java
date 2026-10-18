@@ -199,6 +199,21 @@ public final class Record<D extends Data> {
         }
 
         /**
+         * Get the textual representation of the given binary type value. Types unknown to MiniDNS are represented
+         * using the generic "TYPE&lt;value&gt;" notation as per RFC 3597 § 5, e.g. "TYPE65534".
+         *
+         * @param value The binary type value.
+         * @return the textual representation of the type.
+         */
+        public static String asString(int value) {
+            TYPE type = getType(value);
+            if (type == UNKNOWN) {
+                return "TYPE" + value;
+            }
+            return type.toString();
+        }
+
+        /**
          * Retrieve the type for a given {@link Data} class.
          *
          * @param <D> The class for this type.
@@ -289,6 +304,12 @@ public final class Record<D extends Data> {
      * The type (and payload type) of this record.
      */
     public final TYPE type;
+
+    /**
+     * The binary value of the type of this record. In contrast to {@link #type}, this also holds the actual value if
+     * the type is unknown to MiniDNS.
+     */
+    public final int typeValue;
 
     /**
      * The record class (usually CLASS.IN).
@@ -401,14 +422,14 @@ public final class Record<D extends Data> {
                 break;
             case UNKNOWN:
             default:
-                payloadData = UNKNOWN.parse(dis, payloadLength, type);
+                payloadData = UNKNOWN.parse(dis, payloadLength, typeValue);
                 break;
         }
-        return new Record<>(name, type, clazz, clazzValue, ttl, payloadData, unicastQuery);
+        return new Record<>(name, type, typeValue, clazz, clazzValue, ttl, payloadData, unicastQuery);
     }
 
     public Record(DnsName name, TYPE type, CLASS clazz, long ttl, D payloadData, boolean unicastQuery) {
-        this(name, type, clazz, clazz.getValue() + (unicastQuery ? 0x8000 : 0), ttl, payloadData, unicastQuery);
+        this(name, type, typeValueOf(type, payloadData), clazz, clazz.getValue() + (unicastQuery ? 0x8000 : 0), ttl, payloadData, unicastQuery);
     }
 
     public Record(String name, TYPE type, CLASS clazz, long ttl, D payloadData, boolean unicastQuery) {
@@ -416,21 +437,37 @@ public final class Record<D extends Data> {
     }
 
     public Record(String name, TYPE type, int clazzValue, long ttl, D payloadData) {
-        this(DnsName.from(name), type, CLASS.NONE, clazzValue, ttl, payloadData, false);
+        this(DnsName.from(name), type, clazzValue, ttl, payloadData);
     }
 
     public Record(DnsName name, TYPE type, int clazzValue, long ttl, D payloadData) {
-        this(name, type, CLASS.NONE, clazzValue, ttl, payloadData, false);
+        this(name, type, typeValueOf(type, payloadData), CLASS.NONE, clazzValue, ttl, payloadData, false);
     }
 
-    private Record(DnsName name, TYPE type, CLASS clazz, int clazzValue, long ttl, D payloadData, boolean unicastQuery) {
+    private Record(DnsName name, TYPE type, int typeValue, CLASS clazz, int clazzValue, long ttl, D payloadData, boolean unicastQuery) {
         this.name = name;
         this.type = type;
+        this.typeValue = typeValue;
         this.clazz = clazz;
         this.clazzValue = clazzValue;
         this.ttl = ttl;
         this.payloadData = payloadData;
         this.unicastQuery = unicastQuery;
+    }
+
+    /**
+     * Determine the binary type value of a record with the given type and payload. If the type is unknown to MiniDNS,
+     * then the binary type value is taken from the payload, if possible.
+     *
+     * @param type the type of the record.
+     * @param payloadData the payload of the record.
+     * @return the binary type value.
+     */
+    private static int typeValueOf(TYPE type, Data payloadData) {
+        if (type == TYPE.UNKNOWN && payloadData instanceof UNKNOWN) {
+            return ((UNKNOWN) payloadData).getTypeValue();
+        }
+        return type.getValue();
     }
 
     public void toOutputStream(OutputStream outputStream) throws IOException {
@@ -441,7 +478,7 @@ public final class Record<D extends Data> {
         DataOutputStream dos = new DataOutputStream(outputStream);
 
         name.writeToStream(dos);
-        dos.writeShort(type.getValue());
+        dos.writeShort(typeValue);
         dos.writeShort(clazzValue);
         dos.writeInt((int) ttl);
 
@@ -475,7 +512,7 @@ public final class Record<D extends Data> {
      */
     @Override
     public String toString() {
-        return name.getRawAce() + ".\t" + ttl + '\t' + clazz + '\t' + type + '\t' + payloadData;
+        return name.getRawAce() + ".\t" + ttl + '\t' + clazz + '\t' + TYPE.asString(typeValue) + '\t' + payloadData;
     }
 
     /**
@@ -484,7 +521,7 @@ public final class Record<D extends Data> {
      * @return True if this record is a valid answer.
      */
     public boolean isAnswer(Question q) {
-        return (q.type == type || q.type == TYPE.ANY) &&
+        return (q.typeValue == typeValue || q.type == TYPE.ANY) &&
                (q.clazz == clazz || q.clazz == CLASS.ANY) &&
                q.name.equals(name);
     }
@@ -547,7 +584,7 @@ public final class Record<D extends Data> {
         if (hashCodeCache == null) {
             int hashCode = 1;
             hashCode = 37 * hashCode + name.hashCode();
-            hashCode = 37 * hashCode + type.hashCode();
+            hashCode = 37 * hashCode + typeValue;
             hashCode = 37 * hashCode + clazz.hashCode();
             hashCode = 37 * hashCode + payloadData.hashCode();
             hashCodeCache = hashCode;
@@ -565,7 +602,7 @@ public final class Record<D extends Data> {
         }
         Record<?> otherRecord = (Record<?>) other;
         if (!name.equals(otherRecord.name)) return false;
-        if (type != otherRecord.type) return false;
+        if (typeValue != otherRecord.typeValue) return false;
         if (clazz != otherRecord.clazz) return false;
         // Note that we do not compare the TTL here, since we consider two Records with everything but the TTL equal to
         // be equal too.
