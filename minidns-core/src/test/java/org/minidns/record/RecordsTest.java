@@ -294,6 +294,7 @@ public class RecordsTest {
         byte[] rrsigb = rrsig.toByteArray();
         rrsig = RRSIG.parse(new DataInputStream(new ByteArrayInputStream(rrsigb)), rrsigb, rrsigb.length);
         assertEquals(TYPE.A, rrsig.typeCovered);
+        assertEquals(TYPE.A.getValue(), rrsig.typeCoveredValue);
         assertEquals(SignatureAlgorithm.RSASHA256, rrsig.algorithm);
         assertEquals(2, rrsig.labels);
         assertEquals(3600, rrsig.originalTtl);
@@ -302,6 +303,30 @@ public class RecordsTest {
         assertEquals(42, rrsig.keyTag);
         assertCsEquals("example.com", rrsig.signerName);
         assertArrayEquals(new byte[] {42}, rrsig.getSignature());
+    }
+
+    @Test
+    public void testRrsigRecordWithUnknownTypeCovered() throws Exception {
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        DataOutputStream dos = new DataOutputStream(baos);
+        // 65534 is a private use type, and hence unknown to MiniDNS.
+        dos.writeShort(65534);
+        dos.writeByte(8);
+        dos.writeByte(2);
+        dos.writeInt(3600);
+        dos.writeInt(1);
+        dos.writeInt(0);
+        dos.writeShort(42);
+        DnsName.from("example.com").writeToStream(dos);
+        dos.write(new byte[] {42});
+        byte[] rrsigb = baos.toByteArray();
+
+        RRSIG rrsig = RRSIG.parse(new DataInputStream(new ByteArrayInputStream(rrsigb)), rrsigb, rrsigb.length);
+        assertEquals(TYPE.UNKNOWN, rrsig.typeCovered);
+        assertEquals(65534, rrsig.typeCoveredValue);
+        assertEquals("TYPE65534 RSASHA256 2 3600 19700101000001 19700101000000 42 example.com. " + rrsig.getSignatureBase64(), rrsig.toString());
+        // The covered type must not get lost, otherwise the signature can not be verified.
+        assertArrayEquals(rrsigb, rrsig.toByteArray());
     }
 
     @Test

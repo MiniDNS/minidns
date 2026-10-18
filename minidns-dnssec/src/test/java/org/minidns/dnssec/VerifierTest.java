@@ -22,6 +22,7 @@ import org.minidns.record.RRSIG;
 import org.minidns.record.Record;
 import org.minidns.record.Record.CLASS;
 import org.minidns.record.Record.TYPE;
+import org.minidns.record.UNKNOWN;
 import org.junit.jupiter.api.Test;
 
 import java.io.ByteArrayInputStream;
@@ -181,7 +182,7 @@ public class VerifierTest {
                 + "ff4958143235b6d610688b968bc11d39381e9904");
     }
 
-    private static void assertVerifies(List<Record<? extends Data>> records, String rrsigHex, String dnskeyHex) throws IOException {
+    private static RRSIG assertVerifies(List<Record<? extends Data>> records, String rrsigHex, String dnskeyHex) throws IOException {
         byte[] rrsigBytes = hexToBytes(rrsigHex);
         RRSIG rrsig = RRSIG.parse(new DataInputStream(new ByteArrayInputStream(rrsigBytes)), rrsigBytes, rrsigBytes.length);
         byte[] dnskeyBytes = hexToBytes(dnskeyHex);
@@ -189,6 +190,7 @@ public class VerifierTest {
         assertEquals(rrsig.keyTag, dnskey.getKeyTag());
 
         assertNull(Verifier.verify(records, rrsig, dnskey));
+        return rrsig;
     }
 
     private static byte[] hexToBytes(String hex) {
@@ -197,5 +199,48 @@ public class VerifierTest {
             bytes[i] = (byte) Integer.parseInt(hex.substring(i * 2, i * 2 + 2), 16);
         }
         return bytes;
+    }
+
+    /**
+     * The .xxx zone apex holds a RRset of the private use type 65534, which is unknown to MiniDNS. Verifying the
+     * RRSIGs covering it requires that the type value is not lost, neither in the RRs nor in the RRSIGs.
+     */
+    @Test
+    public void testVerifyRrsetWithUnknownType() throws IOException {
+        String[] rdatas = new String[] {
+                "07a43f0001",
+                "0795a60001",
+                "076ca40001",
+                "0df33a0001",
+                "076e560001",
+                "0d7db10001",
+                "08990f0001",
+                "08dcae0001",
+        };
+        List<Record<? extends Data>> records = new ArrayList<>(rdatas.length);
+        for (String rdata : rdatas) {
+            byte[] rdataBytes = hexToBytes(rdata);
+            UNKNOWN payload = UNKNOWN.parse(new DataInputStream(new ByteArrayInputStream(rdataBytes)), rdataBytes.length, 65534);
+            records.add(new Record<>(DnsName.from("xxx"), TYPE.UNKNOWN, CLASS.IN.getValue(), 0, payload));
+        }
+
+        // RSASHA256 RRSIG and the corresponding ZSK of .xxx with key tag 30300.
+        RRSIG rrsig = assertVerifies(records,
+                "fffe0801000000006ae3e00c6ad165db765c03787878000991df71a9f97036b52143d0fdb572bafd60c4263ec1454d13"
+                + "7d1cb75366204c2ad70659c96606ad032f8bb2b7fd154fb2536017bfdb320aad57e8a0c361b35a356cf4b1d634aee6ae"
+                + "946ec781e336d1b0b1f3b664807aba41c521bfad3d9da4fe6deb823b0aaf2e813862bca4324dcd16df71671326b48112"
+                + "891196379f4f9424a5a5a1de5c2faac4ab30fd29c645fc70ea52b2dc5ecf718651115812b34d52",
+                "01000308030100019f99964778f040901ae60cee36c2e66783173afa808df6177f92d5f6f7188f1df6b7b4e785326007"
+                + "03dceb12cee59342096c327d319b5cd285311fecf08f31a470e834ffefaa1630d838d9c6bf3bb299d100242c52e18488"
+                + "4f0f125aff94835aac3c32ba6cea5b81b1e5b33def69cb2cfa30026b3bfd9022cf641e15bdb02f83e008544ffa2f4a94"
+                + "a677fa7fc2d4c1e81a5e2468da60d4e8ee4b9a2924f59187");
+        assertEquals(65534, rrsig.typeCoveredValue);
+
+        // ECDSAP256SHA256 RRSIG and the corresponding ZSK of .xxx with key tag 62266.
+        assertVerifies(records,
+                "fffe0d01000000006ae3e00c6ad165dbf33a037878780037d4a3e5e89fea30695f9ffdffae168d04d92a8022aee585f1"
+                + "b6ec58a25a8c9b25b03d78e20450503eba9e30fb9681dda58e155acd6b182a1cb873e21c8b2f0a",
+                "0100030d934410d29142983cb2f78a737522eef4ed8c4775ed2feee43f7d6e5cc47fd9e3b0eef24be666ba03ad2edb66"
+                + "ff4958143235b6d610688b968bc11d39381e9904");
     }
 }
