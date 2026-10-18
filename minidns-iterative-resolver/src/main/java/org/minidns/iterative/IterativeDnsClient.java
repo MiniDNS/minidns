@@ -487,7 +487,7 @@ public class IterativeDnsClient extends AbstractDnsClient {
                 this.random = random;
             }
 
-            public IpResultSet build() {
+            IpResultSet build() {
                 return new IpResultSet(ipv4Addresses, ipv6Addresses, random);
             }
         }

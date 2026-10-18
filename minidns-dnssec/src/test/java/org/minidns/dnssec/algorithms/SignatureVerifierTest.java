@@ -49,7 +49,7 @@ public class SignatureVerifierTest extends AlgorithmTest {
     private static boolean verify(byte[] publicKey, SignatureAlgorithm algorithm, byte[] signature, byte[] signedBytes)
             throws DnssecValidationFailedException {
         DNSKEY key = new DNSKEY((short) 0, (byte) 0, algorithm, publicKey);
-        RRSIG rrsig = new RRSIG(null, algorithm, (byte) 0, (long) 0, null, null, 0, DnsName.ROOT, signature);
+        RRSIG rrsig = new RRSIG(null, algorithm, (byte) 0, 0L, null, null, 0, DnsName.ROOT, signature);
 
         boolean res = algorithmMap.getSignatureVerifier(algorithm).verify(signedBytes, rrsig, key);
         return res;

@@ -7,32 +7,28 @@ plugins {
 	id 'java'
 	id 'java-library'
 	id 'java-test-fixtures'
-	id 'maven-publish'
 	id 'net.ltgt.errorprone'
 	id 'signing'
+	id 'io.github.ben-manes.versions'
+	id 'com.vanniktech.maven.publish'
 
 	id 'jacoco-report-aggregation'
 	id 'test-report-aggregation'
 
-	id 'org.minidns.common-conventions'
+	id 'org.minidns.global-conventions'
 	id 'org.minidns.javadoc-conventions'
 }
-
-version readVersionFile()
 
 ext {
 	isSnapshot = version.endsWith('-SNAPSHOT')
 	gitCommit = getGitCommit()
 	rootConfigDir = new File(rootDir, 'config')
-	sonatypeCredentialsAvailable = project.hasProperty('sonatypeUsername') && project.hasProperty('sonatypePassword')
 	isReleaseVersion = !isSnapshot
 	isContinuousIntegrationEnvironment = Boolean.parseBoolean(System.getenv('CI'))
 	signingRequired = !(isSnapshot || isContinuousIntegrationEnvironment)
-	sonatypeSnapshotUrl = 'https://oss.sonatype.org/content/repositories/snapshots'
-	sonatypeStagingUrl = 'https://oss.sonatype.org/service/local/staging/deploy/maven2'
 	builtDate = (new java.text.SimpleDateFormat("yyyy-MM-dd")).format(new Date())
 
-	junitVersion = '5.9.2'
+	junitVersion = '5.12.2'
 
 	if (project.hasProperty("useSonatype")) {
 		useSonatype = project.getProperty("useSonatype").toBoolean()
@@ -78,7 +74,7 @@ tasks.withType(JavaCompile) {
 }
 
 jacoco {
-	toolVersion = "0.8.12"
+	toolVersion = "0.8.15"
 }
 
 jacocoTestReport {
@@ -96,9 +92,9 @@ dependencies {
 	testImplementation "org.junit.jupiter:junit-jupiter-params:$junitVersion"
 	testRuntimeOnly "org.junit.jupiter:junit-jupiter-engine:$junitVersion"
 	// https://stackoverflow.com/a/77274251/194894
-	testImplementation "org.junit.platform:junit-platform-launcher:1.11.0"
+	testImplementation "org.junit.platform:junit-platform-launcher:1.12.2"
 
-	errorprone 'com.google.errorprone:error_prone_core:2.32.0'
+	errorprone 'com.google.errorprone:error_prone_core:2.41.0'
 }
 
 test {
@@ -110,7 +106,8 @@ test {
 	// for CI environments.
 	testLogging {
 		events "failed"
-		exceptionFormat "full"
+		exceptionFormat = "full"
+		showStandardStreams = System.getenv("GRADLE_TEST_SHOW_STANDARD_STREAMS")
 	}
 }
 
@@ -161,76 +158,54 @@ artifacts {
 	testRuntime testsJar
 }
 
-publishing {
-	publications {
-		mavenJava(MavenPublication) {
-			from components.java
-			artifact sourcesJar
-			artifact javadocJar
-			artifact testsJar
-			pom {
-				name = 'MiniDNS'
-				packaging = 'jar'
-				inceptionYear = '2014'
-				url = 'https://github.com/minidns/minidns'
-				afterEvaluate {
-					description = project.description
-				}
+mavenPublishing {
+	publishToMavenCentral()
 
-				scm {
-					url = 'https://github.com/minidns/minidns'
-					connection = 'scm:https://github.com/minidns/minidns'
-					developerConnection = 'scm:git://github.com/minidns/minidns.git'
-				}
+	signAllPublications()
 
-				licenses {
-					license {
-						name = 'The Apache Software License, Version 2.0'
-						url = 'http://www.apache.org/licenses/LICENSE-2.0.txt'
-						distribution = 'repo'
-					}
-				}
+	pom {
+		name = 'MiniDNS'
+		packaging = 'jar'
+		inceptionYear = '2014'
+		url = 'https://github.com/minidns/minidns'
+		afterEvaluate {
+			description = project.description
+		}
 
-				developers {
-					developer {
-						id = 'rtreffer'
-						name = 'Rene Treffer'
-						email = 'treffer@measite.de'
-					}
-					developer {
-						id = 'flow'
-						name = 'Florian Schmaus'
-						email = 'flow@geekplace.eu'
-					}
-				}
+		scm {
+			url = 'https://github.com/minidns/minidns'
+			connection = 'scm:https://github.com/minidns/minidns'
+			developerConnection = 'scm:git://github.com/minidns/minidns.git'
+		}
+
+		licenses {
+			license {
+				name = 'The Apache Software License, Version 2.0'
+				url = 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+				distribution = 'repo'
+			}
+		}
+
+		developers {
+			developer {
+				id = 'rtreffer'
+				name = 'Rene Treffer'
+				email = 'treffer@measite.de'
+			}
+			developer {
+				id = 'flow'
+				name = 'Florian Schmaus'
+				email = 'flow@geekplace.eu'
 			}
 		}
 	}
-	repositories {
-		if (sonatypeCredentialsAvailable && useSonatype) {
-			maven {
-				url isSnapshot ? sonatypeSnapshotUrl : sonatypeStagingUrl
-				credentials {
-					username = sonatypeUsername
-					password = sonatypePassword
-				}
-			}
-		}
-		// Use
-		// gradle publish -P customRepoUrl=https://www.igniterealtime.org/archiva/repository/maven -P customRepoUsername=bamboo -P customRepoPassword=hidden -P useSonatype=false
-		// to deploy to this repo.
-		if (project.hasProperty("customRepoUrl")) {
-			maven {
-				name 'customRepo'
-				url customRepoUrl
-				if (project.hasProperty("customRepoUsername")) {
-					credentials {
-						username customRepoUsername
-						password customRepoPassword
-					}
-				}
-			}
-		}
+}
+
+// Keep publishing the tests jar, as we did before switching to
+// gradle-maven-publish-plugin.
+publishing {
+	publications.withType(MavenPublication).configureEach {
+		artifact testsJar
 	}
 }
 
@@ -243,9 +218,8 @@ tasks.withType(Sign) {
 	}
 }
 signing {
-	required { signingRequired }
+	required = signingRequired
 	useGpgCmd()
-	sign publishing.publications.mavenJava
 }
 
 tasks.withType(JavaCompile) {
@@ -288,15 +262,4 @@ def getGitCommit() {
 	def gitCommit = proc.text.trim()
 	assert !gitCommit.isEmpty()
 	gitCommit
-}
-
-def readVersionFile() {
-	def versionFile = new File(rootDir, 'version')
-	if (!versionFile.isFile()) {
-		throw new Exception("Could not find version file")
-	}
-	if (versionFile.text.isEmpty()) {
-		throw new Exception("Version file does not contain a version")
-	}
-	versionFile.text.trim()
 }

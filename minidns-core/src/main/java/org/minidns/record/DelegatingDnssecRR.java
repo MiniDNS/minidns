@@ -125,12 +125,10 @@ public abstract class DelegatingDnssecRR extends Data {
 
     @Override
     public String toString() {
-        StringBuilder sb = new StringBuilder()
-                .append(keyTag).append(' ')
-                .append(algorithm).append(' ')
-                .append(digestType).append(' ')
-                .append(new BigInteger(1, digest).toString(16).toUpperCase(Locale.ROOT));
-        return sb.toString();
+        return keyTag + " "
+                + algorithm + " "
+                + digestType + " "
+                + new BigInteger(1, digest).toString(16).toUpperCase(Locale.ROOT);
     }
 
     private transient BigInteger digestBigIntCache;

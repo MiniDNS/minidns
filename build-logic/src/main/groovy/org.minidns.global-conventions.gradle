@@ -3,7 +3,7 @@ ext {
 	javaMajor = javaVersion.getMajorVersion()
 	minAndroidSdk = 19
 
-	androidBootClasspath = getAndroidRuntimeJar(minAndroidSdk)
+	androidBootClasspath = { getAndroidRuntimeJar(minAndroidSdk) }
 
 	// Export the function by turning it into a closure.
 	// https://stackoverflow.com/a/23290820/194894
@@ -11,8 +11,8 @@ ext {
 }
 
 repositories {
-	mavenLocal()
 	mavenCentral()
+	mavenLocal()
 }
 
 def getAndroidRuntimeJar(androidApiLevel) {

@@ -1,12 +1,8 @@
 plugins {
-	id 'org.minidns.java-conventions'
-	id "com.github.alisiikh.scalastyle" version "3.5.0"
+	id 'org.minidns.java-common-conventions'
 }
 
 description = "A read-eval-print loop (REPL) for MiniDNS"
-
-apply plugin: 'scala'
-apply plugin: 'com.github.alisiikh.scalastyle'
 
 ext {
     scalaVersion = '2.13.13'
@@ -21,14 +17,6 @@ dependencies {
     implementation "com.lihaoyi:ammonite_$scalaVersion:3.0.0-M1"
     testImplementation project(path: ":minidns-client", configuration: "testRuntime")
 }
-
-scalastyle {
-	config = new File(rootConfigDir, 'scalaStyle.xml')
-	verbose = true
-	failOnWarning = true
-}
-
-check.dependsOn(scalastyleCheck)
 
 task printClasspath(dependsOn: assemble) {
 	doLast {

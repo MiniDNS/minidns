@@ -1,5 +1,5 @@
 plugins {
-	id 'org.minidns.java-conventions'
+	id 'org.minidns.java-common-conventions'
 	id 'org.minidns.android-conventions'
 }
 
