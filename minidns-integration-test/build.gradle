@@ -15,8 +15,9 @@ plugins {
 
 description = "MiniDNS' integration test suite"
 
-mainClassName = 'org.minidns.integrationtest.IntegrationTestHelper'
-applicationDefaultJvmArgs = ["-enableassertions"]
+application {
+	mainClass = 'org.minidns.integrationtest.IntegrationTestHelper'
+}
 
 dependencies {
     api project(':minidns-client')
@@ -27,10 +28,4 @@ dependencies {
     implementation "org.junit.vintage:junit-vintage-engine:$junitVersion"
 	implementation "org.junit.jupiter:junit-jupiter-api:$junitVersion"
     testImplementation project(path: ":minidns-client", configuration: "testRuntime")
-}
-
-run {
-   // Pass all system properties down to the "application" run.
-   // Used e.g. for integration test configuration via properties.
-   systemProperties System.getProperties()
 }
