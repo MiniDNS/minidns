@@ -223,7 +223,6 @@ public class DnsClient extends AbstractDnsClient {
             if (nonRaServers.contains(dns)) {
                 it.remove();
                 LOGGER.finer("Skipping " + dns + " because it was marked as \"recursion not available\"");
-                continue;
             }
         }
 

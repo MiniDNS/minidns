@@ -30,7 +30,7 @@ public class DaneTest {
     }
 
     @Ignore
-    @IntegrationTest()
+    @IntegrationTest
     public static void testOarcDaneBadHash() throws IOException, CertificateException {
         DaneVerifier daneVerifier = new DaneVerifier();
         daneVerifier.verifiedConnect((HttpsURLConnection) new URL("https://bad-hash.dane.dns-oarc.net/").openConnection());

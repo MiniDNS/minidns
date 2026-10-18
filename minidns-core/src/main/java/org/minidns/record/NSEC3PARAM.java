@@ -88,12 +88,10 @@ public class NSEC3PARAM extends Data {
 
     @Override
     public String toString() {
-        StringBuilder sb = new StringBuilder()
-                .append(hashAlgorithm).append(' ')
-                .append(flags).append(' ')
-                .append(iterations).append(' ')
-                .append(salt.length == 0 ? "-" : new BigInteger(1, salt).toString(16).toUpperCase(Locale.ROOT));
-        return sb.toString();
+        return hashAlgorithm + " "
+                + flags + " "
+                + iterations + " "
+                + (salt.length == 0 ? "-" : new BigInteger(1, salt).toString(16).toUpperCase(Locale.ROOT));
     }
 
     public int getSaltLength() {

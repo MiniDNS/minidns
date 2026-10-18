@@ -202,16 +202,14 @@ public class RRSIG extends Data {
     public String toString() {
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMddHHmmss");
         dateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
-        StringBuilder sb = new StringBuilder()
-                .append(TYPE.asString(typeCoveredValue)).append(' ')
-                .append(algorithm).append(' ')
-                .append(labels).append(' ')
-                .append(originalTtl).append(' ')
-                .append(dateFormat.format(signatureExpiration)).append(' ')
-                .append(dateFormat.format(signatureInception)).append(' ')
-                .append(keyTag).append(' ')
-                .append(signerName).append(". ")
-                .append(getSignatureBase64());
-        return sb.toString();
+        return TYPE.asString(typeCoveredValue) + " "
+                + algorithm + " "
+                + labels + " "
+                + originalTtl + " "
+                + dateFormat.format(signatureExpiration) + " "
+                + dateFormat.format(signatureInception) + " "
+                + keyTag + " "
+                + signerName + ". "
+                + getSignatureBase64();
     }
 }

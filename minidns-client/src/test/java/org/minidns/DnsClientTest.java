@@ -61,7 +61,7 @@ public class DnsClientTest {
     }
 
     private static class TestDnsServerLookupMechanism extends AbstractDnsServerLookupMechanism {
-        protected TestDnsServerLookupMechanism(DnsServerLookupMechanism lookupMechanism) {
+        TestDnsServerLookupMechanism(DnsServerLookupMechanism lookupMechanism) {
             super(lookupMechanism.getName(), lookupMechanism.getPriority());
         }
         @Override

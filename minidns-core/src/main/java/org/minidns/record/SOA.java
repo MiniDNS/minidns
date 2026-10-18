@@ -103,14 +103,12 @@ public class SOA extends Data {
 
     @Override
     public String toString() {
-        StringBuilder sb = new StringBuilder()
-                .append(mname).append(". ")
-                .append(rname).append(". ")
-                .append(serial).append(' ')
-                .append(refresh).append(' ')
-                .append(retry).append(' ')
-                .append(expire).append(' ')
-                .append(minimum);
-        return sb.toString();
+        return mname + ". "
+                + rname + ". "
+                + serial + " "
+                + refresh + " "
+                + retry + " "
+                + expire + " "
+                + minimum;
     }
 }
