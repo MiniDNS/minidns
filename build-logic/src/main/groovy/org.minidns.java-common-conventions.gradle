@@ -7,10 +7,10 @@ plugins {
 	id 'java'
 	id 'java-library'
 	id 'java-test-fixtures'
-	id 'maven-publish'
 	id 'net.ltgt.errorprone'
 	id 'signing'
 	id 'io.github.ben-manes.versions'
+	id 'com.vanniktech.maven.publish'
 
 	id 'jacoco-report-aggregation'
 	id 'test-report-aggregation'
@@ -23,12 +23,9 @@ ext {
 	isSnapshot = version.endsWith('-SNAPSHOT')
 	gitCommit = getGitCommit()
 	rootConfigDir = new File(rootDir, 'config')
-	sonatypeCredentialsAvailable = project.hasProperty('sonatypeUsername') && project.hasProperty('sonatypePassword')
 	isReleaseVersion = !isSnapshot
 	isContinuousIntegrationEnvironment = Boolean.parseBoolean(System.getenv('CI'))
 	signingRequired = !(isSnapshot || isContinuousIntegrationEnvironment)
-	sonatypeSnapshotUrl = 'https://oss.sonatype.org/content/repositories/snapshots'
-	sonatypeStagingUrl = 'https://oss.sonatype.org/service/local/staging/deploy/maven2'
 	builtDate = (new java.text.SimpleDateFormat("yyyy-MM-dd")).format(new Date())
 
 	junitVersion = '5.12.2'
@@ -161,76 +158,54 @@ artifacts {
 	testRuntime testsJar
 }
 
-publishing {
-	publications {
-		mavenJava(MavenPublication) {
-			from components.java
-			artifact sourcesJar
-			artifact javadocJar
-			artifact testsJar
-			pom {
-				name = 'MiniDNS'
-				packaging = 'jar'
-				inceptionYear = '2014'
-				url = 'https://github.com/minidns/minidns'
-				afterEvaluate {
-					description = project.description
-				}
+mavenPublishing {
+	publishToMavenCentral()
 
-				scm {
-					url = 'https://github.com/minidns/minidns'
-					connection = 'scm:https://github.com/minidns/minidns'
-					developerConnection = 'scm:git://github.com/minidns/minidns.git'
-				}
+	signAllPublications()
 
-				licenses {
-					license {
-						name = 'The Apache Software License, Version 2.0'
-						url = 'http://www.apache.org/licenses/LICENSE-2.0.txt'
-						distribution = 'repo'
-					}
-				}
+	pom {
+		name = 'MiniDNS'
+		packaging = 'jar'
+		inceptionYear = '2014'
+		url = 'https://github.com/minidns/minidns'
+		afterEvaluate {
+			description = project.description
+		}
 
-				developers {
-					developer {
-						id = 'rtreffer'
-						name = 'Rene Treffer'
-						email = 'treffer@measite.de'
-					}
-					developer {
-						id = 'flow'
-						name = 'Florian Schmaus'
-						email = 'flow@geekplace.eu'
-					}
-				}
+		scm {
+			url = 'https://github.com/minidns/minidns'
+			connection = 'scm:https://github.com/minidns/minidns'
+			developerConnection = 'scm:git://github.com/minidns/minidns.git'
+		}
+
+		licenses {
+			license {
+				name = 'The Apache Software License, Version 2.0'
+				url = 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+				distribution = 'repo'
+			}
+		}
+
+		developers {
+			developer {
+				id = 'rtreffer'
+				name = 'Rene Treffer'
+				email = 'treffer@measite.de'
+			}
+			developer {
+				id = 'flow'
+				name = 'Florian Schmaus'
+				email = 'flow@geekplace.eu'
 			}
 		}
 	}
-	repositories {
-		if (sonatypeCredentialsAvailable && useSonatype) {
-			maven {
-				url isSnapshot ? sonatypeSnapshotUrl : sonatypeStagingUrl
-				credentials {
-					username = sonatypeUsername
-					password = sonatypePassword
-				}
-			}
-		}
-		// Use
-		// gradle publish -P customRepoUrl=https://www.igniterealtime.org/archiva/repository/maven -P customRepoUsername=bamboo -P customRepoPassword=hidden -P useSonatype=false
-		// to deploy to this repo.
-		if (project.hasProperty("customRepoUrl")) {
-			maven {
-				name 'customRepo'
-				url customRepoUrl
-				if (project.hasProperty("customRepoUsername")) {
-					credentials {
-						username customRepoUsername
-						password customRepoPassword
-					}
-				}
-			}
-		}
+}
+
+// Keep publishing the tests jar, as we did before switching to
+// gradle-maven-publish-plugin.
+publishing {
+	publications.withType(MavenPublication).configureEach {
+		artifact testsJar
 	}
 }
 
@@ -243,9 +218,8 @@ tasks.withType(Sign) {
 	}
 }
 signing {
-	required { signingRequired }
+	required = signingRequired
 	useGpgCmd()
-	sign publishing.publications.mavenJava
 }
 
 tasks.withType(JavaCompile) {
