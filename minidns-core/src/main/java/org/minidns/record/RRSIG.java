@@ -34,6 +34,12 @@ public class RRSIG extends Data {
     public final TYPE typeCovered;
 
     /**
+     * The binary value of the type of RRset covered by this signature. In contrast to {@link #typeCovered}, this also
+     * holds the actual value if the type is unknown to MiniDNS.
+     */
+    public final int typeCoveredValue;
+
+    /**
      * The cryptographic algorithm used to create the signature.
      */
     public final SignatureAlgorithm algorithm;
@@ -80,7 +86,8 @@ public class RRSIG extends Data {
 
     @SuppressWarnings("JavaUtilDate")
     public static RRSIG parse(DataInputStream dis, byte[] data, int length) throws IOException {
-        TYPE typeCovered = TYPE.getType(dis.readUnsignedShort());
+        int typeCoveredValue = dis.readUnsignedShort();
+        TYPE typeCovered = TYPE.getType(typeCoveredValue);
         byte algorithm = dis.readByte();
         byte labels = dis.readByte();
         long originalTtl = dis.readInt() & 0xFFFFFFFFL;
@@ -91,13 +98,14 @@ public class RRSIG extends Data {
         int sigSize = length - signerName.size() - 18;
         byte[] signature = new byte[sigSize];
         if (dis.read(signature) != signature.length) throw new IOException();
-        return new RRSIG(typeCovered, null, algorithm, labels, originalTtl, signatureExpiration, signatureInception, keyTag, signerName,
-                signature);
+        return new RRSIG(typeCovered, typeCoveredValue, null, algorithm, labels, originalTtl, signatureExpiration, signatureInception, keyTag,
+                signerName, signature);
     }
 
-    private  RRSIG(TYPE typeCovered, SignatureAlgorithm algorithm, byte algorithmByte, byte labels, long originalTtl, Date signatureExpiration, 
-            Date signatureInception, int keyTag, DnsName signerName, byte[] signature) {
+    private  RRSIG(TYPE typeCovered, int typeCoveredValue, SignatureAlgorithm algorithm, byte algorithmByte, byte labels, long originalTtl,
+            Date signatureExpiration, Date signatureInception, int keyTag, DnsName signerName, byte[] signature) {
         this.typeCovered = typeCovered;
+        this.typeCoveredValue = typeCoveredValue;
 
         assert algorithmByte == (algorithm != null ? algorithm.number : algorithmByte);
         this.algorithmByte = algorithmByte;
@@ -114,12 +122,14 @@ public class RRSIG extends Data {
 
     public RRSIG(TYPE typeCovered, int algorithm, byte labels, long originalTtl, Date signatureExpiration, 
             Date signatureInception, int keyTag, DnsName signerName, byte[] signature) {
-            this(typeCovered, null, (byte) algorithm, labels, originalTtl, signatureExpiration, signatureInception, keyTag, signerName, signature);
+            this(typeCovered, typeValueOf(typeCovered), null, (byte) algorithm, labels, originalTtl, signatureExpiration, signatureInception, keyTag,
+                    signerName, signature);
     }
 
     public RRSIG(TYPE typeCovered, int algorithm, byte labels, long originalTtl, Date signatureExpiration, 
             Date signatureInception, int keyTag, String signerName, byte[] signature) {
-            this(typeCovered, null, (byte) algorithm, labels, originalTtl, signatureExpiration, signatureInception, keyTag, DnsName.from(signerName), signature);
+            this(typeCovered, typeValueOf(typeCovered), null, (byte) algorithm, labels, originalTtl, signatureExpiration, signatureInception, keyTag,
+                    DnsName.from(signerName), signature);
     }
 
     public RRSIG(TYPE typeCovered, SignatureAlgorithm algorithm, byte labels,
@@ -134,6 +144,14 @@ public class RRSIG extends Data {
             int keyTag, String signerName, byte[] signature) {
         this(typeCovered, algorithm.number, labels, originalTtl, signatureExpiration, signatureInception,
                 keyTag, DnsName.from(signerName), signature);
+    }
+
+    private static int typeValueOf(TYPE typeCovered) {
+        // Some users construct RRSIGs without a covered type, e.g. if they are only interested in the signature.
+        if (typeCovered == null) {
+            return TYPE.UNKNOWN.getValue();
+        }
+        return typeCovered.getValue();
     }
 
     public byte[] getSignature() {
@@ -170,7 +188,7 @@ public class RRSIG extends Data {
 
     @SuppressWarnings("JavaUtilDate")
     public void writePartialSignature(DataOutputStream dos) throws IOException {
-        dos.writeShort(typeCovered.getValue());
+        dos.writeShort(typeCoveredValue);
         dos.writeByte(algorithmByte);
         dos.writeByte(labels);
         dos.writeInt((int) originalTtl);
@@ -185,7 +203,7 @@ public class RRSIG extends Data {
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMddHHmmss");
         dateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
         StringBuilder sb = new StringBuilder()
-                .append(typeCovered).append(' ')
+                .append(TYPE.asString(typeCoveredValue)).append(' ')
                 .append(algorithm).append(' ')
                 .append(labels).append(' ')
                 .append(originalTtl).append(' ')

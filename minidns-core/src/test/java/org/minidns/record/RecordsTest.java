@@ -14,6 +14,7 @@ import org.minidns.constants.DnssecConstants.DigestAlgorithm;
 import org.minidns.constants.DnssecConstants.SignatureAlgorithm;
 import org.minidns.dnsname.DnsName;
 import org.minidns.record.NSEC3.HashAlgorithm;
+import org.minidns.record.Record.CLASS;
 import org.minidns.record.Record.TYPE;
 import org.junit.jupiter.api.Test;
 
@@ -32,8 +33,10 @@ import static org.minidns.Assert.assertArrayContentEquals;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * These are some tests for all records.
@@ -291,6 +294,7 @@ public class RecordsTest {
         byte[] rrsigb = rrsig.toByteArray();
         rrsig = RRSIG.parse(new DataInputStream(new ByteArrayInputStream(rrsigb)), rrsigb, rrsigb.length);
         assertEquals(TYPE.A, rrsig.typeCovered);
+        assertEquals(TYPE.A.getValue(), rrsig.typeCoveredValue);
         assertEquals(SignatureAlgorithm.RSASHA256, rrsig.algorithm);
         assertEquals(2, rrsig.labels);
         assertEquals(3600, rrsig.originalTtl);
@@ -299,6 +303,30 @@ public class RecordsTest {
         assertEquals(42, rrsig.keyTag);
         assertCsEquals("example.com", rrsig.signerName);
         assertArrayEquals(new byte[] {42}, rrsig.getSignature());
+    }
+
+    @Test
+    public void testRrsigRecordWithUnknownTypeCovered() throws Exception {
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        DataOutputStream dos = new DataOutputStream(baos);
+        // 65534 is a private use type, and hence unknown to MiniDNS.
+        dos.writeShort(65534);
+        dos.writeByte(8);
+        dos.writeByte(2);
+        dos.writeInt(3600);
+        dos.writeInt(1);
+        dos.writeInt(0);
+        dos.writeShort(42);
+        DnsName.from("example.com").writeToStream(dos);
+        dos.write(new byte[] {42});
+        byte[] rrsigb = baos.toByteArray();
+
+        RRSIG rrsig = RRSIG.parse(new DataInputStream(new ByteArrayInputStream(rrsigb)), rrsigb, rrsigb.length);
+        assertEquals(TYPE.UNKNOWN, rrsig.typeCovered);
+        assertEquals(65534, rrsig.typeCoveredValue);
+        assertEquals("TYPE65534 RSASHA256 2 3600 19700101000001 19700101000000 42 example.com. " + rrsig.getSignatureBase64(), rrsig.toString());
+        // The covered type must not get lost, otherwise the signature can not be verified.
+        assertArrayEquals(rrsigb, rrsig.toByteArray());
     }
 
     @Test
@@ -341,5 +369,72 @@ public class RecordsTest {
         assertEquals(1, tlsa.selectorByte);
         assertEquals(1, tlsa.matchingTypeByte);
         assertArrayEquals(new byte[] {0x13, 0x37}, tlsa.getCertificateAssociation());
+    }
+
+    @Test
+    public void testTypeAsString() {
+        assertEquals("A", TYPE.asString(1));
+        assertEquals("HTTPS", TYPE.asString(65));
+        assertEquals("TYPE65534", TYPE.asString(65534));
+    }
+
+    private static byte[] createRecordBytes(int typeValue) throws IOException {
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        DataOutputStream dos = new DataOutputStream(baos);
+        DnsName.from("example.com").writeToStream(dos);
+        dos.writeShort(typeValue);
+        dos.writeShort(CLASS.IN.getValue());
+        dos.writeInt(300);
+        dos.writeShort(3);
+        dos.write(new byte[] {0x13, 0x37, 0x42});
+        return baos.toByteArray();
+    }
+
+    private static Record<Data> parseRecord(byte[] recordBytes) throws IOException {
+        return Record.parse(new DataInputStream(new ByteArrayInputStream(recordBytes)), recordBytes);
+    }
+
+    @Test
+    public void testRecordWithUnknownType() throws Exception {
+        // 65534 is a private use type, and hence unknown to MiniDNS.
+        byte[] recordBytes = createRecordBytes(65534);
+        Record<Data> record = parseRecord(recordBytes);
+        assertEquals(TYPE.UNKNOWN, record.type);
+        assertEquals(65534, record.typeValue);
+        assertEquals(TYPE.UNKNOWN, record.payloadData.getType());
+        assertEquals(65534, ((UNKNOWN) record.payloadData).getTypeValue());
+        assertTrue(record.toString().contains("\tTYPE65534\t"));
+        assertArrayEquals(recordBytes, record.toByteArray());
+
+        // Copies of the record, like the ones created when verifying signatures, must keep the type value.
+        Record<Data> copy = new Record<>(record.name, record.type, record.clazzValue, record.ttl, record.payloadData);
+        assertEquals(65534, copy.typeValue);
+        assertArrayEquals(recordBytes, copy.toByteArray());
+    }
+
+    @Test
+    public void testRecordWithKnownTypeWithoutDataClass() throws Exception {
+        byte[] recordBytes = createRecordBytes(TYPE.HINFO.getValue());
+        Record<Data> record = parseRecord(recordBytes);
+        assertEquals(TYPE.HINFO, record.type);
+        assertEquals(TYPE.HINFO.getValue(), record.typeValue);
+        assertEquals(TYPE.HINFO, record.payloadData.getType());
+        assertArrayEquals(recordBytes, record.toByteArray());
+    }
+
+    @Test
+    public void testRecordsWithDifferentUnknownTypesAreNotEqual() throws Exception {
+        Record<Data> record1 = parseRecord(createRecordBytes(65533));
+        Record<Data> record2 = parseRecord(createRecordBytes(65534));
+        assertEquals(record1.type, record2.type);
+        assertNotEquals(record1, record2);
+        assertEquals(record1, parseRecord(createRecordBytes(65533)));
+    }
+
+    @Test
+    public void testRecordWithUnknownTypeAndKnownPayload() {
+        // Without an UNKNOWN payload, there is no binary value MiniDNS could use for TYPE.UNKNOWN.
+        Record<A> record = new Record<>("example.com", TYPE.UNKNOWN, CLASS.IN, 300, new A(127, 0, 0, 1), false);
+        assertEquals(TYPE.UNKNOWN.getValue(), record.typeValue);
     }
 }

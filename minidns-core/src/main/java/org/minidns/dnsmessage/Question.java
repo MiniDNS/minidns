@@ -36,6 +36,12 @@ public class Question {
     public final TYPE type;
 
     /**
+     * The binary value of the question type. In contrast to {@link #type}, this also holds the actual value if the
+     * type is unknown to MiniDNS.
+     */
+    public final int typeValue;
+
+    /**
      * The question class (usually IN for Internet).
      */
     public final CLASS clazz;
@@ -67,6 +73,7 @@ public class Question {
         assert clazz != null;
         this.name = name;
         this.type = type;
+        this.typeValue = type.getValue();
         this.clazz = clazz;
         this.unicastQuery = unicastQuery;
     }
@@ -117,7 +124,8 @@ public class Question {
      */
     public Question(DataInputStream dis, byte[] data) throws IOException {
         name = DnsName.parse(dis, data);
-        type = TYPE.getType(dis.readUnsignedShort());
+        typeValue = dis.readUnsignedShort();
+        type = TYPE.getType(typeValue);
         clazz = CLASS.getClass(dis.readUnsignedShort());
         unicastQuery = false;
     }
@@ -133,7 +141,7 @@ public class Question {
 
             try {
                 name.writeToStream(dos);
-                dos.writeShort(type.getValue());
+                dos.writeShort(typeValue);
                 dos.writeShort(clazz.getValue() | (unicastQuery ? (1 << 15) : 0));
                 dos.flush();
             } catch (IOException e) {
@@ -165,7 +173,7 @@ public class Question {
 
     @Override
     public String toString() {
-        return name.getRawAce() + ".\t" + clazz + '\t' + type;
+        return name.getRawAce() + ".\t" + clazz + '\t' + TYPE.asString(typeValue);
     }
 
     public DnsMessage.Builder asMessageBuilder() {

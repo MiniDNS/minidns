@@ -313,7 +313,7 @@ public class DnssecClient extends ReliableDnsClient {
 
             List<Record<? extends Data>> records = new ArrayList<>(reference.size());
             for (Record<? extends Data> record : reference) {
-                if (record.type == rrsig.typeCovered && record.name.equals(sigRecord.name)) {
+                if (record.typeValue == rrsig.typeCoveredValue && record.name.equals(sigRecord.name)) {
                     records.add(record);
                 }
             }
