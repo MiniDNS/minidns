@@ -36,6 +36,7 @@ import java.security.NoSuchAlgorithmException;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
+import java.util.List;
 
 import org.junit.jupiter.api.Test;
 import org.minidns.DnsWorld;
@@ -45,6 +46,8 @@ import org.minidns.dnsmessage.Question;
 import org.minidns.dnssec.DnssecClient;
 import org.minidns.dnssec.DnssecClientTest;
 import org.minidns.dnssec.DnssecWorld.SignedRRSet;
+import org.minidns.record.DNAME;
+import org.minidns.record.Data;
 import org.minidns.record.Record;
 import org.minidns.record.Record.TYPE;
 import org.minidns.record.TLSA;
@@ -251,5 +254,25 @@ public class DaneVerifierTest {
         DnsWorld dnsWorld = applyComZone(client, cnameRrSet, tlsaRrSet);
         addTlsaResponse(dnsWorld, cnameRrSet, tlsaRrSet);
         assertThrows(DaneCertificateException.MultipleCertificateMismatchExceptions.class, () -> daneVerify(client));
+    }
+
+    @Test
+    public void testTlsaViaDname() throws IOException, CertificateException {
+        DnssecClient client = DnssecClientTest.constructDnssecClient();
+        SignedRRSet dnameRrSet = sign("com", record(HOST, new DNAME("tlsa.example.com")));
+        SignedRRSet tlsaRrSet = sign("com", record(TLSA_TARGET_NAME, matching(3)));
+        DnsWorld dnsWorld = applyComZone(client, dnameRrSet, tlsaRrSet);
+        DnsMessage request = DnsMessage.builder()
+                .setQuestion(new Question(TLSA_NAME, TYPE.TLSA))
+                .build();
+        List<Record<? extends Data>> answers = merge(dnameRrSet, tlsaRrSet);
+        // The synthesized CNAME RR is not signed.
+        answers.add(record(TLSA_NAME, cname(TLSA_TARGET_NAME)));
+        DnsMessage response = DnsMessage.builder()
+                .setAnswers(answers)
+                .setAuthoritativeAnswer(true)
+                .build();
+        dnsWorld.addPreparedResponse(new AddressedAnswerResponse(comNameserver(), request, response));
+        assertEquals(DaneVerificationResult.verified, daneVerify(client));
     }
 }

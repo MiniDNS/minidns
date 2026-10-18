@@ -11,15 +11,20 @@
 package org.minidns.dnssec;
 
 import org.minidns.DnsWorld;
+import org.minidns.DnsWorld.AddressedAnswerResponse;
 import org.minidns.cache.LruCache;
 import org.minidns.constants.DnssecConstants.DigestAlgorithm;
 import org.minidns.constants.DnssecConstants.SignatureAlgorithm;
 import org.minidns.dnsmessage.DnsMessage;
+import org.minidns.dnsmessage.Question;
 import org.minidns.dnsname.DnsName;
 import org.minidns.dnssec.DnssecValidationFailedException.AuthorityDoesNotContainSoa;
 import org.minidns.dnssec.DnssecWorld.DnssecData;
+import org.minidns.dnssec.DnssecWorld.SignedRRSet;
 import org.minidns.iterative.ReliableDnsClient.Mode;
 import org.minidns.record.A;
+import org.minidns.record.CNAME;
+import org.minidns.record.DNAME;
 import org.minidns.record.DNSKEY;
 import org.minidns.record.Data;
 import org.minidns.record.RRSIG;
@@ -31,11 +36,14 @@ import java.io.IOException;
 import java.lang.reflect.Field;
 import java.net.InetAddress;
 import java.security.PrivateKey;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 
 import static org.minidns.DnsWorld.a;
 import static org.minidns.DnsWorld.applyZones;
+import static org.minidns.DnsWorld.cname;
 import static org.minidns.DnsWorld.dnskey;
 import static org.minidns.DnsWorld.ns;
 import static org.minidns.DnsWorld.nsec;
@@ -47,6 +55,7 @@ import static org.minidns.DnsWorld.zone;
 import static org.minidns.dnssec.DnssecWorld.addNsec;
 import static org.minidns.dnssec.DnssecWorld.dlv;
 import static org.minidns.dnssec.DnssecWorld.ds;
+import static org.minidns.dnssec.DnssecWorld.merge;
 import static org.minidns.dnssec.DnssecWorld.publicKey;
 import static org.minidns.dnssec.DnssecWorld.rrsigRecord;
 import static org.minidns.dnssec.DnssecWorld.selfSignDnskeyRrSet;
@@ -624,5 +633,129 @@ public class DnssecClientTest {
         assertFalse(result.isAuthenticData());
         message = result.synthesizedResponse;
         checkCorrectExampleMessage(message);
+    }
+
+    // Query the A RRs of the given name, which are answered by the nameserver of the 'com' zone with the given signed
+    // and unsigned RRs.
+    private static DnssecQueryResult queryWithUnsignedRecords(String name, List<Record<? extends Data>> unsignedRecords,
+            SignedRRSet... signedRrSets) throws IOException {
+        DnssecClient client = constructDnssecClient();
+        SignedRRSet[] comRrSets = new SignedRRSet[signedRrSets.length + 1];
+        comRrSets[0] = selfSignDnskeyRrSet("com");
+        System.arraycopy(signedRrSets, 0, comRrSets, 1, signedRrSets.length);
+        DnsWorld dnsWorld = applyZones(client,
+                signedRootZone(
+                        selfSignDnskeyRrSet(""),
+                        sign("",
+                                ds("com")),
+                        sign("",
+                                record("com", ns("ns.com"))),
+                        sign("",
+                                record("ns.com", a("1.1.1.1")))
+                ), signedZone("com", "ns.com", "1.1.1.1", comRrSets)
+        );
+
+        List<Record<? extends Data>> answers = merge(signedRrSets);
+        answers.addAll(unsignedRecords);
+        DnsMessage request = DnsMessage.builder()
+                .setQuestion(new Question(name, TYPE.A))
+                .build();
+        DnsMessage response = DnsMessage.builder()
+                .setAnswers(answers)
+                .setAuthoritativeAnswer(true)
+                .build();
+        InetAddress comNameserver = InetAddress.getByAddress("ns.com", new byte[] {1, 1, 1, 1});
+        dnsWorld.addPreparedResponse(new AddressedAnswerResponse(comNameserver, request, response));
+
+        return client.queryDnssec(name, TYPE.A);
+    }
+
+    @Test
+    public void testDnameSynthesizedCname() throws IOException {
+        DnssecQueryResult result = queryWithUnsignedRecords("www.old.example.com",
+                Collections.singletonList(record("www.old.example.com", cname("www.new.example.com"))),
+                sign("com",
+                        record("old.example.com", new DNAME("new.example.com"))),
+                sign("com",
+                        record("www.new.example.com", a("1.1.1.2")))
+        );
+        assertTrue(result.isAuthenticData());
+        DnsMessage message = result.synthesizedResponse;
+        assertEquals(1, message.filterAnswerSectionBy(CNAME.class).size());
+        assertEquals(1, message.filterAnswerSectionBy(A.class).size());
+    }
+
+    @Test
+    public void testChainedDnameSynthesizedCnames() throws IOException {
+        DnssecQueryResult result = queryWithUnsignedRecords("www.a.example.com",
+                Arrays.asList(
+                        record("www.a.example.com", cname("www.b.example.com")),
+                        record("www.b.example.com", cname("www.c.example.com"))),
+                sign("com",
+                        record("a.example.com", new DNAME("b.example.com"))),
+                sign("com",
+                        record("b.example.com", new DNAME("c.example.com"))),
+                sign("com",
+                        record("www.c.example.com", a("1.1.1.2")))
+        );
+        assertTrue(result.isAuthenticData());
+    }
+
+    @Test
+    public void testDnameSynthesizedCnameWithWrongTarget() {
+        assertThrows(DnssecValidationFailedException.class, () -> queryWithUnsignedRecords("www.old.example.com",
+                Collections.singletonList(record("www.old.example.com", cname("www.evil.example.com"))),
+                sign("com",
+                        record("old.example.com", new DNAME("new.example.com"))),
+                sign("com",
+                        record("www.evil.example.com", a("1.1.1.2")))
+        ));
+    }
+
+    @Test
+    public void testDnameSynthesizedCnameAtDnameOwner() {
+        // A DNAME RR does not redirect its owner name, hence a CNAME RR at the owner can not be synthesized from it.
+        assertThrows(DnssecValidationFailedException.class, () -> queryWithUnsignedRecords("old.example.com",
+                Collections.singletonList(record("old.example.com", cname("new.example.com"))),
+                sign("com",
+                        record("old.example.com", new DNAME("new.example.com"))),
+                sign("com",
+                        record("new.example.com", a("1.1.1.2")))
+        ));
+    }
+
+    @Test
+    public void testDnameSynthesizedCnameOutsideOfDname() {
+        assertThrows(DnssecValidationFailedException.class, () -> queryWithUnsignedRecords("www.other.example.com",
+                Collections.singletonList(record("www.other.example.com", cname("www.new.example.com"))),
+                sign("com",
+                        record("old.example.com", new DNAME("new.example.com"))),
+                sign("com",
+                        record("www.new.example.com", a("1.1.1.2")))
+        ));
+    }
+
+    @Test
+    public void testUnsignedDnameSynthesizedCname() {
+        assertThrows(DnssecValidationFailedException.class, () -> queryWithUnsignedRecords("www.old.example.com",
+                Arrays.asList(
+                        record("old.example.com", new DNAME("new.example.com")),
+                        record("www.old.example.com", cname("www.new.example.com"))),
+                sign("com",
+                        record("www.new.example.com", a("1.1.1.2")))
+        ));
+    }
+
+    @Test
+    public void testDnameDoesNotValidateOtherUnsignedRecords() {
+        assertThrows(DnssecValidationFailedException.class, () -> queryWithUnsignedRecords("www.old.example.com",
+                Arrays.asList(
+                        record("www.old.example.com", cname("www.new.example.com")),
+                        record("www.new.example.com", a("1.1.1.3"))),
+                sign("com",
+                        record("old.example.com", new DNAME("new.example.com"))),
+                sign("com",
+                        record("www.new.example.com", a("1.1.1.2")))
+        ));
     }
 }
