@@ -61,12 +61,24 @@ public class DaneVerifier {
      * @return Whether the DANE verification is the only requirement according to the TLSA record.
      * If this method returns {@code false}, additional PKIX validation is required.
      * @throws CertificateException if the certificate chain provided differs from the one enforced using DANE.
+     * @see #daneVerify(SSLSocket)
      */
     public boolean verify(SSLSocket socket) throws CertificateException {
+        return daneVerify(socket).isFullyVerified();
+    }
+
+    /**
+     * Verifies the certificate chain in an active {@link SSLSocket}. The socket must be connected.
+     *
+     * @param socket A connected {@link SSLSocket} whose certificate chain shall be verified using DANE.
+     * @return The result of the DANE verification.
+     * @throws CertificateException if the certificate chain provided differs from the one enforced using DANE.
+     */
+    public DaneVerificationResult daneVerify(SSLSocket socket) throws CertificateException {
         if (!socket.isConnected()) {
             throw new IllegalStateException("Socket not yet connected.");
         }
-        return verify(socket.getSession());
+        return daneVerify(socket.getSession());
     }
 
     /**
@@ -76,10 +88,22 @@ public class DaneVerifier {
      * @return Whether the DANE verification is the only requirement according to the TLSA record.
      * If this method returns {@code false}, additional PKIX validation is required.
      * @throws CertificateException if the certificate chain provided differs from the one enforced using DANE.
+     * @see #daneVerify(SSLSession)
      */
     public boolean verify(SSLSession session) throws CertificateException {
+        return daneVerify(session).isFullyVerified();
+    }
+
+    /**
+     * Verifies the certificate chain in an active {@link SSLSession}.
+     *
+     * @param session An active {@link SSLSession} whose certificate chain shall be verified using DANE.
+     * @return The result of the DANE verification.
+     * @throws CertificateException if the certificate chain provided differs from the one enforced using DANE.
+     */
+    public DaneVerificationResult daneVerify(SSLSession session) throws CertificateException {
         try {
-            return verifyCertificateChain(convert(session.getPeerCertificates()), session.getPeerHost(), session.getPeerPort());
+            return daneVerify(convert(session.getPeerCertificates()), session.getPeerHost(), session.getPeerPort());
         } catch (SSLPeerUnverifiedException e) {
             throw new CertificateException("Peer not verified", e);
         }
@@ -94,8 +118,27 @@ public class DaneVerifier {
      * @return Whether the DANE verification is the only requirement according to the TLSA record.
      * If this method returns {@code false}, additional PKIX validation is required.
      * @throws CertificateException if the certificate chain provided differs from the one enforced using DANE.
+     * @see #daneVerify(X509Certificate[], String, int)
      */
     public boolean verifyCertificateChain(X509Certificate[] chain, String hostName, int port) throws CertificateException {
+        return daneVerify(chain, hostName, port).isFullyVerified();
+    }
+
+    /**
+     * Verifies a certificate chain to be valid when used with the given connection details using DANE.
+     * <p>
+     * Unlike {@link #verifyCertificateChain(X509Certificate[], String, int)}, this method allows the caller to
+     * distinguish between DANE not being applicable and a TLSA record matching the certificate while still requiring
+     * PKIX validation, as it is the case for the certificate usage PKIX-EE (1).
+     * </p>
+     *
+     * @param chain A certificate chain that should be verified using DANE.
+     * @param hostName The DNS name of the host this certificate chain belongs to.
+     * @param port The port number that was used to reach the server providing the certificate chain in question.
+     * @return The result of the DANE verification.
+     * @throws CertificateException if the certificate chain provided differs from the one enforced using DANE.
+     */
+    public DaneVerificationResult daneVerify(X509Certificate[] chain, String hostName, int port) throws CertificateException {
         DnsName req = DnsName.from("_" + port + "._tcp." + hostName);
         DnssecQueryResult result;
         try {
@@ -113,37 +156,56 @@ public class DaneVerifier {
                  msg += " " + reason;
             }
             LOGGER.info(msg);
-            return false;
+            return DaneVerificationResult.notAuthenticated;
         }
 
         List<DaneCertificateException.CertificateMismatch> certificateMismatchExceptions = new ArrayList<>();
-        boolean verified = false;
+        DaneVerificationResult verificationResult = DaneVerificationResult.noUsableTlsaRecords;
         for (Record<? extends Data> record : res.answerSection) {
             if (record.type == Record.TYPE.TLSA && record.name.equals(req)) {
                 TLSA tlsa = (TLSA) record.payloadData;
+                DaneVerificationResult recordResult;
                 try {
-                    verified |= checkCertificateMatches(chain[0], tlsa, hostName);
+                    recordResult = checkCertificateMatches(chain[0], tlsa, hostName);
                 } catch (DaneCertificateException.CertificateMismatch certificateMismatchException) {
                     // Record the mismatch and only throw an exception if no
                     // TLSA RR is able to verify the cert. This allows for TLSA
                     // certificate rollover.
                     certificateMismatchExceptions.add(certificateMismatchException);
+                    continue;
                 }
-                if (verified) break;
+
+                if (recordResult == DaneVerificationResult.verified) {
+                    return recordResult;
+                }
+                if (recordResult == DaneVerificationResult.matchedPkixRequired) {
+                    // Keep looking, as another TLSA RR may make PKIX validation unnecessary.
+                    verificationResult = recordResult;
+                }
             }
         }
 
-        if (!verified && !certificateMismatchExceptions.isEmpty()) {
+        if (!verificationResult.isDaneMatch() && !certificateMismatchExceptions.isEmpty()) {
             throw new DaneCertificateException.MultipleCertificateMismatchExceptions(certificateMismatchExceptions);
         }
 
-        return verified;
+        return verificationResult;
     }
 
-    private static boolean checkCertificateMatches(X509Certificate cert, TLSA tlsa, String hostName) throws CertificateException {
+    /**
+     * Check if the given certificate matches the given TLSA record.
+     *
+     * @param cert The certificate to check.
+     * @param tlsa The TLSA record to check the certificate against.
+     * @param hostName The DNS name of the host the certificate belongs to, used for logging.
+     * @return {@link DaneVerificationResult#verified} or {@link DaneVerificationResult#matchedPkixRequired} if the
+     * certificate matches, or {@link DaneVerificationResult#noUsableTlsaRecords} if the TLSA record is not usable.
+     * @throws DaneCertificateException.CertificateMismatch if the TLSA record is usable but does not match.
+     */
+    private static DaneVerificationResult checkCertificateMatches(X509Certificate cert, TLSA tlsa, String hostName) throws CertificateException {
         if (tlsa.certUsage == null) {
             LOGGER.warning("TLSA certificate usage byte " + tlsa.certUsageByte + " is not supported while verifying " + hostName);
-            return false;
+            return DaneVerificationResult.noUsableTlsaRecords;
         }
 
         switch (tlsa.certUsage) {
@@ -154,12 +216,12 @@ public class DaneVerifier {
         case trustAnchorAssertion: // DANE-TA
         default:
             LOGGER.warning("TLSA certificate usage " + tlsa.certUsage + " (" + tlsa.certUsageByte + ") not supported while verifying " + hostName);
-            return false;
+            return DaneVerificationResult.noUsableTlsaRecords;
         }
 
         if (tlsa.selector == null) {
             LOGGER.warning("TLSA selector byte " + tlsa.selectorByte + " is not supported while verifying " + hostName);
-            return false;
+            return DaneVerificationResult.noUsableTlsaRecords;
         }
 
         byte[] comp = null;
@@ -172,12 +234,12 @@ public class DaneVerifier {
                 break;
             default:
                 LOGGER.warning("TLSA selector " + tlsa.selector + " (" + tlsa.selectorByte + ") not supported while verifying " + hostName);
-                return false;
+                return DaneVerificationResult.noUsableTlsaRecords;
         }
 
         if (tlsa.matchingType == null) {
             LOGGER.warning("TLSA matching type byte " + tlsa.matchingTypeByte + " is not supported while verifying " + hostName);
-            return false;
+            return DaneVerificationResult.noUsableTlsaRecords;
         }
 
         switch (tlsa.matchingType) {
@@ -199,7 +261,7 @@ public class DaneVerifier {
                 break;
             default:
                 LOGGER.warning("TLSA matching type " + tlsa.matchingType + " not supported while verifying " + hostName);
-                return false;
+                return DaneVerificationResult.noUsableTlsaRecords;
         }
 
         boolean matches = tlsa.certificateAssociationEquals(comp);
@@ -209,7 +271,10 @@ public class DaneVerifier {
 
         // domain issued certificate does not require further verification,
         // service certificate constraint does.
-        return tlsa.certUsage == TLSA.CertUsage.domainIssuedCertificate;
+        if (tlsa.certUsage == TLSA.CertUsage.domainIssuedCertificate) {
+            return DaneVerificationResult.verified;
+        }
+        return DaneVerificationResult.matchedPkixRequired;
     }
 
     /**
