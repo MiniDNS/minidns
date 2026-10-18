@@ -275,4 +275,23 @@ public class DaneVerifierTest {
         dnsWorld.addPreparedResponse(new AddressedAnswerResponse(comNameserver(), request, response));
         assertEquals(DaneVerificationResult.verified, daneVerify(client));
     }
+
+    @Test
+    public void testBogusTlsaResponse() throws IOException {
+        DnssecClient client = DnssecClientTest.constructDnssecClient();
+        SignedRRSet tlsaRrSet = sign("com", record(TLSA_TARGET_NAME, matching(3)));
+        DnsWorld dnsWorld = applyComZone(client, tlsaRrSet);
+        DnsMessage request = DnsMessage.builder()
+                .setQuestion(new Question(TLSA_NAME, TYPE.TLSA))
+                .build();
+        List<Record<? extends Data>> answers = merge(tlsaRrSet);
+        // An unsigned CNAME RR, which is not synthesized from a DNAME RR, makes the response bogus.
+        answers.add(record(TLSA_NAME, cname(TLSA_TARGET_NAME)));
+        DnsMessage response = DnsMessage.builder()
+                .setAnswers(answers)
+                .setAuthoritativeAnswer(true)
+                .build();
+        dnsWorld.addPreparedResponse(new AddressedAnswerResponse(comNameserver(), request, response));
+        assertThrows(DaneCertificateException.DnssecValidationFailed.class, () -> daneVerify(client));
+    }
 }

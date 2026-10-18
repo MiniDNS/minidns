@@ -14,6 +14,7 @@ import org.minidns.dnsname.DnsName;
 import org.minidns.dnssec.DnssecClient;
 import org.minidns.dnssec.DnssecQueryResult;
 import org.minidns.dnssec.DnssecUnverifiedReason;
+import org.minidns.dnssec.DnssecValidationFailedException;
 import org.minidns.record.CNAME;
 import org.minidns.record.Data;
 import org.minidns.record.Record;
@@ -65,7 +66,8 @@ public class DaneVerifier {
      * @param socket A connected {@link SSLSocket} whose certificate chain shall be verified using DANE.
      * @return Whether the DANE verification is the only requirement according to the TLSA record.
      * If this method returns {@code false}, additional PKIX validation is required.
-     * @throws CertificateException if the certificate chain provided differs from the one enforced using DANE.
+     * @throws CertificateException if the certificate chain provided differs from the one enforced using DANE, or if
+     * the DNSSEC validation of the TLSA response failed.
      * @see #daneVerify(SSLSocket)
      */
     public boolean verify(SSLSocket socket) throws CertificateException {
@@ -77,7 +79,8 @@ public class DaneVerifier {
      *
      * @param socket A connected {@link SSLSocket} whose certificate chain shall be verified using DANE.
      * @return The result of the DANE verification.
-     * @throws CertificateException if the certificate chain provided differs from the one enforced using DANE.
+     * @throws CertificateException if the certificate chain provided differs from the one enforced using DANE, or if
+     * the DNSSEC validation of the TLSA response failed.
      */
     public DaneVerificationResult daneVerify(SSLSocket socket) throws CertificateException {
         if (!socket.isConnected()) {
@@ -92,7 +95,8 @@ public class DaneVerifier {
      * @param session An active {@link SSLSession} whose certificate chain shall be verified using DANE.
      * @return Whether the DANE verification is the only requirement according to the TLSA record.
      * If this method returns {@code false}, additional PKIX validation is required.
-     * @throws CertificateException if the certificate chain provided differs from the one enforced using DANE.
+     * @throws CertificateException if the certificate chain provided differs from the one enforced using DANE, or if
+     * the DNSSEC validation of the TLSA response failed.
      * @see #daneVerify(SSLSession)
      */
     public boolean verify(SSLSession session) throws CertificateException {
@@ -104,7 +108,8 @@ public class DaneVerifier {
      *
      * @param session An active {@link SSLSession} whose certificate chain shall be verified using DANE.
      * @return The result of the DANE verification.
-     * @throws CertificateException if the certificate chain provided differs from the one enforced using DANE.
+     * @throws CertificateException if the certificate chain provided differs from the one enforced using DANE, or if
+     * the DNSSEC validation of the TLSA response failed.
      */
     public DaneVerificationResult daneVerify(SSLSession session) throws CertificateException {
         try {
@@ -122,7 +127,8 @@ public class DaneVerifier {
      * @param port The port number that was used to reach the server providing the certificate chain in question.
      * @return Whether the DANE verification is the only requirement according to the TLSA record.
      * If this method returns {@code false}, additional PKIX validation is required.
-     * @throws CertificateException if the certificate chain provided differs from the one enforced using DANE.
+     * @throws CertificateException if the certificate chain provided differs from the one enforced using DANE, or if
+     * the DNSSEC validation of the TLSA response failed.
      * @see #daneVerify(X509Certificate[], String, int)
      */
     public boolean verifyCertificateChain(X509Certificate[] chain, String hostName, int port) throws CertificateException {
@@ -141,7 +147,8 @@ public class DaneVerifier {
      * @param hostName The DNS name of the host this certificate chain belongs to.
      * @param port The port number that was used to reach the server providing the certificate chain in question.
      * @return The result of the DANE verification.
-     * @throws CertificateException if the certificate chain provided differs from the one enforced using DANE.
+     * @throws CertificateException if the certificate chain provided differs from the one enforced using DANE, or if
+     * the DNSSEC validation of the TLSA response failed.
      */
     public DaneVerificationResult daneVerify(X509Certificate[] chain, String hostName, int port) throws CertificateException {
         DnsName req = DnsName.from("_" + port + "._tcp." + hostName);
@@ -152,6 +159,9 @@ public class DaneVerifier {
             DnssecQueryResult result;
             try {
                 result = client.queryDnssec(tlsaName, Record.TYPE.TLSA);
+            } catch (DnssecValidationFailedException e) {
+                // A bogus TLSA response must cause the TLS connection to be aborted (RFC 6698 § 4.1).
+                throw new DaneCertificateException.DnssecValidationFailed(e);
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
