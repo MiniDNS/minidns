@@ -1,5 +1,5 @@
 plugins {
-	id 'org.minidns.java-conventions'
+	id 'org.minidns.java-common-conventions'
 }
 
 description = "Support for DANE using APIs of Java 7 (or higher)"

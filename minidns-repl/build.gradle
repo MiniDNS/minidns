@@ -1,5 +1,5 @@
 plugins {
-	id 'org.minidns.java-conventions'
+	id 'org.minidns.java-common-conventions'
 }
 
 description = "A read-eval-print loop (REPL) for MiniDNS"

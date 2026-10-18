@@ -1,6 +1,6 @@
 plugins {
 	id 'ru.vyarus.animalsniffer'
-	id 'org.minidns.common-conventions'
+	id 'org.minidns.global-conventions'
 }
 dependencies {
 	signature "net.sf.androidscents.signature:android-api-level-${minAndroidSdk}:4.4.2_r4@signature"

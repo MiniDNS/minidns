@@ -9,7 +9,7 @@
  * the Apache License 2.0, the LGPL 2.1+ or the WTFPL.
  */
 plugins {
-	id 'org.minidns.java-conventions'
+	id 'org.minidns.java-common-conventions'
 	id 'org.minidns.application-conventions'
 }
 

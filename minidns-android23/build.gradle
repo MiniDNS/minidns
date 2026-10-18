@@ -1,11 +1,11 @@
 plugins {
-	id 'org.minidns.java-conventions'
+	id 'org.minidns.java-common-conventions'
 	id 'org.minidns.android-conventions'
 }
 
 ext {
 	myAndroidSdkApi = 23
-	androidBootClasspath = getAndroidRuntimeJar(myAndroidSdkApi)
+	androidBootClasspath = { getAndroidRuntimeJar(myAndroidSdkApi) }
 }
 
 description = "MiniDNS code that requires an Android SDK API of ${myAndroidSdkApi} or higher"

@@ -1,7 +1,7 @@
 plugins {
 	// Javadoc linking requires repositories to bet configured. And
-	// those are declared in common-conventions, hence we add it here.
-	id 'org.minidns.common-conventions'
+	// those are declared in global-conventions, hence we add it here.
+	id 'org.minidns.global-conventions'
 }
 
 

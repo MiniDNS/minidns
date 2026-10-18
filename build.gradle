@@ -15,29 +15,40 @@ ext {
 	javadocAllProjects = subprojects - nonJavadocAllProjects
 }
 
-evaluationDependsOnChildren()
-task javadocAll(type: Javadoc) {
-	source javadocAllProjects.collect {project ->
-		project.sourceSets.main.allJava.findAll {
-			// Filter out symbolic links to avoid
-			// "warning: a package-info.java file has already been seen for package"
-			// javadoc warnings.
-			!java.nio.file.Files.isSymbolicLink(it.toPath())
-		}
-	}
+version = gradle.ext.version
+
+tasks.register('javadocAll', Javadoc) {
+	description = 'Generates aggregated Javadoc for all subprojects that apply the Java plugin.'
+	group = 'documentation'
+
 	destinationDir = javadocAllDir
-	// Might need a classpath
-	classpath = files(subprojects.collect {project ->
-		project.sourceSets.main.compileClasspath})
-	classpath += files(androidBootClasspath)
+
 	options {
+		windowTitle = "MiniDNS ${project.version} API Documentation"
+		docTitle = windowTitle
 		linkSource = true
 		use = true
 		links = [
-		"https://docs.oracle.com/en/java/javase/${javaMajor}/docs/api/",
+			"https://docs.oracle.com/en/java/javase/${javaMajor}/docs/api/",
 		] as String[]
 		overview = "$projectDir/resources/javadoc-overview.html"
 	}
+
+	def allJavadocTasksProvider = project.provider {
+		javadocAllProjects
+			.collect { it.tasks.named('javadoc', Javadoc).get() }
+			.flatten()
+	}
+
+	source = allJavadocTasksProvider.map { tasks -> tasks.collect { it.source } }
+
+	def classpathProvider = project.provider {
+		javadocAllProjects
+			.collect { it.sourceSets.main.compileClasspath }
+	}
+	classpath = project.files(classpathProvider, project.files(androidBootClasspath))
+
+	dependsOn(allJavadocTasksProvider)
 
 	// Finally copy the javadoc doc-files from the subprojects, which
 	// are potentially generated, to the javadocAll directory. Note
@@ -60,6 +71,6 @@ task javadocAll(type: Javadoc) {
 }
 
 task inttest {
-	description 'Verify correct functionality by running some integration tests.'
-	dependsOn project(':minidns-integration-test').tasks.run
+	description = 'Verify correct functionality by running some integration tests.'
+	dependsOn 'minidns-integration-test:run'
 }
