@@ -15,9 +15,7 @@ import org.minidns.dnssec.DnssecValidationFailedException.DnssecInvalidKeySpecEx
 import org.minidns.record.DNSKEY;
 import org.minidns.record.RRSIG;
 
-import java.io.ByteArrayOutputStream;
 import java.io.DataInput;
-import java.io.DataOutputStream;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.security.NoSuchAlgorithmException;
@@ -46,35 +44,18 @@ abstract class EcdsaSignatureVerifier extends JavaSecSignatureVerifier {
     @Override
     protected byte[] getSignature(RRSIG rrsig) throws DataMalformedException {
         DataInput dis = rrsig.getSignatureAsDataInputStream();
-        ByteArrayOutputStream bos = new ByteArrayOutputStream();
-        DataOutputStream dos = new DataOutputStream(bos);
 
+        // Convert RFC 6605 (r and s as fixed-length unsigned integers) to ASN.1.
+        byte[] r = new byte[length];
+        byte[] s = new byte[length];
         try {
-            byte[] r = new byte[length];
             dis.readFully(r);
-            int rlen = (r[0] < 0) ? length + 1 : length;
-
-            byte[] s = new byte[length];
             dis.readFully(s);
-            int slen = (s[0] < 0) ? length + 1 : length;
-
-            dos.writeByte(0x30);
-            dos.writeByte(rlen + slen + 4);
-
-            dos.writeByte(0x2);
-            dos.writeByte(rlen);
-            if (rlen > length) dos.writeByte(0);
-            dos.write(r);
-
-            dos.writeByte(0x2);
-            dos.writeByte(slen);
-            if (slen > length) dos.writeByte(0);
-            dos.write(s);
         } catch (IOException e) {
             throw new DataMalformedException(e, rrsig.getSignature());
         }
 
-        return bos.toByteArray();
+        return toDerSignature(r, s);
     }
 
     @Override

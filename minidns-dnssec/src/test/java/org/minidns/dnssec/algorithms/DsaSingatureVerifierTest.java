@@ -15,7 +15,10 @@ import org.minidns.dnssec.DnssecValidationFailedException;
 import org.minidns.dnssec.DnssecValidationFailedException.DataMalformedException;
 import org.junit.jupiter.api.Test;
 
+import java.security.PrivateKey;
+
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.minidns.dnssec.DnssecWorld.generatePrivateKey;
 import static org.minidns.dnssec.DnssecWorld.publicKey;
 import static org.minidns.dnssec.DnssecWorld.sign;
@@ -31,6 +34,35 @@ public class DsaSingatureVerifierTest extends SignatureVerifierTest {
     @Test
     public void testDSA512Valid() throws DnssecValidationFailedException {
         verifierTest(512, ALGORITHM);
+    }
+
+    /**
+     * Signatures where r or s start with a zero byte must be encoded with the leading zero bytes removed in ASN.1
+     * DER, but must keep one zero byte if the following byte has its high bit set.
+     *
+     * @throws DnssecValidationFailedException if the validation failed.
+     */
+    @Test
+    public void testDSALeadingZeroValid() throws DnssecValidationFailedException {
+        PrivateKey privateKey = generatePrivateKey(ALGORITHM, 1024);
+        byte[] publicKey = publicKey(ALGORITHM, privateKey);
+        boolean redundantLeadingZeroSeen = false, requiredLeadingZeroSeen = false;
+        for (int i = 0; i < 100_000 && !(redundantLeadingZeroSeen && requiredLeadingZeroSeen); i++) {
+            byte[] sample = getRandomBytes();
+            byte[] signature = sign(privateKey, ALGORITHM, sample);
+            // Skip the T octet, r and s are 20 bytes each.
+            for (int offset : new int[] { 1, 21 }) {
+                if (signature[offset] != 0) continue;
+
+                assertSignatureValid(publicKey, ALGORITHM, signature, sample);
+                if ((signature[offset + 1] & 0x80) == 0) {
+                    redundantLeadingZeroSeen = true;
+                } else {
+                    requiredLeadingZeroSeen = true;
+                }
+            }
+        }
+        assertTrue(redundantLeadingZeroSeen && requiredLeadingZeroSeen);
     }
 
     @Test

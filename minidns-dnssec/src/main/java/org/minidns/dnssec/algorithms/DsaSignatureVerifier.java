@@ -15,9 +15,7 @@ import org.minidns.record.DNSKEY;
 import org.minidns.record.RRSIG;
 import org.minidns.dnssec.DnssecValidationFailedException.DataMalformedException;
 
-import java.io.ByteArrayOutputStream;
 import java.io.DataInput;
-import java.io.DataOutputStream;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.security.NoSuchAlgorithmException;
@@ -36,64 +34,20 @@ class DsaSignatureVerifier extends JavaSecSignatureVerifier {
     protected byte[] getSignature(RRSIG rrsig) throws DataMalformedException {
         DataInput dis = rrsig.getSignatureAsDataInputStream();
 
-        ByteArrayOutputStream bos;
+        // Convert RFC 2536 to ASN.1
+        byte[] r = new byte[LENGTH];
+        byte[] s = new byte[LENGTH];
         try {
-            // Convert RFC 2536 to ASN.1
             @SuppressWarnings("unused")
             byte t = dis.readByte();
 
-            byte[] r = new byte[LENGTH];
             dis.readFully(r);
-            int roff = 0;
-            final int rlen;
-            if (r[0] == 0) {
-                while (roff < LENGTH && r[roff] == 0) {
-                    roff++;
-                }
-                rlen = r.length - roff;
-            } else if (r[0] < 0) {
-                rlen = r.length + 1;
-            } else {
-                rlen = r.length;
-            }
-
-            byte[] s = new byte[LENGTH];
             dis.readFully(s);
-            int soff = 0;
-            final int slen;
-            if (s[0] == 0) {
-                while (soff < LENGTH && s[soff] == 0) {
-                    soff++;
-                }
-                slen = s.length - soff;
-            } else if (s[0] < 0) {
-                slen = s.length + 1;
-            } else {
-                slen = s.length;
-            }
-
-            bos = new ByteArrayOutputStream();
-            DataOutputStream dos = new DataOutputStream(bos);
-
-            dos.writeByte(0x30);
-            dos.writeByte(rlen + slen + 4);
-
-            dos.writeByte(0x2);
-            dos.writeByte(rlen);
-            if (rlen > LENGTH)
-                dos.writeByte(0);
-            dos.write(r, roff, LENGTH - roff);
-
-            dos.writeByte(0x2);
-            dos.writeByte(slen);
-            if (slen > LENGTH)
-                dos.writeByte(0);
-            dos.write(s, soff, LENGTH - soff);
         } catch (IOException e) {
             throw new DataMalformedException(e, rrsig.getSignature());
         }
 
-        return bos.toByteArray();
+        return toDerSignature(r, s);
     }
 
     @Override

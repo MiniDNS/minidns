@@ -45,7 +45,10 @@ import java.security.Signature;
 import java.security.SignatureException;
 import java.security.interfaces.DSAParams;
 import java.security.interfaces.DSAPrivateKey;
+import java.security.interfaces.ECPublicKey;
 import java.security.interfaces.RSAPrivateCrtKey;
+import java.security.spec.ECGenParameterSpec;
+import java.security.spec.ECPoint;
 import java.security.spec.RSAKeyGenParameterSpec;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -53,6 +56,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class DnssecWorld extends DnsWorld {
 
@@ -281,6 +285,12 @@ public class DnssecWorld extends DnsWorld {
                 case DSA_NSEC3_SHA1:
                     signature = Signature.getInstance("SHA1withDSA");
                     break;
+                case ECDSAP256SHA256:
+                    signature = Signature.getInstance("SHA256withECDSA");
+                    break;
+                case ECDSAP384SHA384:
+                    signature = Signature.getInstance("SHA384withECDSA");
+                    break;
                 default:
                     throw new RuntimeException(algorithm + " algorithm not yet supported by DNSSECWorld");
             }
@@ -291,6 +301,10 @@ public class DnssecWorld extends DnsWorld {
                 case DSA:
                 case DSA_NSEC3_SHA1:
                     return convertAsn1ToRFC((DSAPrivateKey) privateKey, bytes);
+
+                case ECDSAP256SHA256:
+                case ECDSAP384SHA384:
+                    return convertAsn1ToRfc6605(bytes, getEcdsaLength(algorithm));
 
                 case RSAMD5:
                 case RSASHA1:
@@ -314,35 +328,76 @@ public class DnssecWorld extends DnsWorld {
      * @throws IOException if an IO error occurs.
      */
     public static byte[] convertAsn1ToRFC(DSAPrivateKey privateKey, byte[] bytes) throws IOException {
-        DataInputStream dis = new DataInputStream(new ByteArrayInputStream(bytes));
         ByteArrayOutputStream bos = new ByteArrayOutputStream();
         DataOutputStream dos = new DataOutputStream(bos);
         dos.writeByte(privateKey.getParams().getP().bitLength() / 64 - 8);
-        dis.skipBytes(2);
-        streamAsn1Int(dis, dos, 20);
-        streamAsn1Int(dis, dos, 20);
+        dos.write(convertAsn1SignatureToFixedLength(bytes, 20));
         return bos.toByteArray();
     }
 
-    public static void streamAsn1Int(DataInputStream dis, DataOutputStream dos, int targetLength) throws IOException {
-        dis.skipBytes(1);
+    /**
+     * Convert an ASN.1 ECDSA signature to RFC 6605.
+     *
+     * @param bytes the ASN.1 DER encoded signature.
+     * @param length the length of r and s in bytes.
+     * @return the RFC 6605 bytes.
+     * @throws IOException if an IO error occurs.
+     */
+    public static byte[] convertAsn1ToRfc6605(byte[] bytes, int length) throws IOException {
+        return convertAsn1SignatureToFixedLength(bytes, length);
+    }
 
-        byte s_pad = (byte) (dis.readByte() - targetLength);
-        if (s_pad >= 0) {
-            dis.skipBytes(s_pad);
-            s_pad = 0;
-        } else {
-            for (int i = 0; i < (1 - s_pad); i++) {
-                dos.writeByte(0);
-            }
+    /**
+     * Convert an ASN.1 DER encoded {@code SEQUENCE { INTEGER r, INTEGER s }} to the concatenation of r and s, each as
+     * fixed-length unsigned integer.
+     *
+     * @param bytes the ASN.1 DER encoded signature.
+     * @param length the length of r and s in bytes.
+     * @return r and s as fixed-length unsigned integers.
+     * @throws IOException if an IO error occurs.
+     */
+    private static byte[] convertAsn1SignatureToFixedLength(byte[] bytes, int length) throws IOException {
+        DataInputStream dis = new DataInputStream(new ByteArrayInputStream(bytes));
+        if (dis.readUnsignedByte() != 0x30) throw new IOException("Not an ASN.1 SEQUENCE");
+        readAsn1Length(dis);
+        BigInteger r = readAsn1Integer(dis);
+        BigInteger s = readAsn1Integer(dis);
+
+        ByteArrayOutputStream bos = new ByteArrayOutputStream();
+        bos.write(toUnsignedByteArray(r, length));
+        bos.write(toUnsignedByteArray(s, length));
+        return bos.toByteArray();
+    }
+
+    private static BigInteger readAsn1Integer(DataInputStream dis) throws IOException {
+        if (dis.readUnsignedByte() != 0x02) throw new IOException("Not an ASN.1 INTEGER");
+        byte[] value = new byte[readAsn1Length(dis)];
+        dis.readFully(value);
+        return new BigInteger(value);
+    }
+
+    private static int readAsn1Length(DataInputStream dis) throws IOException {
+        int length = dis.readUnsignedByte();
+        if (length < 0x80) {
+            return length;
         }
+        int numBytes = length & 0x7f;
+        length = 0;
+        for (int i = 0; i < numBytes; i++) {
+            length = (length << 8) | dis.readUnsignedByte();
+        }
+        return length;
+    }
 
-        byte[] buf = new byte[targetLength + s_pad];
-
-        int bytesRead = dis.read(buf);
-        if (bytesRead != buf.length) throw new IOException();
-
-        dos.write(buf);
+    private static int getEcdsaLength(SignatureAlgorithm algorithm) {
+        switch (algorithm) {
+            case ECDSAP256SHA256:
+                return 32;
+            case ECDSAP384SHA384:
+                return 48;
+            default:
+                throw new IllegalArgumentException(algorithm + " is not an ECDSA algorithm");
+        }
     }
 
     @SuppressWarnings("deprecation")
@@ -357,6 +412,10 @@ public class DnssecWorld extends DnsWorld {
             case DSA:
             case DSA_NSEC3_SHA1:
                 return generateDSAPrivateKey(length);
+            case ECDSAP256SHA256:
+                return generateECPrivateKey("secp256r1");
+            case ECDSAP384SHA384:
+                return generateECPrivateKey("secp384r1");
             default:
                 throw new RuntimeException(algorithm + " algorithm not yet supported by DNSSECWorld");
         }
@@ -384,6 +443,24 @@ public class DnssecWorld extends DnsWorld {
         }
     }
 
+    /**
+     * Unlike RSA and DSA private keys, EC private keys do not allow to derive the public key easily. Hence we remember
+     * the public key of every generated EC private key.
+     */
+    private static final Map<PrivateKey, ECPublicKey> EC_PUBLIC_KEYS = new ConcurrentHashMap<>();
+
+    public static PrivateKey generateECPrivateKey(String curveName) {
+        try {
+            KeyPairGenerator ec = KeyPairGenerator.getInstance("EC");
+            ec.initialize(new ECGenParameterSpec(curveName));
+            KeyPair keyPair = ec.generateKeyPair();
+            EC_PUBLIC_KEYS.put(keyPair.getPrivate(), (ECPublicKey) keyPair.getPublic());
+            return keyPair.getPrivate();
+        } catch (InvalidAlgorithmParameterException | NoSuchAlgorithmException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     @SuppressWarnings("deprecation")
     public static byte[] publicKey(SignatureAlgorithm algorithm, PrivateKey privateKey) {
         switch (algorithm) {
@@ -396,6 +473,9 @@ public class DnssecWorld extends DnsWorld {
             case DSA:
             case DSA_NSEC3_SHA1:
                 return getDSAPublicKey((DSAPrivateKey) privateKey);
+            case ECDSAP256SHA256:
+            case ECDSAP384SHA384:
+                return getECPublicKey(privateKey, getEcdsaLength(algorithm));
             default:
                 throw new RuntimeException(algorithm + " algorithm not yet supported by DNSSECWorld");
         }
@@ -422,6 +502,23 @@ public class DnssecWorld extends DnsWorld {
             throw new RuntimeException(e);
         }
 
+        return baos.toByteArray();
+    }
+
+    private static byte[] getECPublicKey(PrivateKey privateKey, int length) {
+        ECPublicKey publicKey = EC_PUBLIC_KEYS.get(privateKey);
+        if (publicKey == null) {
+            throw new IllegalArgumentException("Unknown EC private key, it must be generated by DnssecWorld");
+        }
+        ECPoint w = publicKey.getW();
+
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        try {
+            baos.write(toUnsignedByteArray(w.getAffineX(), length));
+            baos.write(toUnsignedByteArray(w.getAffineY(), length));
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
         return baos.toByteArray();
     }
 
