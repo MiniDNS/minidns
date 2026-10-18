@@ -22,34 +22,42 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.logging.Logger;
 
 /**
  * NSEC record payload.
  */
 public class NSEC extends Data {
 
-    private static final Logger LOGGER = Logger.getLogger(NSEC.class.getName());
-
     /**
      * The next owner name that contains a authoritative data or a delegation point.
      */
     public final DnsName next;
 
+    /**
+     * The type bitmap in wire format. If this NSEC was parsed, then those are the exact bytes as received. This is
+     * important, as re-creating the bitmap from {@link #types} would lose the types unknown to MiniDNS, which would
+     * cause the RRSIG covering this NSEC to fail to verify.
+     */
     private final byte[] typeBitmap;
 
     /**
-     * The RR types existing at the owner name.
+     * The RR types existing at the owner name. This only contains the types known to MiniDNS, see
+     * {@link #typeValues} for all types.
      */
     public final List<TYPE> types;
+
+    /**
+     * The numeric values of all RR types existing at the owner name, including the ones unknown to MiniDNS.
+     */
+    public final List<Integer> typeValues;
 
     public static NSEC parse(DataInputStream dis, byte[] data, int length) throws IOException {
         DnsName next = DnsName.parse(dis, data);
 
         byte[] typeBitmap = new byte[length - next.size()];
         if (dis.read(typeBitmap) != typeBitmap.length) throw new IOException();
-        List<TYPE> types = readTypeBitMap(typeBitmap);
-        return new NSEC(next, types);
+        List<Integer> typeValues = readTypeBitMap(typeBitmap);
+        return new NSEC(next, typeBitmap, typeValues);
     }
 
     public NSEC(String next, List<TYPE> types) {
@@ -61,9 +69,14 @@ public class NSEC extends Data {
     }
 
     public NSEC(DnsName next, List<TYPE> types) {
+        this(next, createTypeBitMap(types), toTypeValues(types));
+    }
+
+    private NSEC(DnsName next, byte[] typeBitmap, List<Integer> typeValues) {
         this.next = next;
-        this.types = Collections.unmodifiableList(types);
-        this.typeBitmap = createTypeBitMap(types);
+        this.typeBitmap = typeBitmap;
+        this.typeValues = Collections.unmodifiableList(typeValues);
+        this.types = Collections.unmodifiableList(toKnownTypes(typeValues));
     }
 
     @Override
@@ -81,18 +94,52 @@ public class NSEC extends Data {
     public String toString() {
         StringBuilder sb = new StringBuilder()
                 .append(next).append('.');
-        for (TYPE type : types) {
-            sb.append(' ').append(type);
-        }
+        appendTypes(sb, typeValues);
         return sb.toString();
+    }
+
+    static List<Integer> toTypeValues(List<TYPE> types) {
+        List<Integer> typeValues = new ArrayList<>(types.size());
+        for (TYPE type : types) {
+            typeValues.add(type.getValue());
+        }
+        return typeValues;
+    }
+
+    static List<TYPE> toKnownTypes(List<Integer> typeValues) {
+        List<TYPE> types = new ArrayList<>(typeValues.size());
+        for (int typeValue : typeValues) {
+            TYPE type = TYPE.getType(typeValue);
+            if (type == TYPE.UNKNOWN) {
+                continue;
+            }
+            types.add(type);
+        }
+        return types;
+    }
+
+    /**
+     * Append the given types to the given string builder. Types unknown to MiniDNS are written in the generic
+     * "TYPE&lt;value&gt;" notation as per RFC 3597 § 5.
+     *
+     * @param sb the string builder.
+     * @param typeValues the numeric values of the types.
+     */
+    static void appendTypes(StringBuilder sb, List<Integer> typeValues) {
+        for (int typeValue : typeValues) {
+            sb.append(' ');
+            TYPE type = TYPE.getType(typeValue);
+            if (type == TYPE.UNKNOWN) {
+                sb.append("TYPE").append(typeValue);
+            } else {
+                sb.append(type);
+            }
+        }
     }
 
     @SuppressWarnings("NarrowingCompoundAssignment")
     static byte[] createTypeBitMap(List<TYPE> types) {
-        List<Integer> typeList = new ArrayList<Integer>(types.size());
-        for (TYPE type : types) {
-            typeList.add(type.getValue());
-        }
+        List<Integer> typeList = toTypeValues(types);
         Collections.sort(typeList);
 
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
@@ -132,25 +179,26 @@ public class NSEC extends Data {
         }
     }
 
-    // TODO: This method should probably just return List<Integer> so that unknown types can be act on later.
-    static List<TYPE> readTypeBitMap(byte[] typeBitmap) throws IOException {
+    /**
+     * Read the numeric values of all types in the given type bitmap, in ascending order.
+     *
+     * @param typeBitmap the type bitmap in wire format.
+     * @return the numeric values of the types, including the ones unknown to MiniDNS.
+     * @throws IOException if the type bitmap is malformed.
+     */
+    static List<Integer> readTypeBitMap(byte[] typeBitmap) throws IOException {
         DataInputStream dis = new DataInputStream(new ByteArrayInputStream(typeBitmap));
         int read = 0;
-        ArrayList<TYPE> typeList = new ArrayList<TYPE>();
+        List<Integer> typeList = new ArrayList<>();
         while (typeBitmap.length > read) {
             int windowBlock = dis.readUnsignedByte();
             int bitmapLength = dis.readUnsignedByte();
             for (int i = 0; i < bitmapLength; i++) {
                 int b = dis.readUnsignedByte();
-                for (int j = 0; j < 8; j++) {
+                for (int j = 7; j >= 0; j--) {
                     if (((b >> j) & 0x1) > 0) {
                         int typeInt = (windowBlock << 8) + (i * 8) + (7 - j);
-                        TYPE type = TYPE.getType(typeInt);
-                        if (type == TYPE.UNKNOWN) {
-                            LOGGER.warning("Skipping unknown type in type bitmap: " + typeInt);
-                            continue;
-                        }
-                        typeList.add(type);
+                        typeList.add(typeInt);
                     }
                 }
             }

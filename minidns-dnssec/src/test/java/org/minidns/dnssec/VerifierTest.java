@@ -20,14 +20,18 @@ import org.minidns.record.NSEC;
 import org.minidns.record.NSEC3;
 import org.minidns.record.RRSIG;
 import org.minidns.record.Record;
+import org.minidns.record.Record.CLASS;
 import org.minidns.record.Record.TYPE;
 import org.junit.jupiter.api.Test;
 
+import java.io.ByteArrayInputStream;
+import java.io.DataInputStream;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Base64;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 
@@ -141,5 +145,57 @@ public class VerifierTest {
     public void testNsec3hash() throws Exception {
         JavaSecDigestCalculator digestCalculator = new JavaSecDigestCalculator("SHA-1");
         assertEquals("6e8777855bcd60d7b45fc51893776dde75bf6cd4", new BigInteger(1, Verifier.nsec3hash(digestCalculator, new byte[] {42}, new byte[] {88}, 5)).toString(16));
+    }
+
+    /**
+     * The NSEC3 RR of the .xxx zone apex has the private use type 65534 in its type bitmap, which is unknown to
+     * MiniDNS. Verifying the RRSIGs covering it requires that the type bitmap is not altered when the RR is parsed.
+     *
+     * @see <a href="https://github.com/MiniDNS/minidns/issues/121">MiniDNS issue #121</a>
+     */
+    @Test
+    public void testVerifyNsec3WithUnknownTypeInTypeBitmap() throws IOException {
+        // d3af3knn4crq0h4h8ppmf7nal1s271gb.xxx. NSEC3 1 1 0 - D3OBB7D5V2H77C2BFUM7FQBGJ7BV4R1J NS SOA RRSIG DNSKEY NSEC3PARAM TYPE65534
+        byte[] nsec3Bytes = hexToBytes("01010000001468f0b59da5f8a273b04b7fac77e97099d7f26c33000722000000000290ff200000000000000000000000"
+                + "000000000000000000000000000000000000000002");
+        NSEC3 nsec3 = NSEC3.parse(new DataInputStream(new ByteArrayInputStream(nsec3Bytes)), nsec3Bytes.length);
+        List<Record<? extends Data>> records = Collections.<Record<? extends Data>>singletonList(
+                new Record<>(DnsName.from("d3af3knn4crq0h4h8ppmf7nal1s271gb.xxx"), TYPE.NSEC3, CLASS.IN.getValue(), 900, nsec3));
+
+        // RSASHA256 RRSIG and the corresponding ZSK of .xxx with key tag 30300.
+        assertVerifies(records,
+                "00320802000003846ae247986acfcf65765c03787878001f12508fecb855c3d1ea0e785da6970b29e34ae8d058c09a0a"
+                + "81199a7aace2d4d6fcb8382bd24b947f01ff7ffc751b40f70593124c00ea4fda3d14923a8e300ad95baf5504a70b2724"
+                + "0415d4fc2df2a90c31a2f813161bb324d36013d09fe814b69bdf4cdef0ef294854fececa79c82dbd5c2a5e4b7d6296d4"
+                + "9a1a7ac201d9930d9371c42cfa3e0f97106924e9edf359a51727deb627c0b6dcb2caa2864da657",
+                "01000308030100019f99964778f040901ae60cee36c2e66783173afa808df6177f92d5f6f7188f1df6b7b4e785326007"
+                + "03dceb12cee59342096c327d319b5cd285311fecf08f31a470e834ffefaa1630d838d9c6bf3bb299d100242c52e18488"
+                + "4f0f125aff94835aac3c32ba6cea5b81b1e5b33def69cb2cfa30026b3bfd9022cf641e15bdb02f83e008544ffa2f4a94"
+                + "a677fa7fc2d4c1e81a5e2468da60d4e8ee4b9a2924f59187");
+
+        // ECDSAP256SHA256 RRSIG and the corresponding ZSK of .xxx with key tag 62266.
+        assertVerifies(records,
+                "00320d02000003846ae247986acfcf65f33a0378787800f32051347f26e6ab245a00ed984096447f0e8b479193878842"
+                + "0d77f2e7d215732e42dfcadd9ad3cf6925dd204cc8d9cb49b5f08e8bd07cb876004974566b9bec",
+                "0100030d934410d29142983cb2f78a737522eef4ed8c4775ed2feee43f7d6e5cc47fd9e3b0eef24be666ba03ad2edb66"
+                + "ff4958143235b6d610688b968bc11d39381e9904");
+    }
+
+    private static void assertVerifies(List<Record<? extends Data>> records, String rrsigHex, String dnskeyHex) throws IOException {
+        byte[] rrsigBytes = hexToBytes(rrsigHex);
+        RRSIG rrsig = RRSIG.parse(new DataInputStream(new ByteArrayInputStream(rrsigBytes)), rrsigBytes, rrsigBytes.length);
+        byte[] dnskeyBytes = hexToBytes(dnskeyHex);
+        DNSKEY dnskey = DNSKEY.parse(new DataInputStream(new ByteArrayInputStream(dnskeyBytes)), dnskeyBytes.length);
+        assertEquals(rrsig.keyTag, dnskey.getKeyTag());
+
+        assertNull(Verifier.verify(records, rrsig, dnskey));
+    }
+
+    private static byte[] hexToBytes(String hex) {
+        byte[] bytes = new byte[hex.length() / 2];
+        for (int i = 0; i < bytes.length; i++) {
+            bytes[i] = (byte) Integer.parseInt(hex.substring(i * 2, i * 2 + 2), 16);
+        }
+        return bytes;
     }
 }
