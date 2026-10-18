@@ -17,6 +17,8 @@ import org.minidns.dnssec.SignatureVerifier;
 import org.minidns.record.DNSKEY;
 import org.minidns.record.RRSIG;
 
+import java.io.ByteArrayOutputStream;
+import java.math.BigInteger;
 import java.security.InvalidKeyException;
 import java.security.KeyFactory;
 import java.security.NoSuchAlgorithmException;
@@ -54,6 +56,44 @@ public abstract class JavaSecSignatureVerifier implements SignatureVerifier {
         } catch (InvalidKeyException | SignatureException | ArithmeticException e) {
             throw new DnssecValidationFailedException("Validating signature failed", e);
         }
+    }
+
+    /**
+     * Encode the two unsigned integers r and s of a DSA or ECDSA signature as ASN.1 DER
+     * {@code SEQUENCE { INTEGER r, INTEGER s }}, as expected by {@link Signature#verify(byte[])}.
+     * <p>
+     * DER requires the minimal two's complement encoding of each INTEGER: leading zero bytes have to be removed,
+     * unless they are required because the following byte has its high bit set. Strict DER parsers, like the one of
+     * the SunEC provider, reject non-minimal encodings.
+     * </p>
+     *
+     * @param r the unsigned big-endian r value.
+     * @param s the unsigned big-endian s value.
+     * @return the DER encoded signature.
+     */
+    static byte[] toDerSignature(byte[] r, byte[] s) {
+        byte[] rDer = new BigInteger(1, r).toByteArray();
+        byte[] sDer = new BigInteger(1, s).toByteArray();
+
+        int sequenceLength = 2 + rDer.length + 2 + sDer.length;
+        // Only the DER short form length encoding is implemented, which is sufficient for DSA (20 byte r and s) and
+        // ECDSA P-256 (32 byte r and s) and P-384 (48 byte r and s).
+        if (sequenceLength > 127) {
+            throw new IllegalArgumentException("The DER encoding of r (" + r.length + " bytes) and s (" + s.length
+                    + " bytes) requires a SEQUENCE length of " + sequenceLength
+                    + " bytes, but only up to 127 bytes (DER short form length) are supported");
+        }
+
+        ByteArrayOutputStream bos = new ByteArrayOutputStream(2 + sequenceLength);
+        bos.write(0x30);
+        bos.write(sequenceLength);
+        bos.write(0x02);
+        bos.write(rDer.length);
+        bos.write(rDer, 0, rDer.length);
+        bos.write(0x02);
+        bos.write(sDer.length);
+        bos.write(sDer, 0, sDer.length);
+        return bos.toByteArray();
     }
 
     protected abstract byte[] getSignature(RRSIG rrsig) throws DataMalformedException;
