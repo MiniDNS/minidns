@@ -19,6 +19,7 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -100,12 +101,23 @@ public class NSEC3 extends Data {
      */
     private final byte[] nextHashed;
 
+    /**
+     * The type bitmap in wire format. If this NSEC3 was parsed, then those are the exact bytes as received.
+     *
+     * @see NSEC#typeValues
+     */
     private final byte[] typeBitmap;
 
     /**
-     * The RR types existing at the original owner name.
+     * The RR types existing at the original owner name. This only contains the types known to MiniDNS, see
+     * {@link #typeValues} for all types.
      */
     public final List<TYPE> types;
+
+    /**
+     * The numeric values of all RR types existing at the original owner name, including the ones unknown to MiniDNS.
+     */
+    public final List<Integer> typeValues;
 
     public static NSEC3 parse(DataInputStream dis, int length) throws IOException {
         byte hashAlgorithm = dis.readByte();
@@ -119,11 +131,15 @@ public class NSEC3 extends Data {
         if (dis.read(nextHashed) != nextHashed.length) throw new IOException();
         byte[] typeBitmap = new byte[length - (6 + saltLength + hashLength)];
         if (dis.read(typeBitmap) != typeBitmap.length) throw new IOException();
-        List<TYPE> types = NSEC.readTypeBitMap(typeBitmap);
-        return new NSEC3(hashAlgorithm, flags, iterations, salt, nextHashed, types);
+        List<Integer> typeValues = NSEC.readTypeBitMap(typeBitmap);
+        return new NSEC3(null, hashAlgorithm, flags, iterations, salt, nextHashed, typeBitmap, typeValues);
     }
 
     private NSEC3(HashAlgorithm hashAlgorithm, byte hashAlgorithmByte, byte flags, int iterations, byte[] salt, byte[] nextHashed, List<TYPE> types) {
+        this(hashAlgorithm, hashAlgorithmByte, flags, iterations, salt, nextHashed, NSEC.createTypeBitMap(types), NSEC.toTypeValues(types));
+    }
+
+    private NSEC3(HashAlgorithm hashAlgorithm, byte hashAlgorithmByte, byte flags, int iterations, byte[] salt, byte[] nextHashed, byte[] typeBitmap, List<Integer> typeValues) {
         assert hashAlgorithmByte == (hashAlgorithm != null ? hashAlgorithm.value : hashAlgorithmByte);
         this.hashAlgorithmByte = hashAlgorithmByte;
         this.hashAlgorithm = hashAlgorithm != null ? hashAlgorithm : HashAlgorithm.forByte(hashAlgorithmByte);
@@ -132,8 +148,9 @@ public class NSEC3 extends Data {
         this.iterations = iterations;
         this.salt = salt;
         this.nextHashed = nextHashed;
-        this.types = types;
-        this.typeBitmap = NSEC.createTypeBitMap(types);
+        this.typeBitmap = typeBitmap;
+        this.typeValues = Collections.unmodifiableList(typeValues);
+        this.types = Collections.unmodifiableList(NSEC.toKnownTypes(typeValues));
     }
 
     public NSEC3(byte hashAlgorithm, byte flags, int iterations, byte[] salt, byte[] nextHashed, List<TYPE> types) {
@@ -169,9 +186,7 @@ public class NSEC3 extends Data {
                 .append(iterations).append(' ')
                 .append(salt.length == 0 ? "-" : new BigInteger(1, salt).toString(16).toUpperCase(Locale.ROOT)).append(' ')
                 .append(Base32.encodeToString(nextHashed));
-        for (TYPE type : types) {
-            sb.append(' ').append(type);
-        }
+        NSEC.appendTypes(sb, typeValues);
         return sb.toString();
     }
 

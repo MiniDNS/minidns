@@ -12,13 +12,17 @@ package org.minidns.record;
 
 import org.minidns.constants.DnssecConstants.DigestAlgorithm;
 import org.minidns.constants.DnssecConstants.SignatureAlgorithm;
+import org.minidns.dnsname.DnsName;
 import org.minidns.record.NSEC3.HashAlgorithm;
 import org.minidns.record.Record.TYPE;
 import org.junit.jupiter.api.Test;
 
 import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
+import java.io.DataOutputStream;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
@@ -159,6 +163,41 @@ public class RecordsTest {
         assertArrayContentEquals(new TYPE[] {TYPE.A, TYPE.RRSIG, TYPE.DLV}, nsec.types);
     }
 
+    /**
+     * Create a type bitmap containing A (1), RRSIG (46) and the private use type 65534, which is unknown to MiniDNS.
+     *
+     * @return the type bitmap in wire format.
+     */
+    private static byte[] createTypeBitmapWithUnknownType() {
+        byte[] typeBitmap = new byte[2 + 6 + 2 + 32];
+        // Window block 0 with A and RRSIG.
+        typeBitmap[0] = 0x00;
+        typeBitmap[1] = 6;
+        typeBitmap[2] = 0x40;
+        typeBitmap[7] = 0x02;
+        // Window block 255 with 65534.
+        typeBitmap[8] = (byte) 0xff;
+        typeBitmap[9] = 32;
+        typeBitmap[41] = 0x02;
+        return typeBitmap;
+    }
+
+    @Test
+    public void testNsecRecordWithUnknownType() throws Exception {
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        DataOutputStream dos = new DataOutputStream(baos);
+        DnsName.from("example.com").writeToStream(dos);
+        dos.write(createTypeBitmapWithUnknownType());
+        byte[] nsecb = baos.toByteArray();
+
+        NSEC nsec = NSEC.parse(new DataInputStream(new ByteArrayInputStream(nsecb)), nsecb, nsecb.length);
+        assertArrayContentEquals(new TYPE[] {TYPE.A, TYPE.RRSIG}, nsec.types);
+        assertEquals(Arrays.asList(1, 46, 65534), nsec.typeValues);
+        assertEquals("example.com. A RRSIG TYPE65534", nsec.toString());
+        // The type bitmap must not lose the unknown type, otherwise the RRSIG covering the NSEC can not be verified.
+        assertArrayEquals(nsecb, nsec.toByteArray());
+    }
+
     @Test
     public void testNsecTypeBitmapEmpty() throws IOException {
         List<TYPE> emptyTypes = Collections.emptyList();
@@ -180,6 +219,30 @@ public class RecordsTest {
         assertArrayContentEquals(new TYPE[] {TYPE.A}, nsec3.types);
 
         assertEquals("SHA1 1 1 - ", new NSEC3((byte) 1, (byte) 1, 1, new byte[0], new byte[0], new TYPE[0]).toString());
+    }
+
+    @Test
+    public void testNsec3RecordWithUnknownType() throws Exception {
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        DataOutputStream dos = new DataOutputStream(baos);
+        // Hash algorithm, flags and iterations.
+        dos.writeByte(1);
+        dos.writeByte(1);
+        dos.writeShort(0);
+        // Salt.
+        dos.writeByte(0);
+        // Next hashed owner name.
+        dos.writeByte(5);
+        dos.write(new byte[] {0x42, 0x42, 0x42, 0x42, 0x42});
+        dos.write(createTypeBitmapWithUnknownType());
+        byte[] nsec3b = baos.toByteArray();
+
+        NSEC3 nsec3 = NSEC3.parse(new DataInputStream(new ByteArrayInputStream(nsec3b)), nsec3b.length);
+        assertArrayContentEquals(new TYPE[] {TYPE.A, TYPE.RRSIG}, nsec3.types);
+        assertEquals(Arrays.asList(1, 46, 65534), nsec3.typeValues);
+        assertEquals("SHA1 1 0 - 89144GI2 A RRSIG TYPE65534", nsec3.toString());
+        // The type bitmap must not lose the unknown type, otherwise the RRSIG covering the NSEC3 can not be verified.
+        assertArrayEquals(nsec3b, nsec3.toByteArray());
     }
 
     @Test
