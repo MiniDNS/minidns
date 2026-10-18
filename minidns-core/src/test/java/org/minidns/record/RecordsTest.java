@@ -374,6 +374,7 @@ public class RecordsTest {
     @Test
     public void testTypeAsString() {
         assertEquals("A", TYPE.asString(1));
+        assertEquals("HTTPS", TYPE.asString(65));
         assertEquals("TYPE65534", TYPE.asString(65534));
     }
 
