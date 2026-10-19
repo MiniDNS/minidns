@@ -27,6 +27,7 @@ import org.minidns.record.A;
 import org.minidns.record.CNAME;
 import org.minidns.record.DNAME;
 import org.minidns.record.DNSKEY;
+import org.minidns.record.DS;
 import org.minidns.record.Data;
 import org.minidns.record.RRSIG;
 import org.minidns.record.Record;
@@ -37,6 +38,7 @@ import java.io.IOException;
 import java.lang.reflect.Field;
 import java.net.InetAddress;
 import java.security.PrivateKey;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
@@ -54,6 +56,7 @@ import static org.minidns.DnsWorld.rrsig;
 import static org.minidns.DnsWorld.soa;
 import static org.minidns.DnsWorld.zone;
 import static org.minidns.dnssec.DnssecWorld.addNsec;
+import static org.minidns.dnssec.DnssecWorld.calculateDsDigest;
 import static org.minidns.dnssec.DnssecWorld.dlv;
 import static org.minidns.dnssec.DnssecWorld.ds;
 import static org.minidns.dnssec.DnssecWorld.merge;
@@ -885,6 +888,79 @@ public class DnssecClientTest {
         );
         DnssecQueryResult result = client.queryDnssec("example.com", Record.TYPE.A);
         assertFalse(result.isAuthenticData());
+    }
+
+    @SuppressWarnings("unchecked")
+    private static DnssecClient constructDnssecClientWithComDsRrSet(DS... comDsRrs) {
+        DnssecClient client = constructDnssecClient();
+        List<Record<? extends Data>> comDsRecords = new ArrayList<>(comDsRrs.length);
+        for (DS ds : comDsRrs) {
+            comDsRecords.add(record("com", ds));
+        }
+        applyZones(client,
+                signedRootZone(
+                        sign(rootKSK, "", rootPrivateKSK, algorithm,
+                                record("", rootKSK),
+                                record("", rootZSK)),
+                        sign(rootZSK, "", rootPrivateZSK, algorithm,
+                                comDsRecords.toArray(new Record<?>[0])),
+                        sign(rootZSK, "", rootPrivateZSK, algorithm,
+                                record("com", ns("ns.com"))),
+                        sign(rootZSK, "", rootPrivateZSK, algorithm,
+                                record("ns.com", a("1.1.1.1")))
+                ), signedZone("com", "ns.com", "1.1.1.1",
+                        sign(comKSK, "com", comPrivateKSK, algorithm,
+                                record("com", comKSK),
+                                record("com", comZSK)),
+                        sign(comZSK, "com", comPrivateZSK, algorithm,
+                                record("example.com", a("1.1.1.2")))
+                )
+        );
+        return client;
+    }
+
+    @Test
+    public void testUnknownDelegationDigestTypeAlongsideValidDs() throws IOException {
+        DnssecClient client = constructDnssecClientWithComDsRrSet(
+                ds(comKSK.getKeyTag(), algorithm, (byte) 213, new byte[0]),
+                ds("com", DigestAlgorithm.SHA256, comKSK));
+        DnssecQueryResult result = client.queryDnssec("example.com", Record.TYPE.A);
+        assertTrue(result.isAuthenticData());
+        checkCorrectExampleMessage(result.synthesizedResponse);
+    }
+
+    @Test
+    public void testDsKeyTagCollision() throws IOException {
+        // The first DS RR has the same key tag and algorithm as comKSK, but refers to a different key.
+        DnssecClient client = constructDnssecClientWithComDsRrSet(
+                ds(comKSK.getKeyTag(), algorithm, DigestAlgorithm.SHA256,
+                        calculateDsDigest(DnsName.from("com"), DigestAlgorithm.SHA256, comZSK)),
+                ds("com", DigestAlgorithm.SHA256, comKSK));
+        DnssecQueryResult result = client.queryDnssec("example.com", Record.TYPE.A);
+        assertTrue(result.isAuthenticData());
+        checkCorrectExampleMessage(result.synthesizedResponse);
+    }
+
+    @Test
+    public void testDsAlgorithmMismatch() throws IOException {
+        DnssecClient client = constructDnssecClientWithComDsRrSet(
+                ds(comKSK.getKeyTag(), SignatureAlgorithm.RSASHA1, DigestAlgorithm.SHA256,
+                        calculateDsDigest(DnsName.from("com"), DigestAlgorithm.SHA256, comKSK)));
+        DnssecQueryResult result = client.queryDnssec("example.com", Record.TYPE.A);
+        assertFalse(result.isAuthenticData());
+    }
+
+    @Test
+    public void testSha1DsIgnoredIfSha256DsPresent() {
+        // The SHA-1 DS RR is valid, but the SHA-256 one is not. Since SHA-1 DS RRs have to be ignored if there is a
+        // SHA-256 DS RR, the validation must fail.
+        DnssecClient client = constructDnssecClientWithComDsRrSet(
+                ds("com", DigestAlgorithm.SHA1, comKSK),
+                ds(comKSK.getKeyTag(), algorithm, DigestAlgorithm.SHA256,
+                        calculateDsDigest(DnsName.from("com"), DigestAlgorithm.SHA256, comZSK)));
+        assertThrows(DnssecValidationFailedException.class, () ->
+            client.queryDnssec("example.com", Record.TYPE.A)
+        );
     }
 
     @SuppressWarnings("unchecked")

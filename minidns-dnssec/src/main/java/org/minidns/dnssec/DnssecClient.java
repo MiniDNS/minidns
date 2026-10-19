@@ -11,6 +11,7 @@
 package org.minidns.dnssec;
 
 import org.minidns.DnsCache;
+import org.minidns.constants.DnssecConstants.DigestAlgorithm;
 import org.minidns.dnsmessage.DnsMessage;
 import org.minidns.dnsmessage.Question;
 import org.minidns.dnsname.DnsName;
@@ -21,6 +22,7 @@ import org.minidns.dnssec.DnssecUnverifiedReason.NoSecureEntryPointReason;
 import org.minidns.dnssec.DnssecUnverifiedReason.NoSignaturesReason;
 import org.minidns.dnssec.DnssecUnverifiedReason.NoTrustAnchorReason;
 import org.minidns.dnssec.DnssecValidationFailedException.AuthorityDoesNotContainSoa;
+import org.minidns.dnssec.algorithms.AlgorithmMap;
 import org.minidns.iterative.ReliableDnsClient;
 import org.minidns.record.CNAME;
 import org.minidns.record.DLV;
@@ -40,6 +42,7 @@ import java.io.IOException;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -582,50 +585,117 @@ public class DnssecClient extends ReliableDnsClient {
            return unverifiedReasons;
         }
 
-        DelegatingDnssecRR delegation = null;
         DnssecQueryResult dsResp = queryDnssec(sepRecord.name, TYPE.DS);
         unverifiedReasons.addAll(dsResp.getUnverifiedReasons());
 
-        List<Record<DS>> dsRrs = dsResp.dnsQueryResult.response.filterAnswerSectionBy(DS.class);
-        for (Record<DS> dsRecord : dsRrs) {
-            DS ds = dsRecord.payloadData;
-            if (dnskey.getKeyTag() == ds.keyTag) {
-                delegation = ds;
-                activeReasons = dsResp.getUnverifiedReasons();
-                break;
-            }
+        List<DS> dsRrs = new ArrayList<>();
+        for (Record<DS> dsRecord : dsResp.dnsQueryResult.response.filterAnswerSectionBy(DS.class)) {
+            dsRrs.add(dsRecord.payloadData);
         }
-
-        if (delegation == null) {
+        List<DelegatingDnssecRR> delegations = getDelegationsFor(dnskey, dsRrs);
+        if (!delegations.isEmpty()) {
+            activeReasons = dsResp.getUnverifiedReasons();
+        } else {
             LOGGER.fine("There is no DS record for \'" + sepRecord.name + "\', server gives empty result");
         }
 
-        if (delegation == null && dlv != null && !dlv.isChildOf(sepRecord.name)) {
+        if (delegations.isEmpty() && dlv != null && !dlv.isChildOf(sepRecord.name)) {
             DnssecQueryResult dlvResp = queryDnssec(DnsName.from(sepRecord.name, dlv), TYPE.DLV);
             unverifiedReasons.addAll(dlvResp.getUnverifiedReasons());
 
-            List<Record<DLV>> dlvRrs = dlvResp.dnsQueryResult.response.filterAnswerSectionBy(DLV.class);
-            for (Record<DLV> dlvRecord : dlvRrs) {
-                if (sepRecord.payloadData.getKeyTag() == dlvRecord.payloadData.keyTag) {
-                    LOGGER.fine("Found DLV for " + sepRecord.name + ", awesome.");
-                    delegation = dlvRecord.payloadData;
-                    activeReasons = dlvResp.getUnverifiedReasons();
-                    break;
-                }
+            List<DLV> dlvRrs = new ArrayList<>();
+            for (Record<DLV> dlvRecord : dlvResp.dnsQueryResult.response.filterAnswerSectionBy(DLV.class)) {
+                dlvRrs.add(dlvRecord.payloadData);
+            }
+            delegations = getDelegationsFor(dnskey, dlvRrs);
+            if (!delegations.isEmpty()) {
+                LOGGER.fine("Found DLV for " + sepRecord.name + ", awesome.");
+                activeReasons = dlvResp.getUnverifiedReasons();
             }
         }
 
-        if (delegation != null) {
-            DnssecUnverifiedReason unverifiedReason = Verifier.verify(sepRecord, delegation);
-            if (unverifiedReason != null) {
-                unverifiedReasons.add(unverifiedReason);
-            } else {
+        if (!delegations.isEmpty()) {
+            Set<DnssecUnverifiedReason> delegationReasons = verifyDelegations(sepRecord, delegations);
+            if (delegationReasons.isEmpty()) {
                 unverifiedReasons = activeReasons;
+            } else {
+                unverifiedReasons.addAll(delegationReasons);
             }
         } else if (unverifiedReasons.isEmpty()) {
             unverifiedReasons.add(new NoTrustAnchorReason(sepRecord.name));
         }
         return unverifiedReasons;
+    }
+
+    /**
+     * Get the delegating RRs, i.e., DS or DLV RRs, that refer to the given DNSKEY. A delegating RR refers to a DNSKEY
+     * if its key tag and algorithm match the ones of the DNSKEY (RFC 4035 § 5.2). If there is a delegating RR with a
+     * supported digest type other than SHA-1, then the ones with SHA-1 are ignored (RFC 4509 § 3).
+     *
+     * @param dnskey the DNSKEY.
+     * @param delegatingRrs the delegating RRs.
+     * @return the delegating RRs that refer to the DNSKEY.
+     */
+    private static List<DelegatingDnssecRR> getDelegationsFor(DNSKEY dnskey, List<? extends DelegatingDnssecRR> delegatingRrs) {
+        List<DelegatingDnssecRR> delegations = new ArrayList<>(delegatingRrs.size());
+        boolean strongerThanSha1Present = false;
+        for (DelegatingDnssecRR delegatingRr : delegatingRrs) {
+            if (delegatingRr.keyTag != dnskey.getKeyTag() || delegatingRr.algorithmByte != dnskey.algorithmByte) {
+                continue;
+            }
+            delegations.add(delegatingRr);
+
+            DigestAlgorithm digestType = delegatingRr.digestType;
+            if (digestType != null && digestType != DigestAlgorithm.SHA1
+                    && AlgorithmMap.INSTANCE.getDsDigestCalculator(digestType) != null) {
+                strongerThanSha1Present = true;
+            }
+        }
+
+        if (strongerThanSha1Present) {
+            for (Iterator<DelegatingDnssecRR> iterator = delegations.iterator(); iterator.hasNext(); ) {
+                if (iterator.next().digestType == DigestAlgorithm.SHA1) {
+                    iterator.remove();
+                }
+            }
+        }
+        return delegations;
+    }
+
+    /**
+     * Verify the given SEP using the given delegating RRs. The SEP is verified if at least one of the delegating RRs
+     * verifies it.
+     *
+     * @param sepRecord the SEP.
+     * @param delegations the delegating RRs that refer to the SEP.
+     * @return the reasons why the SEP could not be verified, which is empty if the SEP is verified.
+     * @throws DnssecValidationFailedException if the SEP could not be verified because a digest did not match.
+     */
+    private static Set<DnssecUnverifiedReason> verifyDelegations(Record<DNSKEY> sepRecord, List<DelegatingDnssecRR> delegations)
+                    throws DnssecValidationFailedException {
+        Set<DnssecUnverifiedReason> reasons = new HashSet<>();
+        DnssecValidationFailedException validationFailedException = null;
+        for (DelegatingDnssecRR delegation : delegations) {
+            DnssecUnverifiedReason unverifiedReason;
+            try {
+                unverifiedReason = Verifier.verify(sepRecord, delegation);
+            } catch (DnssecValidationFailedException e) {
+                if (validationFailedException == null) {
+                    validationFailedException = e;
+                }
+                continue;
+            }
+
+            if (unverifiedReason == null) {
+                return Collections.emptySet();
+            }
+            reasons.add(unverifiedReason);
+        }
+
+        if (validationFailedException != null) {
+            throw validationFailedException;
+        }
+        return reasons;
     }
 
     @Override
