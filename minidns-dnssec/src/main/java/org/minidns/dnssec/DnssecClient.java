@@ -44,17 +44,27 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 public class DnssecClient extends ReliableDnsClient {
 
     /**
-     * The root zone's KSK.
-     * The ID of the current key is "Klajeyz", and the key tag value is "20326".
+     * The root zone's KSK-2017, whose ID is "Klajeyz" and whose key tag value is "20326".
+     *
+     * @see <a href="https://data.iana.org/root-anchors/root-anchors.xml">IANA root zone trust anchors</a>
      */
-    private static final BigInteger rootEntryKey = new BigInteger("1628686155461064465348252249725010996177649738666492500572664444461532807739744536029771810659241049343994038053541290419968870563183856865780916376571550372513476957870843322273120879361960335192976656756972171258658400305760429696147778001233984421619267530978084631948434496468785021389956803104620471232008587410372348519229650742022804219634190734272506220018657920136902014393834092648785514548876370028925405557661759399901378816916683122474038734912535425670533237815676134840739565610963796427401855723026687073600445461090736240030247906095053875491225879656640052743394090544036297390104110989318819106653199917493");
+    private static final BigInteger ROOT_KSK_2017 = new BigInteger("1628686155461064465348252249725010996177649738666492500572664444461532807739744536029771810659241049343994038053541290419968870563183856865780916376571550372513476957870843322273120879361960335192976656756972171258658400305760429696147778001233984421619267530978084631948434496468785021389956803104620471232008587410372348519229650742022804219634190734272506220018657920136902014393834092648785514548876370028925405557661759399901378816916683122474038734912535425670533237815676134840739565610963796427401855723026687073600445461090736240030247906095053875491225879656640052743394090544036297390104110989318819106653199917493");
+
+    /**
+     * The root zone's KSK-2024, whose ID is "Kmyv6jo" and whose key tag value is "38696". The root zone's DNSKEY RRset
+     * is signed with this key since 2026-10-11.
+     *
+     * @see <a href="https://data.iana.org/root-anchors/root-anchors.xml">IANA root zone trust anchors</a>
+     */
+    private static final BigInteger ROOT_KSK_2024 = new BigInteger("1628686155774121212168081024680239155604420268691380415887810174716442156063993152758837847983942799877886941977560662680203835048611462974430324555256015052877501366226310539062711393346584350551693842362076723827358391786883611293998126527175865775276768514791204165196787699241676676814251122639194103258915247638509608611180547418668353298742571235995455990809680031413088313234415379381686894805351607921243348741522050630785576836709808997878870113887781468394260370502860846217704015926043569970756428556654452203219129363526322839180253672785807974524503640093519709242302125704407718029753636688205844737179386330503");
 
     private static final DnsName DEFAULT_DLV = DnsName.from("dlv.isc.org");
 
@@ -72,13 +82,14 @@ public class DnssecClient extends ReliableDnsClient {
      */
     public DnssecClient(DnsCache cache) {
         super(cache);
-        addSecureEntryPoint(DnsName.ROOT, rootEntryKey.toByteArray());
+        addSecureEntryPoint(DnsName.ROOT, ROOT_KSK_2017.toByteArray());
+        addSecureEntryPoint(DnsName.ROOT, ROOT_KSK_2024.toByteArray());
     }
 
     /**
      * Known secure entry points (SEPs).
      */
-    private final Map<DnsName, byte[]> knownSeps = new ConcurrentHashMap<>();
+    private final ConcurrentMap<DnsName, List<byte[]>> knownSeps = new ConcurrentHashMap<>();
 
     private boolean stripSignatureRecords = true;
 
@@ -459,13 +470,15 @@ public class DnssecClient extends ReliableDnsClient {
 
         Set<DnssecUnverifiedReason> unverifiedReasons = new HashSet<>();
         Set<DnssecUnverifiedReason> activeReasons = new HashSet<>();
-        if (knownSeps.containsKey(sepRecord.name)) {
-            if (dnskey.keyEquals(knownSeps.get(sepRecord.name))) {
-                return unverifiedReasons;
-            } else {
-                unverifiedReasons.add(new DnssecUnverifiedReason.ConflictsWithSep(sepRecord));
-                return unverifiedReasons;
+        List<byte[]> knownSepKeys = knownSeps.get(sepRecord.name);
+        if (knownSepKeys != null) {
+            for (byte[] knownSepKey : knownSepKeys) {
+                if (dnskey.keyEquals(knownSepKey)) {
+                    return unverifiedReasons;
+                }
             }
+            unverifiedReasons.add(new DnssecUnverifiedReason.ConflictsWithSep(sepRecord));
+            return unverifiedReasons;
         }
 
         // If we are looking for the SEP of the root zone at this point, then the client was not
@@ -547,8 +560,9 @@ public class DnssecClient extends ReliableDnsClient {
     /**
      * Add a new secure entry point to the list of known secure entry points.
      *
-     * A secure entry point acts as a trust anchor. By default, the only secure entry point is the key signing key
-     * provided by the root zone.
+     * A secure entry point acts as a trust anchor. By default, the secure entry points are the key signing keys of the
+     * root zone. A domain name may have multiple secure entry points, e.g., during a key rollover, in which case a
+     * DNSKEY that matches any of them is accepted.
      *
      * @param name The domain name originating the key. Once the secure entry point for this domain is requested,
      *             the resolver will use this key without further verification instead of using the DNS system to
@@ -558,13 +572,21 @@ public class DnssecClient extends ReliableDnsClient {
      *             (also called key signing key)
      */
     public final void addSecureEntryPoint(DnsName name, byte[] key) {
-        knownSeps.put(name, key);
+        List<byte[]> keys = knownSeps.get(name);
+        if (keys == null) {
+            keys = new CopyOnWriteArrayList<>();
+            List<byte[]> previousKeys = knownSeps.putIfAbsent(name, keys);
+            if (previousKeys != null) {
+                keys = previousKeys;
+            }
+        }
+        keys.add(key);
     }
 
     /**
-     * Remove the secure entry point stored for a domain name.
+     * Remove the secure entry points stored for a domain name.
      *
-     * @param name The domain name of which the corresponding secure entry point shall be removed. For the root zone,
+     * @param name The domain name of which the corresponding secure entry points shall be removed. For the root zone,
      *             use the empty string here.
      */
     public void removeSecureEntryPoint(DnsName name) {

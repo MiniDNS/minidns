@@ -12,6 +12,7 @@ package org.minidns.dnssec;
 
 import org.minidns.DnsWorld;
 import org.minidns.DnsWorld.AddressedAnswerResponse;
+import org.minidns.DnsWorld.Zone;
 import org.minidns.cache.LruCache;
 import org.minidns.constants.DnssecConstants.DigestAlgorithm;
 import org.minidns.constants.DnssecConstants.SignatureAlgorithm;
@@ -757,5 +758,57 @@ public class DnssecClientTest {
                 sign("com",
                         record("www.new.example.com", a("1.1.1.2")))
         ));
+    }
+
+    @SuppressWarnings("unchecked")
+    private static Zone signedRootZoneDelegatingCom() {
+        return signedRootZone(
+                sign(rootKSK, "", rootPrivateKSK, algorithm,
+                        record("", rootKSK),
+                        record("", rootZSK)),
+                sign(rootZSK, "", rootPrivateZSK, algorithm,
+                        record("com", ds("com", digestType, comKSK))),
+                sign(rootZSK, "", rootPrivateZSK, algorithm,
+                        record("com", ns("ns.com"))),
+                sign(rootZSK, "", rootPrivateZSK, algorithm,
+                        record("ns.com", a("1.1.1.1")))
+        );
+    }
+
+    private static final PrivateKey ROGUE_PRIVATE_KEY = DnssecWorld.generatePrivateKey(algorithm, 1024);
+    private static final DNSKEY ROGUE_KEY = dnskey(DNSKEY.FLAG_ZONE | DNSKEY.FLAG_SECURE_ENTRY_POINT, algorithm, publicKey(algorithm, ROGUE_PRIVATE_KEY));
+
+    @SuppressWarnings("unchecked")
+    private static DnssecQueryResult queryWithRootSecureEntryPoints(DNSKEY... rootSeps) throws IOException {
+        DnssecClient client = constructDnssecClient();
+        client.clearSecureEntryPoints();
+        for (DNSKEY rootSep : rootSeps) {
+            client.addSecureEntryPoint(DnsName.ROOT, rootSep.getKey());
+        }
+        applyZones(client,
+                signedRootZoneDelegatingCom(),
+                signedZone("com", "ns.com", "1.1.1.1",
+                        sign(comKSK, "com", comPrivateKSK, algorithm,
+                                record("com", comKSK),
+                                record("com", comZSK)),
+                        sign(comZSK, "com", comPrivateZSK, algorithm,
+                                record("example.com", a("1.1.1.2")))
+                )
+        );
+        return client.queryDnssec("example.com", Record.TYPE.A);
+    }
+
+    @Test
+    public void testMultipleRootSecureEntryPoints() throws IOException {
+        DnssecQueryResult result = queryWithRootSecureEntryPoints(ROGUE_KEY, rootKSK);
+        assertTrue(result.isAuthenticData());
+        checkCorrectExampleMessage(result.synthesizedResponse);
+    }
+
+    @Test
+    public void testRootSecureEntryPointDoesNotSignDnskeyRrSet() throws IOException {
+        DnssecQueryResult result = queryWithRootSecureEntryPoints(ROGUE_KEY);
+        assertFalse(result.isAuthenticData());
+        assertTrue(result.getUnverifiedReasons().iterator().next() instanceof DnssecUnverifiedReason.ConflictsWithSep);
     }
 }
