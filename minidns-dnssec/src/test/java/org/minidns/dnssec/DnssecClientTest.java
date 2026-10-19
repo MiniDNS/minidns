@@ -867,6 +867,27 @@ public class DnssecClientTest {
     }
 
     @SuppressWarnings("unchecked")
+    @Test
+    public void testDnskeyRrsetSignedOnlyByKeyWithoutDelegation() throws IOException {
+        DnssecClient client = constructDnssecClient();
+        // The DNSKEY RRset contains comKSK, which the DS RR at the parent refers to. But the RRset is only signed by a
+        // key that has no delegation, hence there is no chain of trust to the RRset.
+        applyZones(client,
+                signedRootZoneDelegatingCom(),
+                zone("com", "ns.com", "1.1.1.1", merge(
+                        sign(ROGUE_KEY, "com", ROGUE_PRIVATE_KEY, algorithm,
+                                record("com", comKSK),
+                                record("com", comZSK),
+                                record("com", ROGUE_KEY)),
+                        sign(comZSK, "com", comPrivateZSK, algorithm,
+                                record("example.com", a("1.1.1.2")))
+                ))
+        );
+        DnssecQueryResult result = client.queryDnssec("example.com", Record.TYPE.A);
+        assertFalse(result.isAuthenticData());
+    }
+
+    @SuppressWarnings("unchecked")
     private static DnssecQueryResult queryWithRootSecureEntryPoints(DNSKEY... rootSeps) throws IOException {
         DnssecClient client = constructDnssecClient();
         client.clearSecureEntryPoints();

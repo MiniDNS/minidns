@@ -185,6 +185,12 @@ public class DnssecClient extends ReliableDnsClient {
             if (record == null) {
                 continue;
             }
+            iterator.remove();
+
+            // Only a DNSKEY that validly signs the DNSKEY RRset can establish the chain of trust to the RRset.
+            if (verifiedSignatures.sepSignaturePresent && !verifiedSignatures.selfSigningKeys.contains(record.payloadData)) {
+                continue;
+            }
 
             // Verify all DNSKEYs as if it was a SEP. If we find a single SEP we are safe.
             Set<DnssecUnverifiedReason> reasons = verifySecureEntryPoint(record);
@@ -196,7 +202,6 @@ public class DnssecClient extends ReliableDnsClient {
             if (!verifiedSignatures.sepSignaturePresent) {
                 LOGGER.finer("SEP key is not self-signed.");
             }
-            iterator.remove();
         }
 
         if (verifiedSignatures.sepSignaturePresent && !sepSignatureValid) {
@@ -340,6 +345,10 @@ public class DnssecClient extends ReliableDnsClient {
     private static final class VerifySignaturesResult {
         boolean sepSignatureRequired = false;
         boolean sepSignaturePresent = false;
+        /**
+         * The DNSKEYs of the queried name that validly sign the DNSKEY RRset.
+         */
+        Set<DNSKEY> selfSigningKeys = new HashSet<>();
         Set<DnssecUnverifiedReason> reasons = new HashSet<>();
     }
 
@@ -439,9 +448,9 @@ public class DnssecClient extends ReliableDnsClient {
                 boolean selfSignedDnskeys = q.name.equals(rrsig.signerName) && rrsig.typeCovered == TYPE.DNSKEY;
                 rrSetSelfSigned |= selfSignedDnskeys;
 
-                Set<DnssecUnverifiedReason> reasons;
+                VerifySignedRecordsResult verifySignedRecordsResult;
                 try {
-                    reasons = verifySignedRecords(q, rrsig, records);
+                    verifySignedRecordsResult = verifySignedRecords(q, rrsig, records);
                 } catch (DnssecValidationFailedException e) {
                     if (validationFailedException == null) {
                         validationFailedException = e;
@@ -449,16 +458,19 @@ public class DnssecClient extends ReliableDnsClient {
                     continue;
                 }
 
-                if (!reasons.isEmpty()) {
-                    rrSetReasons.addAll(reasons);
+                if (!verifySignedRecordsResult.reasons.isEmpty()) {
+                    rrSetReasons.addAll(verifySignedRecordsResult.reasons);
                     continue;
                 }
 
                 rrSetVerified = true;
-                if (selfSignedDnskeys) {
-                    result.sepSignaturePresent = true;
+                if (!selfSignedDnskeys) {
+                    break;
                 }
-                break;
+                // Continue verifying the remaining RRSIGs, as we need to know all DNSKEYs that validly sign the
+                // DNSKEY RRset in order to find the one that is a secure entry point.
+                result.sepSignaturePresent = true;
+                result.selfSigningKeys.add(verifySignedRecordsResult.signingKey);
             }
 
             if (rrSetSelfSigned) {
@@ -500,8 +512,13 @@ public class DnssecClient extends ReliableDnsClient {
         return true;
     }
 
-    private Set<DnssecUnverifiedReason> verifySignedRecords(Question q, RRSIG rrsig, List<Record<? extends Data>> records) throws IOException {
-        Set<DnssecUnverifiedReason> result = new HashSet<>();
+    private static final class VerifySignedRecordsResult {
+        final Set<DnssecUnverifiedReason> reasons = new HashSet<>();
+        DNSKEY signingKey;
+    }
+
+    private VerifySignedRecordsResult verifySignedRecords(Question q, RRSIG rrsig, List<Record<? extends Data>> records) throws IOException {
+        VerifySignedRecordsResult result = new VerifySignedRecordsResult();
         List<Record<DNSKEY>> dnskeyRrs;
 
         if (rrsig.typeCovered == TYPE.DNSKEY) {
@@ -509,11 +526,11 @@ public class DnssecClient extends ReliableDnsClient {
             dnskeyRrs = Record.filter(DNSKEY.class, records);
         } else if (q.type == TYPE.DS && rrsig.signerName.equals(q.name)) {
             // We should not probe for the self signed DS negative response, as it will be an endless loop.
-            result.add(new NoTrustAnchorReason(q.name));
+            result.reasons.add(new NoTrustAnchorReason(q.name));
             return result;
         } else {
             DnssecQueryResult dnskeyRes = queryDnssec(rrsig.signerName, TYPE.DNSKEY);
-            result.addAll(dnskeyRes.getUnverifiedReasons());
+            result.reasons.addAll(dnskeyRes.getUnverifiedReasons());
             dnskeyRrs = dnskeyRes.dnsQueryResult.response.filterAnswerSectionBy(DNSKEY.class);
         }
 
@@ -529,6 +546,7 @@ public class DnssecClient extends ReliableDnsClient {
 
             unverifiedReason = Verifier.verify(records, rrsig, dnskey);
             if (unverifiedReason == null) {
+                result.signingKey = dnskey;
                 return result;
             }
         }
@@ -537,7 +555,7 @@ public class DnssecClient extends ReliableDnsClient {
             throw new DnssecValidationFailedException(q, records.size() + " " + rrsig.typeCovered + " record(s) are signed using an unknown key.");
         }
 
-        result.add(unverifiedReason);
+        result.reasons.add(unverifiedReason);
         return result;
     }
 
