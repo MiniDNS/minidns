@@ -10,11 +10,12 @@
  */
 package org.minidns.dane;
 
-import org.minidns.dnsmessage.DnsMessage;
 import org.minidns.dnsname.DnsName;
 import org.minidns.dnssec.DnssecClient;
 import org.minidns.dnssec.DnssecQueryResult;
 import org.minidns.dnssec.DnssecUnverifiedReason;
+import org.minidns.dnssec.DnssecValidationFailedException;
+import org.minidns.record.CNAME;
 import org.minidns.record.Data;
 import org.minidns.record.Record;
 import org.minidns.record.TLSA;
@@ -44,6 +45,11 @@ import java.util.logging.Logger;
 public class DaneVerifier {
     private static final Logger LOGGER = Logger.getLogger(DaneVerifier.class.getName());
 
+    /**
+     * The maximum number of CNAMEs followed when looking up the TLSA RRs. This also prevents looping on CNAME loops.
+     */
+    private static final int MAX_CNAME_CHAIN_LENGTH = 16;
+
     private final DnssecClient client;
 
     public DaneVerifier() {
@@ -60,7 +66,8 @@ public class DaneVerifier {
      * @param socket A connected {@link SSLSocket} whose certificate chain shall be verified using DANE.
      * @return Whether the DANE verification is the only requirement according to the TLSA record.
      * If this method returns {@code false}, additional PKIX validation is required.
-     * @throws CertificateException if the certificate chain provided differs from the one enforced using DANE.
+     * @throws CertificateException if the certificate chain provided differs from the one enforced using DANE, or if
+     * the DNSSEC validation of the TLSA response failed.
      * @see #daneVerify(SSLSocket)
      */
     public boolean verify(SSLSocket socket) throws CertificateException {
@@ -72,7 +79,8 @@ public class DaneVerifier {
      *
      * @param socket A connected {@link SSLSocket} whose certificate chain shall be verified using DANE.
      * @return The result of the DANE verification.
-     * @throws CertificateException if the certificate chain provided differs from the one enforced using DANE.
+     * @throws CertificateException if the certificate chain provided differs from the one enforced using DANE, or if
+     * the DNSSEC validation of the TLSA response failed.
      */
     public DaneVerificationResult daneVerify(SSLSocket socket) throws CertificateException {
         if (!socket.isConnected()) {
@@ -87,7 +95,8 @@ public class DaneVerifier {
      * @param session An active {@link SSLSession} whose certificate chain shall be verified using DANE.
      * @return Whether the DANE verification is the only requirement according to the TLSA record.
      * If this method returns {@code false}, additional PKIX validation is required.
-     * @throws CertificateException if the certificate chain provided differs from the one enforced using DANE.
+     * @throws CertificateException if the certificate chain provided differs from the one enforced using DANE, or if
+     * the DNSSEC validation of the TLSA response failed.
      * @see #daneVerify(SSLSession)
      */
     public boolean verify(SSLSession session) throws CertificateException {
@@ -99,7 +108,8 @@ public class DaneVerifier {
      *
      * @param session An active {@link SSLSession} whose certificate chain shall be verified using DANE.
      * @return The result of the DANE verification.
-     * @throws CertificateException if the certificate chain provided differs from the one enforced using DANE.
+     * @throws CertificateException if the certificate chain provided differs from the one enforced using DANE, or if
+     * the DNSSEC validation of the TLSA response failed.
      */
     public DaneVerificationResult daneVerify(SSLSession session) throws CertificateException {
         try {
@@ -117,7 +127,8 @@ public class DaneVerifier {
      * @param port The port number that was used to reach the server providing the certificate chain in question.
      * @return Whether the DANE verification is the only requirement according to the TLSA record.
      * If this method returns {@code false}, additional PKIX validation is required.
-     * @throws CertificateException if the certificate chain provided differs from the one enforced using DANE.
+     * @throws CertificateException if the certificate chain provided differs from the one enforced using DANE, or if
+     * the DNSSEC validation of the TLSA response failed.
      * @see #daneVerify(X509Certificate[], String, int)
      */
     public boolean verifyCertificateChain(X509Certificate[] chain, String hostName, int port) throws CertificateException {
@@ -136,33 +147,61 @@ public class DaneVerifier {
      * @param hostName The DNS name of the host this certificate chain belongs to.
      * @param port The port number that was used to reach the server providing the certificate chain in question.
      * @return The result of the DANE verification.
-     * @throws CertificateException if the certificate chain provided differs from the one enforced using DANE.
+     * @throws CertificateException if the certificate chain provided differs from the one enforced using DANE, or if
+     * the DNSSEC validation of the TLSA response failed.
      */
     public DaneVerificationResult daneVerify(X509Certificate[] chain, String hostName, int port) throws CertificateException {
         DnsName req = DnsName.from("_" + port + "._tcp." + hostName);
-        DnssecQueryResult result;
-        try {
-            result = client.queryDnssec(req, Record.TYPE.TLSA);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-        DnsMessage res = result.dnsQueryResult.response;
-        // TODO: We previously used the AD bit here. This allowed non-DNSSEC aware clients to be plugged into
-        // DaneVerifier, which, in turn, allows to use a trusted forward as DNSSEC validator. Is this a good idea?
-        if (!result.isAuthenticData()) {
-            String msg = "Got TLSA response from DNS server, but was not signed properly.";
-            msg += " Reasons:";
-            for (DnssecUnverifiedReason reason : result.getUnverifiedReasons()) {
-                 msg += " " + reason;
+        DnsName tlsaName = req;
+        List<Record<? extends Data>> answers;
+        int remainingCnames = MAX_CNAME_CHAIN_LENGTH;
+        while (true) {
+            DnssecQueryResult result;
+            try {
+                result = client.queryDnssec(tlsaName, Record.TYPE.TLSA);
+            } catch (DnssecValidationFailedException e) {
+                // A bogus TLSA response must cause the TLS connection to be aborted (RFC 6698 § 4.1).
+                throw new DaneCertificateException.DnssecValidationFailed(e);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
             }
-            LOGGER.info(msg);
-            return DaneVerificationResult.notAuthenticated;
+            // TODO: We previously used the AD bit here. This allowed non-DNSSEC aware clients to be plugged into
+            // DaneVerifier, which, in turn, allows to use a trusted forward as DNSSEC validator. Is this a good idea?
+            if (!result.isAuthenticData()) {
+                String msg = "Got TLSA response from DNS server, but was not signed properly.";
+                msg += " Reasons:";
+                for (DnssecUnverifiedReason reason : result.getUnverifiedReasons()) {
+                     msg += " " + reason;
+                }
+                LOGGER.info(msg);
+                return DaneVerificationResult.notAuthenticated;
+            }
+            answers = result.dnsQueryResult.response.answerSection;
+
+            // The TLSA RRs may be provisioned via CNAMEs (RFC 6698 § A.2.1). Since the response is authentic, all
+            // CNAME RRs in the answer section have been validated, so we can de-alias the queried name.
+            DnsName queriedName = tlsaName;
+            while (true) {
+                DnsName target = findCnameTarget(tlsaName, answers);
+                if (target == null) break;
+                if (remainingCnames-- == 0) {
+                    LOGGER.warning("CNAME chain for " + req + " exceeds " + MAX_CNAME_CHAIN_LENGTH + " CNAMEs, not using TLSA RRs");
+                    return DaneVerificationResult.noUsableTlsaRecords;
+                }
+                tlsaName = target;
+            }
+
+            // If the response did not include the RRs of the CNAME target, e.g., because the target is in another
+            // zone, then query the target.
+            if (tlsaName.equals(queriedName) || containsTlsa(tlsaName, answers)) {
+                break;
+            }
         }
 
         List<DaneCertificateException.CertificateMismatch> certificateMismatchExceptions = new ArrayList<>();
         DaneVerificationResult verificationResult = DaneVerificationResult.noUsableTlsaRecords;
-        for (Record<? extends Data> record : res.answerSection) {
-            if (record.type == Record.TYPE.TLSA && record.name.equals(req)) {
+        for (Record<? extends Data> record : answers) {
+            if (record.type == Record.TYPE.TLSA && record.name.equals(tlsaName)) {
                 TLSA tlsa = (TLSA) record.payloadData;
                 DaneVerificationResult recordResult;
                 try {
@@ -190,6 +229,24 @@ public class DaneVerifier {
         }
 
         return verificationResult;
+    }
+
+    private static DnsName findCnameTarget(DnsName name, List<Record<? extends Data>> records) {
+        for (Record<? extends Data> record : records) {
+            if (record.type == Record.TYPE.CNAME && record.name.equals(name)) {
+                return ((CNAME) record.payloadData).target;
+            }
+        }
+        return null;
+    }
+
+    private static boolean containsTlsa(DnsName name, List<Record<? extends Data>> records) {
+        for (Record<? extends Data> record : records) {
+            if (record.type == Record.TYPE.TLSA && record.name.equals(name)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /**

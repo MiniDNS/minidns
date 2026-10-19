@@ -224,8 +224,6 @@ public final class DnsName extends SafeCharSequence implements Serializable, Com
 
         baos.write(0);
 
-        assert baos.size() <= MAX_DNSNAME_LENGTH_IN_OCTETS;
-
         return baos.toByteArray();
     }
 
@@ -569,6 +567,37 @@ public final class DnsName extends SafeCharSequence implements Serializable, Com
         }
 
         return true;
+    }
+
+    /**
+     * Replace a suffix of this DNS name.
+     * <p>
+     * For example, replacing the suffix "example.org" of "foo.example.org" with "example.net" results in
+     * "foo.example.net". This is the substitution performed for DNAME RRs (RFC 6672 § 2.2).
+     * </p>
+     *
+     * @param oldSuffix the suffix to replace. This DNS name must be a child of, or equal to, it.
+     * @param newSuffix the new suffix.
+     * @return the resulting DNS name.
+     * @throws IllegalArgumentException if this DNS name is not a child of, or equal to, oldSuffix.
+     * @throws InvalidDnsNameException.DNSNameTooLongException if the resulting DNS name is too long.
+     */
+    public DnsName replaceSuffix(DnsName oldSuffix, DnsName newSuffix) {
+        if (!isChildOf(oldSuffix)) {
+            throw new IllegalArgumentException(this + " is not a child of " + oldSuffix);
+        }
+
+        int oldSuffixLabelCount = oldSuffix.labels.length;
+        int prefixLabelCount = rawLabels.length - oldSuffixLabelCount;
+        if (prefixLabelCount == 0) {
+            return newSuffix;
+        }
+
+        newSuffix.setLabelsIfRequired();
+        DnsLabel[] resultRawLabels = new DnsLabel[newSuffix.rawLabels.length + prefixLabelCount];
+        System.arraycopy(newSuffix.rawLabels, 0, resultRawLabels, 0, newSuffix.rawLabels.length);
+        System.arraycopy(rawLabels, oldSuffixLabelCount, resultRawLabels, newSuffix.rawLabels.length, prefixLabelCount);
+        return new DnsName(resultRawLabels, true);
     }
 
     public int getLabelCount() {

@@ -14,6 +14,7 @@ import java.security.cert.CertificateException;
 import java.util.Collections;
 import java.util.List;
 
+import org.minidns.dnssec.DnssecValidationFailedException;
 import org.minidns.record.TLSA;
 
 public abstract class DaneCertificateException extends CertificateException {
@@ -28,6 +29,28 @@ public abstract class DaneCertificateException extends CertificateException {
 
     protected DaneCertificateException(String message) {
         super(message);
+    }
+
+    protected DaneCertificateException(String message, Throwable cause) {
+        super(message, cause);
+    }
+
+    /**
+     * The DNSSEC validation of the TLSA response failed, i.e., the response is bogus (RFC 6698 § 4.1).
+     */
+    public static class DnssecValidationFailed extends DaneCertificateException {
+
+        /**
+         *
+         */
+        private static final long serialVersionUID = 1L;
+
+        public final DnssecValidationFailedException dnssecValidationFailedException;
+
+        public DnssecValidationFailed(DnssecValidationFailedException dnssecValidationFailedException) {
+            super("DNSSEC validation of the TLSA response failed", dnssecValidationFailedException);
+            this.dnssecValidationFailedException = dnssecValidationFailedException;
+        }
     }
 
     public static class CertificateMismatch extends DaneCertificateException {

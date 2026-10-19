@@ -14,6 +14,7 @@ import org.minidns.DnsCache;
 import org.minidns.dnsmessage.DnsMessage;
 import org.minidns.dnsmessage.Question;
 import org.minidns.dnsname.DnsName;
+import org.minidns.dnsname.InvalidDnsNameException;
 import org.minidns.dnsqueryresult.DnsQueryResult;
 import org.minidns.dnssec.DnssecUnverifiedReason.NoActiveSignaturesReason;
 import org.minidns.dnssec.DnssecUnverifiedReason.NoSecureEntryPointReason;
@@ -21,7 +22,9 @@ import org.minidns.dnssec.DnssecUnverifiedReason.NoSignaturesReason;
 import org.minidns.dnssec.DnssecUnverifiedReason.NoTrustAnchorReason;
 import org.minidns.dnssec.DnssecValidationFailedException.AuthorityDoesNotContainSoa;
 import org.minidns.iterative.ReliableDnsClient;
+import org.minidns.record.CNAME;
 import org.minidns.record.DLV;
+import org.minidns.record.DNAME;
 import org.minidns.record.DNSKEY;
 import org.minidns.record.DS;
 import org.minidns.record.Data;
@@ -189,6 +192,7 @@ public class DnssecClient extends ReliableDnsClient {
         if (verifiedSignatures.sepSignatureRequired && !verifiedSignatures.sepSignaturePresent) {
             result.add(new NoSecureEntryPointReason(q.name));
         }
+        removeDnameSynthesizedCnames(answers, toBeVerified);
         if (!toBeVerified.isEmpty()) {
             if (toBeVerified.size() != answers.size()) {
                 throw new DnssecValidationFailedException(q, "Only some records are signed!");
@@ -197,6 +201,55 @@ public class DnssecClient extends ReliableDnsClient {
             }
         }
         return result;
+    }
+
+    /**
+     * Remove the CNAME RRs synthesized from validated DNAME RRs from the RRs to be verified. Synthesized CNAME RRs are
+     * not signed, instead a validator has to check that they are consistent with a validated DNAME RR (RFC 6672
+     * § 5.3.1).
+     *
+     * @param answers the RRs of the answer section.
+     * @param toBeVerified the RRs of the answer section that have not been verified yet.
+     */
+    private static void removeDnameSynthesizedCnames(List<Record<? extends Data>> answers, List<Record<? extends Data>> toBeVerified) {
+        List<Record<DNAME>> validatedDnames = new ArrayList<>();
+        for (Record<? extends Data> record : answers) {
+            Record<DNAME> dnameRecord = record.ifPossibleAs(DNAME.class);
+            // The RRs that are no longer to be verified have been validated by verifySignatures().
+            if (dnameRecord == null || toBeVerified.contains(dnameRecord)) continue;
+            validatedDnames.add(dnameRecord);
+        }
+        if (validatedDnames.isEmpty()) return;
+
+        for (Iterator<Record<? extends Data>> iterator = toBeVerified.iterator(); iterator.hasNext(); ) {
+            Record<CNAME> cnameRecord = iterator.next().ifPossibleAs(CNAME.class);
+            if (cnameRecord == null) continue;
+
+            for (Record<DNAME> dnameRecord : validatedDnames) {
+                if (isSynthesizedFrom(cnameRecord, dnameRecord)) {
+                    iterator.remove();
+                    break;
+                }
+            }
+        }
+    }
+
+    private static boolean isSynthesizedFrom(Record<CNAME> cnameRecord, Record<DNAME> dnameRecord) {
+        if (cnameRecord.clazz != dnameRecord.clazz) return false;
+
+        DnsName owner = cnameRecord.name;
+        DnsName dnameOwner = dnameRecord.name;
+        // A DNAME RR does not redirect its owner name, only the names below it (RFC 6672 § 2.3).
+        if (!owner.isChildOf(dnameOwner) || owner.equals(dnameOwner)) return false;
+
+        DnsName synthesizedTarget;
+        try {
+            synthesizedTarget = owner.replaceSuffix(dnameOwner, dnameRecord.payloadData.target);
+        } catch (InvalidDnsNameException.DNSNameTooLongException e) {
+            // The substitution overflows, hence no CNAME is synthesized (RFC 6672 § 2.2).
+            return false;
+        }
+        return cnameRecord.payloadData.target.equals(synthesizedTarget);
     }
 
     private Set<DnssecUnverifiedReason> verifyNsec(DnsMessage dnsMessage) throws IOException {

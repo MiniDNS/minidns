@@ -190,4 +190,50 @@ public class DnsNameTest {
         DnsLabel hostpart = dnsName.getHostpartLabel();
         assertEquals("foo", hostpart.toString());
     }
+
+    @Test
+    public void replaceSuffix() {
+        DnsName dnsName = DnsName.from("Foo.bar.Example.org");
+        DnsName result = dnsName.replaceSuffix(DnsName.from("example.org"), DnsName.from("example.net"));
+        assertEquals(DnsName.from("foo.bar.example.net"), result);
+        // The raw labels of the replaced part are preserved.
+        assertEquals("Foo.bar.example.net", result.getRawAce());
+    }
+
+    @Test
+    public void replaceSuffixWithRoot() {
+        DnsName dnsName = DnsName.from("foo.example.org");
+        DnsName result = dnsName.replaceSuffix(DnsName.from("example.org"), DnsName.ROOT);
+        assertEquals(DnsName.from("foo"), result);
+    }
+
+    @Test
+    public void replaceSuffixOfRoot() {
+        DnsName dnsName = DnsName.from("foo.example.org");
+        DnsName result = dnsName.replaceSuffix(DnsName.ROOT, DnsName.from("example.net"));
+        assertEquals(DnsName.from("foo.example.org.example.net"), result);
+    }
+
+    @Test
+    public void replaceSuffixWholeName() {
+        DnsName dnsName = DnsName.from("example.org");
+        DnsName result = dnsName.replaceSuffix(DnsName.from("example.org"), DnsName.from("example.net"));
+        assertEquals(DnsName.from("example.net"), result);
+    }
+
+    @Test
+    public void replaceSuffixNotAChild() {
+        DnsName dnsName = DnsName.from("foo.example.org");
+        assertThrows(IllegalArgumentException.class,
+                () -> dnsName.replaceSuffix(DnsName.from("example.net"), DnsName.from("example.com")));
+    }
+
+    @Test
+    public void replaceSuffixResultTooLong() {
+        String label = "a123456789012345678901234567890123456789012345678901234567890";
+        // 4 * 62 + 4 + 1 = 253 octets.
+        DnsName dnsName = DnsName.from(label + '.' + label + '.' + label + '.' + label + ".org");
+        assertThrows(InvalidDnsNameException.DNSNameTooLongException.class,
+                () -> dnsName.replaceSuffix(DnsName.from("org"), DnsName.from("example.org")));
+    }
 }
