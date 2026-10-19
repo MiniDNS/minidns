@@ -43,7 +43,9 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -341,6 +343,29 @@ public class DnssecClient extends ReliableDnsClient {
         Set<DnssecUnverifiedReason> reasons = new HashSet<>();
     }
 
+    private static final class RrSetId {
+        final DnsName name;
+        final int typeCoveredValue;
+
+        RrSetId(DnsName name, int typeCoveredValue) {
+            this.name = name;
+            this.typeCoveredValue = typeCoveredValue;
+        }
+
+        @Override
+        public boolean equals(Object other) {
+            if (this == other) return true;
+            if (!(other instanceof RrSetId)) return false;
+            RrSetId otherRrSetId = (RrSetId) other;
+            return typeCoveredValue == otherRrSetId.typeCoveredValue && name.equals(otherRrSetId.name);
+        }
+
+        @Override
+        public int hashCode() {
+            return 37 * name.hashCode() + typeCoveredValue;
+        }
+    }
+
     @SuppressWarnings("JavaUtilDate")
     private VerifySignaturesResult verifySignatures(Question q, Collection<Record<? extends Data>> reference, List<Record<? extends Data>> toBeVerified) throws IOException {
         final Date now = new Date();
@@ -372,40 +397,91 @@ public class DnssecClient extends ReliableDnsClient {
             return result;
         }
 
+        // Group the RRSIGs by the RRset they cover, i.e., by owner name and covered type.
+        Map<RrSetId, List<Record<RRSIG>>> rrsigsByRrSet = new LinkedHashMap<>();
         for (Record<RRSIG> sigRecord : rrsigs) {
-            RRSIG rrsig = sigRecord.payloadData;
+            RrSetId rrSetId = new RrSetId(sigRecord.name, sigRecord.payloadData.typeCoveredValue);
+            List<Record<RRSIG>> rrSetRrsigs = rrsigsByRrSet.get(rrSetId);
+            if (rrSetRrsigs == null) {
+                rrSetRrsigs = new ArrayList<>();
+                rrsigsByRrSet.put(rrSetId, rrSetRrsigs);
+            }
+            rrSetRrsigs.add(sigRecord);
+        }
+
+        for (Map.Entry<RrSetId, List<Record<RRSIG>>> entry : rrsigsByRrSet.entrySet()) {
+            RrSetId rrSetId = entry.getKey();
+            List<Record<RRSIG>> rrSetRrsigs = entry.getValue();
+            toBeVerified.removeAll(rrSetRrsigs);
 
             List<Record<? extends Data>> records = new ArrayList<>(reference.size());
             for (Record<? extends Data> record : reference) {
-                if (record.typeValue == rrsig.typeCoveredValue && record.name.equals(sigRecord.name)) {
+                if (record.typeValue == rrSetId.typeCoveredValue && record.name.equals(rrSetId.name)) {
                     records.add(record);
                 }
             }
 
-            Set<DnssecUnverifiedReason> reasons = verifySignedRecords(q, rrsig, records);
-            result.reasons.addAll(reasons);
+            // An RRset is verified if at least one of its RRSIGs is valid (RFC 4035 § 5.3.3, RFC 6840 § 5.11). For
+            // example, during a key or algorithm rollover, the RRset may also carry RRSIGs that we are unable to
+            // verify.
+            boolean rrSetVerified = false;
+            boolean rrSetSelfSigned = false;
+            Set<DnssecUnverifiedReason> rrSetReasons = new HashSet<>();
+            DnssecValidationFailedException validationFailedException = null;
+            for (Record<RRSIG> sigRecord : rrSetRrsigs) {
+                RRSIG rrsig = sigRecord.payloadData;
 
-            if (q.name.equals(rrsig.signerName) && rrsig.typeCovered == TYPE.DNSKEY) {
-                for (Iterator<Record<? extends Data>> iterator = records.iterator(); iterator.hasNext(); ) {
-                    Record<DNSKEY> dnsKeyRecord = iterator.next().ifPossibleAs(DNSKEY.class);
-                    // dnsKeyRecord should never be null here.
-                    DNSKEY dnskey = dnsKeyRecord.payloadData;
-                    // DNSKEYs are verified separately, so don't mark them verified now.
-                    iterator.remove();
-                    if (dnskey.getKeyTag() == rrsig.keyTag) {
-                        result.sepSignaturePresent = true;
-                    }
+                if (!isParentOrSelf(sigRecord.name.ace, rrsig.signerName.ace)) {
+                    LOGGER.finer("Records at " + sigRecord.name + " are cross-signed with a key from " + rrsig.signerName);
+                    continue;
                 }
+
+                boolean selfSignedDnskeys = q.name.equals(rrsig.signerName) && rrsig.typeCovered == TYPE.DNSKEY;
+                rrSetSelfSigned |= selfSignedDnskeys;
+
+                Set<DnssecUnverifiedReason> reasons;
+                try {
+                    reasons = verifySignedRecords(q, rrsig, records);
+                } catch (DnssecValidationFailedException e) {
+                    if (validationFailedException == null) {
+                        validationFailedException = e;
+                    }
+                    continue;
+                }
+
+                if (!reasons.isEmpty()) {
+                    rrSetReasons.addAll(reasons);
+                    continue;
+                }
+
+                rrSetVerified = true;
+                if (selfSignedDnskeys) {
+                    result.sepSignaturePresent = true;
+                }
+                break;
+            }
+
+            if (rrSetSelfSigned) {
                 // DNSKEY's should be signed by a SEP
                 result.sepSignatureRequired = true;
             }
 
-            if (!isParentOrSelf(sigRecord.name.ace, rrsig.signerName.ace)) {
-                LOGGER.finer("Records at " + sigRecord.name + " are cross-signed with a key from " + rrsig.signerName);
-            } else {
-                toBeVerified.removeAll(records);
+            if (!rrSetVerified) {
+                if (validationFailedException != null) {
+                    throw validationFailedException;
+                }
+                if (rrSetReasons.isEmpty()) {
+                    // All RRSIGs of this RRset are cross-signed, hence the records remain to be verified.
+                    continue;
+                }
+                result.reasons.addAll(rrSetReasons);
             }
-            toBeVerified.remove(sigRecord);
+
+            if (rrSetSelfSigned) {
+                // DNSKEYs are verified separately, so don't mark them verified now.
+                continue;
+            }
+            toBeVerified.removeAll(records);
         }
         return result;
     }
@@ -426,17 +502,11 @@ public class DnssecClient extends ReliableDnsClient {
 
     private Set<DnssecUnverifiedReason> verifySignedRecords(Question q, RRSIG rrsig, List<Record<? extends Data>> records) throws IOException {
         Set<DnssecUnverifiedReason> result = new HashSet<>();
-        DNSKEY dnskey = null;
+        List<Record<DNSKEY>> dnskeyRrs;
 
         if (rrsig.typeCovered == TYPE.DNSKEY) {
             // Key must be present
-            List<Record<DNSKEY>> dnskeyRrs = Record.filter(DNSKEY.class, records);
-            for (Record<DNSKEY> dnsKeyRecord : dnskeyRrs) {
-                if (dnsKeyRecord.payloadData.getKeyTag() == rrsig.keyTag) {
-                    dnskey = dnsKeyRecord.payloadData;
-                    break;
-                }
-            }
+            dnskeyRrs = Record.filter(DNSKEY.class, records);
         } else if (q.type == TYPE.DS && rrsig.signerName.equals(q.name)) {
             // We should not probe for the self signed DS negative response, as it will be an endless loop.
             result.add(new NoTrustAnchorReason(q.name));
@@ -444,24 +514,30 @@ public class DnssecClient extends ReliableDnsClient {
         } else {
             DnssecQueryResult dnskeyRes = queryDnssec(rrsig.signerName, TYPE.DNSKEY);
             result.addAll(dnskeyRes.getUnverifiedReasons());
-            List<Record<DNSKEY>> dnskeyRrs = dnskeyRes.dnsQueryResult.response.filterAnswerSectionBy(DNSKEY.class);
-            for (Record<DNSKEY> dnsKeyRecord : dnskeyRrs) {
-                if (dnsKeyRecord.payloadData.getKeyTag() == rrsig.keyTag) {
-                    dnskey = dnsKeyRecord.payloadData;
-                    break;
-                }
+            dnskeyRrs = dnskeyRes.dnsQueryResult.response.filterAnswerSectionBy(DNSKEY.class);
+        }
+
+        // Key tags are not unique, hence try every DNSKEY with a matching key tag (RFC 4034 § 5.3.1).
+        boolean keyFound = false;
+        DnssecUnverifiedReason unverifiedReason = null;
+        for (Record<DNSKEY> dnsKeyRecord : dnskeyRrs) {
+            DNSKEY dnskey = dnsKeyRecord.payloadData;
+            if (dnskey.getKeyTag() != rrsig.keyTag) {
+                continue;
+            }
+            keyFound = true;
+
+            unverifiedReason = Verifier.verify(records, rrsig, dnskey);
+            if (unverifiedReason == null) {
+                return result;
             }
         }
 
-        if (dnskey == null) {
+        if (!keyFound) {
             throw new DnssecValidationFailedException(q, records.size() + " " + rrsig.typeCovered + " record(s) are signed using an unknown key.");
         }
 
-        DnssecUnverifiedReason unverifiedReason = Verifier.verify(records, rrsig, dnskey);
-        if (unverifiedReason != null) {
-            result.add(unverifiedReason);
-        }
-
+        result.add(unverifiedReason);
         return result;
     }
 
