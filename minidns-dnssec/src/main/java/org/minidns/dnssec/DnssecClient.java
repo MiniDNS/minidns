@@ -22,6 +22,7 @@ import org.minidns.dnssec.DnssecUnverifiedReason.NoActiveSignaturesReason;
 import org.minidns.dnssec.DnssecUnverifiedReason.NoSecureEntryPointReason;
 import org.minidns.dnssec.DnssecUnverifiedReason.NoSignaturesReason;
 import org.minidns.dnssec.DnssecUnverifiedReason.NoTrustAnchorReason;
+import org.minidns.dnssec.DnssecUnverifiedReason.SignaturesExpectedButMissingReason;
 import org.minidns.dnssec.DnssecValidationFailedException.AuthorityDoesNotContainSoa;
 import org.minidns.dnssec.algorithms.AlgorithmMap;
 import org.minidns.iterative.ReliableDnsClient;
@@ -54,6 +55,7 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.logging.Level;
 
 public class DnssecClient extends ReliableDnsClient {
 
@@ -98,6 +100,8 @@ public class DnssecClient extends ReliableDnsClient {
     private final ConcurrentMap<DnsName, List<byte[]>> knownSeps = new ConcurrentHashMap<>();
 
     private boolean stripSignatureRecords = true;
+
+    private boolean detectSignatureStripping = false;
 
     /**
      * The active DNSSEC Look-aside Validation Registry. May be <code>null</code>.
@@ -423,9 +427,10 @@ public class DnssecClient extends ReliableDnsClient {
         if (rrsigs.isEmpty()) {
             if (!outdatedRrSigs.isEmpty()) {
                 result.reasons.add(new NoActiveSignaturesReason(q, outdatedRrSigs));
+            } else if (queriedNameIsInSignedZone(q)) {
+                // The queried name is within a signed zone, hence signatures were expected but are missing.
+                result.reasons.add(new SignaturesExpectedButMissingReason(q));
             } else {
-                // TODO: Check if QNAME results should have signatures and add a different reason if there are RRSIGs
-                // expected compared to when not.
                 result.reasons.add(new NoSignaturesReason(q));
             }
             return result;
@@ -518,6 +523,38 @@ public class DnssecClient extends ReliableDnsClient {
             toBeVerified.removeAll(records);
         }
         return result;
+    }
+
+    /**
+     * Probe whether the queried name is within a signed zone, so that a response without signatures can be reported as
+     * signature stripping rather than as an unsigned (insecure) zone. See
+     * {@link #setDetectSignatureStripping(boolean)}.
+     *
+     * @param q the question whose response carried no signatures.
+     * @return {@code true} if the queried name is within a signed zone.
+     */
+    private boolean queriedNameIsInSignedZone(Question q) {
+        if (!detectSignatureStripping) {
+            return false;
+        }
+        // Querying the DNSKEY (or DS) of a name that has no signatures would recurse into this very method. The DNSKEY
+        // query below also covers whether the parent's DS, i.e., the delegation, is signed.
+        if (q.type == TYPE.DNSKEY || q.type == TYPE.DS) {
+            return false;
+        }
+
+        // The queried name is within a signed zone if, and only if, the response to a DNSKEY query for it is authentic:
+        // either an authentic DNSKEY RRset, if the name is a signed zone's apex, or an authentic denial of existence of
+        // the DNSKEY RRset, if the name is below a signed zone's apex. The probe is best-effort: it only refines the
+        // reported reason, hence any error, including a failed validation of the probe response, is treated as "not
+        // determined" and never propagated to the original query.
+        try {
+            DnssecQueryResult dnskeyResult = queryDnssec(q.name, TYPE.DNSKEY);
+            return dnskeyResult.isAuthenticData();
+        } catch (IOException e) {
+            LOGGER.log(Level.FINER, "Probing whether " + q.name + " is within a signed zone failed", e);
+            return false;
+        }
     }
 
     private static final class VerifySignedRecordsResult {
@@ -789,6 +826,42 @@ public class DnssecClient extends ReliableDnsClient {
      */
     public void setStripSignatureRecords(boolean stripSignatureRecords) {
         this.stripSignatureRecords = stripSignatureRecords;
+    }
+
+    /**
+     * Whether detection of signature stripping is enabled.
+     * <p>
+     * See {@link #setDetectSignatureStripping(boolean)} for details. Default is {@code false}.
+     * </p>
+     *
+     * @return whether detection of signature stripping is enabled.
+     */
+    public boolean isDetectSignatureStripping() {
+        return detectSignatureStripping;
+    }
+
+    /**
+     * Enable or disable detection of signature stripping.
+     * <p>
+     * If enabled, then a response without signatures is probed to find out whether the queried name is within a signed
+     * zone, in which case the response should have carried signatures. If so, the more specific
+     * {@link DnssecUnverifiedReason.SignaturesExpectedButMissingReason} is reported instead of the generic
+     * {@link DnssecUnverifiedReason.NoSignaturesReason}, which indicates possible signature stripping, a downgrade
+     * attack, or a misconfigured authoritative name server.
+     * </p>
+     * <p>
+     * The probe performs an additional DNSKEY query for the queried name's zone, hence this is disabled by default.
+     * Note that it only refines the reported {@link DnssecUnverifiedReason}; a response without signatures is not
+     * authentic data regardless of this setting. The detection is best-effort: it is accurate for names that are a
+     * zone apex, and an on-path attacker able to strip the signatures of the probe response as well is able to evade
+     * it. A complete defense requires authenticated denial of existence of the delegating DS RR, which MiniDNS does
+     * not yet implement.
+     * </p>
+     *
+     * @param detectSignatureStripping whether detection of signature stripping shall be enabled.
+     */
+    public void setDetectSignatureStripping(boolean detectSignatureStripping) {
+        this.detectSignatureStripping = detectSignatureStripping;
     }
 
     /**

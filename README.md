@@ -47,6 +47,15 @@ for (A a : answers) {
 }
 ```
 
+When `isAuthenticData()` returns `false`, `getUnverifiedReasons()` explains why the response could not be authenticated. One of those reasons, a response that carries no signatures, is ambiguous: the queried zone may be unsigned (*insecure*), or it may be signed but had its signatures stripped by an on-path attacker or a misconfigured name server. MiniDNS can tell the two apart on request:
+
+```java
+DnssecClient dnssecClient = DnssecResolverApi.INSTANCE.getDnssecClient();
+dnssecClient.setDetectSignatureStripping(true);
+```
+
+With this enabled, a response from a signed zone that carries no signatures is reported as `DnssecUnverifiedReason.SignaturesExpectedButMissingReason` instead of the generic `NoSignaturesReason`. It is disabled by default because it performs an additional DNSKEY query for each response without signatures. It only refines the reported reason; a response without signatures is never authentic data regardless of this setting.
+
 MiniDNS also provides full support for SRV resource records and their handling.
 
 ```java

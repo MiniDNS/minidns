@@ -170,6 +170,25 @@ public abstract class DnssecUnverifiedReason {
         }
     }
 
+    public static class SignaturesExpectedButMissingReason extends DnssecUnverifiedReason {
+        private final Question question;
+
+        public SignaturesExpectedButMissingReason(Question question) {
+            this.question = question;
+        }
+
+        public Question getQuestion() {
+            return question;
+        }
+
+        @Override
+        public String getReasonString() {
+            return "No signatures were attached to the answer on question for " + question.type + " at "
+                            + question.name + ", although it is within a signed zone. The signatures may have been "
+                            + "stripped, which indicates a downgrade attack or a misconfigured name server";
+        }
+    }
+
     public static class NoActiveSignaturesReason extends DnssecUnverifiedReason {
         private final Question question;
         private final List<RRSIG> outdatedRrSigs;

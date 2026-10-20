@@ -961,6 +961,71 @@ public class DnssecClientTest {
         assertFalse(result.isAuthenticData());
     }
 
+    // The com zone is signed and securely delegated, but the response for its apex A RRset carries no signature, as if
+    // an attacker had stripped it. With detection of signature stripping enabled, this is reported as the specific
+    // SignaturesExpectedButMissingReason.
+    @SuppressWarnings("unchecked")
+    private static DnssecClient constructClientWithSignedComServingUnsignedApexA(boolean detectSignatureStripping) {
+        DnssecClient client = constructDnssecClient();
+        client.setDetectSignatureStripping(detectSignatureStripping);
+        List<Record<? extends Data>> comRecords = merge(
+                sign(comKSK, "com", comPrivateKSK, algorithm,
+                        record("com", comKSK),
+                        record("com", comZSK)));
+        // The signature of the com apex A RRset has been stripped: the A record is present, but its RRSIG is not.
+        comRecords.add(record("com", a("1.2.3.4")));
+        applyZones(client,
+                signedRootZoneDelegatingCom(),
+                zone("com", "ns.com", "1.1.1.1", comRecords)
+        );
+        return client;
+    }
+
+    @Test
+    public void testSignatureStrippingDetectedForSignedZone() throws IOException {
+        DnssecClient client = constructClientWithSignedComServingUnsignedApexA(true);
+        DnssecQueryResult result = client.queryDnssec("com", Record.TYPE.A);
+        assertFalse(result.isAuthenticData());
+        assertTrue(result.getUnverifiedReasons().iterator().next()
+                instanceof DnssecUnverifiedReason.SignaturesExpectedButMissingReason);
+    }
+
+    @Test
+    public void testSignatureStrippingNotDetectedWhenDisabled() throws IOException {
+        DnssecClient client = constructClientWithSignedComServingUnsignedApexA(false);
+        DnssecQueryResult result = client.queryDnssec("com", Record.TYPE.A);
+        assertFalse(result.isAuthenticData());
+        assertTrue(result.getUnverifiedReasons().iterator().next()
+                instanceof DnssecUnverifiedReason.NoSignaturesReason);
+    }
+
+    @SuppressWarnings("unchecked")
+    @Test
+    public void testNoSignaturesForInsecureZoneNotReportedAsStripping() throws IOException {
+        // The com zone is insecurely delegated: the root has no DS RR for it, and the zone is unsigned. A response
+        // without signatures is then expected, so it must be reported as NoSignaturesReason, not as stripping, even
+        // with detection enabled.
+        DnssecClient client = constructDnssecClient();
+        client.setDetectSignatureStripping(true);
+        applyZones(client,
+                signedRootZone(
+                        sign(rootKSK, "", rootPrivateKSK, algorithm,
+                                record("", rootKSK),
+                                record("", rootZSK)),
+                        sign(rootZSK, "", rootPrivateZSK, algorithm,
+                                record("com", ns("ns.com"))),
+                        sign(rootZSK, "", rootPrivateZSK, algorithm,
+                                record("ns.com", a("1.1.1.1")))
+                ), zone("com", "ns.com", "1.1.1.1",
+                        record("example.com", a("1.1.1.2"))
+                )
+        );
+        DnssecQueryResult result = client.queryDnssec("example.com", Record.TYPE.A);
+        assertFalse(result.isAuthenticData());
+        assertTrue(result.getUnverifiedReasons().iterator().next()
+                instanceof DnssecUnverifiedReason.NoSignaturesReason);
+    }
+
     @SuppressWarnings("unchecked")
     private static DnssecClient constructDnssecClientWithComDsRrSet(DS... comDsRrs) {
         DnssecClient client = constructDnssecClient();
