@@ -180,7 +180,19 @@ public class DnssecClient extends ReliableDnsClient {
             return result;
         }
 
-        // Keep SEPs separated, we only need one valid SEP.
+        // A DNSKEY RRset owned by the queried name is authenticated only through a secure entry point (SEP), i.e., a
+        // key of the RRset that validly signs the RRset and that is a trust anchor or is referred to by a DS RR in the
+        // parent zone (RFC 4035 § 5.2). It is never authenticated by a signature from another zone. Hence, if the
+        // answer carries such a DNSKEY RRset, a SEP has to be found below, or the answer is not authentic.
+        boolean dnskeyRrsetRequiresSep = false;
+        for (Record<? extends Data> record : answers) {
+            if (record.type == TYPE.DNSKEY && record.name.equals(q.name)) {
+                dnskeyRrsetRequiresSep = true;
+                break;
+            }
+        }
+
+        // We only need one valid SEP.
         boolean sepSignatureValid = false;
         Set<DnssecUnverifiedReason> sepReasons = new HashSet<>();
         Set<DNSKEY> selfSigningKeys = verifiedSignatures.selfSigningKeys;
@@ -207,11 +219,14 @@ public class DnssecClient extends ReliableDnsClient {
             }
         }
 
-        if (!sepSignatureValid) {
-            result.addAll(sepReasons);
-        }
-        if (verifiedSignatures.sepSignatureRequired && selfSigningKeys.isEmpty()) {
-            result.add(new NoSecureEntryPointReason(q.name));
+        if (dnskeyRrsetRequiresSep && !sepSignatureValid) {
+            if (sepReasons.isEmpty()) {
+                // The DNSKEY RRset is not validly signed by any DNSKEY that is a secure entry point, for example
+                // because it is only signed by a key from another zone.
+                result.add(new NoSecureEntryPointReason(q.name));
+            } else {
+                result.addAll(sepReasons);
+            }
         }
         removeDnameSynthesizedCnames(answers, toBeVerified);
         if (!toBeVerified.isEmpty()) {
@@ -346,7 +361,6 @@ public class DnssecClient extends ReliableDnsClient {
     }
 
     private static final class VerifySignaturesResult {
-        boolean sepSignatureRequired = false;
         /**
          * The DNSKEYs of the queried name that validly sign the DNSKEY RRset. If empty, then the DNSKEY RRset has no
          * valid self-signature.
@@ -473,11 +487,6 @@ public class DnssecClient extends ReliableDnsClient {
                 // Continue verifying the remaining RRSIGs, as we need to know all DNSKEYs that validly sign the
                 // DNSKEY RRset in order to find the one that is a secure entry point.
                 result.selfSigningKeys.add(verifySignedRecordsResult.signingKey);
-            }
-
-            if (rrSetSelfSigned) {
-                // DNSKEY's should be signed by a SEP
-                result.sepSignatureRequired = true;
             }
 
             if (!rrSetVerified) {
