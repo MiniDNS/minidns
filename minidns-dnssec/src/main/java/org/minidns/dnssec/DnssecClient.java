@@ -465,7 +465,7 @@ public class DnssecClient extends ReliableDnsClient {
             for (Record<RRSIG> sigRecord : rrSetRrsigs) {
                 RRSIG rrsig = sigRecord.payloadData;
 
-                if (!isParentOrSelf(sigRecord.name.ace, rrsig.signerName.ace)) {
+                if (!sigRecord.name.isChildOf(rrsig.signerName)) {
                     LOGGER.finer("Records at " + sigRecord.name + " are cross-signed with a key from " + rrsig.signerName);
                     if (rrsig.typeCovered == TYPE.DNSKEY && sigRecord.name.equals(q.name)) {
                         result.dnskeyRrsetCrossSigners.add(rrsig.signerName);
@@ -518,20 +518,6 @@ public class DnssecClient extends ReliableDnsClient {
             toBeVerified.removeAll(records);
         }
         return result;
-    }
-
-    private static boolean isParentOrSelf(String child, String parent) {
-        if (child.equals(parent)) return true;
-        if (parent.isEmpty()) return true;
-        String[] childSplit = child.split("\\.");
-        String[] parentSplit = parent.split("\\.");
-        if (parentSplit.length > childSplit.length) return false;
-        for (int i = 1; i <= parentSplit.length; i++) {
-            if (!parentSplit[parentSplit.length - i].equals(childSplit[childSplit.length - i])) {
-                return false;
-            }
-        }
-        return true;
     }
 
     private static final class VerifySignedRecordsResult {
