@@ -209,6 +209,24 @@ public abstract class DnssecUnverifiedReason {
         }
     }
 
+    public static class NoDenialOfExistenceReason extends DnssecUnverifiedReason {
+        private final Question question;
+
+        public NoDenialOfExistenceReason(Question question) {
+            this.question = question;
+        }
+
+        public Question getQuestion() {
+            return question;
+        }
+
+        @Override
+        public String getReasonString() {
+            return "The negative response on the question for " + question.type + " at " + question.name
+                            + " contains no NSEC or NSEC3 record proving the denial of existence";
+        }
+    }
+
     public static class NSECDoesNotMatchReason extends DnssecUnverifiedReason {
         private final Question question;
         private final Record<? extends Data> record;

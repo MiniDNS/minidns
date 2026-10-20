@@ -591,6 +591,47 @@ public class DnssecClientTest {
         assertTrue(message.authenticData);
     }
 
+    @SuppressWarnings("unchecked")
+    @Test
+    public void testNegativeAnswerWithoutNsecIsNotAuthentic() throws Exception {
+        DnssecClient client = constructDnssecClient();
+        DnsWorld world = applyZones(client,
+                signedRootZone(
+                        sign(rootKSK, "", rootPrivateKSK, algorithm,
+                                record("", rootKSK),
+                                record("", rootZSK)),
+                        sign(rootZSK, "", rootPrivateZSK, algorithm,
+                                record("com", ds("com", digestType, comKSK))),
+                        sign(rootZSK, "", rootPrivateZSK, algorithm,
+                                record("com", ns("ns.com"))),
+                        sign(rootZSK, "", rootPrivateZSK, algorithm,
+                                record("ns.com", a("1.1.1.1")))
+                ), signedZone("com", "ns.com", "1.1.1.1",
+                        sign(comKSK, "com", comPrivateKSK, algorithm,
+                                record("com", comKSK),
+                                record("com", comZSK))
+                )
+        );
+        // A negative response that carries only a validly signed SOA, but no NSEC records, as if an attacker had
+        // replayed the zone's signed SOA RR while stripping the NSEC records, must not be authentic.
+        DnsMessage request = DnsMessage.builder()
+                .setQuestion(new Question("nsec.example.com", Record.TYPE.A))
+                .build();
+        DnsMessage response = DnsMessage.builder()
+                .setNameserverRecords(DnssecWorld.merge(
+                        sign(comZSK, "com", comPrivateZSK, algorithm,
+                                record("example.com", soa("sns.dns.icann.org", "noc.dns.icann.org", 2015081265, 7200, 3600, 1209600, 3600)))))
+                .setAuthoritativeAnswer(true)
+                .build();
+        world.addPreparedResponse(new AddressedAnswerResponse(
+                InetAddress.getByAddress("ns.com", new byte[] {1, 1, 1, 1}), request, response));
+
+        DnssecQueryResult result = client.queryDnssec("nsec.example.com", Record.TYPE.A);
+        assertFalse(result.isAuthenticData());
+        assertTrue(result.getUnverifiedReasons().iterator().next()
+                instanceof DnssecUnverifiedReason.NoDenialOfExistenceReason);
+    }
+
     /**
      * Zone 'com.' has no DS in the root zone. Hence, in order to verify the results of RRs under 'com.' a DLV has to
      * been used.
