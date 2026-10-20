@@ -10,8 +10,10 @@
  */
 package org.minidns.dnssec;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 
 import org.minidns.constants.DnssecConstants.DigestAlgorithm;
 import org.minidns.dnsmessage.Question;
@@ -125,6 +127,36 @@ public abstract class DnssecUnverifiedReason {
         }
     }
 
+    public static class CrossSignedDnskeyRrsetReason extends DnssecUnverifiedReason {
+        private final DnsName zone;
+        private final Set<DnsName> signerNames;
+
+        public CrossSignedDnskeyRrsetReason(DnsName zone, Set<DnsName> signerNames) {
+            this.zone = zone;
+            this.signerNames = Collections.unmodifiableSet(signerNames);
+        }
+
+        /**
+         * The names of the zones whose keys signed the DNSKEY RRset instead of a key of the zone itself.
+         *
+         * @return the cross-signing zones.
+         */
+        public Set<DnsName> getSignerNames() {
+            return signerNames;
+        }
+
+        @Override
+        public String getReasonString() {
+            List<String> sortedSignerNames = new ArrayList<>(signerNames.size());
+            for (DnsName signerName : signerNames) {
+                sortedSignerNames.add(signerName.toString());
+            }
+            Collections.sort(sortedSignerNames);
+            return "The DNSKEY RRset of zone " + zone + " is not self-signed and hence can not be anchored. It is only "
+                            + "signed by a key of the following zone(s): " + sortedSignerNames;
+        }
+    }
+
     public static class NoSignaturesReason extends DnssecUnverifiedReason {
         private final Question question;
 
@@ -135,6 +167,25 @@ public abstract class DnssecUnverifiedReason {
         @Override
         public String getReasonString() {
             return "No signatures were attached to answer on question for " + question.type + " at " + question.name;
+        }
+    }
+
+    public static class SignaturesExpectedButMissingReason extends DnssecUnverifiedReason {
+        private final Question question;
+
+        public SignaturesExpectedButMissingReason(Question question) {
+            this.question = question;
+        }
+
+        public Question getQuestion() {
+            return question;
+        }
+
+        @Override
+        public String getReasonString() {
+            return "No signatures were attached to the answer on question for " + question.type + " at "
+                            + question.name + ", although it is within a signed zone. The signatures may have been "
+                            + "stripped, which indicates a downgrade attack or a misconfigured name server";
         }
     }
 
