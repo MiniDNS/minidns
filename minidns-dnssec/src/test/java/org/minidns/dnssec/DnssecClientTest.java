@@ -12,6 +12,7 @@ package org.minidns.dnssec;
 
 import org.minidns.DnsWorld;
 import org.minidns.DnsWorld.AddressedAnswerResponse;
+import org.minidns.DnsWorld.Zone;
 import org.minidns.cache.LruCache;
 import org.minidns.constants.DnssecConstants.DigestAlgorithm;
 import org.minidns.constants.DnssecConstants.SignatureAlgorithm;
@@ -26,6 +27,7 @@ import org.minidns.record.A;
 import org.minidns.record.CNAME;
 import org.minidns.record.DNAME;
 import org.minidns.record.DNSKEY;
+import org.minidns.record.DS;
 import org.minidns.record.Data;
 import org.minidns.record.RRSIG;
 import org.minidns.record.Record;
@@ -36,6 +38,7 @@ import java.io.IOException;
 import java.lang.reflect.Field;
 import java.net.InetAddress;
 import java.security.PrivateKey;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
@@ -53,6 +56,7 @@ import static org.minidns.DnsWorld.rrsig;
 import static org.minidns.DnsWorld.soa;
 import static org.minidns.DnsWorld.zone;
 import static org.minidns.dnssec.DnssecWorld.addNsec;
+import static org.minidns.dnssec.DnssecWorld.calculateDsDigest;
 import static org.minidns.dnssec.DnssecWorld.dlv;
 import static org.minidns.dnssec.DnssecWorld.ds;
 import static org.minidns.dnssec.DnssecWorld.merge;
@@ -757,5 +761,239 @@ public class DnssecClientTest {
                 sign("com",
                         record("www.new.example.com", a("1.1.1.2")))
         ));
+    }
+
+    @SuppressWarnings("unchecked")
+    private static Zone signedRootZoneDelegatingCom() {
+        return signedRootZone(
+                sign(rootKSK, "", rootPrivateKSK, algorithm,
+                        record("", rootKSK),
+                        record("", rootZSK)),
+                sign(rootZSK, "", rootPrivateZSK, algorithm,
+                        record("com", ds("com", digestType, comKSK))),
+                sign(rootZSK, "", rootPrivateZSK, algorithm,
+                        record("com", ns("ns.com"))),
+                sign(rootZSK, "", rootPrivateZSK, algorithm,
+                        record("ns.com", a("1.1.1.1")))
+        );
+    }
+
+    private static final PrivateKey ROGUE_PRIVATE_KEY = DnssecWorld.generatePrivateKey(algorithm, 1024);
+    private static final DNSKEY ROGUE_KEY = dnskey(DNSKEY.FLAG_ZONE | DNSKEY.FLAG_SECURE_ENTRY_POINT, algorithm, publicKey(algorithm, ROGUE_PRIVATE_KEY));
+
+    /**
+     * Create an RRSIG RR that claims to be made by comZSK, but which is made with a different private key, and hence is
+     * invalid.
+     *
+     * @param record the record to sign.
+     * @return the invalid RRSIG RR.
+     */
+    @SuppressWarnings("unchecked")
+    private static Record<RRSIG> invalidComZskRrsig(Record<? extends Data> record) {
+        return rrsigRecord(comZSK, "com", ROGUE_PRIVATE_KEY, algorithm, record);
+    }
+
+    @SuppressWarnings("unchecked")
+    private static DnssecClient constructDnssecClientWithComZone(List<Record<? extends Data>> comZoneRecords) {
+        DnssecClient client = constructDnssecClient();
+        List<Record<? extends Data>> records = merge(
+                sign(comKSK, "com", comPrivateKSK, algorithm,
+                        record("com", comKSK),
+                        record("com", comZSK)));
+        records.addAll(comZoneRecords);
+        applyZones(client,
+                signedRootZoneDelegatingCom(),
+                zone("com", "ns.com", "1.1.1.1", records)
+        );
+        return client;
+    }
+
+    @Test
+    public void testOneOfMultipleRrsigsInvalid() throws IOException {
+        Record<A> example = record("example.com", a("1.1.1.2"));
+        DnssecClient client = constructDnssecClientWithComZone(Arrays.asList(
+                example,
+                invalidComZskRrsig(example),
+                rrsigRecord(comZSK, "com", comPrivateZSK, algorithm, example)));
+        DnssecQueryResult result = client.queryDnssec("example.com", Record.TYPE.A);
+        assertTrue(result.isAuthenticData());
+        checkCorrectExampleMessage(result.synthesizedResponse);
+    }
+
+    @Test
+    public void testRrsigWithUnknownKeyAlongsideValidRrsig() throws IOException {
+        Record<A> example = record("example.com", a("1.1.1.2"));
+        DnssecClient client = constructDnssecClientWithComZone(Arrays.asList(
+                example,
+                rrsigRecord(ROGUE_KEY, "com", ROGUE_PRIVATE_KEY, algorithm, example),
+                rrsigRecord(comZSK, "com", comPrivateZSK, algorithm, example)));
+        DnssecQueryResult result = client.queryDnssec("example.com", Record.TYPE.A);
+        assertTrue(result.isAuthenticData());
+        checkCorrectExampleMessage(result.synthesizedResponse);
+    }
+
+    @Test
+    public void testAllRrsigsInvalid() throws IOException {
+        Record<A> example = record("example.com", a("1.1.1.2"));
+        DnssecClient client = constructDnssecClientWithComZone(Arrays.asList(
+                example,
+                invalidComZskRrsig(example),
+                rrsigRecord(ROGUE_KEY, "com", ROGUE_PRIVATE_KEY, algorithm, example)));
+        assertThrows(DnssecValidationFailedException.class, () ->
+            client.query("example.com", Record.TYPE.A)
+        );
+    }
+
+    @SuppressWarnings("unchecked")
+    @Test
+    public void testDnskeyRrsetSignedByDelegatedAndRogueKey() throws IOException {
+        DnssecClient client = constructDnssecClient();
+        Record<DNSKEY> comKskRecord = record("com", comKSK);
+        Record<DNSKEY> comZskRecord = record("com", comZSK);
+        Record<DNSKEY> rogueKeyRecord = record("com", ROGUE_KEY);
+        List<Record<? extends Data>> records = merge(
+                sign(comZSK, "com", comPrivateZSK, algorithm,
+                        record("example.com", a("1.1.1.2"))));
+        records.addAll(Arrays.asList(
+                comKskRecord,
+                comZskRecord,
+                rogueKeyRecord,
+                rrsigRecord(ROGUE_KEY, "com", ROGUE_PRIVATE_KEY, algorithm, comKskRecord, comZskRecord, rogueKeyRecord),
+                rrsigRecord(comKSK, "com", comPrivateKSK, algorithm, comKskRecord, comZskRecord, rogueKeyRecord)));
+        applyZones(client,
+                signedRootZoneDelegatingCom(),
+                zone("com", "ns.com", "1.1.1.1", records)
+        );
+        DnssecQueryResult result = client.queryDnssec("example.com", Record.TYPE.A);
+        assertTrue(result.isAuthenticData());
+        checkCorrectExampleMessage(result.synthesizedResponse);
+    }
+
+    @SuppressWarnings("unchecked")
+    @Test
+    public void testDnskeyRrsetSignedOnlyByKeyWithoutDelegation() throws IOException {
+        DnssecClient client = constructDnssecClient();
+        // The DNSKEY RRset contains comKSK, which the DS RR at the parent refers to. But the RRset is only signed by a
+        // key that has no delegation, hence there is no chain of trust to the RRset.
+        applyZones(client,
+                signedRootZoneDelegatingCom(),
+                zone("com", "ns.com", "1.1.1.1", merge(
+                        sign(ROGUE_KEY, "com", ROGUE_PRIVATE_KEY, algorithm,
+                                record("com", comKSK),
+                                record("com", comZSK),
+                                record("com", ROGUE_KEY)),
+                        sign(comZSK, "com", comPrivateZSK, algorithm,
+                                record("example.com", a("1.1.1.2")))
+                ))
+        );
+        DnssecQueryResult result = client.queryDnssec("example.com", Record.TYPE.A);
+        assertFalse(result.isAuthenticData());
+    }
+
+    @SuppressWarnings("unchecked")
+    private static DnssecClient constructDnssecClientWithComDsRrSet(DS... comDsRrs) {
+        DnssecClient client = constructDnssecClient();
+        List<Record<? extends Data>> comDsRecords = new ArrayList<>(comDsRrs.length);
+        for (DS ds : comDsRrs) {
+            comDsRecords.add(record("com", ds));
+        }
+        applyZones(client,
+                signedRootZone(
+                        sign(rootKSK, "", rootPrivateKSK, algorithm,
+                                record("", rootKSK),
+                                record("", rootZSK)),
+                        sign(rootZSK, "", rootPrivateZSK, algorithm,
+                                comDsRecords.toArray(new Record<?>[0])),
+                        sign(rootZSK, "", rootPrivateZSK, algorithm,
+                                record("com", ns("ns.com"))),
+                        sign(rootZSK, "", rootPrivateZSK, algorithm,
+                                record("ns.com", a("1.1.1.1")))
+                ), signedZone("com", "ns.com", "1.1.1.1",
+                        sign(comKSK, "com", comPrivateKSK, algorithm,
+                                record("com", comKSK),
+                                record("com", comZSK)),
+                        sign(comZSK, "com", comPrivateZSK, algorithm,
+                                record("example.com", a("1.1.1.2")))
+                )
+        );
+        return client;
+    }
+
+    @Test
+    public void testUnknownDelegationDigestTypeAlongsideValidDs() throws IOException {
+        DnssecClient client = constructDnssecClientWithComDsRrSet(
+                ds(comKSK.getKeyTag(), algorithm, (byte) 213, new byte[0]),
+                ds("com", DigestAlgorithm.SHA256, comKSK));
+        DnssecQueryResult result = client.queryDnssec("example.com", Record.TYPE.A);
+        assertTrue(result.isAuthenticData());
+        checkCorrectExampleMessage(result.synthesizedResponse);
+    }
+
+    @Test
+    public void testDsKeyTagCollision() throws IOException {
+        // The first DS RR has the same key tag and algorithm as comKSK, but refers to a different key.
+        DnssecClient client = constructDnssecClientWithComDsRrSet(
+                ds(comKSK.getKeyTag(), algorithm, DigestAlgorithm.SHA256,
+                        calculateDsDigest(DnsName.from("com"), DigestAlgorithm.SHA256, comZSK)),
+                ds("com", DigestAlgorithm.SHA256, comKSK));
+        DnssecQueryResult result = client.queryDnssec("example.com", Record.TYPE.A);
+        assertTrue(result.isAuthenticData());
+        checkCorrectExampleMessage(result.synthesizedResponse);
+    }
+
+    @Test
+    public void testDsAlgorithmMismatch() throws IOException {
+        DnssecClient client = constructDnssecClientWithComDsRrSet(
+                ds(comKSK.getKeyTag(), SignatureAlgorithm.RSASHA1, DigestAlgorithm.SHA256,
+                        calculateDsDigest(DnsName.from("com"), DigestAlgorithm.SHA256, comKSK)));
+        DnssecQueryResult result = client.queryDnssec("example.com", Record.TYPE.A);
+        assertFalse(result.isAuthenticData());
+    }
+
+    @Test
+    public void testSha1DsIgnoredIfSha256DsPresent() {
+        // The SHA-1 DS RR is valid, but the SHA-256 one is not. Since SHA-1 DS RRs have to be ignored if there is a
+        // SHA-256 DS RR, the validation must fail.
+        DnssecClient client = constructDnssecClientWithComDsRrSet(
+                ds("com", DigestAlgorithm.SHA1, comKSK),
+                ds(comKSK.getKeyTag(), algorithm, DigestAlgorithm.SHA256,
+                        calculateDsDigest(DnsName.from("com"), DigestAlgorithm.SHA256, comZSK)));
+        assertThrows(DnssecValidationFailedException.class, () ->
+            client.queryDnssec("example.com", Record.TYPE.A)
+        );
+    }
+
+    @SuppressWarnings("unchecked")
+    private static DnssecQueryResult queryWithRootSecureEntryPoints(DNSKEY... rootSeps) throws IOException {
+        DnssecClient client = constructDnssecClient();
+        client.clearSecureEntryPoints();
+        for (DNSKEY rootSep : rootSeps) {
+            client.addSecureEntryPoint(DnsName.ROOT, rootSep.getKey());
+        }
+        applyZones(client,
+                signedRootZoneDelegatingCom(),
+                signedZone("com", "ns.com", "1.1.1.1",
+                        sign(comKSK, "com", comPrivateKSK, algorithm,
+                                record("com", comKSK),
+                                record("com", comZSK)),
+                        sign(comZSK, "com", comPrivateZSK, algorithm,
+                                record("example.com", a("1.1.1.2")))
+                )
+        );
+        return client.queryDnssec("example.com", Record.TYPE.A);
+    }
+
+    @Test
+    public void testMultipleRootSecureEntryPoints() throws IOException {
+        DnssecQueryResult result = queryWithRootSecureEntryPoints(ROGUE_KEY, rootKSK);
+        assertTrue(result.isAuthenticData());
+        checkCorrectExampleMessage(result.synthesizedResponse);
+    }
+
+    @Test
+    public void testRootSecureEntryPointDoesNotSignDnskeyRrSet() throws IOException {
+        DnssecQueryResult result = queryWithRootSecureEntryPoints(ROGUE_KEY);
+        assertFalse(result.isAuthenticData());
+        assertTrue(result.getUnverifiedReasons().iterator().next() instanceof DnssecUnverifiedReason.ConflictsWithSep);
     }
 }

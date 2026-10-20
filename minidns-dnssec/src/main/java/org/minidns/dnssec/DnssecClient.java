@@ -11,6 +11,7 @@
 package org.minidns.dnssec;
 
 import org.minidns.DnsCache;
+import org.minidns.constants.DnssecConstants.DigestAlgorithm;
 import org.minidns.dnsmessage.DnsMessage;
 import org.minidns.dnsmessage.Question;
 import org.minidns.dnsname.DnsName;
@@ -21,6 +22,7 @@ import org.minidns.dnssec.DnssecUnverifiedReason.NoSecureEntryPointReason;
 import org.minidns.dnssec.DnssecUnverifiedReason.NoSignaturesReason;
 import org.minidns.dnssec.DnssecUnverifiedReason.NoTrustAnchorReason;
 import org.minidns.dnssec.DnssecValidationFailedException.AuthorityDoesNotContainSoa;
+import org.minidns.dnssec.algorithms.AlgorithmMap;
 import org.minidns.iterative.ReliableDnsClient;
 import org.minidns.record.CNAME;
 import org.minidns.record.DLV;
@@ -40,21 +42,34 @@ import java.io.IOException;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 public class DnssecClient extends ReliableDnsClient {
 
     /**
-     * The root zone's KSK.
-     * The ID of the current key is "Klajeyz", and the key tag value is "20326".
+     * The root zone's KSK-2017, whose ID is "Klajeyz" and whose key tag value is "20326".
+     *
+     * @see <a href="https://data.iana.org/root-anchors/root-anchors.xml">IANA root zone trust anchors</a>
      */
-    private static final BigInteger rootEntryKey = new BigInteger("1628686155461064465348252249725010996177649738666492500572664444461532807739744536029771810659241049343994038053541290419968870563183856865780916376571550372513476957870843322273120879361960335192976656756972171258658400305760429696147778001233984421619267530978084631948434496468785021389956803104620471232008587410372348519229650742022804219634190734272506220018657920136902014393834092648785514548876370028925405557661759399901378816916683122474038734912535425670533237815676134840739565610963796427401855723026687073600445461090736240030247906095053875491225879656640052743394090544036297390104110989318819106653199917493");
+    private static final BigInteger ROOT_KSK_2017 = new BigInteger("1628686155461064465348252249725010996177649738666492500572664444461532807739744536029771810659241049343994038053541290419968870563183856865780916376571550372513476957870843322273120879361960335192976656756972171258658400305760429696147778001233984421619267530978084631948434496468785021389956803104620471232008587410372348519229650742022804219634190734272506220018657920136902014393834092648785514548876370028925405557661759399901378816916683122474038734912535425670533237815676134840739565610963796427401855723026687073600445461090736240030247906095053875491225879656640052743394090544036297390104110989318819106653199917493");
+
+    /**
+     * The root zone's KSK-2024, whose ID is "Kmyv6jo" and whose key tag value is "38696". The root zone's DNSKEY RRset
+     * is signed with this key since 2026-10-11.
+     *
+     * @see <a href="https://data.iana.org/root-anchors/root-anchors.xml">IANA root zone trust anchors</a>
+     */
+    private static final BigInteger ROOT_KSK_2024 = new BigInteger("1628686155774121212168081024680239155604420268691380415887810174716442156063993152758837847983942799877886941977560662680203835048611462974430324555256015052877501366226310539062711393346584350551693842362076723827358391786883611293998126527175865775276768514791204165196787699241676676814251122639194103258915247638509608611180547418668353298742571235995455990809680031413088313234415379381686894805351607921243348741522050630785576836709808997878870113887781468394260370502860846217704015926043569970756428556654452203219129363526322839180253672785807974524503640093519709242302125704407718029753636688205844737179386330503");
 
     private static final DnsName DEFAULT_DLV = DnsName.from("dlv.isc.org");
 
@@ -72,13 +87,14 @@ public class DnssecClient extends ReliableDnsClient {
      */
     public DnssecClient(DnsCache cache) {
         super(cache);
-        addSecureEntryPoint(DnsName.ROOT, rootEntryKey.toByteArray());
+        addSecureEntryPoint(DnsName.ROOT, ROOT_KSK_2017.toByteArray());
+        addSecureEntryPoint(DnsName.ROOT, ROOT_KSK_2024.toByteArray());
     }
 
     /**
      * Known secure entry points (SEPs).
      */
-    private final Map<DnsName, byte[]> knownSeps = new ConcurrentHashMap<>();
+    private final ConcurrentMap<DnsName, List<byte[]>> knownSeps = new ConcurrentHashMap<>();
 
     private boolean stripSignatureRecords = true;
 
@@ -172,6 +188,12 @@ public class DnssecClient extends ReliableDnsClient {
             if (record == null) {
                 continue;
             }
+            iterator.remove();
+
+            // Only a DNSKEY that validly signs the DNSKEY RRset can establish the chain of trust to the RRset.
+            if (verifiedSignatures.sepSignaturePresent && !verifiedSignatures.selfSigningKeys.contains(record.payloadData)) {
+                continue;
+            }
 
             // Verify all DNSKEYs as if it was a SEP. If we find a single SEP we are safe.
             Set<DnssecUnverifiedReason> reasons = verifySecureEntryPoint(record);
@@ -183,7 +205,6 @@ public class DnssecClient extends ReliableDnsClient {
             if (!verifiedSignatures.sepSignaturePresent) {
                 LOGGER.finer("SEP key is not self-signed.");
             }
-            iterator.remove();
         }
 
         if (verifiedSignatures.sepSignaturePresent && !sepSignatureValid) {
@@ -327,7 +348,34 @@ public class DnssecClient extends ReliableDnsClient {
     private static final class VerifySignaturesResult {
         boolean sepSignatureRequired = false;
         boolean sepSignaturePresent = false;
+        /**
+         * The DNSKEYs of the queried name that validly sign the DNSKEY RRset.
+         */
+        Set<DNSKEY> selfSigningKeys = new HashSet<>();
         Set<DnssecUnverifiedReason> reasons = new HashSet<>();
+    }
+
+    private static final class RrSetId {
+        final DnsName name;
+        final int typeCoveredValue;
+
+        RrSetId(DnsName name, int typeCoveredValue) {
+            this.name = name;
+            this.typeCoveredValue = typeCoveredValue;
+        }
+
+        @Override
+        public boolean equals(Object other) {
+            if (this == other) return true;
+            if (!(other instanceof RrSetId)) return false;
+            RrSetId otherRrSetId = (RrSetId) other;
+            return typeCoveredValue == otherRrSetId.typeCoveredValue && name.equals(otherRrSetId.name);
+        }
+
+        @Override
+        public int hashCode() {
+            return 37 * name.hashCode() + typeCoveredValue;
+        }
     }
 
     @SuppressWarnings("JavaUtilDate")
@@ -361,40 +409,94 @@ public class DnssecClient extends ReliableDnsClient {
             return result;
         }
 
+        // Group the RRSIGs by the RRset they cover, i.e., by owner name and covered type.
+        Map<RrSetId, List<Record<RRSIG>>> rrsigsByRrSet = new LinkedHashMap<>();
         for (Record<RRSIG> sigRecord : rrsigs) {
-            RRSIG rrsig = sigRecord.payloadData;
+            RrSetId rrSetId = new RrSetId(sigRecord.name, sigRecord.payloadData.typeCoveredValue);
+            List<Record<RRSIG>> rrSetRrsigs = rrsigsByRrSet.get(rrSetId);
+            if (rrSetRrsigs == null) {
+                rrSetRrsigs = new ArrayList<>();
+                rrsigsByRrSet.put(rrSetId, rrSetRrsigs);
+            }
+            rrSetRrsigs.add(sigRecord);
+        }
+
+        for (Map.Entry<RrSetId, List<Record<RRSIG>>> entry : rrsigsByRrSet.entrySet()) {
+            RrSetId rrSetId = entry.getKey();
+            List<Record<RRSIG>> rrSetRrsigs = entry.getValue();
+            toBeVerified.removeAll(rrSetRrsigs);
 
             List<Record<? extends Data>> records = new ArrayList<>(reference.size());
             for (Record<? extends Data> record : reference) {
-                if (record.typeValue == rrsig.typeCoveredValue && record.name.equals(sigRecord.name)) {
+                if (record.typeValue == rrSetId.typeCoveredValue && record.name.equals(rrSetId.name)) {
                     records.add(record);
                 }
             }
 
-            Set<DnssecUnverifiedReason> reasons = verifySignedRecords(q, rrsig, records);
-            result.reasons.addAll(reasons);
+            // An RRset is verified if at least one of its RRSIGs is valid (RFC 4035 § 5.3.3, RFC 6840 § 5.11). For
+            // example, during a key or algorithm rollover, the RRset may also carry RRSIGs that we are unable to
+            // verify.
+            boolean rrSetVerified = false;
+            boolean rrSetSelfSigned = false;
+            Set<DnssecUnverifiedReason> rrSetReasons = new HashSet<>();
+            DnssecValidationFailedException validationFailedException = null;
+            for (Record<RRSIG> sigRecord : rrSetRrsigs) {
+                RRSIG rrsig = sigRecord.payloadData;
 
-            if (q.name.equals(rrsig.signerName) && rrsig.typeCovered == TYPE.DNSKEY) {
-                for (Iterator<Record<? extends Data>> iterator = records.iterator(); iterator.hasNext(); ) {
-                    Record<DNSKEY> dnsKeyRecord = iterator.next().ifPossibleAs(DNSKEY.class);
-                    // dnsKeyRecord should never be null here.
-                    DNSKEY dnskey = dnsKeyRecord.payloadData;
-                    // DNSKEYs are verified separately, so don't mark them verified now.
-                    iterator.remove();
-                    if (dnskey.getKeyTag() == rrsig.keyTag) {
-                        result.sepSignaturePresent = true;
-                    }
+                if (!isParentOrSelf(sigRecord.name.ace, rrsig.signerName.ace)) {
+                    LOGGER.finer("Records at " + sigRecord.name + " are cross-signed with a key from " + rrsig.signerName);
+                    continue;
                 }
+
+                boolean selfSignedDnskeys = q.name.equals(rrsig.signerName) && rrsig.typeCovered == TYPE.DNSKEY;
+                rrSetSelfSigned |= selfSignedDnskeys;
+
+                VerifySignedRecordsResult verifySignedRecordsResult;
+                try {
+                    verifySignedRecordsResult = verifySignedRecords(q, rrsig, records);
+                } catch (DnssecValidationFailedException e) {
+                    if (validationFailedException == null) {
+                        validationFailedException = e;
+                    }
+                    continue;
+                }
+
+                if (!verifySignedRecordsResult.reasons.isEmpty()) {
+                    rrSetReasons.addAll(verifySignedRecordsResult.reasons);
+                    continue;
+                }
+
+                rrSetVerified = true;
+                if (!selfSignedDnskeys) {
+                    break;
+                }
+                // Continue verifying the remaining RRSIGs, as we need to know all DNSKEYs that validly sign the
+                // DNSKEY RRset in order to find the one that is a secure entry point.
+                result.sepSignaturePresent = true;
+                result.selfSigningKeys.add(verifySignedRecordsResult.signingKey);
+            }
+
+            if (rrSetSelfSigned) {
                 // DNSKEY's should be signed by a SEP
                 result.sepSignatureRequired = true;
             }
 
-            if (!isParentOrSelf(sigRecord.name.ace, rrsig.signerName.ace)) {
-                LOGGER.finer("Records at " + sigRecord.name + " are cross-signed with a key from " + rrsig.signerName);
-            } else {
-                toBeVerified.removeAll(records);
+            if (!rrSetVerified) {
+                if (validationFailedException != null) {
+                    throw validationFailedException;
+                }
+                if (rrSetReasons.isEmpty()) {
+                    // All RRSIGs of this RRset are cross-signed, hence the records remain to be verified.
+                    continue;
+                }
+                result.reasons.addAll(rrSetReasons);
             }
-            toBeVerified.remove(sigRecord);
+
+            if (rrSetSelfSigned) {
+                // DNSKEYs are verified separately, so don't mark them verified now.
+                continue;
+            }
+            toBeVerified.removeAll(records);
         }
         return result;
     }
@@ -413,44 +515,50 @@ public class DnssecClient extends ReliableDnsClient {
         return true;
     }
 
-    private Set<DnssecUnverifiedReason> verifySignedRecords(Question q, RRSIG rrsig, List<Record<? extends Data>> records) throws IOException {
-        Set<DnssecUnverifiedReason> result = new HashSet<>();
-        DNSKEY dnskey = null;
+    private static final class VerifySignedRecordsResult {
+        final Set<DnssecUnverifiedReason> reasons = new HashSet<>();
+        DNSKEY signingKey;
+    }
+
+    private VerifySignedRecordsResult verifySignedRecords(Question q, RRSIG rrsig, List<Record<? extends Data>> records) throws IOException {
+        VerifySignedRecordsResult result = new VerifySignedRecordsResult();
+        List<Record<DNSKEY>> dnskeyRrs;
 
         if (rrsig.typeCovered == TYPE.DNSKEY) {
             // Key must be present
-            List<Record<DNSKEY>> dnskeyRrs = Record.filter(DNSKEY.class, records);
-            for (Record<DNSKEY> dnsKeyRecord : dnskeyRrs) {
-                if (dnsKeyRecord.payloadData.getKeyTag() == rrsig.keyTag) {
-                    dnskey = dnsKeyRecord.payloadData;
-                    break;
-                }
-            }
+            dnskeyRrs = Record.filter(DNSKEY.class, records);
         } else if (q.type == TYPE.DS && rrsig.signerName.equals(q.name)) {
             // We should not probe for the self signed DS negative response, as it will be an endless loop.
-            result.add(new NoTrustAnchorReason(q.name));
+            result.reasons.add(new NoTrustAnchorReason(q.name));
             return result;
         } else {
             DnssecQueryResult dnskeyRes = queryDnssec(rrsig.signerName, TYPE.DNSKEY);
-            result.addAll(dnskeyRes.getUnverifiedReasons());
-            List<Record<DNSKEY>> dnskeyRrs = dnskeyRes.dnsQueryResult.response.filterAnswerSectionBy(DNSKEY.class);
-            for (Record<DNSKEY> dnsKeyRecord : dnskeyRrs) {
-                if (dnsKeyRecord.payloadData.getKeyTag() == rrsig.keyTag) {
-                    dnskey = dnsKeyRecord.payloadData;
-                    break;
-                }
+            result.reasons.addAll(dnskeyRes.getUnverifiedReasons());
+            dnskeyRrs = dnskeyRes.dnsQueryResult.response.filterAnswerSectionBy(DNSKEY.class);
+        }
+
+        // Key tags are not unique, hence try every DNSKEY with a matching key tag (RFC 4034 § 5.3.1).
+        boolean keyFound = false;
+        DnssecUnverifiedReason unverifiedReason = null;
+        for (Record<DNSKEY> dnsKeyRecord : dnskeyRrs) {
+            DNSKEY dnskey = dnsKeyRecord.payloadData;
+            if (dnskey.getKeyTag() != rrsig.keyTag) {
+                continue;
+            }
+            keyFound = true;
+
+            unverifiedReason = Verifier.verify(records, rrsig, dnskey);
+            if (unverifiedReason == null) {
+                result.signingKey = dnskey;
+                return result;
             }
         }
 
-        if (dnskey == null) {
+        if (!keyFound) {
             throw new DnssecValidationFailedException(q, records.size() + " " + rrsig.typeCovered + " record(s) are signed using an unknown key.");
         }
 
-        DnssecUnverifiedReason unverifiedReason = Verifier.verify(records, rrsig, dnskey);
-        if (unverifiedReason != null) {
-            result.add(unverifiedReason);
-        }
-
+        result.reasons.add(unverifiedReason);
         return result;
     }
 
@@ -459,13 +567,15 @@ public class DnssecClient extends ReliableDnsClient {
 
         Set<DnssecUnverifiedReason> unverifiedReasons = new HashSet<>();
         Set<DnssecUnverifiedReason> activeReasons = new HashSet<>();
-        if (knownSeps.containsKey(sepRecord.name)) {
-            if (dnskey.keyEquals(knownSeps.get(sepRecord.name))) {
-                return unverifiedReasons;
-            } else {
-                unverifiedReasons.add(new DnssecUnverifiedReason.ConflictsWithSep(sepRecord));
-                return unverifiedReasons;
+        List<byte[]> knownSepKeys = knownSeps.get(sepRecord.name);
+        if (knownSepKeys != null) {
+            for (byte[] knownSepKey : knownSepKeys) {
+                if (dnskey.keyEquals(knownSepKey)) {
+                    return unverifiedReasons;
+                }
             }
+            unverifiedReasons.add(new DnssecUnverifiedReason.ConflictsWithSep(sepRecord));
+            return unverifiedReasons;
         }
 
         // If we are looking for the SEP of the root zone at this point, then the client was not
@@ -475,50 +585,117 @@ public class DnssecClient extends ReliableDnsClient {
            return unverifiedReasons;
         }
 
-        DelegatingDnssecRR delegation = null;
         DnssecQueryResult dsResp = queryDnssec(sepRecord.name, TYPE.DS);
         unverifiedReasons.addAll(dsResp.getUnverifiedReasons());
 
-        List<Record<DS>> dsRrs = dsResp.dnsQueryResult.response.filterAnswerSectionBy(DS.class);
-        for (Record<DS> dsRecord : dsRrs) {
-            DS ds = dsRecord.payloadData;
-            if (dnskey.getKeyTag() == ds.keyTag) {
-                delegation = ds;
-                activeReasons = dsResp.getUnverifiedReasons();
-                break;
-            }
+        List<DS> dsRrs = new ArrayList<>();
+        for (Record<DS> dsRecord : dsResp.dnsQueryResult.response.filterAnswerSectionBy(DS.class)) {
+            dsRrs.add(dsRecord.payloadData);
         }
-
-        if (delegation == null) {
+        List<DelegatingDnssecRR> delegations = getDelegationsFor(dnskey, dsRrs);
+        if (!delegations.isEmpty()) {
+            activeReasons = dsResp.getUnverifiedReasons();
+        } else {
             LOGGER.fine("There is no DS record for \'" + sepRecord.name + "\', server gives empty result");
         }
 
-        if (delegation == null && dlv != null && !dlv.isChildOf(sepRecord.name)) {
+        if (delegations.isEmpty() && dlv != null && !dlv.isChildOf(sepRecord.name)) {
             DnssecQueryResult dlvResp = queryDnssec(DnsName.from(sepRecord.name, dlv), TYPE.DLV);
             unverifiedReasons.addAll(dlvResp.getUnverifiedReasons());
 
-            List<Record<DLV>> dlvRrs = dlvResp.dnsQueryResult.response.filterAnswerSectionBy(DLV.class);
-            for (Record<DLV> dlvRecord : dlvRrs) {
-                if (sepRecord.payloadData.getKeyTag() == dlvRecord.payloadData.keyTag) {
-                    LOGGER.fine("Found DLV for " + sepRecord.name + ", awesome.");
-                    delegation = dlvRecord.payloadData;
-                    activeReasons = dlvResp.getUnverifiedReasons();
-                    break;
-                }
+            List<DLV> dlvRrs = new ArrayList<>();
+            for (Record<DLV> dlvRecord : dlvResp.dnsQueryResult.response.filterAnswerSectionBy(DLV.class)) {
+                dlvRrs.add(dlvRecord.payloadData);
+            }
+            delegations = getDelegationsFor(dnskey, dlvRrs);
+            if (!delegations.isEmpty()) {
+                LOGGER.fine("Found DLV for " + sepRecord.name + ", awesome.");
+                activeReasons = dlvResp.getUnverifiedReasons();
             }
         }
 
-        if (delegation != null) {
-            DnssecUnverifiedReason unverifiedReason = Verifier.verify(sepRecord, delegation);
-            if (unverifiedReason != null) {
-                unverifiedReasons.add(unverifiedReason);
-            } else {
+        if (!delegations.isEmpty()) {
+            Set<DnssecUnverifiedReason> delegationReasons = verifyDelegations(sepRecord, delegations);
+            if (delegationReasons.isEmpty()) {
                 unverifiedReasons = activeReasons;
+            } else {
+                unverifiedReasons.addAll(delegationReasons);
             }
         } else if (unverifiedReasons.isEmpty()) {
             unverifiedReasons.add(new NoTrustAnchorReason(sepRecord.name));
         }
         return unverifiedReasons;
+    }
+
+    /**
+     * Get the delegating RRs, i.e., DS or DLV RRs, that refer to the given DNSKEY. A delegating RR refers to a DNSKEY
+     * if its key tag and algorithm match the ones of the DNSKEY (RFC 4035 § 5.2). If there is a delegating RR with a
+     * supported digest type other than SHA-1, then the ones with SHA-1 are ignored (RFC 4509 § 3).
+     *
+     * @param dnskey the DNSKEY.
+     * @param delegatingRrs the delegating RRs.
+     * @return the delegating RRs that refer to the DNSKEY.
+     */
+    private static List<DelegatingDnssecRR> getDelegationsFor(DNSKEY dnskey, List<? extends DelegatingDnssecRR> delegatingRrs) {
+        List<DelegatingDnssecRR> delegations = new ArrayList<>(delegatingRrs.size());
+        boolean strongerThanSha1Present = false;
+        for (DelegatingDnssecRR delegatingRr : delegatingRrs) {
+            if (delegatingRr.keyTag != dnskey.getKeyTag() || delegatingRr.algorithmByte != dnskey.algorithmByte) {
+                continue;
+            }
+            delegations.add(delegatingRr);
+
+            DigestAlgorithm digestType = delegatingRr.digestType;
+            if (digestType != null && digestType != DigestAlgorithm.SHA1
+                    && AlgorithmMap.INSTANCE.getDsDigestCalculator(digestType) != null) {
+                strongerThanSha1Present = true;
+            }
+        }
+
+        if (strongerThanSha1Present) {
+            for (Iterator<DelegatingDnssecRR> iterator = delegations.iterator(); iterator.hasNext(); ) {
+                if (iterator.next().digestType == DigestAlgorithm.SHA1) {
+                    iterator.remove();
+                }
+            }
+        }
+        return delegations;
+    }
+
+    /**
+     * Verify the given SEP using the given delegating RRs. The SEP is verified if at least one of the delegating RRs
+     * verifies it.
+     *
+     * @param sepRecord the SEP.
+     * @param delegations the delegating RRs that refer to the SEP.
+     * @return the reasons why the SEP could not be verified, which is empty if the SEP is verified.
+     * @throws DnssecValidationFailedException if the SEP could not be verified because a digest did not match.
+     */
+    private static Set<DnssecUnverifiedReason> verifyDelegations(Record<DNSKEY> sepRecord, List<DelegatingDnssecRR> delegations)
+                    throws DnssecValidationFailedException {
+        Set<DnssecUnverifiedReason> reasons = new HashSet<>();
+        DnssecValidationFailedException validationFailedException = null;
+        for (DelegatingDnssecRR delegation : delegations) {
+            DnssecUnverifiedReason unverifiedReason;
+            try {
+                unverifiedReason = Verifier.verify(sepRecord, delegation);
+            } catch (DnssecValidationFailedException e) {
+                if (validationFailedException == null) {
+                    validationFailedException = e;
+                }
+                continue;
+            }
+
+            if (unverifiedReason == null) {
+                return Collections.emptySet();
+            }
+            reasons.add(unverifiedReason);
+        }
+
+        if (validationFailedException != null) {
+            throw validationFailedException;
+        }
+        return reasons;
     }
 
     @Override
@@ -547,8 +724,9 @@ public class DnssecClient extends ReliableDnsClient {
     /**
      * Add a new secure entry point to the list of known secure entry points.
      *
-     * A secure entry point acts as a trust anchor. By default, the only secure entry point is the key signing key
-     * provided by the root zone.
+     * A secure entry point acts as a trust anchor. By default, the secure entry points are the key signing keys of the
+     * root zone. A domain name may have multiple secure entry points, e.g., during a key rollover, in which case a
+     * DNSKEY that matches any of them is accepted.
      *
      * @param name The domain name originating the key. Once the secure entry point for this domain is requested,
      *             the resolver will use this key without further verification instead of using the DNS system to
@@ -558,13 +736,21 @@ public class DnssecClient extends ReliableDnsClient {
      *             (also called key signing key)
      */
     public final void addSecureEntryPoint(DnsName name, byte[] key) {
-        knownSeps.put(name, key);
+        List<byte[]> keys = knownSeps.get(name);
+        if (keys == null) {
+            keys = new CopyOnWriteArrayList<>();
+            List<byte[]> previousKeys = knownSeps.putIfAbsent(name, keys);
+            if (previousKeys != null) {
+                keys = previousKeys;
+            }
+        }
+        keys.add(key);
     }
 
     /**
-     * Remove the secure entry point stored for a domain name.
+     * Remove the secure entry points stored for a domain name.
      *
-     * @param name The domain name of which the corresponding secure entry point shall be removed. For the root zone,
+     * @param name The domain name of which the corresponding secure entry points shall be removed. For the root zone,
      *             use the empty string here.
      */
     public void removeSecureEntryPoint(DnsName name) {
