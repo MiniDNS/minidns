@@ -183,6 +183,7 @@ public class DnssecClient extends ReliableDnsClient {
         // Keep SEPs separated, we only need one valid SEP.
         boolean sepSignatureValid = false;
         Set<DnssecUnverifiedReason> sepReasons = new HashSet<>();
+        Set<DNSKEY> selfSigningKeys = verifiedSignatures.selfSigningKeys;
         for (Iterator<Record<? extends Data>> iterator = toBeVerified.iterator(); iterator.hasNext(); ) {
             Record<DNSKEY> record = iterator.next().ifPossibleAs(DNSKEY.class);
             if (record == null) {
@@ -191,26 +192,25 @@ public class DnssecClient extends ReliableDnsClient {
             iterator.remove();
 
             // Only a DNSKEY that validly signs the DNSKEY RRset can establish the chain of trust to the RRset.
-            if (verifiedSignatures.sepSignaturePresent && !verifiedSignatures.selfSigningKeys.contains(record.payloadData)) {
+            if (!selfSigningKeys.contains(record.payloadData)) {
+                LOGGER.finer("Not considering DNSKEY " + record.payloadData.getKeyTag() + " of " + record.name
+                                + " as secure entry point, as it does not validly sign the DNSKEY RRset");
                 continue;
             }
 
-            // Verify all DNSKEYs as if it was a SEP. If we find a single SEP we are safe.
+            // Verify the DNSKEY as if it was a SEP. If we find a single SEP we are safe.
             Set<DnssecUnverifiedReason> reasons = verifySecureEntryPoint(record);
             if (reasons.isEmpty()) {
                 sepSignatureValid = true;
             } else {
                 sepReasons.addAll(reasons);
             }
-            if (!verifiedSignatures.sepSignaturePresent) {
-                LOGGER.finer("SEP key is not self-signed.");
-            }
         }
 
-        if (verifiedSignatures.sepSignaturePresent && !sepSignatureValid) {
+        if (!sepSignatureValid) {
             result.addAll(sepReasons);
         }
-        if (verifiedSignatures.sepSignatureRequired && !verifiedSignatures.sepSignaturePresent) {
+        if (verifiedSignatures.sepSignatureRequired && selfSigningKeys.isEmpty()) {
             result.add(new NoSecureEntryPointReason(q.name));
         }
         removeDnameSynthesizedCnames(answers, toBeVerified);
@@ -347,9 +347,9 @@ public class DnssecClient extends ReliableDnsClient {
 
     private static final class VerifySignaturesResult {
         boolean sepSignatureRequired = false;
-        boolean sepSignaturePresent = false;
         /**
-         * The DNSKEYs of the queried name that validly sign the DNSKEY RRset.
+         * The DNSKEYs of the queried name that validly sign the DNSKEY RRset. If empty, then the DNSKEY RRset has no
+         * valid self-signature.
          */
         Set<DNSKEY> selfSigningKeys = new HashSet<>();
         Set<DnssecUnverifiedReason> reasons = new HashSet<>();
@@ -472,7 +472,6 @@ public class DnssecClient extends ReliableDnsClient {
                 }
                 // Continue verifying the remaining RRSIGs, as we need to know all DNSKEYs that validly sign the
                 // DNSKEY RRset in order to find the one that is a secure entry point.
-                result.sepSignaturePresent = true;
                 result.selfSigningKeys.add(verifySignedRecordsResult.signingKey);
             }
 
