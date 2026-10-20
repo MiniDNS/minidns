@@ -10,8 +10,10 @@
  */
 package org.minidns.dnssec;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 
 import org.minidns.constants.DnssecConstants.DigestAlgorithm;
 import org.minidns.dnsmessage.Question;
@@ -122,6 +124,36 @@ public abstract class DnssecUnverifiedReason {
         @Override
         public String getReasonString() {
             return "No secure entry point was found for the root zone (\"Did you forget to configure a root SEP?\")";
+        }
+    }
+
+    public static class CrossSignedDnskeyRrsetReason extends DnssecUnverifiedReason {
+        private final DnsName zone;
+        private final Set<DnsName> signerNames;
+
+        public CrossSignedDnskeyRrsetReason(DnsName zone, Set<DnsName> signerNames) {
+            this.zone = zone;
+            this.signerNames = Collections.unmodifiableSet(signerNames);
+        }
+
+        /**
+         * The names of the zones whose keys signed the DNSKEY RRset instead of a key of the zone itself.
+         *
+         * @return the cross-signing zones.
+         */
+        public Set<DnsName> getSignerNames() {
+            return signerNames;
+        }
+
+        @Override
+        public String getReasonString() {
+            List<String> sortedSignerNames = new ArrayList<>(signerNames.size());
+            for (DnsName signerName : signerNames) {
+                sortedSignerNames.add(signerName.toString());
+            }
+            Collections.sort(sortedSignerNames);
+            return "The DNSKEY RRset of zone " + zone + " is not self-signed and hence can not be anchored. It is only "
+                            + "signed by a key of the following zone(s): " + sortedSignerNames;
         }
     }
 

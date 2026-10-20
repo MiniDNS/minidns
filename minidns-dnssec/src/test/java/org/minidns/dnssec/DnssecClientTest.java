@@ -910,8 +910,10 @@ public class DnssecClientTest {
         );
         DnssecQueryResult result = client.queryDnssec("example.com", Record.TYPE.A);
         assertFalse(result.isAuthenticData());
-        assertTrue(result.getUnverifiedReasons().iterator().next()
-                instanceof DnssecUnverifiedReason.NoSecureEntryPointReason);
+        DnssecUnverifiedReason reason = result.getUnverifiedReasons().iterator().next();
+        assertTrue(reason instanceof DnssecUnverifiedReason.CrossSignedDnskeyRrsetReason);
+        assertEquals(Collections.singleton(DnsName.from("org")),
+                ((DnssecUnverifiedReason.CrossSignedDnskeyRrsetReason) reason).getSignerNames());
     }
 
     @SuppressWarnings("unchecked")

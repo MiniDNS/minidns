@@ -17,6 +17,7 @@ import org.minidns.dnsmessage.Question;
 import org.minidns.dnsname.DnsName;
 import org.minidns.dnsname.InvalidDnsNameException;
 import org.minidns.dnsqueryresult.DnsQueryResult;
+import org.minidns.dnssec.DnssecUnverifiedReason.CrossSignedDnskeyRrsetReason;
 import org.minidns.dnssec.DnssecUnverifiedReason.NoActiveSignaturesReason;
 import org.minidns.dnssec.DnssecUnverifiedReason.NoSecureEntryPointReason;
 import org.minidns.dnssec.DnssecUnverifiedReason.NoSignaturesReason;
@@ -220,12 +221,13 @@ public class DnssecClient extends ReliableDnsClient {
         }
 
         if (dnskeyRrsetRequiresSep && !sepSignatureValid) {
-            if (sepReasons.isEmpty()) {
-                // The DNSKEY RRset is not validly signed by any DNSKEY that is a secure entry point, for example
-                // because it is only signed by a key from another zone.
-                result.add(new NoSecureEntryPointReason(q.name));
-            } else {
+            if (!sepReasons.isEmpty()) {
                 result.addAll(sepReasons);
+            } else if (!verifiedSignatures.dnskeyRrsetCrossSigners.isEmpty()) {
+                // The DNSKEY RRset is not self-signed; it is only signed by a key from another zone.
+                result.add(new CrossSignedDnskeyRrsetReason(q.name, verifiedSignatures.dnskeyRrsetCrossSigners));
+            } else {
+                result.add(new NoSecureEntryPointReason(q.name));
             }
         }
         removeDnameSynthesizedCnames(answers, toBeVerified);
@@ -366,6 +368,12 @@ public class DnssecClient extends ReliableDnsClient {
          * valid self-signature.
          */
         Set<DNSKEY> selfSigningKeys = new HashSet<>();
+        /**
+         * The names of the zones whose keys cross-sign the DNSKEY RRset of the queried name, that is, keys that are
+         * neither of the queried name nor of one of its parents. Used to explain why a cross-signed DNSKEY RRset is
+         * not anchored.
+         */
+        Set<DnsName> dnskeyRrsetCrossSigners = new HashSet<>();
         Set<DnssecUnverifiedReason> reasons = new HashSet<>();
     }
 
@@ -459,6 +467,9 @@ public class DnssecClient extends ReliableDnsClient {
 
                 if (!isParentOrSelf(sigRecord.name.ace, rrsig.signerName.ace)) {
                     LOGGER.finer("Records at " + sigRecord.name + " are cross-signed with a key from " + rrsig.signerName);
+                    if (rrsig.typeCovered == TYPE.DNSKEY && sigRecord.name.equals(q.name)) {
+                        result.dnskeyRrsetCrossSigners.add(rrsig.signerName);
+                    }
                     continue;
                 }
 
