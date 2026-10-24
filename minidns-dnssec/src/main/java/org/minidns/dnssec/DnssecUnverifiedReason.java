@@ -20,6 +20,7 @@ import org.minidns.dnsmessage.Question;
 import org.minidns.dnsname.DnsName;
 import org.minidns.record.DNSKEY;
 import org.minidns.record.Data;
+import org.minidns.record.NSEC3;
 import org.minidns.record.RRSIG;
 import org.minidns.record.Record;
 import org.minidns.record.Record.TYPE;
@@ -206,6 +207,40 @@ public abstract class DnssecUnverifiedReason {
 
         public List<RRSIG> getOutdatedRrSigs() {
             return outdatedRrSigs;
+        }
+    }
+
+    public static class Nsec3IterationCountExceededReason extends DnssecUnverifiedReason {
+        private final Record<NSEC3> nsec3Record;
+        private final int maxIterations;
+
+        public Nsec3IterationCountExceededReason(Record<NSEC3> nsec3Record, int maxIterations) {
+            this.nsec3Record = nsec3Record;
+            this.maxIterations = maxIterations;
+        }
+
+        @Override
+        public String getReasonString() {
+            return "The NSEC3 RR " + nsec3Record.name + " uses " + nsec3Record.payloadData.iterations
+                            + " iterations, which exceeds the limit of " + maxIterations + " (RFC 9276 § 3.2)";
+        }
+    }
+
+    public static class NoDenialOfExistenceReason extends DnssecUnverifiedReason {
+        private final Question question;
+
+        public NoDenialOfExistenceReason(Question question) {
+            this.question = question;
+        }
+
+        public Question getQuestion() {
+            return question;
+        }
+
+        @Override
+        public String getReasonString() {
+            return "The negative response on the question for " + question.type + " at " + question.name
+                            + " contains no NSEC or NSEC3 record proving the denial of existence";
         }
     }
 

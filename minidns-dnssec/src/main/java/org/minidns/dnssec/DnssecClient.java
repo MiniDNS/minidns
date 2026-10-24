@@ -19,6 +19,7 @@ import org.minidns.dnsname.InvalidDnsNameException;
 import org.minidns.dnsqueryresult.DnsQueryResult;
 import org.minidns.dnssec.DnssecUnverifiedReason.CrossSignedDnskeyRrsetReason;
 import org.minidns.dnssec.DnssecUnverifiedReason.NoActiveSignaturesReason;
+import org.minidns.dnssec.DnssecUnverifiedReason.NoDenialOfExistenceReason;
 import org.minidns.dnssec.DnssecUnverifiedReason.NoSecureEntryPointReason;
 import org.minidns.dnssec.DnssecUnverifiedReason.NoSignaturesReason;
 import org.minidns.dnssec.DnssecUnverifiedReason.NoTrustAnchorReason;
@@ -345,9 +346,14 @@ public class DnssecClient extends ReliableDnsClient {
             }
         }
 
-        // TODO: Shouldn't we also throw if !nsecPresent?
-        if (nsecPresent && !validNsec) {
-            throw new DnssecValidationFailedException(q, "Invalid NSEC!");
+        if (!validNsec) {
+            if (nsecPresent) {
+                throw new DnssecValidationFailedException(q, "Invalid NSEC!");
+            }
+            // A negative response must prove the denial of existence with NSEC or NSEC3 records. Without such a proof
+            // the response is not authentic, even if, e.g., a validly signed SOA RR is present. Otherwise an attacker
+            // could forge a denial of existence by replaying the zone's signed SOA RR while omitting the NSEC records.
+            result.add(new NoDenialOfExistenceReason(q));
         }
 
         List<Record<? extends Data>> toBeVerified = dnsMessage.copyAuthority();

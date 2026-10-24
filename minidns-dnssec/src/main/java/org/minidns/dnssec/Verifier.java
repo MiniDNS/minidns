@@ -16,6 +16,7 @@ import org.minidns.dnsname.DnsName;
 import org.minidns.dnssec.DnssecUnverifiedReason.AlgorithmExceptionThrownReason;
 import org.minidns.dnssec.DnssecUnverifiedReason.AlgorithmNotSupportedReason;
 import org.minidns.dnssec.DnssecUnverifiedReason.NSECDoesNotMatchReason;
+import org.minidns.dnssec.DnssecUnverifiedReason.Nsec3IterationCountExceededReason;
 import org.minidns.dnssec.DnssecValidationFailedException.DigestComparisonFailedException;
 import org.minidns.dnssec.algorithms.AlgorithmMap;
 import org.minidns.record.DNSKEY;
@@ -37,6 +38,12 @@ import java.util.List;
 
 class Verifier {
     private static final AlgorithmMap algorithmMap = AlgorithmMap.INSTANCE;
+
+    /**
+     * The maximum number of NSEC3 hash iterations that is accepted. NSEC3 RRs with more iterations are not considered a
+     * valid proof, as per RFC 9276 § 3.2. This also bounds the hashing work an attacker can impose.
+     */
+    static final int MAX_NSEC3_ITERATIONS = 100;
 
     public static DnssecUnverifiedReason verify(Record<DNSKEY> dnskeyRecord, DelegatingDnssecRR ds) throws DnssecValidationFailedException {
         DNSKEY dnskey = dnskeyRecord.payloadData;
@@ -90,6 +97,11 @@ class Verifier {
 
     public static DnssecUnverifiedReason verifyNsec3(DnsName zone, Record<NSEC3> nsec3record, Question q) {
         NSEC3 nsec3 = nsec3record.payloadData;
+        // Reject excessive iteration counts before hashing, both to comply with RFC 9276 § 3.2 and to bound the
+        // hashing work that an attacker-supplied NSEC3 RR can impose.
+        if (nsec3.iterations > MAX_NSEC3_ITERATIONS) {
+            return new Nsec3IterationCountExceededReason(nsec3record, MAX_NSEC3_ITERATIONS);
+        }
         DigestCalculator digestCalculator = algorithmMap.getNsecDigestCalculator(nsec3.hashAlgorithm);
         if (digestCalculator == null) {
             return new AlgorithmNotSupportedReason(nsec3.hashAlgorithmByte, nsec3.getType(), nsec3record);
