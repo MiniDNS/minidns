@@ -67,6 +67,21 @@ tasks.register('javadocAll', Javadoc) {
 
 			into javadocAllDir
 		}
+
+		// Since JDK 10, javadoc only generates 'element-list' and
+		// no longer 'package-list'. Tools linking against our
+		// javadoc may still expect the latter. As MiniDNS is not
+		// modularized, the element-list contains only package
+		// names and is hence a valid package-list. Note that this
+		// copies element-list, i.e., the original is preserved.
+		copy {
+			from (javadocAllDir) {
+				include 'element-list'
+				rename 'element-list', 'package-list'
+			}
+
+			into javadocAllDir
+		}
 	}
 }
 
